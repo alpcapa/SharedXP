@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { buddies } from "../data/buddies";
 
 const trustedHighlights = [
@@ -40,9 +41,9 @@ const SiteFooter = () => {
               <img key={buddy.id} src={buddy.image} alt="" />
             ))}
           </div>
-          <button type="button" className="footer-host-button">
+          <Link to="/become-a-host" className="footer-host-button">
             Join as a Host
-          </button>
+          </Link>
         </section>
 
         <section className="footer-trust-panel">
@@ -62,9 +63,9 @@ const SiteFooter = () => {
 
       <nav className="footer-links" aria-label="Footer">
         {footerLinks.map((item) => (
-          <a key={item.label} href={item.href}>
+          <Link key={item.label} to={item.href}>
             {item.label}
-          </a>
+          </Link>
         ))}
       </nav>
     </footer>
