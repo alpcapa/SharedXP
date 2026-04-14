@@ -225,7 +225,7 @@ const HomePage = () => {
             </label>
 
             <label className="search-field">
-              <span>When (between 2 dates)</span>
+              <span>When</span>
               <div className="date-range">
                 <input
                   type="date"
