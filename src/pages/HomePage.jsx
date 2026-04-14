@@ -19,13 +19,7 @@ const dayNames = [
   "saturday"
 ];
 
-const matchesAvailability = (schedule, selectedDate) => {
-  if (!selectedDate) {
-    return true;
-  }
-
-  const [year, month, day] = selectedDate.split("-").map(Number);
-  const selectedDayIndex = new Date(year, month - 1, day).getDay();
+const matchesAvailabilityForDay = (schedule, selectedDayIndex) => {
   const selectedDayName = dayNames[selectedDayIndex];
   const isWeekend = selectedDayIndex === 0 || selectedDayIndex === 6;
   const isWeekday = !isWeekend;
@@ -50,15 +44,71 @@ const matchesAvailability = (schedule, selectedDate) => {
   return false;
 };
 
+const matchesAvailability = (schedule, selectedDate) => {
+  if (!selectedDate) {
+    return true;
+  }
+
+  const [year, month, day] = selectedDate.split("-").map(Number);
+  const selectedDayIndex = new Date(year, month - 1, day).getDay();
+  return matchesAvailabilityForDay(schedule, selectedDayIndex);
+};
+
+const matchesAvailabilityInRange = (schedule, startDate, endDate) => {
+  if (!startDate && !endDate) {
+    return true;
+  }
+
+  if (!startDate || !endDate) {
+    return matchesAvailability(schedule, startDate || endDate);
+  }
+
+  const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
+  const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
+  const start = new Date(startYear, startMonth - 1, startDay);
+  const end = new Date(endYear, endMonth - 1, endDay);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return true;
+  }
+
+  const first = start <= end ? start : end;
+  const last = start <= end ? end : start;
+  const current = new Date(first);
+
+  while (current <= last) {
+    if (matchesAvailabilityForDay(schedule, current.getDay())) {
+      return true;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return false;
+};
+
 const HomePage = () => {
   const [sport, setSport] = useState(defaultSport);
   const [location, setLocation] = useState(defaultLocation);
-  const [selectedDate, setSelectedDate] = useState("");
+  const [sportSearch, setSportSearch] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const filteredSports = sports.filter((name) =>
+    name.toLowerCase().includes(sportSearch.toLowerCase())
+  );
+  const filteredLocations = locations.filter((name) =>
+    name.toLowerCase().includes(locationSearch.toLowerCase())
+  );
 
   const filtered = buddies.filter((buddy) => {
     const sportMatches = sport === "All sports" || buddy.sport === sport;
     const locationMatches = location === "Anywhere" || buddy.location === location;
-    const dateMatches = matchesAvailability(buddy.availabilitySchedule, selectedDate);
+    const dateMatches = matchesAvailabilityInRange(
+      buddy.availabilitySchedule,
+      startDate,
+      endDate
+    );
     return sportMatches && locationMatches && dateMatches;
   });
 
@@ -83,8 +133,20 @@ const HomePage = () => {
           <form className="search-bar" onSubmit={(event) => event.preventDefault()}>
             <label className="search-field">
               <span>Sport</span>
-              <select value={sport} onChange={(event) => setSport(event.target.value)}>
-                {sports.map((name) => (
+              <input
+                type="text"
+                className="option-search"
+                placeholder="Search sports"
+                value={sportSearch}
+                onChange={(event) => setSportSearch(event.target.value)}
+              />
+              <select
+                className="option-list"
+                size={4}
+                value={sport}
+                onChange={(event) => setSport(event.target.value)}
+              >
+                {(filteredSports.length ? filteredSports : sports).map((name) => (
                   <option key={name} value={name}>
                     {name}
                   </option>
@@ -94,11 +156,20 @@ const HomePage = () => {
 
             <label className="search-field">
               <span>Where</span>
+              <input
+                type="text"
+                className="option-search"
+                placeholder="Search cities"
+                value={locationSearch}
+                onChange={(event) => setLocationSearch(event.target.value)}
+              />
               <select
+                className="option-list"
+                size={4}
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
               >
-                {locations.map((name) => (
+                {(filteredLocations.length ? filteredLocations : locations).map((name) => (
                   <option key={name} value={name}>
                     {name}
                   </option>
@@ -107,12 +178,22 @@ const HomePage = () => {
             </label>
 
             <label className="search-field">
-              <span>When</span>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(event) => setSelectedDate(event.target.value)}
-              />
+              <span>When (between 2 dates)</span>
+              <div className="date-range">
+                <input
+                  type="date"
+                  className="date-input"
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
+                <span className="range-separator">to</span>
+                <input
+                  type="date"
+                  className="date-input"
+                  value={endDate}
+                  onChange={(event) => setEndDate(event.target.value)}
+                />
+              </div>
             </label>
 
             <button type="submit" className="find-button">

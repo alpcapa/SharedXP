@@ -147,7 +147,7 @@ body {
 .search-field input {
   border: none;
   background: transparent;
-  font-size: 24px;
+  font-size: 15px;
   font-weight: 700;
   color: #1f2937;
   outline: none;
@@ -156,6 +156,36 @@ body {
 
 .search-field input {
   font-family: inherit;
+}
+
+.option-search {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.option-list {
+  min-height: 120px;
+  overflow-y: auto;
+  font-size: 15px;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-input {
+  font-size: 15px;
+}
+
+.range-separator {
+  font-size: 15px;
+  color: #6b7280;
+  font-weight: 600;
 }
 
 .find-button {
@@ -302,10 +332,8 @@ body {
     font-size: clamp(21px, 2.8vw, 31px);
   }
 
-  .search-field select,
-  .search-field input,
   .find-button {
-    font-size: clamp(18px, 2.4vw, 27px);
+    font-size: clamp(18px, 2.4vw, 24px);
   }
 }
 
@@ -318,6 +346,11 @@ body {
   .search-field {
     border-right: none;
     border-bottom: 1px solid #ececef;
+  }
+
+  .date-range {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .find-button {
