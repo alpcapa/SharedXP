@@ -5,6 +5,10 @@ import { buddies } from "../data/buddies";
 
 const sports = ["All sports", ...new Set(buddies.map((buddy) => buddy.sport))];
 const locations = ["Anywhere", ...new Set(buddies.map((buddy) => buddy.location))];
+const defaultSport = sports.includes("Cycling") ? "Cycling" : sports[0];
+const defaultLocation = locations.includes("Lisbon, Portugal")
+  ? "Lisbon, Portugal"
+  : locations[0];
 const dayNames = [
   "sunday",
   "monday",
@@ -47,8 +51,8 @@ const matchesAvailability = (schedule, selectedDate) => {
 };
 
 const HomePage = () => {
-  const [sport, setSport] = useState("Cycling");
-  const [location, setLocation] = useState("Lisbon, Portugal");
+  const [sport, setSport] = useState(defaultSport);
+  const [location, setLocation] = useState(defaultLocation);
   const [selectedDate, setSelectedDate] = useState("");
 
   const filtered = buddies.filter((buddy) => {
