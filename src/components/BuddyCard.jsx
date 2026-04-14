@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 
 const BuddyCard = ({ buddy }) => {
+  const actionLabel = buddy.sport === "Cycling" ? "Ride with" : "Play with";
+
   return (
     <Link to={`/buddy/${buddy.id}`} className="card-link">
       <div className="card">
@@ -10,7 +12,9 @@ const BuddyCard = ({ buddy }) => {
         <p>{buddy.bikeAvailable ? "🚲 Bike available" : ""}</p>
         <p>⭐ {buddy.rating}</p>
         <p className="price">€{buddy.price}</p>
-        <span className="card-cta">Ride with {buddy.name}</span>
+        <span className="card-cta">
+          {actionLabel} {buddy.name}
+        </span>
       </div>
     </Link>
   );

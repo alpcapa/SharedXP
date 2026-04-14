@@ -16,6 +16,9 @@ const ProfilePage = () => {
   }
 
   const recommendations = buddies.filter((item) => item.id !== buddy.id).slice(0, 2);
+  const perLabel = buddy.sport === "Cycling" ? "per ride" : "per session";
+  const requestLabel =
+    buddy.sport === "Cycling" ? "Request a Ride" : "Request a Session";
 
   return (
     <div className="profile-page">
@@ -38,9 +41,11 @@ const ProfilePage = () => {
           </p>
           <p>{buddy.bio}</p>
           <p>Level: {buddy.level}</p>
-          <p className="price">€{buddy.price} per ride</p>
+          <p className="price">
+            €{buddy.price} {perLabel}
+          </p>
           <p>{buddy.availabilitySchedule.join(" · ")}</p>
-          <button>Request a Ride</button>
+          <button>{requestLabel}</button>
         </div>
       </section>
 
