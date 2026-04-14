@@ -122,6 +122,7 @@ body {
   margin-top: 30px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr auto;
+  width: calc(100% + 28px);
   gap: 0;
   background: #fff;
   border-radius: 16px;
@@ -138,7 +139,7 @@ body {
 }
 
 .search-field span {
-  font-size: 14px;
+  font-size: 13px;
   color: #6b7280;
   font-weight: 500;
 }
@@ -147,7 +148,7 @@ body {
 .search-field input {
   border: none;
   background: transparent;
-  font-size: 27px;
+  font-size: 24px;
   font-weight: 700;
   color: #1f2937;
   outline: none;
@@ -164,7 +165,7 @@ body {
   margin-left: 12px;
   background: #97ca3f;
   color: #fff;
-  font-size: 30px;
+  font-size: 27px;
   font-weight: 800;
   padding: 0 30px;
   cursor: pointer;
@@ -179,7 +180,7 @@ body {
   flex-wrap: wrap;
   color: #2d3033;
   font-weight: 600;
-  font-size: 24px;
+  font-size: 21px;
 }
 
 .results-section {
@@ -311,6 +312,7 @@ body {
 
 @media (max-width: 900px) {
   .search-bar {
+    width: 100%;
     grid-template-columns: 1fr;
     gap: 8px;
   }
