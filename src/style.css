@@ -22,6 +22,7 @@ body {
 button {
   margin-right: 10px;
   padding: 10px;
+  cursor: pointer;
 }
 
 .grid {
@@ -37,6 +38,11 @@ button {
   border-radius: 10px;
 }
 
+.card-link {
+  color: inherit;
+  text-decoration: none;
+}
+
 .card img {
   width: 100%;
   border-radius: 10px;
@@ -45,4 +51,68 @@ button {
 .price {
   color: green;
   font-weight: bold;
+}
+
+.card-cta {
+  display: inline-block;
+  border: 1px solid #777;
+  padding: 10px 12px;
+  border-radius: 2px;
+}
+
+.active-filter {
+  background: #222;
+  color: white;
+}
+
+.profile-page {
+  padding-bottom: 30px;
+}
+
+.profile-summary,
+.about,
+.reviews,
+.gallery {
+  background: white;
+  margin: 20px;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.profile-summary {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: 20px;
+}
+
+.profile-main-image {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.gallery-grid img {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.review-card {
+  border-top: 1px solid #e5e5e5;
+  padding-top: 10px;
+}
+
+.verified {
+  color: #0f766e;
+  font-weight: bold;
+}
+
+.back-link {
+  margin-right: 12px;
+  color: #0f766e;
+  text-decoration: none;
 }
