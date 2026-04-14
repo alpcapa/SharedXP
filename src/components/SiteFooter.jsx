@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { buddies } from "../data/buddies";
 
 const trustedHighlights = [
@@ -20,6 +19,12 @@ const trustedHighlights = [
 ];
 
 const hostAvatars = buddies.slice(0, 3);
+const footerLinks = [
+  { label: "About", href: "/about" },
+  { label: "Follow", href: "/follow" },
+  { label: "Help", href: "/help" },
+  { label: "Legal", href: "/legal" }
+];
 
 const SiteFooter = () => {
   return (
@@ -56,10 +61,11 @@ const SiteFooter = () => {
       </div>
 
       <nav className="footer-links" aria-label="Footer">
-        <Link to="/">About</Link>
-        <Link to="/">Follow</Link>
-        <Link to="/">Help</Link>
-        <Link to="/">Legal</Link>
+        {footerLinks.map((item) => (
+          <a key={item.label} href={item.href}>
+            {item.label}
+          </a>
+        ))}
       </nav>
     </footer>
   );
