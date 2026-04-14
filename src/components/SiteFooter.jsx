@@ -4,16 +4,19 @@ import { buddies } from "../data/buddies";
 const trustedHighlights = [
   {
     icon: "🔒",
+    iconLabel: "Trusted community",
     title: "Trusted community",
     detail: "Verified profiles & reviews"
   },
   {
     icon: "💳",
+    iconLabel: "Secure payments",
     title: "Secure payments",
     detail: "We protect every transaction"
   },
   {
     icon: "🕓",
+    iconLabel: "24/7 support",
     title: "24/7 support",
     detail: "We're here for you"
   }
@@ -49,8 +52,10 @@ const SiteFooter = () => {
         <section className="footer-trust-panel">
           {trustedHighlights.map((highlight) => (
             <article key={highlight.title} className="footer-trust-item">
-              <span className="footer-trust-icon" aria-hidden="true">
-                {highlight.icon}
+              <span className="footer-trust-icon">
+                <span role="img" aria-label={highlight.iconLabel}>
+                  {highlight.icon}
+                </span>
               </span>
               <div>
                 <h3>{highlight.title}</h3>
