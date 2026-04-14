@@ -74,13 +74,24 @@ const matchesAvailabilityInRange = (schedule, startDate, endDate) => {
 
   const first = start <= end ? start : end;
   const last = start <= end ? end : start;
-  const current = new Date(first);
+  const firstUtc = Date.UTC(first.getFullYear(), first.getMonth(), first.getDate());
+  const lastUtc = Date.UTC(last.getFullYear(), last.getMonth(), last.getDate());
+  const dayCount = Math.floor((lastUtc - firstUtc) / 86400000) + 1;
 
-  while (current <= last) {
-    if (matchesAvailabilityForDay(schedule, current.getDay())) {
+  if (dayCount >= 7) {
+    for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
+      if (matchesAvailabilityForDay(schedule, dayIndex)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  for (let offset = 0; offset < dayCount; offset += 1) {
+    const dayIndex = (first.getDay() + offset) % 7;
+    if (matchesAvailabilityForDay(schedule, dayIndex)) {
       return true;
     }
-    current.setDate(current.getDate() + 1);
   }
 
   return false;
@@ -178,7 +189,7 @@ const HomePage = () => {
             </label>
 
             <label className="search-field">
-              <span>When (between 2 dates)</span>
+              <span>When (date range)</span>
               <div className="date-range">
                 <input
                   type="date"
