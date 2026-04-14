@@ -10,7 +10,7 @@ const BuddyCard = ({ buddy }) => {
         <p>{buddy.bikeAvailable ? "🚲 Bike available" : ""}</p>
         <p>⭐ {buddy.rating}</p>
         <p className="price">€{buddy.price}</p>
-        <button type="button">Ride with {buddy.name}</button>
+        <span className="card-cta">Ride with {buddy.name}</span>
       </div>
     </Link>
   );

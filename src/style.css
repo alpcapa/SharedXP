@@ -53,6 +53,13 @@ button {
   font-weight: bold;
 }
 
+.card-cta {
+  display: inline-block;
+  border: 1px solid #777;
+  padding: 10px 12px;
+  border-radius: 2px;
+}
+
 .active-filter {
   background: #222;
   color: white;

@@ -63,8 +63,8 @@ const ProfilePage = () => {
 
       <section className="reviews">
         <h3>Reviews</h3>
-        {buddy.reviews.map((review, index) => (
-          <article key={`${review.author}-${index}`} className="review-card">
+        {buddy.reviews.map((review) => (
+          <article key={`${review.author}-${review.comment}`} className="review-card">
             <p>
               <strong>{review.author}</strong> · ⭐ {review.rating}
             </p>
