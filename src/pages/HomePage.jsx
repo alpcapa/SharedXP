@@ -5,6 +5,45 @@ import { buddies } from "../data/buddies";
 
 const sports = ["All sports", ...new Set(buddies.map((buddy) => buddy.sport))];
 const locations = ["Anywhere", ...new Set(buddies.map((buddy) => buddy.location))];
+const dayNames = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday"
+];
+
+const matchesAvailability = (schedule, selectedDate) => {
+  if (!selectedDate) {
+    return true;
+  }
+
+  const selectedDayIndex = new Date(`${selectedDate}T00:00:00`).getDay();
+  const selectedDayName = dayNames[selectedDayIndex];
+  const isWeekend = selectedDayIndex === 0 || selectedDayIndex === 6;
+  const isWeekday = !isWeekend;
+  const normalizedSchedule = schedule.join(" ").toLowerCase();
+
+  if (normalizedSchedule.includes(selectedDayName)) {
+    return true;
+  }
+
+  if (normalizedSchedule.includes("weekend") && isWeekend) {
+    return true;
+  }
+
+  if (
+    (normalizedSchedule.includes("weekdays") ||
+      normalizedSchedule.includes("weeknights")) &&
+    isWeekday
+  ) {
+    return true;
+  }
+
+  return false;
+};
 
 const HomePage = () => {
   const [sport, setSport] = useState("Cycling");
@@ -14,7 +53,8 @@ const HomePage = () => {
   const filtered = buddies.filter((buddy) => {
     const sportMatches = sport === "All sports" || buddy.sport === sport;
     const locationMatches = location === "Anywhere" || buddy.location === location;
-    return sportMatches && locationMatches;
+    const dateMatches = matchesAvailability(buddy.availabilitySchedule, selectedDate);
+    return sportMatches && locationMatches && dateMatches;
   });
 
   return (
