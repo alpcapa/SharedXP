@@ -1,42 +1,141 @@
 import { useState } from "react";
 import BuddyCard from "../components/BuddyCard";
+import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
 
-const sports = ["Cycling", "Tennis", "All"];
+const sports = ["All sports", ...new Set(buddies.map((buddy) => buddy.sport))];
+const locations = ["Anywhere", ...new Set(buddies.map((buddy) => buddy.location))];
+const defaultSport = sports.includes("Cycling") ? "Cycling" : sports[0];
+const defaultLocation = locations.includes("Lisbon, Portugal")
+  ? "Lisbon, Portugal"
+  : locations[0];
+const dayNames = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday"
+];
+
+const matchesAvailability = (schedule, selectedDate) => {
+  if (!selectedDate) {
+    return true;
+  }
+
+  const [year, month, day] = selectedDate.split("-").map(Number);
+  const selectedDayIndex = new Date(year, month - 1, day).getDay();
+  const selectedDayName = dayNames[selectedDayIndex];
+  const isWeekend = selectedDayIndex === 0 || selectedDayIndex === 6;
+  const isWeekday = !isWeekend;
+  const normalizedSchedule = schedule.join(" ").toLowerCase();
+
+  if (normalizedSchedule.includes(selectedDayName)) {
+    return true;
+  }
+
+  if (normalizedSchedule.includes("weekend") && isWeekend) {
+    return true;
+  }
+
+  if (
+    (normalizedSchedule.includes("weekdays") ||
+      normalizedSchedule.includes("weeknights")) &&
+    isWeekday
+  ) {
+    return true;
+  }
+
+  return false;
+};
 
 const HomePage = () => {
-  const [sport, setSport] = useState("Cycling");
-  const filtered =
-    sport === "All" ? buddies : buddies.filter((buddy) => buddy.sport === sport);
+  const [sport, setSport] = useState(defaultSport);
+  const [location, setLocation] = useState(defaultLocation);
+  const [selectedDate, setSelectedDate] = useState("");
+
+  const filtered = buddies.filter((buddy) => {
+    const sportMatches = sport === "All sports" || buddy.sport === sport;
+    const locationMatches = location === "Anywhere" || buddy.location === location;
+    const dateMatches = matchesAvailability(buddy.availabilitySchedule, selectedDate);
+    return sportMatches && locationMatches && dateMatches;
+  });
 
   return (
-    <div>
-      <header className="navbar">
-        <h2>SharedXP</h2>
-      </header>
-
+    <div className="home-page">
       <section className="hero">
-        <h1>Find your sports buddy. Anywhere.</h1>
-        <p>Connect with locals and play together.</p>
+        <SiteHeader />
+        <div className="hero-content">
+          <h1>
+            Find your
+            <br />
+            sports buddy<span className="dot">.</span>
+            <br />
+            <span className="accent">Anywhere.</span>
+          </h1>
+          <p>
+            Connect with locals who love the same sports.
+            <br />
+            Share gear, good vibes, and unforgettable moments.
+          </p>
+
+          <form className="search-bar" onSubmit={(event) => event.preventDefault()}>
+            <label className="search-field">
+              <span>Sport</span>
+              <select value={sport} onChange={(event) => setSport(event.target.value)}>
+                {sports.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="search-field">
+              <span>Where</span>
+              <select
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+              >
+                {locations.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="search-field">
+              <span>When</span>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(event) => setSelectedDate(event.target.value)}
+              />
+            </label>
+
+            <button type="submit" className="find-button">
+              Find Buddies
+            </button>
+          </form>
+
+          <ul className="trust-points">
+            <li>✨ Real people, not tours</li>
+            <li>💫 Gear sharing</li>
+            <li>🔒 Secure payments</li>
+            <li>🧭 Reviewed & trusted</li>
+          </ul>
+        </div>
       </section>
 
-      <div className="filters">
-        {sports.map((name) => (
-          <button
-            key={name}
-            onClick={() => setSport(name)}
-            className={sport === name ? "active-filter" : ""}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid">
-        {filtered.map((buddy) => (
-          <BuddyCard key={buddy.id} buddy={buddy} />
-        ))}
-      </div>
+      <section className="results-section">
+        <div className="grid">
+          {filtered.map((buddy) => (
+            <BuddyCard key={buddy.id} buddy={buddy} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 };

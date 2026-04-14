@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
+import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
 
 const ProfilePage = () => {
@@ -22,12 +23,12 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-page">
-      <header className="navbar">
+      <SiteHeader />
+      <div className="profile-back-wrap">
         <Link to="/" className="back-link">
-          ← Back
+          ← Back to home
         </Link>
-        <h2>SharedXP</h2>
-      </header>
+      </div>
 
       <section className="profile-summary">
         <img src={buddy.image} alt={buddy.name} className="profile-main-image" />
