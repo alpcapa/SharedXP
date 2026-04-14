@@ -20,7 +20,8 @@ const matchesAvailability = (schedule, selectedDate) => {
     return true;
   }
 
-  const selectedDayIndex = new Date(`${selectedDate}T00:00:00`).getDay();
+  const [year, month, day] = selectedDate.split("-").map(Number);
+  const selectedDayIndex = new Date(year, month - 1, day).getDay();
   const selectedDayName = dayNames[selectedDayIndex];
   const isWeekend = selectedDayIndex === 0 || selectedDayIndex === 6;
   const isWeekday = !isWeekend;
