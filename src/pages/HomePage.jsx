@@ -100,6 +100,8 @@ const matchesAvailabilityInRange = (schedule, startDate, endDate) => {
 const HomePage = () => {
   const [sport, setSport] = useState(defaultSport);
   const [location, setLocation] = useState(defaultLocation);
+  const [sportMenuOpen, setSportMenuOpen] = useState(false);
+  const [locationMenuOpen, setLocationMenuOpen] = useState(false);
   const [sportSearch, setSportSearch] = useState("");
   const [locationSearch, setLocationSearch] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -144,52 +146,86 @@ const HomePage = () => {
           <form className="search-bar" onSubmit={(event) => event.preventDefault()}>
             <label className="search-field">
               <span>Sport</span>
-              <input
-                type="text"
-                className="option-search"
-                placeholder="Search sports"
-                value={sportSearch}
-                onChange={(event) => setSportSearch(event.target.value)}
-              />
-              <select
-                className="option-list"
-                size={4}
-                value={sport}
-                onChange={(event) => setSport(event.target.value)}
+              <button
+                type="button"
+                className="dropdown-toggle"
+                onClick={() => {
+                  setSportMenuOpen((isOpen) => !isOpen);
+                  setLocationMenuOpen(false);
+                }}
               >
-                {(filteredSports.length ? filteredSports : sports).map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+                {sport}
+              </button>
+              {sportMenuOpen && (
+                <div className="dropdown-menu">
+                  <input
+                    type="text"
+                    className="option-search"
+                    placeholder="Search sports"
+                    value={sportSearch}
+                    onChange={(event) => setSportSearch(event.target.value)}
+                  />
+                  <div className="option-list">
+                    {(filteredSports.length ? filteredSports : sports).map((name) => (
+                      <button
+                        key={name}
+                        type="button"
+                        className={`option-item${name === sport ? " selected" : ""}`}
+                        onClick={() => {
+                          setSport(name);
+                          setSportMenuOpen(false);
+                        }}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </label>
 
             <label className="search-field">
               <span>Where</span>
-              <input
-                type="text"
-                className="option-search"
-                placeholder="Search cities"
-                value={locationSearch}
-                onChange={(event) => setLocationSearch(event.target.value)}
-              />
-              <select
-                className="option-list"
-                size={4}
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
+              <button
+                type="button"
+                className="dropdown-toggle"
+                onClick={() => {
+                  setLocationMenuOpen((isOpen) => !isOpen);
+                  setSportMenuOpen(false);
+                }}
               >
-                {(filteredLocations.length ? filteredLocations : locations).map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+                {location}
+              </button>
+              {locationMenuOpen && (
+                <div className="dropdown-menu">
+                  <input
+                    type="text"
+                    className="option-search"
+                    placeholder="Search cities"
+                    value={locationSearch}
+                    onChange={(event) => setLocationSearch(event.target.value)}
+                  />
+                  <div className="option-list">
+                    {(filteredLocations.length ? filteredLocations : locations).map((name) => (
+                      <button
+                        key={name}
+                        type="button"
+                        className={`option-item${name === location ? " selected" : ""}`}
+                        onClick={() => {
+                          setLocation(name);
+                          setLocationMenuOpen(false);
+                        }}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </label>
 
             <label className="search-field">
-              <span>When (date range)</span>
+              <span>When (between 2 dates)</span>
               <div className="date-range">
                 <input
                   type="date"
