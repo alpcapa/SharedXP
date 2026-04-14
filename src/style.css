@@ -91,7 +91,7 @@ body {
 }
 
 .hero-content {
-  width: min(960px, 96%);
+  width: min(988px, 96%);
   padding: 44px 18px 28px;
 }
 
@@ -122,7 +122,6 @@ body {
   margin-top: 30px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr auto;
-  width: calc(100% + 28px);
   gap: 0;
   background: #fff;
   border-radius: 16px;
@@ -312,7 +311,6 @@ body {
 
 @media (max-width: 900px) {
   .search-bar {
-    width: 100%;
     grid-template-columns: 1fr;
     gap: 8px;
   }
