@@ -7,7 +7,35 @@ export const buddies = [
     bikeAvailable: true,
     price: 30,
     rating: 4.9,
-    image: "https://randomuser.me/api/portraits/men/32.jpg"
+    image: "https://randomuser.me/api/portraits/men/32.jpg",
+    location: "Lisbon, Portugal",
+    memberSince: "2021",
+    level: "Intermediate",
+    about:
+      "I ride local routes every weekend and love meeting visitors looking for scenic rides.",
+    gallery: [
+      "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1559348349-86f1f65817fe?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=600&q=80"
+    ],
+    bike: {
+      brand: "Trek",
+      model: "Domane SL 6",
+      type: "Road"
+    },
+    availabilitySchedule: ["Weekdays after 18:00", "Saturday mornings"],
+    reviews: [
+      {
+        author: "Lena",
+        rating: 5,
+        comment: "João planned a safe and beautiful route near the river."
+      },
+      {
+        author: "Carlos",
+        rating: 5,
+        comment: "Great pace and very friendly host."
+      }
+    ]
   },
   {
     id: 2,
@@ -17,7 +45,35 @@ export const buddies = [
     bikeAvailable: true,
     price: 35,
     rating: 5.0,
-    image: "https://randomuser.me/api/portraits/women/44.jpg"
+    image: "https://randomuser.me/api/portraits/women/44.jpg",
+    location: "Cascais, Portugal",
+    memberSince: "2020",
+    level: "Advanced",
+    about:
+      "I host gravel and endurance rides around Sintra and can share tips for local trails.",
+    gallery: [
+      "https://images.unsplash.com/photo-1529422643029-d4585747aaf2?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1511994298241-608e28f14fde?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1520975693412-3f6de3d8158f?auto=format&fit=crop&w=600&q=80"
+    ],
+    bike: {
+      brand: "Canyon",
+      model: "Grail CF SL",
+      type: "Gravel"
+    },
+    availabilitySchedule: ["Tuesday and Thursday 17:30", "Sunday 09:00"],
+    reviews: [
+      {
+        author: "Iris",
+        rating: 5,
+        comment: "Amazing guide with tons of local knowledge."
+      },
+      {
+        author: "Pedro",
+        rating: 5,
+        comment: "Great communication and excellent bike condition."
+      }
+    ]
   },
   {
     id: 3,
@@ -27,6 +83,72 @@ export const buddies = [
     bikeAvailable: false,
     price: 20,
     rating: 4.7,
-    image: "https://randomuser.me/api/portraits/men/55.jpg"
+    image: "https://randomuser.me/api/portraits/men/55.jpg",
+    location: "Porto, Portugal",
+    memberSince: "2022",
+    level: "Beginner friendly",
+    about:
+      "I love social tennis sessions and can organize doubles games near the city center.",
+    gallery: [
+      "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1622279457486-62dcc4a431d8?auto=format&fit=crop&w=600&q=80"
+    ],
+    bike: {
+      brand: "N/A",
+      model: "N/A",
+      type: "No bike"
+    },
+    availabilitySchedule: ["Weeknights after 19:00", "Saturday afternoon"],
+    reviews: [
+      {
+        author: "Mia",
+        rating: 5,
+        comment: "Super welcoming and found a great court quickly."
+      },
+      {
+        author: "Tom",
+        rating: 4,
+        comment: "Fun match and easy to coordinate."
+      }
+    ]
+  },
+  {
+    id: 4,
+    name: "Inês",
+    sport: "Tennis",
+    bio: "Fast-paced baseline games",
+    bikeAvailable: false,
+    price: 24,
+    rating: 4.8,
+    image: "https://randomuser.me/api/portraits/women/65.jpg",
+    location: "Lisbon, Portugal",
+    memberSince: "2023",
+    level: "Intermediate",
+    about:
+      "I usually play best-of-three sets in the evening and enjoy coaching newcomers.",
+    gallery: [
+      "https://images.unsplash.com/photo-1622279457486-62dcc4a431d8?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1499510318569-0c17cf6d1eb3?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1560012057-437c6a8bf77f?auto=format&fit=crop&w=600&q=80"
+    ],
+    bike: {
+      brand: "N/A",
+      model: "N/A",
+      type: "No bike"
+    },
+    availabilitySchedule: ["Monday and Wednesday 18:30", "Sunday afternoon"],
+    reviews: [
+      {
+        author: "Alex",
+        rating: 5,
+        comment: "Great rally partner and very punctual."
+      },
+      {
+        author: "Sara",
+        rating: 4,
+        comment: "Helpful tips and a really fun game."
+      }
+    ]
   }
 ];
