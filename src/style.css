@@ -1,35 +1,186 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: Arial;
   margin: 0;
-  background: #f5f5f5;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color: #141a1f;
+  background: #f5f5f2;
 }
 
-.navbar {
-  padding: 20px;
-  background: white;
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 28px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
 }
 
-.hero {
-  padding: 60px;
-  background: #222;
-  color: white;
+.brand {
+  text-decoration: none;
+  color: #111;
+  font-weight: 800;
+  font-size: 39px;
+  letter-spacing: -0.7px;
 }
 
-.filters {
-  padding: 20px;
+.brand span {
+  color: #8dc63f;
 }
 
-button {
-  margin-right: 10px;
-  padding: 10px;
+.site-nav {
+  display: flex;
+  gap: 32px;
+}
+
+.site-nav a {
+  text-decoration: none;
+  color: #272b30;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.auth-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 11px 18px;
+  font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
+}
+
+.btn-light {
+  background: #f0f1f4;
+  color: #222;
+}
+
+.btn-primary {
+  background: #96c93d;
+  color: #fff;
+}
+
+.home-page .hero {
+  margin: 10px;
+  border-radius: 16px;
+  min-height: 690px;
+  padding: 10px;
+  background-image:
+    linear-gradient(90deg, rgba(244, 243, 235, 0.97) 0%, rgba(244, 243, 235, 0.7) 31%, rgba(244, 243, 235, 0.2) 56%, rgba(244, 243, 235, 0.05) 100%),
+    url("https://github.com/user-attachments/assets/1c905934-0a25-4a90-9633-aa2d1e04d748");
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-content {
+  width: min(960px, 96%);
+  padding: 44px 18px 28px;
+}
+
+.hero-content h1 {
+  margin: 0;
+  font-size: clamp(52px, 7vw, 84px);
+  line-height: 1.05;
+  letter-spacing: -1.6px;
+}
+
+.hero-content .dot {
+  color: #8dc63f;
+}
+
+.hero-content .accent {
+  color: #8dc63f;
+}
+
+.hero-content p {
+  margin-top: 28px;
+  margin-bottom: 0;
+  color: #2d3033;
+  font-size: 33px;
+  line-height: 1.42;
+}
+
+.search-bar {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 0;
+  background: #fff;
+  border-radius: 16px;
+  padding: 11px;
+  box-shadow: 0 9px 25px rgba(0, 0, 0, 0.12);
+}
+
+.search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 20px;
+  border-right: 1px solid #ececef;
+}
+
+.search-field span {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.search-field select,
+.search-field input {
+  border: none;
+  background: transparent;
+  font-size: 27px;
+  font-weight: 700;
+  color: #1f2937;
+  outline: none;
+  width: 100%;
+}
+
+.search-field input {
+  font-family: inherit;
+}
+
+.find-button {
+  border: none;
+  border-radius: 14px;
+  margin-left: 12px;
+  background: #97ca3f;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 800;
+  padding: 0 30px;
+  cursor: pointer;
+}
+
+.trust-points {
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  color: #2d3033;
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.results-section {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 8px 12px 28px;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
-  padding: 20px;
 }
 
 .card {
@@ -49,7 +200,7 @@ button {
 }
 
 .price {
-  color: green;
+  color: #2b7a3d;
   font-weight: bold;
 }
 
@@ -60,13 +211,16 @@ button {
   border-radius: 2px;
 }
 
-.active-filter {
-  background: #222;
-  color: white;
-}
-
 .profile-page {
   padding-bottom: 30px;
+}
+
+.profile-page .site-header {
+  margin: 10px;
+}
+
+.profile-back-wrap {
+  margin: 20px;
 }
 
 .profile-summary,
@@ -112,7 +266,55 @@ button {
 }
 
 .back-link {
-  margin-right: 12px;
   color: #0f766e;
   text-decoration: none;
+  font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .site-header {
+    flex-wrap: wrap;
+  }
+
+  .site-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 18px;
+  }
+
+  .hero-content h1 {
+    font-size: clamp(38px, 6vw, 64px);
+  }
+
+  .hero-content p {
+    font-size: clamp(21px, 2.8vw, 31px);
+  }
+
+  .search-field select,
+  .search-field input,
+  .find-button {
+    font-size: clamp(18px, 2.4vw, 27px);
+  }
+}
+
+@media (max-width: 900px) {
+  .search-bar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .search-field {
+    border-right: none;
+    border-bottom: 1px solid #ececef;
+  }
+
+  .find-button {
+    margin-left: 0;
+    min-height: 56px;
+  }
+
+  .profile-summary {
+    grid-template-columns: 1fr;
+  }
 }
