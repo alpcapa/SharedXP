@@ -1,5 +1,6 @@
 import { useState } from "react";
 import BuddyCard from "../components/BuddyCard";
+import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
 
@@ -264,6 +265,8 @@ const HomePage = () => {
           ))}
         </div>
       </section>
+
+      <SiteFooter />
     </div>
   );
 };
