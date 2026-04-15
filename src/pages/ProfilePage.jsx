@@ -257,7 +257,7 @@ const ProfilePage = () => {
                     className="find-button booking-confirm-button"
                     onClick={handleFinalConfirmation}
                   >
-                    Final confirmation
+                    Final Confirmation
                   </button>
                 </div>
               </>
