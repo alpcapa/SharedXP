@@ -1,269 +1,194 @@
-import { useState } from "react";
-import BuddyCard from "../components/BuddyCard";
 import SiteHeader from "../components/SiteHeader";
-import { buddies } from "../data/buddies";
 
-const sports = ["All sports", ...new Set(buddies.map((buddy) => buddy.sport))];
-const locations = ["Anywhere", ...new Set(buddies.map((buddy) => buddy.location))];
-const defaultSport = sports.includes("Cycling") ? "Cycling" : sports[0];
-const defaultLocation = locations.includes("Lisbon, Portugal")
-  ? "Lisbon, Portugal"
-  : locations[0];
-const dayNames = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday"
+const locals = [
+  {
+    id: 1,
+    name: "João",
+    rating: "4.9",
+    reviews: 32,
+    location: "Lisbon, Portugal",
+    tag: "Online",
+    sport: "Cycling",
+    description: "Love coastal rides & coffee stops ☕",
+    bike: "Bike available",
+    level: "Intermediate",
+    price: "€30 per ride",
+    image:
+      "https://github.com/user-attachments/assets/ef5bc0a5-5008-4bd6-8a31-93661eff7fce"
+  },
+  {
+    id: 2,
+    name: "Marta",
+    rating: "5.0",
+    reviews: 18,
+    location: "Lisbon, Portugal",
+    tag: "New",
+    sport: "Cycling",
+    description: "Gravel adventures & hidden trails.",
+    bike: "Bike available",
+    level: "Advanced",
+    price: "€35 per ride",
+    image:
+      "https://github.com/user-attachments/assets/a73ef4f5-b184-4bba-8627-a8539232f671"
+  },
+  {
+    id: 3,
+    name: "Rafael",
+    rating: "4.8",
+    reviews: 27,
+    location: "Lisbon, Portugal",
+    tag: "Online",
+    sport: "Cycling",
+    description: "Fast group rides, always pushing.",
+    bike: "No bike",
+    level: "Advanced",
+    price: "€25 per ride",
+    image:
+      "https://github.com/user-attachments/assets/f956cdf9-66cb-4f8f-a0fc-4f39966d7ec8"
+  },
+  {
+    id: 4,
+    name: "Inês",
+    rating: "4.9",
+    reviews: 21,
+    location: "Lisbon, Portugal",
+    tag: "Online",
+    sport: "Cycling",
+    description: "Relaxed pace, big climbs & good talks.",
+    bike: "Bike available",
+    level: "Intermediate",
+    price: "€28 per ride",
+    image:
+      "https://github.com/user-attachments/assets/e5f26f7c-6a59-40ce-bcf2-b36f87366877"
+  }
 ];
 
-const matchesAvailabilityForDay = (schedule, selectedDayIndex) => {
-  const selectedDayName = dayNames[selectedDayIndex];
-  const isWeekend = selectedDayIndex === 0 || selectedDayIndex === 6;
-  const isWeekday = !isWeekend;
-  const normalizedSchedule = schedule.join(" ").toLowerCase();
+const sports = [
+  { icon: "🚲", name: "Cycling", count: "1,248 locals", active: true },
+  { icon: "🎾", name: "Tennis", count: "842 locals" },
+  { icon: "🏃", name: "Running", count: "643 locals" },
+  { icon: "⚽", name: "Football", count: "512 locals" },
+  { icon: "🏄", name: "Surfing", count: "320 locals" },
+  { icon: "🏀", name: "Basketball", count: "211 locals" },
+  { icon: "…", name: "More", count: "+8 sports" }
+];
 
-  if (normalizedSchedule.includes(selectedDayName)) {
-    return true;
+const steps = [
+  {
+    number: 1,
+    title: "Find a buddy",
+    text: "Browse locals by sport, location, and vibe.",
+    art: "🗺️"
+  },
+  {
+    number: 2,
+    title: "Request & book",
+    text: "Chat, agree on details, and book securely.",
+    art: "📝"
+  },
+  {
+    number: 3,
+    title: "Meet & play",
+    text: "Have an amazing time. We handle the payment.",
+    art: "🤝"
   }
-
-  if (normalizedSchedule.includes("weekend") && isWeekend) {
-    return true;
-  }
-
-  if (
-    (normalizedSchedule.includes("weekdays") ||
-      normalizedSchedule.includes("weeknights")) &&
-    isWeekday
-  ) {
-    return true;
-  }
-
-  return false;
-};
-
-const matchesAvailability = (schedule, selectedDate) => {
-  if (!selectedDate) {
-    return true;
-  }
-
-  const [year, month, day] = selectedDate.split("-").map(Number);
-  const selectedDayIndex = new Date(year, month - 1, day).getDay();
-  return matchesAvailabilityForDay(schedule, selectedDayIndex);
-};
-
-const matchesAvailabilityInRange = (schedule, startDate, endDate) => {
-  if (!startDate && !endDate) {
-    return true;
-  }
-
-  if (!startDate || !endDate) {
-    return matchesAvailability(schedule, startDate || endDate);
-  }
-
-  const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
-  const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
-  const start = new Date(startYear, startMonth - 1, startDay);
-  const end = new Date(endYear, endMonth - 1, endDay);
-
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return true;
-  }
-
-  const first = start <= end ? start : end;
-  const last = start <= end ? end : start;
-  const firstUtc = Date.UTC(first.getFullYear(), first.getMonth(), first.getDate());
-  const lastUtc = Date.UTC(last.getFullYear(), last.getMonth(), last.getDate());
-  const dayCount = Math.floor((lastUtc - firstUtc) / 86400000) + 1;
-
-  if (dayCount >= 7) {
-    for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
-      if (matchesAvailabilityForDay(schedule, dayIndex)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  for (let offset = 0; offset < dayCount; offset += 1) {
-    const dayIndex = (first.getDay() + offset) % 7;
-    if (matchesAvailabilityForDay(schedule, dayIndex)) {
-      return true;
-    }
-  }
-
-  return false;
-};
+];
 
 const HomePage = () => {
-  const [sport, setSport] = useState(defaultSport);
-  const [location, setLocation] = useState(defaultLocation);
-  const [sportMenuOpen, setSportMenuOpen] = useState(false);
-  const [locationMenuOpen, setLocationMenuOpen] = useState(false);
-  const [sportSearch, setSportSearch] = useState("");
-  const [locationSearch, setLocationSearch] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-
-  const filteredSports = sports.filter((name) =>
-    name.toLowerCase().includes(sportSearch.toLowerCase())
-  );
-  const filteredLocations = locations.filter((name) =>
-    name.toLowerCase().includes(locationSearch.toLowerCase())
-  );
-
-  const filtered = buddies.filter((buddy) => {
-    const sportMatches = sport === "All sports" || buddy.sport === sport;
-    const locationMatches = location === "Anywhere" || buddy.location === location;
-    const dateMatches = matchesAvailabilityInRange(
-      buddy.availabilitySchedule,
-      startDate,
-      endDate
-    );
-    return sportMatches && locationMatches && dateMatches;
-  });
-
   return (
     <div className="home-page">
-      <section className="hero">
+      <section className="top-shell">
         <SiteHeader />
-        <div className="hero-content">
-          <h1>
-            Find your
-            <br />
-            sports buddy<span className="dot">.</span>
-            <br />
-            <span className="accent">Anywhere.</span>
-          </h1>
-          <p>
-            Connect with locals who love the same sports.
-            <br />
-            Share gear, good vibes, and unforgettable moments.
-          </p>
+      </section>
 
-          <form className="search-bar" onSubmit={(event) => event.preventDefault()}>
-            <label className="search-field">
-              <span>Sport</span>
-              <button
-                type="button"
-                className="dropdown-toggle"
-                onClick={() => {
-                  setSportMenuOpen((isOpen) => !isOpen);
-                  setLocationMenuOpen(false);
-                }}
-              >
-                {sport}
-              </button>
-              {sportMenuOpen && (
-                <div className="dropdown-menu">
-                  <input
-                    type="text"
-                    className="option-search"
-                    placeholder="Search sports"
-                    value={sportSearch}
-                    onChange={(event) => setSportSearch(event.target.value)}
-                  />
-                  <div className="option-list">
-                    {(filteredSports.length ? filteredSports : sports).map((name) => (
-                      <button
-                        key={name}
-                        type="button"
-                        className={`option-item${name === sport ? " selected" : ""}`}
-                        onClick={() => {
-                          setSport(name);
-                          setSportMenuOpen(false);
-                        }}
-                      >
-                        {name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </label>
-
-            <label className="search-field">
-              <span>Where</span>
-              <button
-                type="button"
-                className="dropdown-toggle"
-                onClick={() => {
-                  setLocationMenuOpen((isOpen) => !isOpen);
-                  setSportMenuOpen(false);
-                }}
-              >
-                {location}
-              </button>
-              {locationMenuOpen && (
-                <div className="dropdown-menu">
-                  <input
-                    type="text"
-                    className="option-search"
-                    placeholder="Search cities"
-                    value={locationSearch}
-                    onChange={(event) => setLocationSearch(event.target.value)}
-                  />
-                  <div className="option-list">
-                    {(filteredLocations.length ? filteredLocations : locations).map((name) => (
-                      <button
-                        key={name}
-                        type="button"
-                        className={`option-item${name === location ? " selected" : ""}`}
-                        onClick={() => {
-                          setLocation(name);
-                          setLocationMenuOpen(false);
-                        }}
-                      >
-                        {name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </label>
-
-            <label className="search-field">
-              <span>When</span>
-              <div className="date-range">
-                <input
-                  type="date"
-                  className="date-input"
-                  value={startDate}
-                  onChange={(event) => setStartDate(event.target.value)}
-                />
-                <span className="range-separator">to</span>
-                <input
-                  type="date"
-                  className="date-input"
-                  value={endDate}
-                  onChange={(event) => setEndDate(event.target.value)}
-                />
-              </div>
-            </label>
-
-            <button type="submit" className="find-button">
-              Find Buddies
+      <main className="middle-section">
+        <section className="locals-section">
+          <div className="section-head">
+            <div>
+              <h1>Locals ready to play in Lisbon</h1>
+              <p>Sports buddies near you. Real people. Real connections.</p>
+            </div>
+            <button type="button" className="view-all-link">
+              View all
             </button>
-          </form>
+          </div>
 
-          <ul className="trust-points">
-            <li>✨ Real people, not tours</li>
-            <li>💫 Gear sharing</li>
-            <li>🔒 Secure payments</li>
-            <li>🧭 Reviewed & trusted</li>
-          </ul>
-        </div>
-      </section>
+          <div className="locals-row">
+            {locals.map((local) => (
+              <article key={local.id} className="local-card">
+                <div className="local-image-wrap">
+                  <img src={local.image} alt={local.name} />
+                  <span className="status-pill">● {local.tag}</span>
+                </div>
+                <div className="local-content">
+                  <h3>
+                    {local.name}
+                    <span>
+                      ⭐ {local.rating} ({local.reviews})
+                    </span>
+                  </h3>
+                  <p className="local-location">📍 {local.location}</p>
+                  <span className="sport-pill">{local.sport}</span>
+                  <p className="local-desc">{local.description}</p>
+                  <ul>
+                    <li>🚲 {local.bike}</li>
+                    <li>🏃 {local.level}</li>
+                    <li>💶 {local.price}</li>
+                  </ul>
+                </div>
+              </article>
+            ))}
+            <button type="button" className="carousel-next" aria-label="Next">
+              ›
+            </button>
+          </div>
+        </section>
 
-      <section className="results-section">
-        <div className="grid">
-          {filtered.map((buddy) => (
-            <BuddyCard key={buddy.id} buddy={buddy} />
-          ))}
-        </div>
-      </section>
+        <section className="sports-section">
+          <h2>Explore by sport</h2>
+          <p>All sports. All levels. All people.</p>
+
+          <div className="sports-row">
+            {sports.map((sport) => (
+              <article
+                key={sport.name}
+                className={`sport-card${sport.active ? " active" : ""}`}
+              >
+                <div className="sport-icon">{sport.icon}</div>
+                <h4>{sport.name}</h4>
+                <span>{sport.count}</span>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="how-it-works">
+          <h2>How it works</h2>
+          <p>Simple steps to connect and play.</p>
+
+          <div className="steps-row">
+            {steps.map((step) => (
+              <article key={step.number} className="step-card">
+                <div className="step-art">{step.art}</div>
+                <h4>
+                  <span>{step.number}</span> {step.title}
+                </h4>
+                <p>{step.text}</p>
+              </article>
+            ))}
+
+            <article className="step-card payment-card">
+              <h4>Fair payments, every time</h4>
+              <p>
+                You pay when you book. We hold the payment and release it after the
+                experience.
+              </p>
+              <button type="button">Learn more</button>
+              <div className="lock-badge">🔒</div>
+            </article>
+          </div>
+        </section>
+      </main>
     </div>
   );
 };
