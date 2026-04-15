@@ -474,7 +474,7 @@ body {
   position: relative;
 }
 
-.search-field span {
+.search-field label {
   font-size: 13px;
   color: #6b7280;
   font-weight: 500;
