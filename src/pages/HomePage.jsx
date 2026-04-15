@@ -13,26 +13,50 @@ const sports = [
   { name: "Football", count: "512 locals", icon: "⚽" },
   { name: "Surfing", count: "320 locals", icon: "🏄" },
   { name: "Basketball", count: "211 locals", icon: "🏀" },
-  { name: "More", count: "+8 sports", icon: "⋯" }
+  { name: "More", count: "+8 sports", icon: "···" }
 ];
 
 const steps = [
   {
+    stepNum: 1,
     title: "1. Find a buddy",
     text: "Browse locals by sport, location, and vibe.",
-    icon: "🧭"
+    img: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=500&h=220&q=80"
   },
   {
+    stepNum: 2,
     title: "2. Request & book",
     text: "Chat, agree on details, and book securely.",
-    icon: "💬"
+    img: "https://images.unsplash.com/photo-1529422643029-d4585747aaf2?auto=format&fit=crop&w=500&h=220&q=80"
   },
   {
+    stepNum: 3,
     title: "3. Meet & play",
     text: "Have an amazing time. We handle the payment.",
-    icon: "🤝"
+    img: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=500&h=220&q=80"
   }
 ];
+
+const LockIcon = () => (
+  <svg
+    className="lock-icon"
+    width="72"
+    height="72"
+    viewBox="0 0 72 72"
+    fill="none"
+    aria-hidden="true"
+  >
+    <rect x="12" y="34" width="48" height="30" rx="7" stroke="#6ca43b" strokeWidth="3" />
+    <path
+      d="M24 34V24a12 12 0 0124 0v10"
+      stroke="#6ca43b"
+      strokeWidth="3"
+      strokeLinecap="round"
+    />
+    <circle cx="36" cy="49" r="4" fill="#6ca43b" />
+    <line x1="36" y1="53" x2="36" y2="58" stroke="#6ca43b" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
 
 const HomePage = () => {
   return (
@@ -41,11 +65,14 @@ const HomePage = () => {
         <SiteHeader />
 
         <main className="middle-section">
+          {/* ── Locals ───────────────────────────────────────── */}
           <section className="locals-section" id="locals">
             <div className="section-head">
               <div>
-                <h1>Locals ready to play in Lisbon</h1>
-                <p>Sports buddies near you. Real people. Real connections.</p>
+                <h2 className="section-title">Locals ready to play in Lisbon</h2>
+                <p className="section-sub">
+                  Sports buddies near you. Real people. Real connections.
+                </p>
               </div>
               <Link to="/locals" className="view-all-link">
                 View all
@@ -59,20 +86,24 @@ const HomePage = () => {
                     <article className="local-card">
                       <div className="local-image-wrap">
                         <img src={buddy.image} alt={buddy.name} />
-                        <span className="status-badge">{featuredStatuses[index]}</span>
+                        <span className="status-badge">
+                          <span className="status-dot" />
+                          {featuredStatuses[index]}
+                        </span>
                       </div>
                       <div className="local-body">
                         <div className="local-title-row">
                           <h3>{buddy.name}</h3>
-                          <p>
-                            ⭐ {buddy.rating} <span>({buddy.reviews.length})</span>
+                          <p className="local-rating">
+                            <span className="star">★</span> {buddy.rating}{" "}
+                            <span className="review-count">({buddy.reviewCount})</span>
                           </p>
                         </div>
                         <p className="local-location">📍 {buddy.location}</p>
-                        <p className="sport-pill">{buddy.sport}</p>
+                        <span className="sport-pill">{buddy.sport}</span>
                         <p className="local-bio">{buddy.bio}</p>
                         <ul className="local-meta">
-                          <li>{buddy.bikeAvailable ? "🚲 Bike available" : "🚲 No bike"}</li>
+                          <li>🚲 {buddy.bikeAvailable ? "Bike available" : "No bike"}</li>
                           <li>🏅 {buddy.level}</li>
                           <li>💶 €{buddy.price} per ride</li>
                         </ul>
@@ -87,16 +118,17 @@ const HomePage = () => {
             </div>
           </section>
 
+          {/* ── Explore by sport ─────────────────────────────── */}
           <section className="sports-section">
-            <h2>Explore by sport</h2>
-            <p>All sports. All levels. All people.</p>
+            <h2 className="section-title">Explore by sport</h2>
+            <p className="section-sub">All sports. All levels. All people.</p>
             <div className="sports-scroll">
               {sports.map((sport) => (
                 <article
                   key={sport.name}
                   className={`sport-chip${sport.active ? " active" : ""}`}
                 >
-                  <span>{sport.icon}</span>
+                  <span className="sport-icon">{sport.icon}</span>
                   <h3>{sport.name}</h3>
                   <p>{sport.count}</p>
                 </article>
@@ -104,26 +136,33 @@ const HomePage = () => {
             </div>
           </section>
 
+          {/* ── How it works ─────────────────────────────────── */}
           <section className="how-section">
-            <h2>How it works</h2>
-            <p>Simple steps to connect and play.</p>
+            <h2 className="section-title">How it works</h2>
+            <p className="section-sub">Simple steps to connect and play.</p>
             <div className="how-grid">
               {steps.map((step) => (
                 <article key={step.title} className="how-card">
-                  <span className="how-icon" aria-hidden="true">
-                    {step.icon}
-                  </span>
+                  <div className="how-step-img-wrap">
+                    <img src={step.img} alt="" className="how-step-img" />
+                    <span className="step-badge">{step.stepNum}</span>
+                  </div>
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
                 </article>
               ))}
-              <article className="how-card highlight">
-                <h3 id="payment-details">Fair payments, every time</h3>
-                <p>
-                  You pay when you book. We hold the payment and release it after the
-                  experience.
-                </p>
-                <a href="#payment-details">Learn more</a>
+              <article className="how-card how-highlight">
+                <div className="how-highlight-body">
+                  <h3>Fair payments, every time</h3>
+                  <p>
+                    You pay when you book. We hold the payment and release it after the
+                    experience.
+                  </p>
+                  <a href="/how-it-works" className="learn-more-link">
+                    Learn more
+                  </a>
+                </div>
+                <LockIcon />
               </article>
             </div>
           </section>
