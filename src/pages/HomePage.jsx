@@ -1,5 +1,6 @@
 import SiteHeader from "../components/SiteHeader";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 const locals = [
   {
@@ -65,7 +66,7 @@ const locals = [
 ];
 
 const sports = [
-  { icon: "🚲", name: "Cycling", count: "1,248 locals", active: true },
+  { icon: "🚲", name: "Cycling", count: "1,248 locals" },
   { icon: "🎾", name: "Tennis", count: "842 locals" },
   { icon: "🏃", name: "Running", count: "643 locals" },
   { icon: "⚽", name: "Football", count: "512 locals" },
@@ -96,6 +97,8 @@ const steps = [
 ];
 
 const HomePage = () => {
+  const [activeSport, setActiveSport] = useState("Cycling");
+
   return (
     <div className="home-page">
       <section className="top-shell">
@@ -109,13 +112,13 @@ const HomePage = () => {
               <h1>Locals ready to play in Lisbon</h1>
               <p>Sports buddies near you. Real people. Real connections.</p>
             </div>
-            <button
-              type="button"
+            <Link
+              to="/"
               className="view-all-link"
               aria-label="View all locals in Lisbon"
             >
               View all
-            </button>
+            </Link>
           </div>
 
           <div className="locals-row">
@@ -145,9 +148,9 @@ const HomePage = () => {
                 </article>
               </Link>
             ))}
-            <button type="button" className="carousel-next" aria-label="Next">
+            <span className="carousel-next" aria-hidden="true">
               ›
-            </button>
+            </span>
           </div>
         </section>
 
@@ -160,8 +163,9 @@ const HomePage = () => {
               <button
                 key={sport.name}
                 type="button"
-                className={`sport-card${sport.active ? " active" : ""}`}
-                aria-pressed={sport.active ? "true" : "false"}
+                className={`sport-card${sport.name === activeSport ? " active" : ""}`}
+                aria-pressed={sport.name === activeSport ? "true" : "false"}
+                onClick={() => setActiveSport(sport.name)}
               >
                 <div className="sport-icon">{sport.icon}</div>
                 <h4>{sport.name}</h4>
@@ -192,7 +196,7 @@ const HomePage = () => {
                 You pay when you book. We hold the payment and release it after the
                 experience.
               </p>
-              <button type="button">Learn more</button>
+              <Link to="/">Learn more</Link>
               <div className="lock-badge">🔒</div>
             </article>
           </div>
