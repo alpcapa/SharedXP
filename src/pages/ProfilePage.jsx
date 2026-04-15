@@ -128,6 +128,7 @@ const ProfilePage = () => {
                 <button
                   type="button"
                   className="calendar-nav-button"
+                  aria-label="Previous month"
                   onClick={() =>
                     setCalendarMonth(
                       (currentMonth) =>
@@ -141,6 +142,7 @@ const ProfilePage = () => {
                 <button
                   type="button"
                   className="calendar-nav-button"
+                  aria-label="Next month"
                   onClick={() =>
                     setCalendarMonth(
                       (currentMonth) =>
@@ -167,6 +169,14 @@ const ProfilePage = () => {
                       className={`booking-day${
                         dayItem.isAvailable ? " available" : " unavailable"
                       }${selectedDate === dayItem.dateKey ? " selected" : ""}`}
+                      aria-label={`${new Intl.DateTimeFormat("en-GB", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                      }).format(new Date(`${dayItem.dateKey}T00:00:00`))}, ${
+                        dayItem.isAvailable ? "Available" : "Unavailable"
+                      }`}
+                      aria-disabled={!dayItem.isAvailable}
                       onClick={() =>
                         setSelectedDate((currentDate) =>
                           currentDate === dayItem.dateKey ? "" : dayItem.dateKey
