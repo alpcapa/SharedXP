@@ -62,7 +62,46 @@ const HomePage = () => {
   return (
     <div className="home-page">
       <div className="middle-page-frame">
-        <SiteHeader />
+        <section className="hero">
+          <SiteHeader />
+          <div className="hero-content">
+            <h1>
+              Find your sports buddy<span className="dot">.</span>
+              <br />
+              Anywhere<span className="accent">.</span>
+            </h1>
+            <p>Join locals and travelers for unforgettable sports experiences.</p>
+            <form className="search-bar" onSubmit={(event) => event.preventDefault()}>
+              <label className="search-field">
+                <span>Sport</span>
+                <select defaultValue="Cycling">
+                  <option>Cycling</option>
+                  <option>Tennis</option>
+                  <option>Running</option>
+                  <option>Football</option>
+                  <option>Surfing</option>
+                  <option>Basketball</option>
+                </select>
+              </label>
+              <label className="search-field">
+                <span>Location</span>
+                <input type="text" defaultValue="Lisbon, Portugal" />
+              </label>
+              <label className="search-field">
+                <span>Date</span>
+                <input type="text" defaultValue="Anytime" />
+              </label>
+              <button type="submit" className="find-button" aria-label="Find buddies">
+                Find
+              </button>
+            </form>
+            <ul className="trust-points">
+              <li>🔒 Trusted community</li>
+              <li>💳 Secure payments</li>
+              <li>🕓 24/7 support</li>
+            </ul>
+          </div>
+        </section>
 
         <main className="middle-section">
           {/* ── Locals ───────────────────────────────────────── */}
