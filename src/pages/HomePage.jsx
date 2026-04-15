@@ -109,7 +109,11 @@ const HomePage = () => {
               <h1>Locals ready to play in Lisbon</h1>
               <p>Sports buddies near you. Real people. Real connections.</p>
             </div>
-            <button type="button" className="view-all-link">
+            <button
+              type="button"
+              className="view-all-link"
+              aria-label="View all locals in Lisbon"
+            >
               View all
             </button>
           </div>
@@ -119,7 +123,7 @@ const HomePage = () => {
               <Link key={local.id} to={`/buddy/${local.id}`} className="local-card-link">
                 <article className="local-card">
                   <div className="local-image-wrap">
-                    <img src={local.image} alt={local.name} />
+                    <img src={local.image} alt={`Profile photo of ${local.name}`} />
                     <span className="status-pill">● {local.tag}</span>
                   </div>
                   <div className="local-content">
