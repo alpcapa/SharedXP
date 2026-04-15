@@ -47,9 +47,9 @@ const HomePage = () => {
                 <h1>Locals ready to play in Lisbon</h1>
                 <p>Sports buddies near you. Real people. Real connections.</p>
               </div>
-              <a href="#locals" className="view-all-link">
+              <Link to="/locals" className="view-all-link">
                 View all
-              </a>
+              </Link>
             </div>
 
             <div className="locals-grid-wrap">
@@ -81,9 +81,9 @@ const HomePage = () => {
                   </Link>
                 ))}
               </div>
-              <button type="button" className="locals-next" aria-label="See more locals">
+              <Link to="/locals" className="locals-next" aria-label="See more locals">
                 ›
-              </button>
+              </Link>
             </div>
           </section>
 
@@ -118,12 +118,12 @@ const HomePage = () => {
                 </article>
               ))}
               <article className="how-card highlight">
-                <h3>Fair payments, every time</h3>
+                <h3 id="payment-details">Fair payments, every time</h3>
                 <p>
                   You pay when you book. We hold the payment and release it after the
                   experience.
                 </p>
-                <button type="button">Learn more</button>
+                <a href="#payment-details">Learn more</a>
               </article>
             </div>
           </section>

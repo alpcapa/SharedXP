@@ -167,6 +167,9 @@ body {
   right: -20px;
   top: 50%;
   transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 44px;
   height: 44px;
   border-radius: 999px;
@@ -175,6 +178,7 @@ body {
   font-size: 32px;
   line-height: 1;
   color: #4b5563;
+  text-decoration: none;
 }
 
 .sports-section,
@@ -267,14 +271,13 @@ body {
   background: #ecf1e7;
 }
 
-.how-card.highlight button {
+.how-card.highlight a {
   margin-top: 12px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
+  display: inline-block;
   font-weight: 700;
   color: #222d22;
   padding: 0;
+  text-decoration: none;
 }
 
 .site-header {
