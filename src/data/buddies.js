@@ -1,3 +1,14 @@
+import { getDateKey } from "../utils/date";
+
+const getDateFromOffset = (offset) => {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + offset);
+  return getDateKey(date.getFullYear(), date.getMonth(), date.getDate());
+};
+
+const buildAvailableDates = (offsets) => offsets.map((offset) => getDateFromOffset(offset));
+
 export const buddies = [
   {
     id: 1,
@@ -24,6 +35,8 @@ export const buddies = [
       model: "Domane SL 6",
       type: "Road"
     },
+    availableDates: buildAvailableDates([1, 3, 5, 8, 11, 14, 20, 27]),
+    availableTimes: ["07:00", "08:30", "18:00", "19:30"],
     availabilitySchedule: ["Weekdays after 18:00", "Saturday mornings"],
     reviews: [
       {
@@ -63,6 +76,8 @@ export const buddies = [
       model: "Grail CF SL",
       type: "Gravel"
     },
+    availableDates: buildAvailableDates([2, 4, 6, 9, 13, 16, 22, 29]),
+    availableTimes: ["06:30", "09:00", "17:30"],
     availabilitySchedule: ["Tuesday and Thursday 17:30", "Sunday 09:00"],
     reviews: [
       {
@@ -102,6 +117,8 @@ export const buddies = [
       model: "N/A",
       type: "No bike"
     },
+    availableDates: buildAvailableDates([1, 4, 7, 10, 12, 18, 24, 30]),
+    availableTimes: ["07:30", "10:00", "19:00"],
     availabilitySchedule: ["Weeknights after 19:00", "Saturday afternoon"],
     reviews: [
       {
@@ -141,6 +158,8 @@ export const buddies = [
       model: "N/A",
       type: "No bike"
     },
+    availableDates: buildAvailableDates([3, 5, 8, 11, 15, 19, 25, 31]),
+    availableTimes: ["08:00", "11:00", "18:30"],
     availabilitySchedule: ["Monday and Wednesday 18:30", "Sunday afternoon"],
     reviews: [
       {
