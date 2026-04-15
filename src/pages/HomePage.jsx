@@ -62,7 +62,61 @@ const HomePage = () => {
   return (
     <div className="home-page">
       <div className="middle-page-frame">
-        <SiteHeader />
+        <section className="hero">
+          <SiteHeader />
+          <div className="hero-content">
+            <h1>
+              Find your sports buddy<span className="dot">.</span>
+              <br />
+              Anywhere<span className="accent">.</span>
+            </h1>
+            <p>Join locals and travelers for unforgettable sports experiences.</p>
+            <div className="search-bar" role="search" aria-label="Find sports buddies">
+              <div className="search-field">
+                <label htmlFor="sport-select">Sport</label>
+                <select id="sport-select" defaultValue="Cycling">
+                  <option>Cycling</option>
+                  <option>Tennis</option>
+                  <option>Running</option>
+                  <option>Football</option>
+                  <option>Surfing</option>
+                  <option>Basketball</option>
+                </select>
+              </div>
+              <div className="search-field">
+                <label htmlFor="location-input">Location</label>
+                <input id="location-input" type="text" defaultValue="Lisbon, Portugal" />
+              </div>
+              <div className="search-field">
+                <label htmlFor="date-input">Date</label>
+                <input id="date-input" type="date" />
+              </div>
+              <button type="button" className="find-button" aria-label="Find buddies">
+                Find
+              </button>
+            </div>
+            <ul className="trust-points">
+              <li>
+                <span role="img" aria-label="Trusted community">
+                  🔒
+                </span>{" "}
+                Trusted community
+              </li>
+              <li>
+                <span role="img" aria-label="Secure payments">
+                  💳
+                </span>{" "}
+                Secure payments
+              </li>
+              <li>
+                <span role="img" aria-label="24/7 support">
+                  🕓
+                </span>{" "}
+                24/7 support
+              </li>
+            </ul>
+          </div>
+        </section>
 
         <main className="middle-section">
           {/* ── Locals ───────────────────────────────────────── */}
