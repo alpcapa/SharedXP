@@ -501,6 +501,7 @@ body {
   padding: 7px 10px;
   font-size: 15px;
   font-weight: 500;
+  background: #fff !important;
 }
 
 .dropdown-toggle {
@@ -512,6 +513,16 @@ body {
   text-align: left;
   padding: 0;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.dropdown-caret {
+  font-size: 14px;
+  color: #6b7280;
 }
 
 .dropdown-menu {
@@ -551,6 +562,12 @@ body {
   background: #f3f4f6;
 }
 
+.option-empty {
+  margin: 8px 6px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
 .date-range {
   display: flex;
   align-items: center;
@@ -559,6 +576,8 @@ body {
 
 .date-input {
   font-size: 15px;
+  min-width: 120px;
+  font-family: inherit;
 }
 
 .range-separator {
@@ -573,9 +592,10 @@ body {
   margin-left: 12px;
   background: #97ca3f;
   color: #fff;
-  font-size: 27px;
+  font-size: clamp(18px, 2.1vw, 24px);
   font-weight: 800;
-  padding: 0 30px;
+  padding: 0 24px;
+  white-space: nowrap;
   cursor: pointer;
 }
 
