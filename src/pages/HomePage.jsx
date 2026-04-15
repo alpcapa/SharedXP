@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
@@ -37,6 +38,18 @@ const steps = [
   }
 ];
 
+const sportOptions = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
+
+const locationOptions = [
+  "Lisbon, Portugal",
+  "Porto, Portugal",
+  "Madrid, Spain",
+  "Barcelona, Spain",
+  "Paris, France",
+  "Berlin, Germany",
+  "Rome, Italy"
+];
+
 const LockIcon = () => (
   <svg
     className="lock-icon"
@@ -59,6 +72,47 @@ const LockIcon = () => (
 );
 
 const HomePage = () => {
+  const [selectedSport, setSelectedSport] = useState("Cycling");
+  const [selectedLocation, setSelectedLocation] = useState("Lisbon, Portugal");
+  const [sportQuery, setSportQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const searchBarRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (!searchBarRef.current?.contains(event.target)) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+  const filteredSports = useMemo(() => {
+    if (!sportQuery.trim()) {
+      return sportOptions.slice(0, 5);
+    }
+
+    return sportOptions.filter((sport) => sport.toLowerCase().includes(sportQuery.toLowerCase()));
+  }, [sportQuery]);
+
+  const filteredLocations = useMemo(() => {
+    if (!locationQuery.trim()) {
+      return locationOptions.slice(0, 5);
+    }
+
+    return locationOptions.filter((location) =>
+      location.toLowerCase().includes(locationQuery.toLowerCase())
+    );
+  }, [locationQuery]);
+
   return (
     <div className="home-page">
       <div className="middle-page-frame">
@@ -71,28 +125,133 @@ const HomePage = () => {
               Anywhere<span className="accent">.</span>
             </h1>
             <p>Join locals and travelers for unforgettable sports experiences.</p>
-            <div className="search-bar" role="search" aria-label="Find sports buddies">
+            <div className="search-bar" role="search" aria-label="Find sports buddies" ref={searchBarRef}>
               <div className="search-field">
-                <label htmlFor="sport-select">Sport</label>
-                <select id="sport-select" defaultValue="Cycling">
-                  <option>Cycling</option>
-                  <option>Tennis</option>
-                  <option>Running</option>
-                  <option>Football</option>
-                  <option>Surfing</option>
-                  <option>Basketball</option>
-                </select>
+                <label htmlFor="sport-search">Sport</label>
+                <button
+                  id="sport-select"
+                  type="button"
+                  className="dropdown-toggle"
+                  aria-haspopup="listbox"
+                  aria-expanded={openDropdown === "sport"}
+                  onClick={() =>
+                    setOpenDropdown((currentDropdown) =>
+                      currentDropdown === "sport" ? null : "sport"
+                    )
+                  }
+                >
+                  {selectedSport}
+                  <span className="dropdown-caret" aria-hidden="true">
+                    ▾
+                  </span>
+                </button>
+                {openDropdown === "sport" && (
+                  <div className="dropdown-menu">
+                    <input
+                      id="sport-search"
+                      type="text"
+                      className="option-search"
+                      placeholder="Search sport"
+                      value={sportQuery}
+                      onChange={(event) => setSportQuery(event.target.value)}
+                    />
+                    <div className="option-list" role="listbox" aria-label="Sport options">
+                      {filteredSports.map((sport) => (
+                        <button
+                          key={sport}
+                          type="button"
+                          className={`option-item${selectedSport === sport ? " selected" : ""}`}
+                          onClick={() => {
+                            setSelectedSport(sport);
+                            setOpenDropdown(null);
+                            setSportQuery("");
+                          }}
+                        >
+                          {sport}
+                        </button>
+                      ))}
+                      {!filteredSports.length && (
+                        <p className="option-empty">No sport found</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="search-field">
-                <label htmlFor="location-input">Location</label>
-                <input id="location-input" type="text" defaultValue="Lisbon, Portugal" />
+                <label htmlFor="location-search">Location</label>
+                <button
+                  id="location-select"
+                  type="button"
+                  className="dropdown-toggle"
+                  aria-haspopup="listbox"
+                  aria-expanded={openDropdown === "location"}
+                  onClick={() =>
+                    setOpenDropdown((currentDropdown) =>
+                      currentDropdown === "location" ? null : "location"
+                    )
+                  }
+                >
+                  {selectedLocation}
+                  <span className="dropdown-caret" aria-hidden="true">
+                    ▾
+                  </span>
+                </button>
+                {openDropdown === "location" && (
+                  <div className="dropdown-menu">
+                    <input
+                      id="location-search"
+                      type="text"
+                      className="option-search"
+                      placeholder="Search location"
+                      value={locationQuery}
+                      onChange={(event) => setLocationQuery(event.target.value)}
+                    />
+                    <div className="option-list" role="listbox" aria-label="Location options">
+                      {filteredLocations.map((location) => (
+                        <button
+                          key={location}
+                          type="button"
+                          className={`option-item${
+                            selectedLocation === location ? " selected" : ""
+                          }`}
+                          onClick={() => {
+                            setSelectedLocation(location);
+                            setOpenDropdown(null);
+                            setLocationQuery("");
+                          }}
+                        >
+                          {location}
+                        </button>
+                      ))}
+                      {!filteredLocations.length && (
+                        <p className="option-empty">No location found</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="search-field">
-                <label htmlFor="date-input">Date</label>
-                <input id="date-input" type="date" />
+                <label htmlFor="date-from">Date</label>
+                <div className="date-range">
+                  <input
+                    id="date-from"
+                    className="date-input"
+                    type="date"
+                    value={dateFrom}
+                    onChange={(event) => setDateFrom(event.target.value)}
+                  />
+                  <span className="range-separator">to</span>
+                  <input
+                    id="date-to"
+                    className="date-input"
+                    type="date"
+                    value={dateTo}
+                    onChange={(event) => setDateTo(event.target.value)}
+                  />
+                </div>
               </div>
               <button type="button" className="find-button" aria-label="Find buddies">
-                Find
+                Find Buddies
               </button>
             </div>
           </div>
