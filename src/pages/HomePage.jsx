@@ -127,7 +127,9 @@ const HomePage = () => {
             <p>Join locals and travelers for unforgettable sports experiences.</p>
             <div className="search-bar" role="search" aria-label="Find sports buddies" ref={searchBarRef}>
               <div className="search-field">
-                <label htmlFor="sport-search">Sport</label>
+                <label id="sport-label" htmlFor="sport-select">
+                  Sport
+                </label>
                 <button
                   id="sport-select"
                   type="button"
@@ -178,7 +180,9 @@ const HomePage = () => {
                 )}
               </div>
               <div className="search-field">
-                <label htmlFor="location-search">Location</label>
+                <label id="location-label" htmlFor="location-select">
+                  Location
+                </label>
                 <button
                   id="location-select"
                   type="button"
@@ -231,7 +235,9 @@ const HomePage = () => {
                 )}
               </div>
               <div className="search-field">
-                <label htmlFor="date-from">Date</label>
+                <label id="date-label" htmlFor="date-from">
+                  Date
+                </label>
                 <div className="date-range">
                   <input
                     id="date-from"
@@ -246,6 +252,7 @@ const HomePage = () => {
                     className="date-input"
                     type="date"
                     value={dateTo}
+                    aria-labelledby="date-label"
                     onChange={(event) => setDateTo(event.target.value)}
                   />
                 </div>
