@@ -71,10 +71,17 @@ const HomePage = () => {
               Anywhere<span className="accent">.</span>
             </h1>
             <p>Join locals and travelers for unforgettable sports experiences.</p>
-            <div className="search-bar" role="search" aria-label="Find sports buddies">
-              <label className="search-field">
-                <span>Sport</span>
-                <select defaultValue="Cycling">
+            <form
+              className="search-bar"
+              role="search"
+              aria-label="Find sports buddies"
+              onSubmit={(event) => event.preventDefault()}
+            >
+              <div className="search-field">
+                <label htmlFor="sport-select">
+                  <span>Sport</span>
+                </label>
+                <select id="sport-select" defaultValue="Cycling">
                   <option>Cycling</option>
                   <option>Tennis</option>
                   <option>Running</option>
@@ -82,19 +89,23 @@ const HomePage = () => {
                   <option>Surfing</option>
                   <option>Basketball</option>
                 </select>
-              </label>
-              <label className="search-field">
-                <span>Location</span>
-                <input type="text" defaultValue="Lisbon, Portugal" />
-              </label>
-              <label className="search-field">
-                <span>Date</span>
-                <input type="text" defaultValue="Anytime" />
-              </label>
-              <button type="button" className="find-button" aria-label="Find buddies">
+              </div>
+              <div className="search-field">
+                <label htmlFor="location-input">
+                  <span>Location</span>
+                </label>
+                <input id="location-input" type="text" defaultValue="Lisbon, Portugal" />
+              </div>
+              <div className="search-field">
+                <label htmlFor="date-input">
+                  <span>Date</span>
+                </label>
+                <input id="date-input" type="date" />
+              </div>
+              <button type="submit" className="find-button" aria-label="Find buddies">
                 Find
               </button>
-            </div>
+            </form>
             <ul className="trust-points">
               <li>
                 <span role="img" aria-label="Trusted community">
