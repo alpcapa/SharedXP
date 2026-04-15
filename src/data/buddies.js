@@ -13,6 +13,7 @@ export const buddies = [
   {
     id: 1,
     name: "João",
+    fullName: "João Oliveira",
     sport: "Cycling",
     bio: "Love coastal rides & coffee stops ☕",
     bikeAvailable: true,
@@ -23,6 +24,7 @@ export const buddies = [
     location: "Lisbon, Portugal",
     memberSince: "2021",
     level: "Intermediate",
+    language: "Portuguese, English",
     about:
       "I ride local routes every weekend and love meeting visitors looking for scenic rides.",
     gallery: [
@@ -54,6 +56,7 @@ export const buddies = [
   {
     id: 2,
     name: "Marta",
+    fullName: "Marta Santos",
     sport: "Cycling",
     bio: "Gravel adventures & hidden trails.",
     bikeAvailable: true,
@@ -64,6 +67,7 @@ export const buddies = [
     location: "Lisbon, Portugal",
     memberSince: "2020",
     level: "Advanced",
+    language: "Portuguese, English",
     about:
       "I host gravel and endurance rides around Sintra and can share tips for local trails.",
     gallery: [
@@ -95,6 +99,7 @@ export const buddies = [
   {
     id: 3,
     name: "Rafael",
+    fullName: "Rafael Costa",
     sport: "Cycling",
     bio: "Fast group rides, always pushing.",
     bikeAvailable: false,
@@ -105,6 +110,7 @@ export const buddies = [
     location: "Lisbon, Portugal",
     memberSince: "2022",
     level: "Advanced",
+    language: "Portuguese, English",
     about:
       "I lead fast-paced group rides around Lisbon and love helping cyclists push their limits.",
     gallery: [
@@ -136,6 +142,7 @@ export const buddies = [
   {
     id: 4,
     name: "Inês",
+    fullName: "Inês Ferreira",
     sport: "Cycling",
     bio: "Relaxed pace, big climbs & good talks.",
     bikeAvailable: true,
@@ -146,6 +153,7 @@ export const buddies = [
     location: "Lisbon, Portugal",
     memberSince: "2023",
     level: "Intermediate",
+    language: "Portuguese, English",
     about:
       "I enjoy scenic climbs around Serra de Sintra and love riding at a comfortable pace with good company.",
     gallery: [
