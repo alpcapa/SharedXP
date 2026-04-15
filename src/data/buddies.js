@@ -1,11 +1,10 @@
+import { getDateKey } from "../utils/date";
+
 const getDateFromOffset = (offset) => {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
   date.setDate(date.getDate() + offset);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return getDateKey(date.getFullYear(), date.getMonth(), date.getDate());
 };
 
 const buildAvailableDates = (offsets) => offsets.map((offset) => getDateFromOffset(offset));

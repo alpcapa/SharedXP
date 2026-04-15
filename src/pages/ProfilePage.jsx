@@ -4,11 +4,9 @@ import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
+import { getDateKey } from "../utils/date";
 
-const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-const getDateKey = (year, month, day) =>
-  `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const ProfilePage = () => {
   const { buddyId } = useParams();
@@ -47,7 +45,7 @@ const ProfilePage = () => {
     const month = calendarMonth.getMonth();
     const firstDay = new Date(year, month, 1);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDayIndex = (firstDay.getDay() + 6) % 7;
+    const firstDayIndex = firstDay.getDay();
 
     const leadingEmpty = Array.from({ length: firstDayIndex }, (_, index) => ({
       id: `empty-${index}`,
@@ -169,7 +167,11 @@ const ProfilePage = () => {
                       className={`booking-day${
                         dayItem.isAvailable ? " available" : " unavailable"
                       }${selectedDate === dayItem.dateKey ? " selected" : ""}`}
-                      onClick={() => setSelectedDate(dayItem.dateKey)}
+                      onClick={() =>
+                        setSelectedDate((currentDate) =>
+                          currentDate === dayItem.dateKey ? "" : dayItem.dateKey
+                        )
+                      }
                       disabled={!dayItem.isAvailable}
                     >
                       {dayItem.label}
