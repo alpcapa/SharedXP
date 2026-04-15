@@ -48,10 +48,13 @@ body {
 }
 
 .view-all-link {
+  border: none;
+  background: transparent;
   color: #6ca43b;
-  text-decoration: none;
   font-weight: 700;
   white-space: nowrap;
+  font: inherit;
+  cursor: pointer;
 }
 
 .locals-grid-wrap {

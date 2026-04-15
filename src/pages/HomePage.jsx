@@ -41,13 +41,13 @@ const HomePage = () => {
         <SiteHeader />
 
         <main className="middle-section">
-          <section className="locals-section">
+          <section className="locals-section" id="locals">
             <div className="section-head">
               <div>
                 <h1>Locals ready to play in Lisbon</h1>
                 <p>Sports buddies near you. Real people. Real connections.</p>
               </div>
-              <Link to="/" className="view-all-link">
+              <Link to="/#locals" className="view-all-link">
                 View all
               </Link>
             </div>
@@ -69,7 +69,7 @@ const HomePage = () => {
                           </p>
                         </div>
                         <p className="local-location">📍 {buddy.location}</p>
-                        <p className="sport-pill">Cycling</p>
+                        <p className="sport-pill">{buddy.sport}</p>
                         <p className="local-bio">{buddy.bio}</p>
                         <ul className="local-meta">
                           <li>{buddy.bikeAvailable ? "🚲 Bike available" : "🚲 No bike"}</li>
