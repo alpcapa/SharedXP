@@ -5,26 +5,22 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
 
-const timeOptions = ["06:30", "08:00", "10:30", "18:00", "19:30"];
+const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const getUpcomingDates = (count = 10) => {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-
-  return Array.from({ length: count }, (_, index) => {
-    const date = new Date(start);
-    date.setDate(start.getDate() + index);
-    return date.toISOString().slice(0, 10);
-  });
-};
+const getDateKey = (year, month, day) =>
+  `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
 const ProfilePage = () => {
   const { buddyId } = useParams();
   const buddy = buddies.find((item) => String(item.id) === buddyId);
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [selectedTimes, setSelectedTimes] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isRequestSubmitted, setIsRequestSubmitted] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
 
   if (!buddy) {
     return (
@@ -37,35 +33,40 @@ const ProfilePage = () => {
 
   const recommendations = buddies.filter((item) => item.id !== buddy.id).slice(0, 2);
   const perLabel = buddy.sport === "Cycling" ? "per ride" : "per session";
-  const dateOptions = useMemo(() => getUpcomingDates(10), []);
-  const canRequestBooking = selectedDates.length > 0 && selectedTimes.length > 0;
-  const selectedSlots = useMemo(
-    () =>
-      selectedDates.flatMap((date) =>
-        selectedTimes.map((time) => ({
-          id: `${date}-${time}`,
-          date,
-          time
-        }))
-      ),
-    [selectedDates, selectedTimes]
-  );
+  const availableDates = buddy.availableDates ?? [];
+  const availableTimes = buddy.availableTimes ?? [];
+  const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
+  const canRequestBooking = Boolean(selectedDate && selectedTime);
+  const monthYearLabel = new Intl.DateTimeFormat("en-GB", {
+    month: "long",
+    year: "numeric"
+  }).format(calendarMonth);
 
-  const toggleDate = (dateValue) => {
-    setSelectedDates((currentDates) =>
-      currentDates.includes(dateValue)
-        ? currentDates.filter((date) => date !== dateValue)
-        : [...currentDates, dateValue]
-    );
-  };
+  const monthDays = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayIndex = (firstDay.getDay() + 6) % 7;
 
-  const toggleTime = (timeValue) => {
-    setSelectedTimes((currentTimes) =>
-      currentTimes.includes(timeValue)
-        ? currentTimes.filter((time) => time !== timeValue)
-        : [...currentTimes, timeValue]
-    );
-  };
+    const leadingEmpty = Array.from({ length: firstDayIndex }, (_, index) => ({
+      id: `empty-${index}`,
+      isEmpty: true
+    }));
+
+    const days = Array.from({ length: daysInMonth }, (_, index) => {
+      const day = index + 1;
+      const dateKey = getDateKey(year, month, day);
+      return {
+        id: dateKey,
+        label: day,
+        dateKey,
+        isAvailable: availableDateSet.has(dateKey)
+      };
+    });
+
+    return [...leadingEmpty, ...days];
+  }, [availableDateSet, calendarMonth]);
 
   const formatDate = (dateValue) =>
     new Intl.DateTimeFormat("en-GB", {
@@ -121,41 +122,83 @@ const ProfilePage = () => {
 
           <section className="booking-engine" aria-label="Booking engine">
             <h3>Book with {buddy.name}</h3>
-            <p className="booking-subtitle">Select one or more dates and times.</p>
+            <p className="booking-subtitle">Choose one available date and time.</p>
 
-            <p className="booking-label">Dates</p>
-            <div className="booking-chip-grid">
-              {dateOptions.map((dateOption) => (
+            <p className="booking-label">Date</p>
+            <div className="booking-calendar" aria-label="Available dates calendar">
+              <div className="booking-calendar-header">
                 <button
-                  key={dateOption}
                   type="button"
-                  className={`booking-chip${
-                    selectedDates.includes(dateOption) ? " selected" : ""
-                  }`}
-                  onClick={() => toggleDate(dateOption)}
+                  className="calendar-nav-button"
+                  onClick={() =>
+                    setCalendarMonth(
+                      (currentMonth) =>
+                        new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+                    )
+                  }
                 >
-                  {formatDate(dateOption)}
+                  ‹
                 </button>
-              ))}
+                <strong>{monthYearLabel}</strong>
+                <button
+                  type="button"
+                  className="calendar-nav-button"
+                  onClick={() =>
+                    setCalendarMonth(
+                      (currentMonth) =>
+                        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+                    )
+                  }
+                >
+                  ›
+                </button>
+              </div>
+              <div className="booking-weekdays">
+                {weekDays.map((dayName) => (
+                  <span key={dayName}>{dayName}</span>
+                ))}
+              </div>
+              <div className="booking-calendar-grid">
+                {monthDays.map((dayItem) =>
+                  dayItem.isEmpty ? (
+                    <span key={dayItem.id} className="booking-day-empty" />
+                  ) : (
+                    <button
+                      key={dayItem.id}
+                      type="button"
+                      className={`booking-day${
+                        dayItem.isAvailable ? " available" : " unavailable"
+                      }${selectedDate === dayItem.dateKey ? " selected" : ""}`}
+                      onClick={() => setSelectedDate(dayItem.dateKey)}
+                      disabled={!dayItem.isAvailable}
+                    >
+                      {dayItem.label}
+                    </button>
+                  )
+                )}
+              </div>
             </div>
 
-            <p className="booking-label">Times</p>
-            <div className="booking-time-grid">
-              {timeOptions.map((timeOption) => (
-                <button
-                  key={timeOption}
-                  type="button"
-                  className={`booking-chip${selectedTimes.includes(timeOption) ? " selected" : ""}`}
-                  onClick={() => toggleTime(timeOption)}
-                >
+            <label className="booking-label" htmlFor="booking-time-select">
+              Time
+            </label>
+            <select
+              id="booking-time-select"
+              className="booking-time-select"
+              value={selectedTime}
+              onChange={(event) => setSelectedTime(event.target.value)}
+            >
+              <option value="">Select available time</option>
+              {availableTimes.map((timeOption) => (
+                <option key={timeOption} value={timeOption}>
                   {formatTime(timeOption)}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
 
             <p className="booking-selection-hint">
-              {selectedDates.length} date(s) · {selectedTimes.length} time(s) ·{" "}
-              {selectedSlots.length} booking option(s)
+              {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
+              {selectedTime ? formatTime(selectedTime) : "No time selected"}
             </p>
             <button
               type="button"
@@ -238,11 +281,9 @@ const ProfilePage = () => {
                   {buddy.name} · €{buddy.price} {perLabel}
                 </p>
                 <div className="booking-modal-list">
-                  {selectedSlots.map((slot) => (
-                    <p key={slot.id}>
-                      {formatDate(slot.date)} at {formatTime(slot.time)}
-                    </p>
-                  ))}
+                  <p>
+                    {formatDate(selectedDate)} at {formatTime(selectedTime)}
+                  </p>
                 </div>
                 <div className="booking-modal-actions">
                   <button
