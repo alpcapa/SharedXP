@@ -833,9 +833,13 @@ body {
 .booking-confirm-button {
   margin-top: 12px;
   margin-left: 0;
-  min-height: 52px;
-  font-size: 18px;
+  min-height: 44px;
+  font-size: 16px;
   padding: 0 20px;
+}
+
+.booking-request-button {
+  width: fit-content;
 }
 
 .booking-request-button:disabled {

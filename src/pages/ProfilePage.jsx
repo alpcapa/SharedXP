@@ -131,6 +131,14 @@ const ProfilePage = () => {
         </div>
       </section>
 
+      <section className="about">
+        <h3>About</h3>
+        <p>{buddy.about}</p>
+        <p>
+          Bike: {buddy.bike.brand} {buddy.bike.model} ({buddy.bike.type})
+        </p>
+      </section>
+
       <section className="booking-engine-section" aria-label="Booking engine">
         <div className="booking-engine">
           <h3>Book with {hostDisplayName}</h3>
@@ -231,7 +239,7 @@ const ProfilePage = () => {
             disabled={!canRequestBooking}
             onClick={handleOpenConfirmation}
           >
-            Request a Booking
+            Request booking
           </button>
         </div>
       </section>
@@ -243,14 +251,6 @@ const ProfilePage = () => {
             <img key={photo} src={photo} alt={`${buddy.name} gallery`} />
           ))}
         </div>
-      </section>
-
-      <section className="about">
-        <h3>About</h3>
-        <p>{buddy.about}</p>
-        <p>
-          Bike: {buddy.bike.brand} {buddy.bike.model} ({buddy.bike.type})
-        </p>
       </section>
 
       <section className="reviews">
