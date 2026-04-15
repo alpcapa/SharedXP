@@ -95,26 +95,6 @@ const HomePage = () => {
                 Find
               </button>
             </div>
-            <ul className="trust-points">
-              <li>
-                <span role="img" aria-label="Trusted community">
-                  🔒
-                </span>{" "}
-                Trusted community
-              </li>
-              <li>
-                <span role="img" aria-label="Secure payments">
-                  💳
-                </span>{" "}
-                Secure payments
-              </li>
-              <li>
-                <span role="img" aria-label="24/7 support">
-                  🕓
-                </span>{" "}
-                24/7 support
-              </li>
-            </ul>
           </div>
         </section>
 
