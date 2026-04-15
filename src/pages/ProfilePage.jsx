@@ -79,6 +79,15 @@ const ProfilePage = () => {
       minute: "2-digit"
     }).format(new Date(`2000-01-01T${timeValue}:00`));
 
+  const formatDateAriaLabel = (dateValue) => {
+    const [year, month, day] = dateValue.split("-").map(Number);
+    return new Intl.DateTimeFormat("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }).format(new Date(year, month - 1, day));
+  };
+
   const handleOpenConfirmation = () => {
     if (!canRequestBooking) {
       return;
@@ -169,19 +178,18 @@ const ProfilePage = () => {
                       className={`booking-day${
                         dayItem.isAvailable ? " available" : " unavailable"
                       }${selectedDate === dayItem.dateKey ? " selected" : ""}`}
-                      aria-label={`${new Intl.DateTimeFormat("en-GB", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric"
-                      }).format(new Date(`${dayItem.dateKey}T00:00:00`))}, ${
+                      aria-label={`${formatDateAriaLabel(dayItem.dateKey)}, ${
                         dayItem.isAvailable ? "Available" : "Unavailable"
                       }`}
                       aria-disabled={!dayItem.isAvailable}
-                      onClick={() =>
+                      onClick={() => {
+                        if (!dayItem.isAvailable) {
+                          return;
+                        }
                         setSelectedDate((currentDate) =>
                           currentDate === dayItem.dateKey ? "" : dayItem.dateKey
-                        )
-                      }
+                        );
+                      }}
                       disabled={!dayItem.isAvailable}
                     >
                       {dayItem.label}
