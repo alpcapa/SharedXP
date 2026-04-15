@@ -47,9 +47,9 @@ const HomePage = () => {
                 <h1>Locals ready to play in Lisbon</h1>
                 <p>Sports buddies near you. Real people. Real connections.</p>
               </div>
-              <Link to="/#locals" className="view-all-link">
+              <a href="#locals" className="view-all-link">
                 View all
-              </Link>
+              </a>
             </div>
 
             <div className="locals-grid-wrap">
