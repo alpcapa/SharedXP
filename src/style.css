@@ -666,7 +666,9 @@ body {
 .profile-summary,
 .about,
 .reviews,
-.gallery {
+.gallery,
+.booking-engine-section,
+.recommendations {
   background: white;
   margin: 20px;
   padding: 20px;
@@ -712,11 +714,8 @@ body {
 }
 
 .booking-engine {
-  margin-top: 18px;
-  padding: 16px;
-  border: 1px solid #e6e7e2;
-  border-radius: 12px;
-  background: #f7f9f3;
+  display: grid;
+  gap: 8px;
 }
 
 .booking-engine h3 {
@@ -813,12 +812,12 @@ body {
 }
 
 .booking-time-select {
-  width: 100%;
+  width: min(100%, 220px);
   border: 1px solid #d3d8cf;
   border-radius: 10px;
   background: #fff;
   min-height: 42px;
-  padding: 0 12px;
+  padding: 0 10px;
   font-size: 15px;
   font-weight: 600;
   color: #1f2937;

@@ -30,6 +30,7 @@ const ProfilePage = () => {
   }
 
   const recommendations = buddies.filter((item) => item.id !== buddy.id).slice(0, 2);
+  const hostDisplayName = buddy.fullName ?? buddy.name;
   const perLabel = buddy.sport === "Cycling" ? "per ride" : "per session";
   const availableDates = buddy.availableDates ?? [];
   const availableTimes = buddy.availableTimes ?? [];
@@ -75,7 +76,7 @@ const ProfilePage = () => {
 
   const formatTime = (timeValue) =>
     new Intl.DateTimeFormat("en-GB", {
-      hour: "2-digit",
+      hour: "numeric",
       minute: "2-digit"
     }).format(new Date(`2000-01-01T${timeValue}:00`));
 
@@ -111,9 +112,9 @@ const ProfilePage = () => {
       </div>
 
       <section className="profile-summary">
-        <img src={buddy.image} alt={buddy.name} className="profile-main-image" />
+        <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
         <div>
-          <h1>{buddy.name}</h1>
+          <h1>{hostDisplayName}</h1>
           <p>
             ⭐ {buddy.rating} · <span className="verified">Verified</span>
           </p>
@@ -122,113 +123,116 @@ const ProfilePage = () => {
           </p>
           <p>{buddy.bio}</p>
           <p>Level: {buddy.level}</p>
+          <p>Language: {buddy.language}</p>
           <p className="price">
             €{buddy.price} {perLabel}
           </p>
           <p>{buddy.availabilitySchedule.join(" · ")}</p>
+        </div>
+      </section>
 
-          <section className="booking-engine" aria-label="Booking engine">
-            <h3>Book with {buddy.name}</h3>
-            <p className="booking-subtitle">Choose one available date and time.</p>
+      <section className="booking-engine-section" aria-label="Booking engine">
+        <div className="booking-engine">
+          <h3>Book with {hostDisplayName}</h3>
+          <p className="booking-subtitle">Choose one available date and time.</p>
 
-            <p className="booking-label">Date</p>
-            <div className="booking-calendar" aria-label="Available dates calendar">
-              <div className="booking-calendar-header">
-                <button
-                  type="button"
-                  className="calendar-nav-button"
-                  aria-label="Previous month"
-                  onClick={() =>
-                    setCalendarMonth(
-                      (currentMonth) =>
-                        new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
-                    )
-                  }
-                >
-                  ‹
-                </button>
-                <strong>{monthYearLabel}</strong>
-                <button
-                  type="button"
-                  className="calendar-nav-button"
-                  aria-label="Next month"
-                  onClick={() =>
-                    setCalendarMonth(
-                      (currentMonth) =>
-                        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
-                    )
-                  }
-                >
-                  ›
-                </button>
-              </div>
-              <div className="booking-weekdays">
-                {weekDays.map((dayName) => (
-                  <span key={dayName}>{dayName}</span>
-                ))}
-              </div>
-              <div className="booking-calendar-grid">
-                {monthDays.map((dayItem) =>
-                  dayItem.isEmpty ? (
-                    <span key={dayItem.id} className="booking-day-empty" />
-                  ) : (
-                    <button
-                      key={dayItem.id}
-                      type="button"
-                      className={`booking-day${
-                        dayItem.isAvailable ? " available" : " unavailable"
-                      }${selectedDate === dayItem.dateKey ? " selected" : ""}`}
-                      aria-label={`${formatDateAriaLabel(dayItem.dateKey)}, ${
-                        dayItem.isAvailable ? "Available" : "Unavailable"
-                      }`}
-                      aria-disabled={!dayItem.isAvailable}
-                      onClick={() => {
-                        if (!dayItem.isAvailable) {
-                          return;
-                        }
-                        setSelectedDate((currentDate) =>
-                          currentDate === dayItem.dateKey ? "" : dayItem.dateKey
-                        );
-                      }}
-                      disabled={!dayItem.isAvailable}
-                    >
-                      {dayItem.label}
-                    </button>
+          <p className="booking-label">Date</p>
+          <div className="booking-calendar" aria-label="Available dates calendar">
+            <div className="booking-calendar-header">
+              <button
+                type="button"
+                className="calendar-nav-button"
+                aria-label="Previous month"
+                onClick={() =>
+                  setCalendarMonth(
+                    (currentMonth) =>
+                      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
                   )
-                )}
-              </div>
+                }
+              >
+                ‹
+              </button>
+              <strong>{monthYearLabel}</strong>
+              <button
+                type="button"
+                className="calendar-nav-button"
+                aria-label="Next month"
+                onClick={() =>
+                  setCalendarMonth(
+                    (currentMonth) =>
+                      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+                  )
+                }
+              >
+                ›
+              </button>
             </div>
-
-            <label className="booking-label" htmlFor="booking-time-select">
-              Time
-            </label>
-            <select
-              id="booking-time-select"
-              className="booking-time-select"
-              value={selectedTime}
-              onChange={(event) => setSelectedTime(event.target.value)}
-            >
-              <option value="">Select available time</option>
-              {availableTimes.map((timeOption) => (
-                <option key={timeOption} value={timeOption}>
-                  {formatTime(timeOption)}
-                </option>
+            <div className="booking-weekdays">
+              {weekDays.map((dayName) => (
+                <span key={dayName}>{dayName}</span>
               ))}
-            </select>
+            </div>
+            <div className="booking-calendar-grid">
+              {monthDays.map((dayItem) =>
+                dayItem.isEmpty ? (
+                  <span key={dayItem.id} className="booking-day-empty" />
+                ) : (
+                  <button
+                    key={dayItem.id}
+                    type="button"
+                    className={`booking-day${
+                      dayItem.isAvailable ? " available" : " unavailable"
+                    }${selectedDate === dayItem.dateKey ? " selected" : ""}`}
+                    aria-label={`${formatDateAriaLabel(dayItem.dateKey)}, ${
+                      dayItem.isAvailable ? "Available" : "Unavailable"
+                    }`}
+                    aria-disabled={!dayItem.isAvailable}
+                    onClick={() => {
+                      if (!dayItem.isAvailable) {
+                        return;
+                      }
+                      setSelectedDate((currentDate) =>
+                        currentDate === dayItem.dateKey ? "" : dayItem.dateKey
+                      );
+                    }}
+                    disabled={!dayItem.isAvailable}
+                  >
+                    {dayItem.label}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
 
-            <p className="booking-selection-hint">
-              {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
-              {selectedTime ? formatTime(selectedTime) : "No time selected"}
-            </p>
-            <button
-              type="button"
-              className="find-button booking-request-button"
-              disabled={!canRequestBooking}
-              onClick={handleOpenConfirmation}
-            >
-              Request a Booking
-            </button>
-          </section>
+          <label className="booking-label" htmlFor="booking-time-select">
+            Time
+          </label>
+          <select
+            id="booking-time-select"
+            className="booking-time-select"
+            value={selectedTime}
+            onChange={(event) => setSelectedTime(event.target.value)}
+          >
+            <option value="">Select time</option>
+            {availableTimes.map((timeOption) => (
+              <option key={timeOption} value={timeOption}>
+                {formatTime(timeOption)}
+              </option>
+            ))}
+          </select>
+
+          <p className="booking-selection-hint">
+            {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
+            {selectedTime ? formatTime(selectedTime) : "No time selected"}
+          </p>
+          <button
+            type="button"
+            className="find-button booking-request-button"
+            disabled={!canRequestBooking}
+            onClick={handleOpenConfirmation}
+          >
+            Request a Booking
+          </button>
         </div>
       </section>
 
@@ -261,7 +265,7 @@ const ProfilePage = () => {
         ))}
       </section>
 
-      <section>
+      <section className="recommendations">
         <h3>More locals you might like</h3>
         <div className="grid">
           {recommendations.map((recommendation) => (
@@ -298,7 +302,7 @@ const ProfilePage = () => {
               <>
                 <h3>Confirm your booking request</h3>
                 <p className="booking-modal-meta">
-                  {buddy.name} · €{buddy.price} {perLabel}
+                  {hostDisplayName} · €{buddy.price} {perLabel}
                 </p>
                 <div className="booking-modal-list">
                   <p>
@@ -325,7 +329,7 @@ const ProfilePage = () => {
             ) : (
               <div className="booking-success">
                 <h3>Booking request sent</h3>
-                <p>We shared your selected options with {buddy.name}.</p>
+                <p>We shared your selected options with {hostDisplayName}.</p>
                 <button
                   type="button"
                   className="find-button booking-confirm-button"
