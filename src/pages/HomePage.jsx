@@ -71,7 +71,7 @@ const HomePage = () => {
               Anywhere<span className="accent">.</span>
             </h1>
             <p>Join locals and travelers for unforgettable sports experiences.</p>
-            <form className="search-bar" onSubmit={(event) => event.preventDefault()}>
+            <div className="search-bar" role="search" aria-label="Find sports buddies">
               <label className="search-field">
                 <span>Sport</span>
                 <select defaultValue="Cycling">
@@ -91,14 +91,29 @@ const HomePage = () => {
                 <span>Date</span>
                 <input type="text" defaultValue="Anytime" />
               </label>
-              <button type="submit" className="find-button" aria-label="Find buddies">
+              <button type="button" className="find-button" aria-label="Find buddies">
                 Find
               </button>
-            </form>
+            </div>
             <ul className="trust-points">
-              <li>🔒 Trusted community</li>
-              <li>💳 Secure payments</li>
-              <li>🕓 24/7 support</li>
+              <li>
+                <span role="img" aria-label="Trusted community">
+                  🔒
+                </span>{" "}
+                Trusted community
+              </li>
+              <li>
+                <span role="img" aria-label="Secure payments">
+                  💳
+                </span>{" "}
+                Secure payments
+              </li>
+              <li>
+                <span role="img" aria-label="24/7 support">
+                  🕓
+                </span>{" "}
+                24/7 support
+              </li>
             </ul>
           </div>
         </section>
