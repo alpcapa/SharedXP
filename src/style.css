@@ -738,7 +738,8 @@ body {
   border: 1px solid #dde3d3;
   border-radius: 12px;
   background: #fff;
-  padding: 12px;
+  width: min(100%, 390px);
+  padding: 10px;
 }
 
 .booking-calendar-header {
@@ -759,33 +760,35 @@ body {
 }
 
 .booking-weekdays {
-  margin-top: 10px;
+  margin-top: 8px;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
-  font-size: 12px;
+  gap: 4px;
+  font-size: 11px;
   font-weight: 700;
   color: #64748b;
   text-align: center;
 }
 
 .booking-calendar-grid {
-  margin-top: 8px;
+  margin-top: 6px;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
+  gap: 4px;
 }
 
 .booking-day-empty {
   width: 100%;
-  aspect-ratio: 1;
+  min-height: 42px;
 }
 
 .booking-day {
   border: 1px solid #d3d8cf;
   border-radius: 8px;
-  aspect-ratio: 1;
+  min-height: 42px;
+  padding: 0;
   font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
 }
 
