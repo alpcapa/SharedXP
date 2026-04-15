@@ -136,6 +136,7 @@ const HomePage = () => {
                   className="dropdown-toggle"
                   aria-haspopup="listbox"
                   aria-expanded={openDropdown === "sport"}
+                  aria-labelledby="sport-label sport-select"
                   onClick={() =>
                     setOpenDropdown((currentDropdown) =>
                       currentDropdown === "sport" ? null : "sport"
@@ -153,6 +154,7 @@ const HomePage = () => {
                       id="sport-search"
                       type="text"
                       className="option-search"
+                      aria-label="Search sports"
                       placeholder="Search sport"
                       value={sportQuery}
                       onChange={(event) => setSportQuery(event.target.value)}
@@ -162,6 +164,8 @@ const HomePage = () => {
                         <button
                           key={sport}
                           type="button"
+                          role="option"
+                          aria-selected={selectedSport === sport}
                           className={`option-item${selectedSport === sport ? " selected" : ""}`}
                           onClick={() => {
                             setSelectedSport(sport);
@@ -189,6 +193,7 @@ const HomePage = () => {
                   className="dropdown-toggle"
                   aria-haspopup="listbox"
                   aria-expanded={openDropdown === "location"}
+                  aria-labelledby="location-label location-select"
                   onClick={() =>
                     setOpenDropdown((currentDropdown) =>
                       currentDropdown === "location" ? null : "location"
@@ -206,6 +211,7 @@ const HomePage = () => {
                       id="location-search"
                       type="text"
                       className="option-search"
+                      aria-label="Search locations"
                       placeholder="Search location"
                       value={locationQuery}
                       onChange={(event) => setLocationQuery(event.target.value)}
@@ -215,6 +221,8 @@ const HomePage = () => {
                         <button
                           key={location}
                           type="button"
+                          role="option"
+                          aria-selected={selectedLocation === location}
                           className={`option-item${
                             selectedLocation === location ? " selected" : ""
                           }`}
