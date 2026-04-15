@@ -100,7 +100,9 @@ const HomePage = () => {
       return sportOptions.slice(0, 5);
     }
 
-    return sportOptions.filter((sport) => sport.toLowerCase().includes(sportQuery.toLowerCase()));
+    return sportOptions
+      .filter((sport) => sport.toLowerCase().includes(sportQuery.toLowerCase()))
+      .slice(0, 5);
   }, [sportQuery]);
 
   const filteredLocations = useMemo(() => {
@@ -108,9 +110,9 @@ const HomePage = () => {
       return locationOptions.slice(0, 5);
     }
 
-    return locationOptions.filter((location) =>
-      location.toLowerCase().includes(locationQuery.toLowerCase())
-    );
+    return locationOptions
+      .filter((location) => location.toLowerCase().includes(locationQuery.toLowerCase()))
+      .slice(0, 5);
   }, [locationQuery]);
 
   return (
@@ -136,7 +138,7 @@ const HomePage = () => {
                   className="dropdown-toggle"
                   aria-haspopup="listbox"
                   aria-expanded={openDropdown === "sport"}
-                  aria-labelledby="sport-label sport-select"
+                  aria-labelledby="sport-label"
                   onClick={() =>
                     setOpenDropdown((currentDropdown) =>
                       currentDropdown === "sport" ? null : "sport"
@@ -193,7 +195,7 @@ const HomePage = () => {
                   className="dropdown-toggle"
                   aria-haspopup="listbox"
                   aria-expanded={openDropdown === "location"}
-                  aria-labelledby="location-label location-select"
+                  aria-labelledby="location-label"
                   onClick={() =>
                     setOpenDropdown((currentDropdown) =>
                       currentDropdown === "location" ? null : "location"
@@ -252,6 +254,7 @@ const HomePage = () => {
                     className="date-input"
                     type="date"
                     value={dateFrom}
+                    aria-label="From date"
                     onChange={(event) => setDateFrom(event.target.value)}
                   />
                   <span className="range-separator">to</span>
@@ -260,7 +263,7 @@ const HomePage = () => {
                     className="date-input"
                     type="date"
                     value={dateTo}
-                    aria-labelledby="date-label"
+                    aria-label="To date"
                     onChange={(event) => setDateTo(event.target.value)}
                   />
                 </div>
