@@ -137,6 +137,17 @@ body {
   background: #fff;
 }
 
+.local-card-link {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 16px;
+}
+
+.local-card-link:focus-visible {
+  outline: 2px solid #88bd3d;
+  outline-offset: 3px;
+}
+
 .local-image-wrap {
   position: relative;
   height: 188px;
@@ -258,10 +269,19 @@ body {
 }
 
 .sport-card {
+  border: none;
   padding: 18px 12px;
   border-radius: 999px;
   background: #ebeceb;
   text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+}
+
+.sport-card:focus-visible {
+  outline: 2px solid #88bd3d;
+  outline-offset: 3px;
 }
 
 .sport-card.active {
@@ -374,13 +394,6 @@ body {
   display: grid;
   place-items: center;
   font-size: 30px;
-}
-
-.card-link,
-.card,
-.price,
-.card-cta {
-  all: unset;
 }
 
 .profile-page {

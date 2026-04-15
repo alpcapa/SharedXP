@@ -1,4 +1,5 @@
 import SiteHeader from "../components/SiteHeader";
+import { Link } from "react-router-dom";
 
 const locals = [
   {
@@ -115,28 +116,30 @@ const HomePage = () => {
 
           <div className="locals-row">
             {locals.map((local) => (
-              <article key={local.id} className="local-card">
-                <div className="local-image-wrap">
-                  <img src={local.image} alt={local.name} />
-                  <span className="status-pill">● {local.tag}</span>
-                </div>
-                <div className="local-content">
-                  <h3>
-                    {local.name}
-                    <span>
-                      ⭐ {local.rating} ({local.reviews})
-                    </span>
-                  </h3>
-                  <p className="local-location">📍 {local.location}</p>
-                  <span className="sport-pill">{local.sport}</span>
-                  <p className="local-desc">{local.description}</p>
-                  <ul>
-                    <li>🚲 {local.bike}</li>
-                    <li>🏃 {local.level}</li>
-                    <li>💶 {local.price}</li>
-                  </ul>
-                </div>
-              </article>
+              <Link key={local.id} to={`/buddy/${local.id}`} className="local-card-link">
+                <article className="local-card">
+                  <div className="local-image-wrap">
+                    <img src={local.image} alt={local.name} />
+                    <span className="status-pill">● {local.tag}</span>
+                  </div>
+                  <div className="local-content">
+                    <h3>
+                      {local.name}
+                      <span>
+                        ⭐ {local.rating} ({local.reviews})
+                      </span>
+                    </h3>
+                    <p className="local-location">📍 {local.location}</p>
+                    <span className="sport-pill">{local.sport}</span>
+                    <p className="local-desc">{local.description}</p>
+                    <ul>
+                      <li>🚲 {local.bike}</li>
+                      <li>🏃 {local.level}</li>
+                      <li>💶 {local.price}</li>
+                    </ul>
+                  </div>
+                </article>
+              </Link>
             ))}
             <button type="button" className="carousel-next" aria-label="Next">
               ›
@@ -150,14 +153,16 @@ const HomePage = () => {
 
           <div className="sports-row">
             {sports.map((sport) => (
-              <article
+              <button
                 key={sport.name}
+                type="button"
                 className={`sport-card${sport.active ? " active" : ""}`}
+                aria-pressed={sport.active ? "true" : "false"}
               >
                 <div className="sport-icon">{sport.icon}</div>
                 <h4>{sport.name}</h4>
                 <span>{sport.count}</span>
-              </article>
+              </button>
             ))}
           </div>
         </section>
