@@ -735,6 +735,7 @@ body {
 }
 
 .booking-calendar {
+  --booking-day-size: 42px;
   border: 1px solid #dde3d3;
   border-radius: 12px;
   background: #fff;
@@ -779,13 +780,13 @@ body {
 
 .booking-day-empty {
   width: 100%;
-  min-height: 42px;
+  min-height: var(--booking-day-size);
 }
 
 .booking-day {
   border: 1px solid #d3d8cf;
   border-radius: 8px;
-  min-height: 42px;
+  min-height: var(--booking-day-size);
   padding: 0;
   font-weight: 700;
   font-size: 13px;
