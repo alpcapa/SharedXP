@@ -1,5 +1,6 @@
 import { useState } from "react";
 import BuddyCard from "../components/BuddyCard";
+import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
 
@@ -258,12 +259,20 @@ const HomePage = () => {
       </section>
 
       <section className="results-section">
+        <div className="middle-section">
+          <h2>How SharedXP works</h2>
+          <p>
+            Pick your sport, choose your location, and match with trusted locals for
+            shared sessions and authentic experiences.
+          </p>
+        </div>
         <div className="grid">
           {filtered.map((buddy) => (
             <BuddyCard key={buddy.id} buddy={buddy} />
           ))}
         </div>
       </section>
+      <SiteFooter />
     </div>
   );
 };

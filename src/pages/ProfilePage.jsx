@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
+import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
 
@@ -87,6 +88,7 @@ const ProfilePage = () => {
           ))}
         </div>
       </section>
+      <SiteFooter />
     </div>
   );
 };
