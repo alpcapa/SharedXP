@@ -15,8 +15,7 @@ const locals = [
     bike: "Bike available",
     level: "Intermediate",
     price: "€30 per ride",
-    image:
-      "https://github.com/user-attachments/assets/ef5bc0a5-5008-4bd6-8a31-93661eff7fce"
+    image: "https://randomuser.me/api/portraits/men/32.jpg"
   },
   {
     id: 2,
@@ -30,8 +29,7 @@ const locals = [
     bike: "Bike available",
     level: "Advanced",
     price: "€35 per ride",
-    image:
-      "https://github.com/user-attachments/assets/a73ef4f5-b184-4bba-8627-a8539232f671"
+    image: "https://randomuser.me/api/portraits/women/44.jpg"
   },
   {
     id: 3,
@@ -45,8 +43,7 @@ const locals = [
     bike: "No bike",
     level: "Advanced",
     price: "€25 per ride",
-    image:
-      "https://github.com/user-attachments/assets/f956cdf9-66cb-4f8f-a0fc-4f39966d7ec8"
+    image: "https://randomuser.me/api/portraits/men/55.jpg"
   },
   {
     id: 4,
@@ -60,8 +57,7 @@ const locals = [
     bike: "Bike available",
     level: "Intermediate",
     price: "€28 per ride",
-    image:
-      "https://github.com/user-attachments/assets/e5f26f7c-6a59-40ce-bcf2-b36f87366877"
+    image: "https://randomuser.me/api/portraits/women/65.jpg"
   }
 ];
 
