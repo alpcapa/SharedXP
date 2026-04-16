@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 
@@ -30,9 +30,13 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
-  const selectedCountry = COUNTRY_OPTIONS.find(
-    (countryOption) =>
-      countryOption.name.toLowerCase() === formValues.country.trim().toLowerCase()
+  const selectedCountry = useMemo(
+    () =>
+      COUNTRY_OPTIONS.find(
+        (countryOption) =>
+          countryOption.name.toLowerCase() === formValues.country.trim().toLowerCase()
+      ),
+    [formValues.country]
   );
 
   const onInputChange = (event) => {
@@ -75,6 +79,11 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     const firstName = formValues.firstName.trim();
     const lastName = formValues.lastName.trim();
     const fullName = `${firstName} ${lastName}`.trim();
+    const phoneDigitsOnly = formValues.phone.replace(/\D/g, "");
+    const dialCodeDigits = selectedCountry.dialCode.replace(/\D/g, "");
+    const localPhoneDigits = phoneDigitsOnly.startsWith(dialCodeDigits)
+      ? phoneDigitsOnly.slice(dialCodeDigits.length)
+      : phoneDigitsOnly;
 
     setErrorMessage("");
     setPendingVerification({
@@ -86,7 +95,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       country: selectedCountry.name,
       countryCode: selectedCountry.code,
       countryDialCode: selectedCountry.dialCode,
-      phone: `${selectedCountry.dialCode} ${formValues.phone.trim()}`.trim(),
+      phone: `${selectedCountry.dialCode} ${localPhoneDigits}`.trim(),
       address: formValues.address.trim(),
       photo: formValues.photo
     });
