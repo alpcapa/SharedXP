@@ -30,13 +30,16 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
-  const normalizedCountryInput = formValues.country.trim().toLowerCase();
   const selectedCountry = useMemo(
-    () =>
+    () => {
+      const normalizedCountryInput = formValues.country.trim().toLowerCase();
+      return (
       COUNTRY_OPTIONS.find(
         (countryOption) => countryOption.name.toLowerCase() === normalizedCountryInput
-      ),
-    [normalizedCountryInput]
+      ) ?? null
+      );
+    },
+    [formValues.country]
   );
 
   const onInputChange = (event) => {
@@ -82,10 +85,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     const rawPhone = formValues.phone.trim();
     const phoneDigitsOnly = rawPhone.replace(/\D/g, "");
     const dialCodeDigits = selectedCountry.dialCode.replace(/\D/g, "");
-    const localPhoneDigits =
-      rawPhone.startsWith("+") && phoneDigitsOnly.startsWith(dialCodeDigits)
-        ? phoneDigitsOnly.slice(dialCodeDigits.length)
-        : phoneDigitsOnly;
+    const localPhoneDigits = phoneDigitsOnly.startsWith(dialCodeDigits)
+      ? phoneDigitsOnly.slice(dialCodeDigits.length)
+      : phoneDigitsOnly;
 
     setErrorMessage("");
     setPendingVerification({
