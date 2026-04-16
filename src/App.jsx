@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import HowItWorksPage from "./pages/HowItWorksPage";
 import ProfilePage from "./pages/ProfilePage";
 
 function App() {
@@ -7,6 +8,7 @@ function App() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/locals" element={<HomePage />} />
+      <Route path="/how-it-works" element={<HowItWorksPage />} />
       <Route path="/buddy/:buddyId" element={<ProfilePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

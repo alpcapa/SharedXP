@@ -15,9 +15,9 @@ const SiteHeader = () => {
         <button type="button" className="nav-link-button">
           Become a Host
         </button>
-        <button type="button" className="nav-link-button">
+        <Link to="/how-it-works" className="nav-link-button">
           How it works
-        </button>
+        </Link>
       </nav>
 
       <div className="auth-actions">

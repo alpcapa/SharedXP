@@ -350,6 +350,86 @@ body {
   margin-bottom: -4px;
 }
 
+/* ── Dedicated how-it-works page ───────────────── */
+.how-it-works-hero {
+  min-height: 380px;
+}
+
+.how-it-works-intro {
+  width: min(900px, 96%);
+  padding: 46px 18px 24px;
+}
+
+.how-it-works-intro h1 {
+  margin: 0;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1.06;
+  letter-spacing: -1px;
+}
+
+.how-it-works-intro p {
+  margin: 14px 0 0;
+  font-size: clamp(18px, 2.2vw, 30px);
+  color: #2d3033;
+}
+
+.how-flow-section,
+.how-friendly-note {
+  margin-top: 36px;
+}
+
+.how-flow-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.how-flow-card {
+  border: 1px solid #e6e7e2;
+  border-radius: 14px;
+  background: #fff;
+  padding: 16px;
+}
+
+.how-flow-card h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.how-flow-card pre {
+  margin: 12px 0 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f4f7ee;
+  color: #27411a;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.how-flow-card p {
+  margin: 12px 0 0;
+  color: #596164;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.how-friendly-note {
+  border: 1px solid #d9e4c5;
+  border-radius: 14px;
+  background: #ecf1e7;
+  padding: 18px;
+}
+
+.how-friendly-note p {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #3c4743;
+}
+
 .site-header {
   display: flex;
   align-items: center;
@@ -1112,7 +1192,8 @@ body {
 
   .locals-grid,
   .sports-scroll,
-  .how-grid {
+  .how-grid,
+  .how-flow-grid {
     grid-template-columns: 1fr;
   }
 
