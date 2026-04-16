@@ -5,6 +5,7 @@ const flowSteps = [
   {
     title: "1) Pick your sport + place",
     text: "Tell us what you want to play and where you're headed.",
+    drawingLabel: "Cartoon showing you choosing from different sports.",
     drawing: `  ⚽  🎾  🚲
    \\  |  /
   [ You choose ]`
@@ -12,12 +13,14 @@ const flowSteps = [
   {
     title: "2) Meet matching locals",
     text: "We show friendly local buddies that match your vibe.",
+    drawingLabel: "Flow from you to SharedXP and then to a local buddy.",
     drawing: ` [ You ] ---> [ SharedXP ] ---> [ Local buddy ]
    (^_^)         (smart match)         (^-^)`
   },
   {
     title: "3) Chat, confirm, book",
     text: "Agree on the details, then book with protected payment.",
+    drawingLabel: "Cartoon showing two-way chat and a secure booking step.",
     drawing: ` You  <---- chat ---->  Buddy
    |                    |
    +---- secure book ---+`
@@ -25,6 +28,7 @@ const flowSteps = [
   {
     title: "4) Play and enjoy",
     text: "Show up, play together, and make a great memory.",
+    drawingLabel: "Cartoon of two people high-fiving after playing.",
     drawing: `  o/            \\o
  /|   High-five!   |\\
  / \\              / \\`
@@ -54,7 +58,9 @@ const HowItWorksPage = () => {
               {flowSteps.map((step) => (
                 <article key={step.title} className="how-flow-card">
                   <h3>{step.title}</h3>
-                  <pre aria-hidden="true">{step.drawing}</pre>
+                  <pre role="img" aria-label={step.drawingLabel}>
+                    {step.drawing}
+                  </pre>
                   <p>{step.text}</p>
                 </article>
               ))}

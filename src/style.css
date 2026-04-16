@@ -457,7 +457,7 @@ body {
   gap: 32px;
 }
 
-.site-nav a,
+.site-nav-link,
 .nav-link-button {
   text-decoration: none;
   color: #272b30;
