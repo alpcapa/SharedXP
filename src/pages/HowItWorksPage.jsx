@@ -73,7 +73,6 @@ const HowItWorksPage = () => {
         <main className="middle-section">
           <section className="how-flow-section">
             <h2 className="section-title">The flow</h2>
-            <p className="section-sub">From idea to game day in a few easy steps.</p>
 
             <ol className="how-steps-list">
               {flowSteps.map((step, index) => (

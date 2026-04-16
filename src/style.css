@@ -375,7 +375,7 @@ body {
 
 .how-flow-section,
 .how-friendly-note {
-  margin-top: 36px;
+  margin-top: 20px;
 }
 
 .how-flow-section .section-title,
@@ -383,12 +383,8 @@ body {
   font-size: clamp(30px, 3vw, 42px);
 }
 
-.how-flow-section .section-sub {
-  font-size: 17px;
-}
-
 .how-steps-list {
-  margin: 16px 0 0;
+  margin: 10px 0 0;
   padding: 0;
   list-style: none;
   display: grid;
