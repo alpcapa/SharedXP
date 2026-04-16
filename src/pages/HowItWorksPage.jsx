@@ -73,6 +73,26 @@ const HowItWorksPage = ({ currentUser, onLogout }) => {
         <main className="middle-section">
           <section className="how-what-section">
             <h2 className="section-title">What is SharedXP?</h2>
+            <div className="how-what-description">
+              <p>
+                SharedXP is an experience-sharing platform designed for sports enthusiasts who love to travel. When
+                exploring new places, it’s often difficult to find opportunities to do what you enjoy most — whether
+                that’s cycling, hiking, or any other sport. Carrying equipment while traveling can also be a major
+                challenge.
+              </p>
+              <p>
+                SharedXP solves these problems by connecting you with local people who are eager to welcome you and
+                share their sports experiences wherever you go.
+              </p>
+              <p>
+                You can join as a host — helping others do what they love while earning money — or sign up as a user
+                to take part in unique, local experiences.
+              </p>
+              <p>
+                No more missing out, carrying heavy gear, or feeling lost in a new place. With SharedXP, you can stay
+                active, connected, and inspired — anywhere in the world.
+              </p>
+            </div>
             <blockquote className="how-what-quote">
               <p>
                 I am a triathlete who loves cycling, running and swimming. My first passion mountain biking is also
