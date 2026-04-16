@@ -8,16 +8,18 @@ const SiteHeader = () => {
       </Link>
 
       <nav className="site-nav">
-        <Link to="/">Explore</Link>
+        <Link to="/" className="site-nav-link">
+          Explore
+        </Link>
         <button type="button" className="nav-link-button">
           Messages
         </button>
         <button type="button" className="nav-link-button">
           Become a Host
         </button>
-        <button type="button" className="nav-link-button">
+        <Link to="/how-it-works" className="site-nav-link">
           How it works
-        </button>
+        </Link>
       </nav>
 
       <div className="auth-actions">
