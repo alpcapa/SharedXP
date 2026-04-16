@@ -9,19 +9,23 @@ const createInitials = (name) =>
     .map((word) => word[0].toUpperCase())
     .join("");
 
+const sanitizeInitials = (initials) => initials.replace(/[^A-Z0-9]/g, "").slice(0, 2) || "U";
+
 const SiteHeader = ({ currentUser, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const isLoggedIn = Boolean(currentUser);
   const hostRoute = currentUser?.isHost ? "/host-settings" : "/become-a-host";
   const hostLabel = currentUser?.isHost ? "Host Settings" : "Become A Host";
+  const navHostRoute = isLoggedIn ? hostRoute : "/become-a-host";
+  const navHostLabel = isLoggedIn ? hostLabel : "Become a Host";
 
   const fallbackPhoto = useMemo(() => {
     if (!currentUser?.fullName) {
       return "";
     }
 
-    const initials = createInitials(currentUser.fullName) || "U";
+    const initials = sanitizeInitials(createInitials(currentUser.fullName));
     return `data:image/svg+xml;utf8,${encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="${initials}">
         <rect width="100" height="100" rx="50" fill="#96c93d" />
@@ -57,8 +61,8 @@ const SiteHeader = ({ currentUser, onLogout }) => {
         <button type="button" className="nav-link-button">
           Messages
         </button>
-        <Link to="/become-a-host" className="site-nav-link">
-          Become a Host
+        <Link to={navHostRoute} className="site-nav-link">
+          {navHostLabel}
         </Link>
         <Link to="/how-it-works" className="site-nav-link">
           How it works

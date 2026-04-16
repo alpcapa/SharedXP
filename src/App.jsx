@@ -35,12 +35,59 @@ const getStoredSession = () => {
   }
 };
 
+const hashPassword = async (rawPassword) => {
+  const encodedPassword = new TextEncoder().encode(rawPassword);
+  const digestBuffer = await crypto.subtle.digest("SHA-256", encodedPassword);
+  return Array.from(new Uint8Array(digestBuffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+};
+
 function App() {
   const [registeredUsers, setRegisteredUsers] = useState(getStoredUsers);
   const [currentUser, setCurrentUser] = useState(getStoredSession);
 
   useEffect(() => {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(registeredUsers));
+  }, [registeredUsers]);
+
+  useEffect(() => {
+    const hasLegacyPasswords = registeredUsers.some(
+      (user) => Boolean(user.password) && !user.passwordHash
+    );
+
+    if (!hasLegacyPasswords) {
+      return;
+    }
+
+    const migrateLegacyPasswords = async () => {
+      const migratedUsers = await Promise.all(
+        registeredUsers.map(async (user) => {
+          if (!user.password || user.passwordHash) {
+            return user;
+          }
+
+          const passwordHash = await hashPassword(user.password);
+          const { password, ...migratedUser } = { ...user, passwordHash };
+          return migratedUser;
+        })
+      );
+
+      setRegisteredUsers(migratedUsers);
+      setCurrentUser((activeUser) => {
+        if (!activeUser) {
+          return activeUser;
+        }
+
+        return (
+          migratedUsers.find(
+            (user) => user.email.toLowerCase() === activeUser.email.toLowerCase()
+          ) ?? activeUser
+        );
+      });
+    };
+
+    migrateLegacyPasswords();
   }, [registeredUsers]);
 
   useEffect(() => {
@@ -56,11 +103,15 @@ function App() {
     () => ({
       currentUser,
       onLogout: () => setCurrentUser(null),
-      onEmailSignUp: (newUser) => {
+      onEmailSignUp: async (newUser) => {
         const normalizedEmail = newUser.email.trim().toLowerCase();
+        const passwordHash = await hashPassword(newUser.password);
+        const restProfile = { ...newUser };
+        delete restProfile.password;
         const userToSave = {
-          ...newUser,
+          ...restProfile,
           email: normalizedEmail,
+          passwordHash,
           isHost: false,
           history: newUser.history ?? []
         };
@@ -74,12 +125,13 @@ function App() {
 
         setCurrentUser(userToSave);
       },
-      onEmailLogin: (email, password) => {
+      onEmailLogin: async (email, password) => {
         const normalizedEmail = email.trim().toLowerCase();
+        const passwordHash = await hashPassword(password);
         const matchedUser = registeredUsers.find(
           (user) =>
             user.email.toLowerCase() === normalizedEmail &&
-            user.password === password
+            user.passwordHash === passwordHash
         );
 
         if (!matchedUser) {
@@ -109,7 +161,7 @@ function App() {
         const createdProviderUser = {
           fullName: `${providerName} Traveler`,
           email: providerEmail,
-          password: "",
+          passwordHash: "",
           phone: "",
           address: "",
           photo:

@@ -22,6 +22,24 @@ const HistoryPage = ({ currentUser, onLogout }) => {
   }
 
   const items = currentUser.history ?? [];
+  const occurrenceMap = {};
+  const normalizedItems = items.map((item) => {
+    let label = "";
+    let providedId = "";
+
+    if (item && typeof item === "object") {
+      label = item.label ?? item.title ?? "Experience";
+      providedId = item.id ?? "";
+    } else {
+      label = String(item);
+    }
+
+    occurrenceMap[label] = (occurrenceMap[label] ?? 0) + 1;
+    return {
+      id: providedId || `${label}-${occurrenceMap[label]}`,
+      label
+    };
+  });
 
   return (
     <div className="home-page">
@@ -31,10 +49,10 @@ const HistoryPage = ({ currentUser, onLogout }) => {
         </section>
         <main className="middle-section simple-page">
           <h1>History</h1>
-          {items.length ? (
+          {normalizedItems.length ? (
             <ul className="simple-list">
-              {items.map((item, index) => (
-                <li key={`${item}-${index}`}>{item}</li>
+              {normalizedItems.map((item) => (
+                <li key={item.id}>{item.label}</li>
               ))}
             </ul>
           ) : (

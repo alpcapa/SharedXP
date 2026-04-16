@@ -59,13 +59,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     });
   };
 
-  const completeEmailVerification = () => {
+  const completeEmailVerification = async () => {
     if (!pendingVerification) {
       return;
     }
 
-    onEmailSignUp?.(pendingVerification);
-    navigate("/");
+    try {
+      await onEmailSignUp?.(pendingVerification);
+      navigate("/");
+    } catch (error) {
+      setErrorMessage("We could not complete signup. Please try again.");
+    }
   };
 
   return (
@@ -134,7 +138,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                   id="password"
                   name="password"
                   type="password"
-                  minLength={6}
+                  minLength={8}
                   required
                   value={formValues.password}
                   onChange={onInputChange}
@@ -145,7 +149,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
-                  minLength={6}
+                  minLength={8}
                   required
                   value={formValues.confirmPassword}
                   onChange={onInputChange}
@@ -189,6 +193,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                   We sent a confirmation email to <strong>{pendingVerification.email}</strong>.
                 </p>
                 <p>After confirming your email, continue below to activate your account.</p>
+                {errorMessage && <p className="auth-error">{errorMessage}</p>}
                 <button type="button" className="btn btn-primary auth-submit" onClick={completeEmailVerification}>
                   I have confirmed my email
                 </button>

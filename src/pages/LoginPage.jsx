@@ -11,9 +11,9 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
 
   const destination = location.state?.from?.pathname ?? "/";
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
-    const loginResult = onEmailLogin?.(email, password);
+    const loginResult = await onEmailLogin?.(email, password);
 
     if (!loginResult?.success) {
       setErrorMessage(loginResult?.message ?? "Unable to login.");
