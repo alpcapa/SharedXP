@@ -31,16 +31,16 @@ const HowItWorksPage = () => {
         <main className="middle-section">
           <section className="how-flow-section">
             <h2 className="section-title">The flow</h2>
-            <p className="section-sub">From idea to game day in a few easy steps.</p>
+              <p className="section-sub">From idea to game day in a few easy steps.</p>
 
-            <ol className="how-steps-list">
-              {flowSteps.map((step, index) => (
-                <li key={step} className="how-step-item">
-                  <span className="how-step-number">{index + 1}.</span>
-                  <p>{step}</p>
-                </li>
-              ))}
-            </ol>
+              <ol className="how-steps-list">
+                {flowSteps.map((step, index) => (
+                  <li key={index} className="how-step-item">
+                    <span className="how-step-number">{index + 1}.</span>
+                    <p>{step}</p>
+                  </li>
+                ))}
+              </ol>
           </section>
 
           <section className="how-friendly-note">
@@ -53,8 +53,8 @@ const HowItWorksPage = () => {
           <section className="how-testimonials">
             <h2 className="section-title">Testimonials</h2>
             <div className="testimonial-list">
-              {testimonials.map((quote) => (
-                <blockquote key={quote} className="testimonial-quote">
+              {testimonials.map((quote, index) => (
+                <blockquote key={index} className="testimonial-quote">
                   {quote}
                 </blockquote>
               ))}
