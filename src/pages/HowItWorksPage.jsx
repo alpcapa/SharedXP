@@ -9,9 +9,9 @@ const flowSteps = [
 ];
 
 const testimonials = [
-  "“I found a tennis buddy in one day and had the best morning match in Lisbon.”",
-  "“Super easy process — from search to booking it felt smooth and clear.”",
-  "“Traveling with no gear was no problem. My local host had everything ready.”"
+  "\"I found a tennis buddy in one day and had the best morning match in Lisbon.\"",
+  "\"Super easy process - from search to booking it felt smooth and clear.\"",
+  "\"Traveling with no gear was no problem. My local host had everything ready.\""
 ];
 
 const HowItWorksPage = () => {
