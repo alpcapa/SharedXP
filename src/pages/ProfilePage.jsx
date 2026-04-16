@@ -8,7 +8,7 @@ import { getDateKey } from "../utils/date";
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const ProfilePage = () => {
+const ProfilePage = ({ currentUser, onLogout }) => {
   const { buddyId } = useParams();
   const buddy = buddies.find((item) => String(item.id) === buddyId);
   const [selectedDate, setSelectedDate] = useState("");
@@ -104,7 +104,7 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-page">
-      <SiteHeader />
+      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
       <div className="profile-back-wrap">
         <Link to="/" className="back-link">
           ← Back to home
