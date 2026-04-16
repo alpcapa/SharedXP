@@ -387,8 +387,26 @@ body {
   margin-bottom: 16px;
 }
 
-.how-what-quote {
+.how-what-description {
+  border: 1px solid #e6e7e2;
+  border-radius: 14px;
+  background: #fff;
+  padding: 20px 24px;
+}
+
+.how-what-description p {
   margin: 0;
+  font-size: clamp(16px, 1.6vw, 20px);
+  line-height: 1.7;
+  color: #2d3033;
+}
+
+.how-what-description p + p {
+  margin-top: 14px;
+}
+
+.how-what-quote {
+  margin: 16px 0 0;
   padding: 24px 28px;
   border-left: 4px solid #8abd35;
   background: #f7faf2;
