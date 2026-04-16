@@ -58,9 +58,10 @@ const HowItWorksPage = () => {
               {flowSteps.map((step) => (
                 <article key={step.title} className="how-flow-card">
                   <h3>{step.title}</h3>
-                  <pre role="img" aria-label={step.drawingLabel}>
-                    {step.drawing}
-                  </pre>
+                  <figure className="how-flow-drawing">
+                    <pre aria-hidden="true">{step.drawing}</pre>
+                    <figcaption className="sr-only">{step.drawingLabel}</figcaption>
+                  </figure>
                   <p>{step.text}</p>
                 </article>
               ))}

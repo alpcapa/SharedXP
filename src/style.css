@@ -397,6 +397,10 @@ body {
   font-size: 16px;
 }
 
+.how-flow-drawing {
+  margin: 0;
+}
+
 .how-flow-card pre {
   margin: 12px 0 0;
   padding: 12px;
@@ -428,6 +432,18 @@ body {
   font-size: 15px;
   line-height: 1.5;
   color: #3c4743;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .site-header {
