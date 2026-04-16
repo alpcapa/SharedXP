@@ -56,12 +56,12 @@ const testimonials = [
   }
 ];
 
-const HowItWorksPage = () => {
+const HowItWorksPage = ({ currentUser, onLogout }) => {
   return (
     <div className="how-it-works-page">
       <div className="middle-page-frame">
         <section className="hero how-it-works-hero">
-          <SiteHeader />
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           <div className="how-it-works-intro">
             <h1>
               How SharedXP works<span className="dot">.</span>

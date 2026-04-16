@@ -71,7 +71,7 @@ const LockIcon = () => (
   </svg>
 );
 
-const HomePage = () => {
+const HomePage = ({ currentUser, onLogout }) => {
   const [selectedSport, setSelectedSport] = useState("Cycling");
   const [selectedLocation, setSelectedLocation] = useState("Lisbon, Portugal");
   const [sportQuery, setSportQuery] = useState("");
@@ -119,7 +119,7 @@ const HomePage = () => {
     <div className="home-page">
       <div className="middle-page-frame">
         <section className="hero">
-          <SiteHeader />
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           <div className="hero-content">
             <h1>
               Find your sports buddy<span className="dot">.</span>
