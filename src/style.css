@@ -1015,12 +1015,39 @@ body {
   color: #374151;
 }
 
-.auth-form input {
+.auth-form input,
+.auth-form textarea {
   border: 1px solid #d1d5db;
   border-radius: 9px;
   padding: 10px 12px;
   font-size: 14px;
   font-family: inherit;
+}
+
+.auth-form textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.auth-phone-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-phone-code {
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #f9fafb;
+  color: #111827;
+  min-width: 62px;
+  text-align: center;
+}
+
+.auth-phone-field input {
+  flex: 1;
 }
 
 .auth-photo-preview {
