@@ -3,11 +3,11 @@ import SiteHeader from "../components/SiteHeader";
 
 const flowSteps = [
   {
-    icon: "🚲",
+    icon: "⚽",
     text: "Tell us your sport and location preferences."
   },
   {
-    icon: "✈️",
+    icon: "🤝",
     text: "We match you with locals that fit your level and vibe."
   },
   {
