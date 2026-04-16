@@ -378,6 +378,38 @@ body {
   margin-top: 20px;
 }
 
+.how-what-section {
+  margin-top: 20px;
+}
+
+.how-what-section .section-title {
+  font-size: clamp(26px, 2.8vw, 38px);
+  margin-bottom: 16px;
+}
+
+.how-what-quote {
+  margin: 0;
+  padding: 24px 28px;
+  border-left: 4px solid #8abd35;
+  background: #f7faf2;
+  border-radius: 0 14px 14px 0;
+}
+
+.how-what-quote p {
+  margin: 0 0 14px;
+  font-size: clamp(16px, 1.6vw, 20px);
+  line-height: 1.7;
+  color: #2d3033;
+  font-style: italic;
+}
+
+.how-what-attribution {
+  font-size: 15px;
+  font-weight: 700;
+  color: #5f9032;
+  font-style: normal;
+}
+
 .how-flow-section .section-title,
 .how-testimonials .section-title {
   font-size: clamp(30px, 3vw, 42px);

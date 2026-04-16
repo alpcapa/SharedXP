@@ -71,6 +71,21 @@ const HowItWorksPage = () => {
         </section>
 
         <main className="middle-section">
+          <section className="how-what-section">
+            <h2 className="section-title">What is SharedXP?</h2>
+            <blockquote className="how-what-quote">
+              <p>
+                I am a triathlete who loves cycling, running and swimming. My first passion mountain biking is also
+                something I cherish so much. But, there is a problem. Every time I travel, I have to stop doing some
+                of the things I do regularly back home. So, I thought of this idea to engage locals to help travelers
+                with their sport expertise, equipment and guidance. In return, hosts can make money for their service
+                and travelers are more than happy to pay for it. It's a win-win for all. Both enjoy being with
+                different people and create new experiences together.
+              </p>
+              <footer className="how-what-attribution">Alp R. Capa — Founder/CEO</footer>
+            </blockquote>
+          </section>
+
           <section className="how-flow-section">
             <h2 className="section-title">The flow</h2>
 
