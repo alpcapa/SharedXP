@@ -378,46 +378,36 @@ body {
   margin-top: 36px;
 }
 
-.how-flow-grid {
-  margin-top: 16px;
+.how-steps-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-.how-flow-card {
+.how-step-item {
   border: 1px solid #e6e7e2;
   border-radius: 14px;
   background: #fff;
-  padding: 16px;
+  padding: 16px 18px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
 }
 
-.how-flow-card h3 {
-  margin: 0;
-  font-size: 16px;
+.how-step-number {
+  color: #5f9032;
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1.1;
 }
 
-.how-flow-drawing {
-  margin: 0;
-}
-
-.how-flow-card pre {
-  margin: 12px 0 0;
-  padding: 12px;
-  border-radius: 10px;
-  background: #f4f7ee;
-  color: #27411a;
-  font-size: 13px;
-  line-height: 1.35;
-  white-space: pre-wrap;
-  font-family: "Courier New", Courier, monospace;
-}
-
-.how-flow-card p {
-  margin: 12px 0 0;
-  color: #596164;
-  font-size: 14px;
-  line-height: 1.45;
+.how-step-item p {
+  margin: 2px 0 0;
+  color: #374151;
+  font-size: 19px;
+  line-height: 1.4;
 }
 
 .how-friendly-note {
@@ -429,21 +419,31 @@ body {
 
 .how-friendly-note p {
   margin: 10px 0 0;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.5;
   color: #3c4743;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.how-testimonials {
+  margin-top: 36px;
+}
+
+.testimonial-list {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.testimonial-quote {
+  margin: 0;
+  border-left: 4px solid #9bbd63;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: #3f4a45;
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.5;
 }
 
 .site-header {
@@ -1209,7 +1209,7 @@ body {
   .locals-grid,
   .sports-scroll,
   .how-grid,
-  .how-flow-grid {
+  .testimonial-list {
     grid-template-columns: 1fr;
   }
 

@@ -2,37 +2,16 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 
 const flowSteps = [
-  {
-    title: "1) Pick your sport + place",
-    text: "Tell us what you want to play and where you're headed.",
-    drawingLabel: "Cartoon showing you choosing from different sports.",
-    drawing: `  ⚽  🎾  🚲
-   \\  |  /
-  [ You choose ]`
-  },
-  {
-    title: "2) Meet matching locals",
-    text: "We show friendly local buddies that match your vibe.",
-    drawingLabel: "Flow from you to SharedXP and then to a local buddy.",
-    drawing: ` [ You ] ---> [ SharedXP ] ---> [ Local buddy ]
-   (^_^)         (smart match)         (^-^)`
-  },
-  {
-    title: "3) Chat, confirm, book",
-    text: "Agree on the details, then book with protected payment.",
-    drawingLabel: "Cartoon showing two-way chat and a secure booking step.",
-    drawing: ` You  <---- chat ---->  Buddy
-   |                    |
-   +---- secure book ---+`
-  },
-  {
-    title: "4) Play and enjoy",
-    text: "Show up, play together, and make a great memory.",
-    drawingLabel: "Cartoon of two people high-fiving after playing.",
-    drawing: `  o/            \\o
- /|   High-five!   |\\
- / \\              / \\`
-  }
+  "Tell us your sport and location preferences.",
+  "We match you with locals that fit your level and vibe.",
+  "Chat to confirm details, then book securely.",
+  "Meet, play, and enjoy your sports experience."
+];
+
+const testimonials = [
+  "“I found a tennis buddy in one day and had the best morning match in Lisbon.”",
+  "“Super easy process — from search to booking it felt smooth and clear.”",
+  "“Traveling with no gear was no problem. My local host had everything ready.”"
 ];
 
 const HowItWorksPage = () => {
@@ -54,18 +33,14 @@ const HowItWorksPage = () => {
             <h2 className="section-title">The flow</h2>
             <p className="section-sub">From idea to game day in a few easy steps.</p>
 
-            <div className="how-flow-grid">
-              {flowSteps.map((step) => (
-                <article key={step.title} className="how-flow-card">
-                  <h3>{step.title}</h3>
-                  <figure className="how-flow-drawing">
-                    <pre aria-hidden="true">{step.drawing}</pre>
-                    <figcaption className="sr-only">{step.drawingLabel}</figcaption>
-                  </figure>
-                  <p>{step.text}</p>
-                </article>
+            <ol className="how-steps-list">
+              {flowSteps.map((step, index) => (
+                <li key={step} className="how-step-item">
+                  <span className="how-step-number">{index + 1}.</span>
+                  <p>{step}</p>
+                </li>
               ))}
-            </div>
+            </ol>
           </section>
 
           <section className="how-friendly-note">
@@ -73,6 +48,17 @@ const HowItWorksPage = () => {
             <p>
               You get local knowledge, no heavy gear stress, and a sports buddy who makes your trip feel easy.
             </p>
+          </section>
+
+          <section className="how-testimonials">
+            <h2 className="section-title">Testimonials</h2>
+            <div className="testimonial-list">
+              {testimonials.map((quote) => (
+                <blockquote key={quote} className="testimonial-quote">
+                  {quote}
+                </blockquote>
+              ))}
+            </div>
           </section>
         </main>
 
