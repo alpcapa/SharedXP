@@ -14,6 +14,7 @@ const COUNTRY_OPTIONS = [
   { name: "United Kingdom", code: "GB", dialCode: "+44" },
   { name: "United States", code: "US", dialCode: "+1" }
 ];
+const REGIONAL_INDICATOR_OFFSET = 127397;
 
 const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => {
   const navigate = useNavigate();
@@ -104,17 +105,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   }, [isCountryDropdownOpen, isPhoneCodeDropdownOpen]);
 
   useEffect(() => {
-    if (!isPhoneCodeDropdownOpen || !selectedCountry || !phoneCodeListRef.current) {
+    if (!isPhoneCodeDropdownOpen || !selectedPhoneCodeCountry || !phoneCodeListRef.current) {
       return;
     }
 
     const selectedOption = phoneCodeListRef.current.querySelector(
-      `[data-country-code="${selectedCountry.code}"]`
+      `[data-country-code="${selectedPhoneCodeCountry.code}"]`
     );
     selectedOption?.scrollIntoView({
       block: "center"
     });
-  }, [isPhoneCodeDropdownOpen, selectedCountry]);
+  }, [isPhoneCodeDropdownOpen, selectedPhoneCodeCountry]);
 
   const onInputChange = (event) => {
     const { name, value } = event.target;
@@ -184,7 +185,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   const getCountryFlag = (countryCode) =>
     countryCode
       .toUpperCase()
-      .replace(/./g, (character) => String.fromCodePoint(127397 + character.charCodeAt(0)));
+      .replace(/./g, (character) =>
+        String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + character.charCodeAt(0))
+      );
 
   const completeEmailVerification = async () => {
     if (!pendingVerification) {
