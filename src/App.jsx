@@ -193,6 +193,26 @@ function App() {
               : user
           )
         );
+      },
+      onSaveHostProfile: (hostProfile) => {
+        if (!currentUser) {
+          return;
+        }
+
+        const updatedUser = {
+          ...currentUser,
+          isHost: true,
+          hostProfile
+        };
+
+        setCurrentUser(updatedUser);
+        setRegisteredUsers((previousUsers) =>
+          previousUsers.map((user) =>
+            user.email.toLowerCase() === currentUser.email.toLowerCase()
+              ? updatedUser
+              : user
+          )
+        );
       }
     }),
     [currentUser, registeredUsers]
