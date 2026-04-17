@@ -158,9 +158,10 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     const firstName = formValues.firstName.trim();
     const lastName = formValues.lastName.trim();
     const fullName = `${firstName} ${lastName}`.trim();
+    const selectedDialCodeCountry = selectedPhoneCodeCountry ?? selectedCountry;
     const rawPhone = formValues.phone.trim();
     const phoneDigitsOnly = rawPhone.replace(/\D/g, "");
-    const dialCodeDigits = selectedCountry.dialCode.replace(/\D/g, "");
+    const dialCodeDigits = selectedDialCodeCountry.dialCode.replace(/\D/g, "");
     const localPhoneDigits = phoneDigitsOnly.startsWith(dialCodeDigits)
       ? phoneDigitsOnly.slice(dialCodeDigits.length)
       : phoneDigitsOnly;
@@ -174,8 +175,8 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       password: formValues.password,
       country: selectedCountry.name,
       countryCode: selectedCountry.code,
-      countryDialCode: selectedCountry.dialCode,
-      phone: `${selectedCountry.dialCode} ${localPhoneDigits}`.trim(),
+      countryDialCode: selectedDialCodeCountry.dialCode,
+      phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
       address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
         .filter(Boolean)
         .join(", "),
@@ -432,7 +433,6 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                                 onClick={() => {
                                   setFormValues((previousValues) => ({
                                     ...previousValues,
-                                    country: countryOption.name,
                                     phoneCountryCode: countryOption.code
                                   }));
                                   setIsPhoneCodeDropdownOpen(false);
