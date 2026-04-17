@@ -419,12 +419,15 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                               role="option"
                               aria-selected={selectedCountry?.code === countryOption.code}
                               onClick={() => {
+                                const nextCities = COUNTRY_CITY_OPTIONS[countryOption.code] ?? [];
                                 setFormValues((previousValues) => ({
-                                   ...previousValues,
-                                   country: countryOption.name,
-                                   city: (COUNTRY_CITY_OPTIONS[countryOption.code] ?? [])[0] ?? "",
-                                   phoneCountryCode: countryOption.code
-                                 }));
+                                  ...previousValues,
+                                  country: countryOption.name,
+                                  city: nextCities.includes(previousValues.city)
+                                    ? previousValues.city
+                                    : (nextCities[0] ?? ""),
+                                  phoneCountryCode: countryOption.code
+                                }));
                                 setIsCountryDropdownOpen(false);
                               }}
                             >
