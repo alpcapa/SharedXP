@@ -289,7 +289,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
         !sportConfig.description.trim() ||
         !sportConfig.about.trim() ||
         !sportConfig.pricing ||
-        Number(sportConfig.pricing) <= 0 ||
+        Number(sportConfig.pricing) < 1 ||
         !sportConfig.level.trim() ||
         availability.days.length === 0 ||
         !availability.startTime ||
@@ -548,7 +548,11 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                       <div key={imageIndex} className="host-image-item">
                         <img
                           src={imageSrc}
-                          alt={`${activeSport.sport || `Sport ${activeSportIndex + 1}`} image ${imageIndex + 1}`}
+                          alt={
+                            activeSport.sport
+                              ? `${activeSport.sport} image ${imageIndex + 1}`
+                              : `Sport ${activeSportIndex + 1} image ${imageIndex + 1}`
+                          }
                         />
                         <button
                           type="button"
