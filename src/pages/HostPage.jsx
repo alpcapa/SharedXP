@@ -31,6 +31,16 @@ const COUNTRY_CITY_OPTIONS = {
   US: ["New York", "Los Angeles", "Austin", "Miami"]
 };
 const REGIONAL_INDICATOR_OFFSET = 127397;
+const REQUIRED_HOST_CONSENTS = [
+  {
+    field: "agreeTermsAndConditions",
+    message: "Please agree to Terms & Conditions."
+  },
+  {
+    field: "agreeHostingRelatedEmailsAndCalls",
+    message: "Please agree to receive hosting related emails and calls."
+  }
+];
 
 const createEmptySportConfig = () => ({
   sport: "",
@@ -88,6 +98,13 @@ const getInitialHostProfile = (user) => {
       accountNumber: existingProfile.stripe?.accountNumber ?? "",
       routingNumber: existingProfile.stripe?.routingNumber ?? "",
       payoutCurrency: existingProfile.stripe?.payoutCurrency ?? ""
+    },
+    consents: {
+      agreeTermsAndConditions: existingProfile.consents?.agreeTermsAndConditions ?? false,
+      agreePromotionsAndMarketingEmails:
+        existingProfile.consents?.agreePromotionsAndMarketingEmails ?? false,
+      agreeHostingRelatedEmailsAndCalls:
+        existingProfile.consents?.agreeHostingRelatedEmailsAndCalls ?? false
     },
     sports: existingSports
   };
@@ -245,6 +262,16 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
     }));
   };
 
+  const updateConsentField = (fieldName, value) => {
+    setHostProfileDraft((previousDraft) => ({
+      ...previousDraft,
+      consents: {
+        ...previousDraft.consents,
+        [fieldName]: value
+      }
+    }));
+  };
+
   const updateSportField = (fieldName, value) => {
     setHostProfileDraft((previousDraft) => ({
       ...previousDraft,
@@ -375,6 +402,12 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
     ];
     if (stripeFields.some((value) => !value.trim())) {
       return "Complete all bank details before saving.";
+    }
+    const missingConsent = REQUIRED_HOST_CONSENTS.find(
+      (consentConfig) => !hostProfileDraft.consents?.[consentConfig.field]
+    );
+    if (missingConsent) {
+      return missingConsent.message;
     }
 
     const invalidSportIndex = hostProfileDraft.sports.findIndex((sportConfig) => {
@@ -790,6 +823,56 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                     </div>
                   )}
                 </div>
+              </div>
+            </section>
+
+            <section className="host-onboarding-card">
+              <h2>Consents</h2>
+              <div className="form-consent-group">
+                <label className="form-consent-option" htmlFor="hostAgreeTermsAndConditions">
+                  <input
+                    id="hostAgreeTermsAndConditions"
+                    type="checkbox"
+                    checked={hostProfileDraft.consents?.agreeTermsAndConditions ?? false}
+                    onChange={(event) =>
+                      updateConsentField("agreeTermsAndConditions", event.target.checked)
+                    }
+                  />
+                  <span>
+                    I agree to{" "}
+                    <a href="https://sharedxp.app/terms-and-conditions" target="_blank" rel="noreferrer">
+                      Terms &amp; Conditions
+                    </a>
+                  </span>
+                </label>
+                <label
+                  className="form-consent-option"
+                  htmlFor="hostAgreeHostingRelatedEmailsAndCalls"
+                >
+                  <input
+                    id="hostAgreeHostingRelatedEmailsAndCalls"
+                    type="checkbox"
+                    checked={hostProfileDraft.consents?.agreeHostingRelatedEmailsAndCalls ?? false}
+                    onChange={(event) =>
+                      updateConsentField("agreeHostingRelatedEmailsAndCalls", event.target.checked)
+                    }
+                  />
+                  <span>I agree to receive hosting related emails and calls</span>
+                </label>
+                <label
+                  className="form-consent-option"
+                  htmlFor="hostAgreePromotionsAndMarketingEmails"
+                >
+                  <input
+                    id="hostAgreePromotionsAndMarketingEmails"
+                    type="checkbox"
+                    checked={hostProfileDraft.consents?.agreePromotionsAndMarketingEmails ?? false}
+                    onChange={(event) =>
+                      updateConsentField("agreePromotionsAndMarketingEmails", event.target.checked)
+                    }
+                  />
+                  <span>I agree to receive Promotions &amp; Marketing emails</span>
+                </label>
               </div>
             </section>
 

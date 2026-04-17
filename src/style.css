@@ -1024,6 +1024,33 @@ body {
   font-family: inherit;
 }
 
+.form-consent-group {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.auth-form .form-consent-option,
+.host-onboarding-form .form-consent-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-consent-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+.form-consent-option a {
+  color: #166534;
+  text-decoration: underline;
+}
+
 .auth-phone-field {
   display: flex;
   align-items: center;

@@ -14,6 +14,18 @@ const COUNTRY_OPTIONS = [
   { name: "United Kingdom", code: "GB", dialCode: "+44" },
   { name: "United States", code: "US", dialCode: "+1" }
 ];
+const COUNTRY_CITY_OPTIONS = {
+  BR: ["Rio de Janeiro", "São Paulo", "Florianópolis", "Salvador"],
+  CA: ["Toronto", "Vancouver", "Montreal", "Calgary"],
+  FR: ["Paris", "Lyon", "Nice", "Bordeaux"],
+  DE: ["Berlin", "Munich", "Hamburg", "Cologne"],
+  IN: ["Mumbai", "Delhi", "Bengaluru", "Goa"],
+  JP: ["Tokyo", "Osaka", "Kyoto", "Sapporo"],
+  PT: ["Lisbon", "Porto", "Faro", "Coimbra"],
+  ES: ["Madrid", "Barcelona", "Valencia", "Seville"],
+  GB: ["London", "Manchester", "Bristol", "Edinburgh"],
+  US: ["New York", "Los Angeles", "Austin", "Miami"]
+};
 const REGIONAL_INDICATOR_OFFSET = 127397;
 
 const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => {
@@ -25,11 +37,14 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     password: "",
     confirmPassword: "",
     country: "",
+    city: "",
     phoneCountryCode: "",
     phone: "",
     addressLine1: "",
     addressLine2: "",
-    photo: ""
+    photo: "",
+    agreeTermsAndConditions: false,
+    agreePromotionsAndMarketingEmails: false
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
@@ -37,8 +52,11 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   const [countrySearchValue, setCountrySearchValue] = useState("");
   const [isPhoneCodeDropdownOpen, setIsPhoneCodeDropdownOpen] = useState(false);
   const [phoneCodeSearchValue, setPhoneCodeSearchValue] = useState("");
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
+  const [citySearchValue, setCitySearchValue] = useState("");
   const countryDropdownRef = useRef(null);
   const phoneCodeDropdownRef = useRef(null);
+  const cityDropdownRef = useRef(null);
   const phoneCodeListRef = useRef(null);
   const selectedCountry = useMemo(
     () => {
@@ -68,6 +86,23 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       countryOption.name.toLowerCase().includes(normalizedSearch)
     );
   }, [countrySearchValue]);
+  const availableCities = useMemo(() => {
+    if (!selectedCountry) {
+      return [];
+    }
+    const cityOptions = COUNTRY_CITY_OPTIONS[selectedCountry.code] ?? [];
+    if (formValues.city && !cityOptions.includes(formValues.city)) {
+      return [formValues.city, ...cityOptions];
+    }
+    return cityOptions;
+  }, [selectedCountry, formValues.city]);
+  const filteredCityOptions = useMemo(() => {
+    const normalizedSearch = citySearchValue.trim().toLowerCase();
+    if (!normalizedSearch) {
+      return availableCities;
+    }
+    return availableCities.filter((cityOption) => cityOption.toLowerCase().includes(normalizedSearch));
+  }, [availableCities, citySearchValue]);
   const filteredPhoneCodeOptions = useMemo(() => {
     const normalizedSearch = phoneCodeSearchValue.trim().toLowerCase();
     if (!normalizedSearch) {
@@ -96,13 +131,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       ) {
         setIsPhoneCodeDropdownOpen(false);
       }
+
+      if (isCityDropdownOpen && cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+        setIsCityDropdownOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleOutsideClick);
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, [isCountryDropdownOpen, isPhoneCodeDropdownOpen]);
+  }, [isCountryDropdownOpen, isPhoneCodeDropdownOpen, isCityDropdownOpen]);
 
   useEffect(() => {
     if (!isPhoneCodeDropdownOpen || !selectedPhoneCodeCountry || !phoneCodeListRef.current) {
@@ -119,10 +158,10 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   }, [isPhoneCodeDropdownOpen, selectedPhoneCodeCountry]);
 
   const onInputChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
     setFormValues((previousValues) => ({
       ...previousValues,
-      [name]: value
+      [name]: type === "checkbox" ? checked : value
     }));
   };
 
@@ -154,6 +193,14 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       setErrorMessage("Please select a valid country from the list.");
       return;
     }
+    if (!formValues.city.trim()) {
+      setErrorMessage("Please select a valid city from the list.");
+      return;
+    }
+    if (!formValues.agreeTermsAndConditions) {
+      setErrorMessage("Please agree to Terms & Conditions to continue.");
+      return;
+    }
 
     const firstName = formValues.firstName.trim();
     const lastName = formValues.lastName.trim();
@@ -181,12 +228,15 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       password: formValues.password,
       country: selectedCountry.name,
       countryCode: selectedCountry.code,
+      city: formValues.city.trim(),
       countryDialCode: selectedDialCodeCountry.dialCode,
       phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
       address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
         .filter(Boolean)
         .join(", "),
-      photo: formValues.photo
+      photo: formValues.photo,
+      agreedToTermsAndConditions: formValues.agreeTermsAndConditions,
+      agreedToPromotionsAndMarketingEmails: formValues.agreePromotionsAndMarketingEmails
     });
   };
 
@@ -369,9 +419,13 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                               role="option"
                               aria-selected={selectedCountry?.code === countryOption.code}
                               onClick={() => {
+                                const nextCities = COUNTRY_CITY_OPTIONS[countryOption.code] ?? [];
                                 setFormValues((previousValues) => ({
                                   ...previousValues,
                                   country: countryOption.name,
+                                  city: nextCities.includes(previousValues.city)
+                                    ? previousValues.city
+                                    : nextCities[0] || "",
                                   phoneCountryCode: countryOption.code
                                 }));
                                 setIsCountryDropdownOpen(false);
@@ -379,6 +433,64 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                             >
                               <span>{getCountryFlag(countryOption.code)}</span>
                               <span>{countryOption.name}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <label id="city-label" htmlFor="city-selector">
+                  City
+                </label>
+                <div className="auth-search-dropdown" ref={cityDropdownRef}>
+                  <button
+                    id="city-selector"
+                    type="button"
+                    className="auth-dropdown-trigger"
+                    aria-haspopup="listbox"
+                    aria-expanded={isCityDropdownOpen}
+                    aria-controls="city-listbox"
+                    disabled={!selectedCountry}
+                    onClick={() => {
+                      setIsCityDropdownOpen((previousState) => !previousState);
+                      setCitySearchValue("");
+                    }}
+                  >
+                    {formValues.city || "Select city"}
+                  </button>
+                  {isCityDropdownOpen && (
+                    <div className="auth-dropdown-panel">
+                      <input
+                        type="search"
+                        className="auth-dropdown-search"
+                        placeholder="Search city"
+                        value={citySearchValue}
+                        onChange={(event) => setCitySearchValue(event.target.value)}
+                      />
+                      <ul
+                        id="city-listbox"
+                        className="auth-dropdown-options"
+                        role="listbox"
+                        aria-labelledby="city-label"
+                      >
+                        {filteredCityOptions.map((cityOption) => (
+                          <li key={cityOption}>
+                            <button
+                              type="button"
+                              className="auth-dropdown-option"
+                              role="option"
+                              aria-selected={formValues.city === cityOption}
+                              onClick={() => {
+                                setFormValues((previousValues) => ({
+                                  ...previousValues,
+                                  city: cityOption
+                                }));
+                                setIsCityDropdownOpen(false);
+                              }}
+                            >
+                              <span>{cityOption}</span>
                             </button>
                           </li>
                         ))}
@@ -470,10 +582,37 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 {formValues.photo && (
                   <img src={formValues.photo} alt="Selected profile" className="auth-photo-preview" />
                 )}
+                <div className="form-consent-group">
+                  <label className="form-consent-option" htmlFor="agreeTermsAndConditions">
+                    <input
+                      id="agreeTermsAndConditions"
+                      name="agreeTermsAndConditions"
+                      type="checkbox"
+                      checked={formValues.agreeTermsAndConditions}
+                      onChange={onInputChange}
+                    />
+                    <span>
+                      I agree to{" "}
+                      <a href="https://sharedxp.app/terms-and-conditions" target="_blank" rel="noreferrer">
+                        Terms &amp; Conditions
+                      </a>
+                    </span>
+                  </label>
+                  <label className="form-consent-option" htmlFor="agreePromotionsAndMarketingEmails">
+                    <input
+                      id="agreePromotionsAndMarketingEmails"
+                      name="agreePromotionsAndMarketingEmails"
+                      type="checkbox"
+                      checked={formValues.agreePromotionsAndMarketingEmails}
+                      onChange={onInputChange}
+                    />
+                    <span>I agree to receive Promotions &amp; Marketing emails</span>
+                  </label>
+                </div>
 
                 {errorMessage && <p className="auth-error">{errorMessage}</p>}
                 <button type="submit" className="btn btn-primary auth-submit">
-                  Continue to email verification
+                  Continue
                 </button>
               </form>
             ) : (
