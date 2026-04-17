@@ -157,7 +157,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       return;
     }
     if (!formValues.agreeTermsAndConditions || !formValues.agreePromotionsAndMarketingEmails) {
-      setErrorMessage("Please accept all required agreements to continue.");
+      setErrorMessage(
+        "Please agree to Terms & Conditions and Promotions & Marketing emails to continue."
+      );
       return;
     }
 

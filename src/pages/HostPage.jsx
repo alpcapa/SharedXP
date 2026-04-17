@@ -393,14 +393,23 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
     if (stripeFields.some((value) => !value.trim())) {
       return "Complete all bank details before saving.";
     }
-    if (!hostProfileDraft.consents?.agreeTermsAndConditions) {
-      return "Please agree to Terms & Conditions.";
-    }
-    if (!hostProfileDraft.consents?.agreePromotionsAndMarketingEmails) {
-      return "Please agree to receive Promotions & Marketing emails.";
-    }
-    if (!hostProfileDraft.consents?.agreeHostingRelatedEmailsAndCalls) {
-      return "Please agree to receive hosting related emails and calls.";
+    const requiredConsents = [
+      {
+        isChecked: hostProfileDraft.consents?.agreeTermsAndConditions,
+        message: "Please agree to Terms & Conditions."
+      },
+      {
+        isChecked: hostProfileDraft.consents?.agreePromotionsAndMarketingEmails,
+        message: "Please agree to receive Promotions & Marketing emails."
+      },
+      {
+        isChecked: hostProfileDraft.consents?.agreeHostingRelatedEmailsAndCalls,
+        message: "Please agree to receive hosting related emails and calls."
+      }
+    ];
+    const missingConsent = requiredConsents.find((consentConfig) => !consentConfig.isChecked);
+    if (missingConsent) {
+      return missingConsent.message;
     }
 
     const invalidSportIndex = hostProfileDraft.sports.findIndex((sportConfig) => {
