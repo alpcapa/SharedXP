@@ -425,7 +425,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                                   country: countryOption.name,
                                   city: nextCities.includes(previousValues.city)
                                     ? previousValues.city
-                                    : (nextCities[0] || ""),
+                                    : nextCities[0] || "",
                                   phoneCountryCode: countryOption.code
                                 }));
                                 setIsCountryDropdownOpen(false);
