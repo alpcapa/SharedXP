@@ -185,8 +185,8 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   const getCountryFlag = (countryCode) =>
     countryCode
       .toUpperCase()
-      .replace(/./g, (character) =>
-        String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + character.charCodeAt(0))
+      .replace(/./g, (char) =>
+        String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + char.charCodeAt(0))
       );
 
   const completeEmailVerification = async () => {
@@ -308,6 +308,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                   id="addressLine2"
                   name="addressLine2"
                   type="text"
+                  aria-label="Address line 2"
                   value={formValues.addressLine2}
                   onChange={onInputChange}
                 />
