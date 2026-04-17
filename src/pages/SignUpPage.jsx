@@ -113,7 +113,8 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       `[data-country-code="${selectedPhoneCodeCountry.code}"]`
     );
     selectedOption?.scrollIntoView({
-      block: "center"
+      block: "center",
+      behavior: "smooth"
     });
   }, [isPhoneCodeDropdownOpen, selectedPhoneCodeCountry]);
 
@@ -313,12 +314,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                   onChange={onInputChange}
                 />
 
-                <label htmlFor="country">Country</label>
+                <label id="country-label" htmlFor="country">
+                  Country
+                </label>
                 <div className="auth-search-dropdown" ref={countryDropdownRef}>
                   <button
                     id="country"
                     type="button"
                     className="auth-dropdown-trigger"
+                    aria-haspopup="listbox"
+                    aria-expanded={isCountryDropdownOpen}
+                    aria-controls="country-listbox"
                     onClick={() => {
                       setIsCountryDropdownOpen((previousState) => !previousState);
                       setCountrySearchValue("");
@@ -342,12 +348,19 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                         value={countrySearchValue}
                         onChange={(event) => setCountrySearchValue(event.target.value)}
                       />
-                      <ul className="auth-dropdown-options" role="listbox">
+                      <ul
+                        id="country-listbox"
+                        className="auth-dropdown-options"
+                        role="listbox"
+                        aria-labelledby="country-label"
+                      >
                         {filteredCountryOptions.map((countryOption) => (
                           <li key={countryOption.code}>
                             <button
                               type="button"
                               className="auth-dropdown-option"
+                              role="option"
+                              aria-selected={selectedCountry?.code === countryOption.code}
                               onClick={() => {
                                 setFormValues((previousValues) => ({
                                   ...previousValues,
@@ -367,12 +380,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                   )}
                 </div>
 
-                <label htmlFor="phone">Phone</label>
+                <label id="phone-label" htmlFor="phone">
+                  Phone
+                </label>
                 <div className="auth-phone-field">
                   <div className="auth-search-dropdown auth-phone-code-picker" ref={phoneCodeDropdownRef}>
                     <button
                       type="button"
                       className="auth-dropdown-trigger auth-phone-code-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded={isPhoneCodeDropdownOpen}
+                      aria-controls="phone-code-listbox"
                       onClick={() => {
                         setIsPhoneCodeDropdownOpen((previousState) => !previousState);
                         setPhoneCodeSearchValue("");
@@ -396,13 +414,21 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                           value={phoneCodeSearchValue}
                           onChange={(event) => setPhoneCodeSearchValue(event.target.value)}
                         />
-                        <ul className="auth-dropdown-options" role="listbox" ref={phoneCodeListRef}>
+                        <ul
+                          id="phone-code-listbox"
+                          className="auth-dropdown-options"
+                          role="listbox"
+                          aria-labelledby="phone-label"
+                          ref={phoneCodeListRef}
+                        >
                           {filteredPhoneCodeOptions.map((countryOption) => (
                             <li key={`phone-code-${countryOption.code}`}>
                               <button
                                 type="button"
                                 className="auth-dropdown-option"
                                 data-country-code={countryOption.code}
+                                role="option"
+                                aria-selected={selectedPhoneCodeCountry?.code === countryOption.code}
                                 onClick={() => {
                                   setFormValues((previousValues) => ({
                                     ...previousValues,
