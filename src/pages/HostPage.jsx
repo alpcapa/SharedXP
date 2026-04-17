@@ -546,7 +546,10 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                   <div className="host-image-grid">
                     {activeSport.images.map((imageSrc, imageIndex) => (
                       <div key={imageIndex} className="host-image-item">
-                        <img src={imageSrc} alt={`Sport ${activeSportIndex + 1} ${imageIndex + 1}`} />
+                        <img
+                          src={imageSrc}
+                          alt={`${activeSport.sport || `Sport ${activeSportIndex + 1}`} image ${imageIndex + 1}`}
+                        />
                         <button
                           type="button"
                           className="host-image-remove"
