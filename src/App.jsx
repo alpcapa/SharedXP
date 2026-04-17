@@ -35,6 +35,23 @@ const getStoredSession = () => {
   }
 };
 
+const inferCityFromAddress = (address) => {
+  if (!address) {
+    return "";
+  }
+
+  const addressParts = address
+    .split(",")
+    .map((addressPart) => addressPart.trim())
+    .filter(Boolean);
+
+  if (addressParts.length >= 2) {
+    return addressParts[1];
+  }
+
+  return addressParts[0] ?? "";
+};
+
 const hashPassword = async (rawPassword) => {
   const encodedPassword = new TextEncoder().encode(rawPassword);
   const digestBuffer = await crypto.subtle.digest("SHA-256", encodedPassword);
@@ -213,6 +230,77 @@ function App() {
               : user
           )
         );
+      },
+      onUpdateProfile: async (profileUpdates) => {
+        if (!currentUser) {
+          return {
+            success: false,
+            message: "Please log in to update your profile."
+          };
+        }
+
+        const previousEmail = currentUser.email.trim().toLowerCase();
+        const nextEmail = (profileUpdates.email ?? currentUser.email).trim().toLowerCase();
+        const nextPhone = (profileUpdates.phone ?? currentUser.phone ?? "").trim();
+        const hasCriticalChanges =
+          nextEmail !== previousEmail || nextPhone !== (currentUser.phone ?? "").trim();
+
+        const isEmailAlreadyInUse = registeredUsers.some(
+          (user) => user.email.toLowerCase() === nextEmail && user.email.toLowerCase() !== previousEmail
+        );
+        if (isEmailAlreadyInUse) {
+          return {
+            success: false,
+            message: "This email is already in use by another account."
+          };
+        }
+
+        const profileCity = profileUpdates.city?.trim() || inferCityFromAddress(profileUpdates.address);
+        const shouldSyncHostProfile = Boolean(currentUser.isHost && currentUser.hostProfile);
+        const nextHostProfile = shouldSyncHostProfile
+          ? {
+              ...currentUser.hostProfile,
+              country: profileUpdates.country ?? currentUser.hostProfile.country,
+              city: profileCity || currentUser.hostProfile.city || "",
+              stripe: {
+                ...(currentUser.hostProfile.stripe ?? {}),
+                stripeEmail: nextEmail
+              }
+            }
+          : currentUser.hostProfile;
+
+        const updatedUser = {
+          ...currentUser,
+          ...profileUpdates,
+          firstName: currentUser.firstName,
+          lastName: currentUser.lastName,
+          fullName: currentUser.fullName,
+          email: nextEmail,
+          phone: nextPhone,
+          hostProfile: nextHostProfile
+        };
+
+        setRegisteredUsers((previousUsers) =>
+          previousUsers.map((user) =>
+            user.email.toLowerCase() === previousEmail
+              ? updatedUser
+              : user
+          )
+        );
+
+        if (hasCriticalChanges) {
+          setCurrentUser(null);
+          return {
+            success: true,
+            requiresReauthentication: true
+          };
+        }
+
+        setCurrentUser(updatedUser);
+        return {
+          success: true,
+          requiresReauthentication: false
+        };
       }
     }),
     [currentUser, registeredUsers]

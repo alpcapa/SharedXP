@@ -1371,6 +1371,77 @@ body {
   margin-top: 10px;
 }
 
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.profile-name-row h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.verified-host-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  background: #ecfdf3;
+  color: #166534;
+  border: 1px solid #86efac;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.profile-form {
+  margin-top: 14px;
+}
+
+.profile-photo-editor {
+  position: relative;
+  width: 170px;
+}
+
+.profile-photo-large {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+.profile-photo-edit-button {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+}
+
+.profile-photo-input {
+  display: none;
+}
+
+.profile-form-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.profile-form-grid input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
 .profile-page .site-header {
   margin: 10px;
 }
