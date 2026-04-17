@@ -837,7 +837,6 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                   <input
                     id="hostAgreeTermsAndConditions"
                     type="checkbox"
-                    required
                     checked={hostProfileDraft.consents?.agreeTermsAndConditions ?? false}
                     onChange={(event) =>
                       updateConsentField("agreeTermsAndConditions", event.target.checked)
@@ -852,7 +851,6 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                   <input
                     id="hostAgreePromotionsAndMarketingEmails"
                     type="checkbox"
-                    required
                     checked={hostProfileDraft.consents?.agreePromotionsAndMarketingEmails ?? false}
                     onChange={(event) =>
                       updateConsentField("agreePromotionsAndMarketingEmails", event.target.checked)
@@ -867,7 +865,6 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                   <input
                     id="hostAgreeHostingRelatedEmailsAndCalls"
                     type="checkbox"
-                    required
                     checked={hostProfileDraft.consents?.agreeHostingRelatedEmailsAndCalls ?? false}
                     onChange={(event) =>
                       updateConsentField("agreeHostingRelatedEmailsAndCalls", event.target.checked)

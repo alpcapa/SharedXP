@@ -488,7 +488,6 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                       id="agreeTermsAndConditions"
                       name="agreeTermsAndConditions"
                       type="checkbox"
-                      required
                       checked={formValues.agreeTermsAndConditions}
                       onChange={onInputChange}
                     />
@@ -499,7 +498,6 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                       id="agreePromotionsAndMarketingEmails"
                       name="agreePromotionsAndMarketingEmails"
                       type="checkbox"
-                      required
                       checked={formValues.agreePromotionsAndMarketingEmails}
                       onChange={onInputChange}
                     />
