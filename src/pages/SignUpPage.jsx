@@ -160,7 +160,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     const fullName = `${firstName} ${lastName}`.trim();
     const selectedDialCodeCountry = selectedPhoneCodeCountry ?? selectedCountry;
     if (!selectedDialCodeCountry) {
-      setErrorMessage("Please select a valid phone area code.");
+      setErrorMessage("Please select a country and phone area code.");
       return;
     }
     const rawPhone = formValues.phone.trim();
