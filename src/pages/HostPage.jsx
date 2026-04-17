@@ -20,6 +20,23 @@ const createEmptySportConfig = () => ({
   images: []
 });
 
+const inferCityFromAddress = (address) => {
+  if (!address) {
+    return "";
+  }
+
+  const addressParts = address
+    .split(",")
+    .map((addressPart) => addressPart.trim())
+    .filter(Boolean);
+
+  if (addressParts.length >= 2) {
+    return addressParts[1];
+  }
+
+  return addressParts[0] ?? "";
+};
+
 const getInitialHostProfile = (user) => {
   const existingProfile = user?.hostProfile ?? {};
   const existingSports = Array.isArray(existingProfile.sports) && existingProfile.sports.length > 0
@@ -39,7 +56,7 @@ const getInitialHostProfile = (user) => {
     city:
       existingProfile.city ??
       user?.city ??
-      user?.address?.split(",")?.[0]?.trim() ??
+      inferCityFromAddress(user?.address) ??
       "",
     stripe: {
       stripeEmail: existingProfile.stripe?.stripeEmail ?? user?.email ?? "",
@@ -246,11 +263,11 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
 
   const validateOnboarding = () => {
     if (!hostProfileDraft.country.trim()) {
-      return "Country is required and must come from your registration profile.";
+      return "Country is missing from your registration profile.";
     }
 
     if (!hostProfileDraft.city.trim()) {
-      return "City is required and must come from your registration profile.";
+      return "City is missing from your registration profile.";
     }
 
     const stripeFields = [
@@ -371,14 +388,22 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                 />
 
                 <label htmlFor="payoutCurrency">Payout currency</label>
-                <input
+                <select
                   id="payoutCurrency"
-                  type="text"
                   required
-                  placeholder="USD"
                   value={hostProfileDraft.stripe.payoutCurrency}
-                  onChange={(event) => updateStripeField("payoutCurrency", event.target.value.toUpperCase())}
-                />
+                  onChange={(event) => updateStripeField("payoutCurrency", event.target.value)}
+                >
+                  <option value="">Select currency</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="CAD">CAD</option>
+                  <option value="AUD">AUD</option>
+                  <option value="JPY">JPY</option>
+                  <option value="INR">INR</option>
+                  <option value="BRL">BRL</option>
+                </select>
 
                 <label htmlFor="hostCountry">Country</label>
                 <input id="hostCountry" type="text" value={hostProfileDraft.country} readOnly />
@@ -520,7 +545,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                 {activeSport.images.length > 0 && (
                   <div className="host-image-grid">
                     {activeSport.images.map((imageSrc, imageIndex) => (
-                      <div key={`${imageSrc.slice(0, 24)}-${imageIndex}`} className="host-image-item">
+                      <div key={imageIndex} className="host-image-item">
                         <img src={imageSrc} alt={`Sport ${activeSportIndex + 1} ${imageIndex + 1}`} />
                         <button
                           type="button"
