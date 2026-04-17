@@ -21,6 +21,32 @@ const getAddressLines = (address) => {
   };
 };
 
+const DEFAULT_PROFILE_PHOTO =
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&h=300&q=80";
+
+const getSafeImageSource = (imageSource, fallbackImageSource) => {
+  if (typeof imageSource !== "string") {
+    return fallbackImageSource;
+  }
+
+  try {
+    const parsedImageSource = new URL(imageSource.trim());
+    return parsedImageSource.protocol === "https:" || parsedImageSource.protocol === "http:"
+      ? parsedImageSource.href
+      : fallbackImageSource;
+  } catch (error) {
+    return fallbackImageSource;
+  }
+};
+
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not read selected image."));
+    reader.readAsDataURL(file);
+  });
+
 const getInitialFormValues = (user) => {
   const { addressLine1, addressLine2 } = getAddressLines(user?.address);
   return {
@@ -43,14 +69,27 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
   const navigate = useNavigate();
   const photoInputRef = useRef(null);
   const [formValues, setFormValues] = useState(getInitialFormValues(currentUser));
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
+  const [selectedPhotoPreviewUrl, setSelectedPhotoPreviewUrl] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     setFormValues(getInitialFormValues(currentUser));
+    setSelectedPhotoFile(null);
+    setSelectedPhotoPreviewUrl("");
     setErrorMessage("");
     setSuccessMessage("");
   }, [currentUser]);
+
+  useEffect(
+    () => () => {
+      if (selectedPhotoPreviewUrl) {
+        URL.revokeObjectURL(selectedPhotoPreviewUrl);
+      }
+    },
+    [selectedPhotoPreviewUrl]
+  );
 
   if (!currentUser) {
     return (
@@ -71,6 +110,10 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
     );
   }
 
+  const profilePhoto =
+    selectedPhotoPreviewUrl ||
+    getSafeImageSource(formValues.photo || currentUser.photo, DEFAULT_PROFILE_PHOTO);
+
   const onInputChange = (event) => {
     const { name, value, checked, type } = event.target;
     setFormValues((previousValues) => ({
@@ -85,14 +128,20 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       return;
     }
 
-    const fileReader = new FileReader();
-    fileReader.onload = () => {
-      setFormValues((previousValues) => ({
-        ...previousValues,
-        photo: String(fileReader.result)
-      }));
-    };
-    fileReader.readAsDataURL(selectedFile);
+    const isSupportedImageType = /^image\/(png|jpe?g|gif|webp|bmp)$/i.test(selectedFile.type);
+    if (!isSupportedImageType) {
+      setSuccessMessage("");
+      setErrorMessage("Please upload a PNG, JPG, GIF, WEBP, or BMP image.");
+      return;
+    }
+
+    if (selectedPhotoPreviewUrl) {
+      URL.revokeObjectURL(selectedPhotoPreviewUrl);
+    }
+
+    setSelectedPhotoFile(selectedFile);
+    setSelectedPhotoPreviewUrl(URL.createObjectURL(selectedFile));
+    setErrorMessage("");
   };
 
   const onSubmit = async (event) => {
@@ -105,6 +154,17 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       return;
     }
 
+    let nextPhoto = formValues.photo;
+    if (selectedPhotoFile) {
+      try {
+        nextPhoto = await fileToDataUrl(selectedPhotoFile);
+      } catch (error) {
+        setSuccessMessage("");
+        setErrorMessage("Could not read the selected photo. Please try again.");
+        return;
+      }
+    }
+
     const profilePayload = {
       email: formValues.email.trim().toLowerCase(),
       phone: formValues.phone.trim(),
@@ -113,7 +173,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
         .filter(Boolean)
         .join(", "),
-      photo: formValues.photo,
+      photo: nextPhoto,
       agreedToPromotionsAndMarketingEmails: formValues.agreedToPromotionsAndMarketingEmails
     };
 
@@ -128,13 +188,18 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
     if (saveResult.requiresReauthentication) {
       setSuccessMessage("");
       window.alert(
-        "Critical information changed. Please verify your account again by logging in with your updated information."
+        "Critical information changed. Please log in again with your updated credentials."
       );
       navigate("/login");
       return;
     }
 
+    setFormValues((previousValues) => ({
+      ...previousValues,
+      email: profilePayload.email
+    }));
     setSuccessMessage("Your profile has been updated.");
+    setSelectedPhotoFile(null);
   };
 
   return (
@@ -156,7 +221,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
           <form className="auth-form profile-form" onSubmit={onSubmit}>
             <div className="profile-photo-editor">
               <img
-                src={formValues.photo || currentUser.photo}
+                src={profilePhoto}
                 alt={currentUser.fullName}
                 className="profile-photo-large"
               />
@@ -245,7 +310,6 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
                   type="checkbox"
                   checked={formValues.agreedToTermsAndConditions}
                   disabled
-                  onChange={onInputChange}
                 />
                 <span>I agree to Terms &amp; Conditions</span>
               </label>

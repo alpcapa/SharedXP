@@ -246,7 +246,10 @@ function App() {
           nextEmail !== previousEmail || nextPhone !== (currentUser.phone ?? "").trim();
 
         const isEmailAlreadyInUse = registeredUsers.some(
-          (user) => user.email.toLowerCase() === nextEmail && user.email.toLowerCase() !== previousEmail
+          (user) => {
+            const normalizedUserEmail = user.email.toLowerCase();
+            return normalizedUserEmail === nextEmail && normalizedUserEmail !== previousEmail;
+          }
         );
         if (isEmailAlreadyInUse) {
           return {
@@ -255,13 +258,18 @@ function App() {
           };
         }
 
-        const profileCity = profileUpdates.city?.trim() || inferCityFromAddress(profileUpdates.address);
+        const normalizedProfileCity =
+          typeof profileUpdates.city === "string" ? profileUpdates.city.trim() : undefined;
+        const profileCity =
+          normalizedProfileCity !== undefined
+            ? normalizedProfileCity
+            : inferCityFromAddress(profileUpdates.address);
         const shouldSyncHostProfile = Boolean(currentUser.isHost && currentUser.hostProfile);
         const nextHostProfile = shouldSyncHostProfile
           ? {
               ...currentUser.hostProfile,
               country: profileUpdates.country ?? currentUser.hostProfile.country,
-              city: profileCity || currentUser.hostProfile.city || "",
+              city: profileCity !== undefined ? profileCity : currentUser.hostProfile.city ?? "",
               stripe: {
                 ...(currentUser.hostProfile.stripe ?? {}),
                 stripeEmail: nextEmail
