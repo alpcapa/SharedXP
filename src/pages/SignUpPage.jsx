@@ -159,6 +159,10 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     const lastName = formValues.lastName.trim();
     const fullName = `${firstName} ${lastName}`.trim();
     const selectedDialCodeCountry = selectedPhoneCodeCountry ?? selectedCountry;
+    if (!selectedDialCodeCountry) {
+      setErrorMessage("Please select a valid phone area code.");
+      return;
+    }
     const rawPhone = formValues.phone.trim();
     const phoneDigitsOnly = rawPhone.replace(/\D/g, "");
     const dialCodeDigits = selectedDialCodeCountry.dialCode.replace(/\D/g, "");
