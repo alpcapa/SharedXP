@@ -29,7 +29,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     phone: "",
     addressLine1: "",
     addressLine2: "",
-    photo: ""
+    photo: "",
+    agreeTermsAndConditions: false,
+    agreePromotionsAndMarketingEmails: false
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
@@ -119,10 +121,10 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   }, [isPhoneCodeDropdownOpen, selectedPhoneCodeCountry]);
 
   const onInputChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
     setFormValues((previousValues) => ({
       ...previousValues,
-      [name]: value
+      [name]: type === "checkbox" ? checked : value
     }));
   };
 
@@ -152,6 +154,10 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
 
     if (!selectedCountry) {
       setErrorMessage("Please select a valid country from the list.");
+      return;
+    }
+    if (!formValues.agreeTermsAndConditions || !formValues.agreePromotionsAndMarketingEmails) {
+      setErrorMessage("Please accept all required agreements to continue.");
       return;
     }
 
@@ -186,7 +192,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
         .filter(Boolean)
         .join(", "),
-      photo: formValues.photo
+      photo: formValues.photo,
+      agreedToTermsAndConditions: formValues.agreeTermsAndConditions,
+      agreedToPromotionsAndMarketingEmails: formValues.agreePromotionsAndMarketingEmails
     });
   };
 
@@ -470,6 +478,30 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 {formValues.photo && (
                   <img src={formValues.photo} alt="Selected profile" className="auth-photo-preview" />
                 )}
+                <div className="form-consent-group">
+                  <label className="form-consent-option" htmlFor="agreeTermsAndConditions">
+                    <input
+                      id="agreeTermsAndConditions"
+                      name="agreeTermsAndConditions"
+                      type="checkbox"
+                      required
+                      checked={formValues.agreeTermsAndConditions}
+                      onChange={onInputChange}
+                    />
+                    <span>I agree to Terms &amp; Conditions</span>
+                  </label>
+                  <label className="form-consent-option" htmlFor="agreePromotionsAndMarketingEmails">
+                    <input
+                      id="agreePromotionsAndMarketingEmails"
+                      name="agreePromotionsAndMarketingEmails"
+                      type="checkbox"
+                      required
+                      checked={formValues.agreePromotionsAndMarketingEmails}
+                      onChange={onInputChange}
+                    />
+                    <span>I agree to receive Promotions &amp; Marketing emails</span>
+                  </label>
+                </div>
 
                 {errorMessage && <p className="auth-error">{errorMessage}</p>}
                 <button type="submit" className="btn btn-primary auth-submit">
