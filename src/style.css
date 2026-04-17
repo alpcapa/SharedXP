@@ -1157,6 +1157,165 @@ body {
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
+.host-settings-page {
+  width: min(920px, 100%);
+}
+
+.host-onboarding-form {
+  display: grid;
+  gap: 14px;
+}
+
+.host-onboarding-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  background: #fafaf9;
+}
+
+.host-onboarding-card h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.host-form-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.host-form-grid label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #374151;
+}
+
+.host-form-grid input,
+.host-form-grid textarea,
+.host-form-grid select {
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.host-form-grid textarea {
+  resize: vertical;
+}
+
+.host-sport-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.host-sport-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.host-sport-tab {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.host-sport-tab.active {
+  border-color: #8ab944;
+  background: #dceab8;
+  color: #2f4f12;
+}
+
+.host-availability-block,
+.host-images-block {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+.host-availability-block h3,
+.host-images-block h3 {
+  margin: 0;
+}
+
+.host-availability-block p {
+  margin: 6px 0 0;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.host-availability-days {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.host-availability-days label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.host-availability-time {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.host-availability-time > div {
+  display: grid;
+  gap: 6px;
+}
+
+.host-image-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.host-image-item {
+  display: grid;
+  gap: 6px;
+}
+
+.host-image-item img {
+  width: 100%;
+  height: 98px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.host-image-remove {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.host-success-message {
+  margin: 0;
+  color: #166534;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .simple-list {
   margin: 18px 0 0;
   padding-left: 20px;
