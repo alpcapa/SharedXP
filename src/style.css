@@ -1205,6 +1205,12 @@ body {
   resize: vertical;
 }
 
+.host-field-hint {
+  margin: -2px 0 2px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
 .host-sport-header {
   display: flex;
   align-items: center;
@@ -1249,6 +1255,12 @@ body {
   margin: 6px 0 0;
   color: #4b5563;
   font-size: 14px;
+}
+
+.host-price-row {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 8px;
 }
 
 .host-availability-days {

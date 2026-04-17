@@ -1,16 +1,43 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 
 const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
-const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced", "Flexible"];
+const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced", "I’m Flexible"];
 const AVAILABILITY_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR", "BRL"];
+const COUNTRY_OPTIONS = [
+  { name: "Brazil", code: "BR" },
+  { name: "Canada", code: "CA" },
+  { name: "France", code: "FR" },
+  { name: "Germany", code: "DE" },
+  { name: "India", code: "IN" },
+  { name: "Japan", code: "JP" },
+  { name: "Portugal", code: "PT" },
+  { name: "Spain", code: "ES" },
+  { name: "United Kingdom", code: "GB" },
+  { name: "United States", code: "US" }
+];
+const COUNTRY_CITY_OPTIONS = {
+  BR: ["Rio de Janeiro", "São Paulo", "Florianópolis", "Salvador"],
+  CA: ["Toronto", "Vancouver", "Montreal", "Calgary"],
+  FR: ["Paris", "Lyon", "Nice", "Bordeaux"],
+  DE: ["Berlin", "Munich", "Hamburg", "Cologne"],
+  IN: ["Mumbai", "Delhi", "Bengaluru", "Goa"],
+  JP: ["Tokyo", "Osaka", "Kyoto", "Sapporo"],
+  PT: ["Lisbon", "Porto", "Faro", "Coimbra"],
+  ES: ["Madrid", "Barcelona", "Valencia", "Seville"],
+  GB: ["London", "Manchester", "Bristol", "Edinburgh"],
+  US: ["New York", "Los Angeles", "Austin", "Miami"]
+};
+const REGIONAL_INDICATOR_OFFSET = 127397;
 
 const createEmptySportConfig = () => ({
   sport: "",
   description: "",
   about: "",
   pricing: "",
+  pricingCurrency: "",
   level: "",
   availability: {
     days: [],
@@ -53,11 +80,7 @@ const getInitialHostProfile = (user) => {
 
   return {
     country: existingProfile.country ?? user?.country ?? "",
-    city:
-      existingProfile.city ??
-      user?.city ??
-      inferCityFromAddress(user?.address) ??
-      "",
+    city: existingProfile.city ?? user?.city ?? inferCityFromAddress(user?.address) ?? "",
     stripe: {
       stripeEmail: existingProfile.stripe?.stripeEmail ?? user?.email ?? "",
       accountHolderName: existingProfile.stripe?.accountHolderName ?? user?.fullName ?? "",
@@ -79,6 +102,52 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
   const [activeSportIndex, setActiveSportIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [countrySearchValue, setCountrySearchValue] = useState("");
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
+  const [citySearchValue, setCitySearchValue] = useState("");
+  const countryDropdownRef = useRef(null);
+  const cityDropdownRef = useRef(null);
+
+  const selectedCountry = useMemo(
+    () =>
+      COUNTRY_OPTIONS.find(
+        (countryOption) => countryOption.name.toLowerCase() === hostProfileDraft.country.trim().toLowerCase()
+      ) ?? null,
+    [hostProfileDraft.country]
+  );
+
+  const availableCities = useMemo(() => {
+    if (!selectedCountry) {
+      return [];
+    }
+
+    const cityOptions = COUNTRY_CITY_OPTIONS[selectedCountry.code] ?? [];
+    if (hostProfileDraft.city && !cityOptions.includes(hostProfileDraft.city)) {
+      return [hostProfileDraft.city, ...cityOptions];
+    }
+    return cityOptions;
+  }, [selectedCountry, hostProfileDraft.city]);
+
+  const filteredCountryOptions = useMemo(() => {
+    const normalizedSearch = countrySearchValue.trim().toLowerCase();
+    if (!normalizedSearch) {
+      return COUNTRY_OPTIONS;
+    }
+
+    return COUNTRY_OPTIONS.filter((countryOption) =>
+      countryOption.name.toLowerCase().includes(normalizedSearch)
+    );
+  }, [countrySearchValue]);
+
+  const filteredCityOptions = useMemo(() => {
+    const normalizedSearch = citySearchValue.trim().toLowerCase();
+    if (!normalizedSearch) {
+      return availableCities;
+    }
+
+    return availableCities.filter((cityOption) => cityOption.toLowerCase().includes(normalizedSearch));
+  }, [availableCities, citySearchValue]);
 
   useEffect(() => {
     setHostProfileDraft(initialProfile);
@@ -92,6 +161,27 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
       setActiveSportIndex(Math.max(0, hostProfileDraft.sports.length - 1));
     }
   }, [activeSportIndex, hostProfileDraft.sports.length]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        isCountryDropdownOpen &&
+        countryDropdownRef.current &&
+        !countryDropdownRef.current.contains(event.target)
+      ) {
+        setIsCountryDropdownOpen(false);
+      }
+
+      if (isCityDropdownOpen && cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+        setIsCityDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isCountryDropdownOpen, isCityDropdownOpen]);
 
   if (!currentUser) {
     return (
@@ -139,6 +229,11 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
   }
 
   const activeSport = hostProfileDraft.sports[activeSportIndex] ?? createEmptySportConfig();
+
+  const getCountryFlag = (countryCode) =>
+    countryCode
+      .toUpperCase()
+      .replace(/./g, (char) => String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + char.charCodeAt(0)));
 
   const updateStripeField = (fieldName, value) => {
     setHostProfileDraft((previousDraft) => ({
@@ -263,11 +358,11 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
 
   const validateOnboarding = () => {
     if (!hostProfileDraft.country.trim()) {
-      return "Country is missing from your registration profile.";
+      return "Please choose your host country.";
     }
 
     if (!hostProfileDraft.city.trim()) {
-      return "City is missing from your registration profile.";
+      return "Please choose your host city.";
     }
 
     const stripeFields = [
@@ -279,7 +374,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
       hostProfileDraft.stripe.payoutCurrency
     ];
     if (stripeFields.some((value) => !value.trim())) {
-      return "Complete all Stripe onboarding fields before saving.";
+      return "Complete all bank details before saving.";
     }
 
     const invalidSportIndex = hostProfileDraft.sports.findIndex((sportConfig) => {
@@ -290,6 +385,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
         !sportConfig.about.trim() ||
         !sportConfig.pricing ||
         Number(sportConfig.pricing) < 1 ||
+        !sportConfig.pricingCurrency.trim() ||
         !sportConfig.level.trim() ||
         availability.days.length === 0 ||
         !availability.startTime ||
@@ -336,83 +432,9 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
         </section>
         <main className="middle-section simple-page host-settings-page">
           <h1>Host Settings</h1>
-          <p>Complete Stripe onboarding and configure each sport profile.</p>
+          <p>Complete sport setup and bank details to start hosting.</p>
 
           <form className="host-onboarding-form" onSubmit={onSubmit}>
-            <section className="host-onboarding-card">
-              <h2>Stripe payout onboarding</h2>
-              <div className="host-form-grid">
-                <label htmlFor="stripeEmail">Stripe email</label>
-                <input
-                  id="stripeEmail"
-                  type="email"
-                  required
-                  value={hostProfileDraft.stripe.stripeEmail}
-                  onChange={(event) => updateStripeField("stripeEmail", event.target.value)}
-                />
-
-                <label htmlFor="accountHolderName">Account holder name</label>
-                <input
-                  id="accountHolderName"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.accountHolderName}
-                  onChange={(event) => updateStripeField("accountHolderName", event.target.value)}
-                />
-
-                <label htmlFor="bankName">Bank name</label>
-                <input
-                  id="bankName"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.bankName}
-                  onChange={(event) => updateStripeField("bankName", event.target.value)}
-                />
-
-                <label htmlFor="accountNumber">Account number / IBAN</label>
-                <input
-                  id="accountNumber"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.accountNumber}
-                  onChange={(event) => updateStripeField("accountNumber", event.target.value)}
-                />
-
-                <label htmlFor="routingNumber">Routing number / SWIFT</label>
-                <input
-                  id="routingNumber"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.routingNumber}
-                  onChange={(event) => updateStripeField("routingNumber", event.target.value)}
-                />
-
-                <label htmlFor="payoutCurrency">Payout currency</label>
-                <select
-                  id="payoutCurrency"
-                  required
-                  value={hostProfileDraft.stripe.payoutCurrency}
-                  onChange={(event) => updateStripeField("payoutCurrency", event.target.value)}
-                >
-                  <option value="">Select currency</option>
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="CAD">CAD</option>
-                  <option value="AUD">AUD</option>
-                  <option value="JPY">JPY</option>
-                  <option value="INR">INR</option>
-                  <option value="BRL">BRL</option>
-                </select>
-
-                <label htmlFor="hostCountry">Country</label>
-                <input id="hostCountry" type="text" value={hostProfileDraft.country} readOnly />
-
-                <label htmlFor="hostCity">City</label>
-                <input id="hostCity" type="text" value={hostProfileDraft.city} readOnly />
-              </div>
-            </section>
-
             <section className="host-onboarding-card">
               <div className="host-sport-header">
                 <h2>Sports onboarding</h2>
@@ -456,11 +478,13 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                 <textarea
                   id="sportDescription"
                   required
+                  maxLength={50}
                   rows={2}
                   placeholder="Love coastal rides & coffee stops"
                   value={activeSport.description}
                   onChange={(event) => updateSportField("description", event.target.value)}
                 />
+                <p className="host-field-hint">{activeSport.description.length}/50</p>
 
                 <label htmlFor="sportAbout">About</label>
                 <textarea
@@ -473,16 +497,31 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                 />
 
                 <label htmlFor="sportPricing">Pricing</label>
-                <input
-                  id="sportPricing"
-                  type="number"
-                  min="1"
-                  step="1"
-                  required
-                  placeholder="How much do you charge?"
-                  value={activeSport.pricing}
-                  onChange={(event) => updateSportField("pricing", event.target.value)}
-                />
+                <div className="host-price-row">
+                  <input
+                    id="sportPricing"
+                    type="number"
+                    min="1"
+                    step="1"
+                    required
+                    placeholder="How much do you charge?"
+                    value={activeSport.pricing}
+                    onChange={(event) => updateSportField("pricing", event.target.value)}
+                  />
+                  <select
+                    aria-label="Pricing currency"
+                    required
+                    value={activeSport.pricingCurrency}
+                    onChange={(event) => updateSportField("pricingCurrency", event.target.value)}
+                  >
+                    <option value="">Currency</option>
+                    {CURRENCY_OPTIONS.map((currencyOption) => (
+                      <option key={currencyOption} value={currencyOption}>
+                        {currencyOption}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <label htmlFor="sportLevel">Level</label>
                 <select
@@ -540,7 +579,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
               </div>
 
               <div className="host-images-block">
-                <h3>Images</h3>
+                <h3>Photo Gallery</h3>
                 <input type="file" accept="image/*" multiple onChange={onSportImageSelect} />
                 {activeSport.images.length > 0 && (
                   <div className="host-image-grid">
@@ -565,6 +604,192 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                     ))}
                   </div>
                 )}
+              </div>
+            </section>
+
+            <section className="host-onboarding-card">
+              <h2>Bank Details (Required for us to pay you)</h2>
+              <div className="host-form-grid">
+                <label htmlFor="stripeEmail">Stripe email</label>
+                <input
+                  id="stripeEmail"
+                  type="email"
+                  required
+                  value={hostProfileDraft.stripe.stripeEmail}
+                  onChange={(event) => updateStripeField("stripeEmail", event.target.value)}
+                />
+
+                <label htmlFor="accountHolderName">Account holder name</label>
+                <input
+                  id="accountHolderName"
+                  type="text"
+                  required
+                  value={hostProfileDraft.stripe.accountHolderName}
+                  onChange={(event) => updateStripeField("accountHolderName", event.target.value)}
+                />
+
+                <label htmlFor="bankName">Bank name</label>
+                <input
+                  id="bankName"
+                  type="text"
+                  required
+                  value={hostProfileDraft.stripe.bankName}
+                  onChange={(event) => updateStripeField("bankName", event.target.value)}
+                />
+
+                <label htmlFor="accountNumber">Account number / IBAN</label>
+                <input
+                  id="accountNumber"
+                  type="text"
+                  required
+                  value={hostProfileDraft.stripe.accountNumber}
+                  onChange={(event) => updateStripeField("accountNumber", event.target.value)}
+                />
+
+                <label htmlFor="routingNumber">Routing number / SWIFT</label>
+                <input
+                  id="routingNumber"
+                  type="text"
+                  required
+                  value={hostProfileDraft.stripe.routingNumber}
+                  onChange={(event) => updateStripeField("routingNumber", event.target.value)}
+                />
+
+                <label htmlFor="payoutCurrency">Payout currency</label>
+                <select
+                  id="payoutCurrency"
+                  required
+                  value={hostProfileDraft.stripe.payoutCurrency}
+                  onChange={(event) => updateStripeField("payoutCurrency", event.target.value)}
+                >
+                  <option value="">Select currency</option>
+                  {CURRENCY_OPTIONS.map((currencyOption) => (
+                    <option key={currencyOption} value={currencyOption}>
+                      {currencyOption}
+                    </option>
+                  ))}
+                </select>
+
+                <label id="host-country-label" htmlFor="host-country-selector">Country</label>
+                <div className="auth-search-dropdown" ref={countryDropdownRef}>
+                  <button
+                    id="host-country-selector"
+                    type="button"
+                    className="auth-dropdown-trigger"
+                    aria-haspopup="listbox"
+                    aria-expanded={isCountryDropdownOpen}
+                    aria-controls="host-country-listbox"
+                    onClick={() => {
+                      setIsCountryDropdownOpen((previousState) => !previousState);
+                      setCountrySearchValue("");
+                    }}
+                  >
+                    {selectedCountry ? (
+                      <>
+                        <span>{getCountryFlag(selectedCountry.code)}</span>
+                        <span>{selectedCountry.name}</span>
+                      </>
+                    ) : (
+                      <span>Select country</span>
+                    )}
+                  </button>
+                  {isCountryDropdownOpen && (
+                    <div className="auth-dropdown-panel">
+                      <input
+                        type="search"
+                        className="auth-dropdown-search"
+                        placeholder="Search country"
+                        value={countrySearchValue}
+                        onChange={(event) => setCountrySearchValue(event.target.value)}
+                      />
+                      <ul
+                        id="host-country-listbox"
+                        className="auth-dropdown-options"
+                        role="listbox"
+                        aria-labelledby="host-country-label"
+                      >
+                        {filteredCountryOptions.map((countryOption) => (
+                          <li key={countryOption.code}>
+                            <button
+                              type="button"
+                              className="auth-dropdown-option"
+                              role="option"
+                              aria-selected={selectedCountry?.code === countryOption.code}
+                              onClick={() => {
+                                const nextCities = COUNTRY_CITY_OPTIONS[countryOption.code] ?? [];
+                                setHostProfileDraft((previousDraft) => ({
+                                  ...previousDraft,
+                                  country: countryOption.name,
+                                  city: nextCities[0] ?? ""
+                                }));
+                                setIsCountryDropdownOpen(false);
+                              }}
+                            >
+                              <span>{getCountryFlag(countryOption.code)}</span>
+                              <span>{countryOption.name}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <label id="host-city-label" htmlFor="host-city-selector">City</label>
+                <div className="auth-search-dropdown" ref={cityDropdownRef}>
+                  <button
+                    id="host-city-selector"
+                    type="button"
+                    className="auth-dropdown-trigger"
+                    aria-haspopup="listbox"
+                    aria-expanded={isCityDropdownOpen}
+                    aria-controls="host-city-listbox"
+                    disabled={!selectedCountry}
+                    onClick={() => {
+                      setIsCityDropdownOpen((previousState) => !previousState);
+                      setCitySearchValue("");
+                    }}
+                  >
+                    {hostProfileDraft.city || "Select city"}
+                  </button>
+                  {isCityDropdownOpen && (
+                    <div className="auth-dropdown-panel">
+                      <input
+                        type="search"
+                        className="auth-dropdown-search"
+                        placeholder="Search city"
+                        value={citySearchValue}
+                        onChange={(event) => setCitySearchValue(event.target.value)}
+                      />
+                      <ul
+                        id="host-city-listbox"
+                        className="auth-dropdown-options"
+                        role="listbox"
+                        aria-labelledby="host-city-label"
+                      >
+                        {filteredCityOptions.map((cityOption) => (
+                          <li key={cityOption}>
+                            <button
+                              type="button"
+                              className="auth-dropdown-option"
+                              role="option"
+                              aria-selected={hostProfileDraft.city === cityOption}
+                              onClick={() => {
+                                setHostProfileDraft((previousDraft) => ({
+                                  ...previousDraft,
+                                  city: cityOption
+                                }));
+                                setIsCityDropdownOpen(false);
+                              }}
+                            >
+                              <span>{cityOption}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
             </section>
 
