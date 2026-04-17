@@ -37,10 +37,6 @@ const REQUIRED_HOST_CONSENTS = [
     message: "Please agree to Terms & Conditions."
   },
   {
-    field: "agreePromotionsAndMarketingEmails",
-    message: "Please agree to receive Promotions & Marketing emails."
-  },
-  {
     field: "agreeHostingRelatedEmailsAndCalls",
     message: "Please agree to receive hosting related emails and calls."
   }
@@ -842,21 +838,12 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                       updateConsentField("agreeTermsAndConditions", event.target.checked)
                     }
                   />
-                  <span>I agree to Terms &amp; Conditions</span>
-                </label>
-                <label
-                  className="form-consent-option"
-                  htmlFor="hostAgreePromotionsAndMarketingEmails"
-                >
-                  <input
-                    id="hostAgreePromotionsAndMarketingEmails"
-                    type="checkbox"
-                    checked={hostProfileDraft.consents?.agreePromotionsAndMarketingEmails ?? false}
-                    onChange={(event) =>
-                      updateConsentField("agreePromotionsAndMarketingEmails", event.target.checked)
-                    }
-                  />
-                  <span>I agree to receive Promotions &amp; Marketing emails</span>
+                  <span>
+                    I agree to{" "}
+                    <a href="https://sharedxp.app/terms-and-conditions" target="_blank" rel="noreferrer">
+                      Terms &amp; Conditions
+                    </a>
+                  </span>
                 </label>
                 <label
                   className="form-consent-option"
@@ -871,6 +858,20 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                     }
                   />
                   <span>I agree to receive hosting related emails and calls</span>
+                </label>
+                <label
+                  className="form-consent-option"
+                  htmlFor="hostAgreePromotionsAndMarketingEmails"
+                >
+                  <input
+                    id="hostAgreePromotionsAndMarketingEmails"
+                    type="checkbox"
+                    checked={hostProfileDraft.consents?.agreePromotionsAndMarketingEmails ?? false}
+                    onChange={(event) =>
+                      updateConsentField("agreePromotionsAndMarketingEmails", event.target.checked)
+                    }
+                  />
+                  <span>I agree to receive Promotions &amp; Marketing emails</span>
                 </label>
               </div>
             </section>

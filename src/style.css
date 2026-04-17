@@ -1046,6 +1046,11 @@ body {
   margin-top: 1px;
 }
 
+.form-consent-option a {
+  color: #166534;
+  text-decoration: underline;
+}
+
 .auth-phone-field {
   display: flex;
   align-items: center;
