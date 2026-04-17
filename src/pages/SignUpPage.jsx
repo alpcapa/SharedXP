@@ -1,20 +1,122 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
+
+const COUNTRY_OPTIONS = [
+  { name: "Brazil", code: "BR", dialCode: "+55" },
+  { name: "Canada", code: "CA", dialCode: "+1" },
+  { name: "France", code: "FR", dialCode: "+33" },
+  { name: "Germany", code: "DE", dialCode: "+49" },
+  { name: "India", code: "IN", dialCode: "+91" },
+  { name: "Japan", code: "JP", dialCode: "+81" },
+  { name: "Portugal", code: "PT", dialCode: "+351" },
+  { name: "Spain", code: "ES", dialCode: "+34" },
+  { name: "United Kingdom", code: "GB", dialCode: "+44" },
+  { name: "United States", code: "US", dialCode: "+1" }
+];
+const REGIONAL_INDICATOR_OFFSET = 127397;
 
 const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => {
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    country: "",
+    phoneCountryCode: "",
     phone: "",
-    address: "",
+    addressLine1: "",
+    addressLine2: "",
     photo: ""
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [countrySearchValue, setCountrySearchValue] = useState("");
+  const [isPhoneCodeDropdownOpen, setIsPhoneCodeDropdownOpen] = useState(false);
+  const [phoneCodeSearchValue, setPhoneCodeSearchValue] = useState("");
+  const countryDropdownRef = useRef(null);
+  const phoneCodeDropdownRef = useRef(null);
+  const phoneCodeListRef = useRef(null);
+  const selectedCountry = useMemo(
+    () => {
+      const normalizedCountryInput = formValues.country.trim().toLowerCase();
+      return (
+        COUNTRY_OPTIONS.find(
+          (countryOption) => countryOption.name.toLowerCase() === normalizedCountryInput
+        ) ?? null
+      );
+    },
+    [formValues.country]
+  );
+  const selectedPhoneCodeCountry = useMemo(
+    () =>
+      COUNTRY_OPTIONS.find((countryOption) => countryOption.code === formValues.phoneCountryCode) ??
+      selectedCountry ??
+      null,
+    [formValues.phoneCountryCode, selectedCountry]
+  );
+  const filteredCountryOptions = useMemo(() => {
+    const normalizedSearch = countrySearchValue.trim().toLowerCase();
+    if (!normalizedSearch) {
+      return COUNTRY_OPTIONS;
+    }
+
+    return COUNTRY_OPTIONS.filter((countryOption) =>
+      countryOption.name.toLowerCase().includes(normalizedSearch)
+    );
+  }, [countrySearchValue]);
+  const filteredPhoneCodeOptions = useMemo(() => {
+    const normalizedSearch = phoneCodeSearchValue.trim().toLowerCase();
+    if (!normalizedSearch) {
+      return COUNTRY_OPTIONS;
+    }
+
+    return COUNTRY_OPTIONS.filter((countryOption) =>
+      `${countryOption.name} ${countryOption.dialCode}`.toLowerCase().includes(normalizedSearch)
+    );
+  }, [phoneCodeSearchValue]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        isCountryDropdownOpen &&
+        countryDropdownRef.current &&
+        !countryDropdownRef.current.contains(event.target)
+      ) {
+        setIsCountryDropdownOpen(false);
+      }
+
+      if (
+        isPhoneCodeDropdownOpen &&
+        phoneCodeDropdownRef.current &&
+        !phoneCodeDropdownRef.current.contains(event.target)
+      ) {
+        setIsPhoneCodeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isCountryDropdownOpen, isPhoneCodeDropdownOpen]);
+
+  useEffect(() => {
+    if (!isPhoneCodeDropdownOpen || !selectedPhoneCodeCountry || !phoneCodeListRef.current) {
+      return;
+    }
+
+    const selectedOption = phoneCodeListRef.current.querySelector(
+      `[data-country-code="${selectedPhoneCodeCountry.code}"]`
+    );
+    selectedOption?.scrollIntoView({
+      block: "center",
+      behavior: "smooth"
+    });
+  }, [isPhoneCodeDropdownOpen, selectedPhoneCodeCountry]);
 
   const onInputChange = (event) => {
     const { name, value } = event.target;
@@ -48,16 +150,52 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       return;
     }
 
+    if (!selectedCountry) {
+      setErrorMessage("Please select a valid country from the list.");
+      return;
+    }
+
+    const firstName = formValues.firstName.trim();
+    const lastName = formValues.lastName.trim();
+    const fullName = `${firstName} ${lastName}`.trim();
+    const selectedDialCodeCountry = formValues.phoneCountryCode
+      ? COUNTRY_OPTIONS.find((countryOption) => countryOption.code === formValues.phoneCountryCode)
+      : selectedCountry;
+    if (!selectedDialCodeCountry) {
+      setErrorMessage("Please select a valid phone area code.");
+      return;
+    }
+    const rawPhone = formValues.phone.trim();
+    const phoneDigitsOnly = rawPhone.replace(/\D/g, "");
+    const dialCodeDigits = selectedDialCodeCountry.dialCode.replace(/\D/g, "");
+    const localPhoneDigits = phoneDigitsOnly.startsWith(dialCodeDigits)
+      ? phoneDigitsOnly.slice(dialCodeDigits.length)
+      : phoneDigitsOnly;
+
     setErrorMessage("");
     setPendingVerification({
-      fullName: formValues.fullName.trim(),
+      firstName,
+      lastName,
+      fullName,
       email: formValues.email.trim().toLowerCase(),
       password: formValues.password,
-      phone: formValues.phone.trim(),
-      address: formValues.address.trim(),
+      country: selectedCountry.name,
+      countryCode: selectedCountry.code,
+      countryDialCode: selectedDialCodeCountry.dialCode,
+      phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
+      address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
+        .filter(Boolean)
+        .join(", "),
       photo: formValues.photo
     });
   };
+
+  const getCountryFlag = (countryCode) =>
+    countryCode
+      .toUpperCase()
+      .replace(/./g, (char) =>
+        String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + char.charCodeAt(0))
+      );
 
   const completeEmailVerification = async () => {
     if (!pendingVerification) {
@@ -113,13 +251,23 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
 
             {!pendingVerification ? (
               <form className="auth-form" onSubmit={onEmailSubmit}>
-                <label htmlFor="fullName">Full name</label>
+                <label htmlFor="firstName">First name</label>
                 <input
-                  id="fullName"
-                  name="fullName"
+                  id="firstName"
+                  name="firstName"
                   type="text"
                   required
-                  value={formValues.fullName}
+                  value={formValues.firstName}
+                  onChange={onInputChange}
+                />
+
+                <label htmlFor="lastName">Last name</label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  required
+                  value={formValues.lastName}
                   onChange={onInputChange}
                 />
 
@@ -155,25 +303,167 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                   onChange={onInputChange}
                 />
 
-                <label htmlFor="phone">Phone</label>
+                <label htmlFor="addressLine1">Address</label>
                 <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
+                  id="addressLine1"
+                  name="addressLine1"
+                  type="text"
                   required
-                  value={formValues.phone}
+                  value={formValues.addressLine1}
+                  onChange={onInputChange}
+                />
+                <input
+                  id="addressLine2"
+                  name="addressLine2"
+                  type="text"
+                  aria-label="Address line 2"
+                  value={formValues.addressLine2}
                   onChange={onInputChange}
                 />
 
-                <label htmlFor="address">Address</label>
-                <input
-                  id="address"
-                  name="address"
-                  type="text"
-                  required
-                  value={formValues.address}
-                  onChange={onInputChange}
-                />
+                <label id="country-label" htmlFor="country">
+                  Country
+                </label>
+                <div className="auth-search-dropdown" ref={countryDropdownRef}>
+                  <button
+                    id="country"
+                    type="button"
+                    className="auth-dropdown-trigger"
+                    aria-haspopup="listbox"
+                    aria-expanded={isCountryDropdownOpen}
+                    aria-controls="country-listbox"
+                    onClick={() => {
+                      setIsCountryDropdownOpen((previousState) => !previousState);
+                      setCountrySearchValue("");
+                    }}
+                  >
+                    {selectedCountry ? (
+                      <>
+                        <span>{getCountryFlag(selectedCountry.code)}</span>
+                        <span>{selectedCountry.name}</span>
+                      </>
+                    ) : (
+                      <span>Select country</span>
+                    )}
+                  </button>
+                  {isCountryDropdownOpen && (
+                    <div className="auth-dropdown-panel">
+                      <input
+                        type="search"
+                        className="auth-dropdown-search"
+                        placeholder="Search country"
+                        value={countrySearchValue}
+                        onChange={(event) => setCountrySearchValue(event.target.value)}
+                      />
+                      <ul
+                        id="country-listbox"
+                        className="auth-dropdown-options"
+                        role="listbox"
+                        aria-labelledby="country-label"
+                      >
+                        {filteredCountryOptions.map((countryOption) => (
+                          <li key={countryOption.code}>
+                            <button
+                              type="button"
+                              className="auth-dropdown-option"
+                              role="option"
+                              aria-selected={selectedCountry?.code === countryOption.code}
+                              onClick={() => {
+                                setFormValues((previousValues) => ({
+                                  ...previousValues,
+                                  country: countryOption.name,
+                                  phoneCountryCode: countryOption.code
+                                }));
+                                setIsCountryDropdownOpen(false);
+                              }}
+                            >
+                              <span>{getCountryFlag(countryOption.code)}</span>
+                              <span>{countryOption.name}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <label id="phone-label" htmlFor="phone">
+                  Phone
+                </label>
+                <div className="auth-phone-field">
+                  <div className="auth-search-dropdown auth-phone-code-picker" ref={phoneCodeDropdownRef}>
+                    <button
+                      type="button"
+                      className="auth-dropdown-trigger auth-phone-code-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded={isPhoneCodeDropdownOpen}
+                      aria-controls="phone-code-listbox"
+                      onClick={() => {
+                        setIsPhoneCodeDropdownOpen((previousState) => !previousState);
+                        setPhoneCodeSearchValue("");
+                      }}
+                    >
+                      {selectedPhoneCodeCountry ? (
+                        <>
+                          <span>{getCountryFlag(selectedPhoneCodeCountry.code)}</span>
+                          <span>{selectedPhoneCodeCountry.dialCode}</span>
+                        </>
+                      ) : (
+                        <span>Code</span>
+                      )}
+                    </button>
+                    {isPhoneCodeDropdownOpen && (
+                      <div className="auth-dropdown-panel">
+                        <input
+                          type="search"
+                          className="auth-dropdown-search"
+                          placeholder="Search country or code"
+                          value={phoneCodeSearchValue}
+                          onChange={(event) => setPhoneCodeSearchValue(event.target.value)}
+                        />
+                        <ul
+                          id="phone-code-listbox"
+                          className="auth-dropdown-options"
+                          role="listbox"
+                          aria-labelledby="phone-label"
+                          ref={phoneCodeListRef}
+                        >
+                          {filteredPhoneCodeOptions.map((countryOption) => (
+                            <li key={`phone-code-${countryOption.code}`}>
+                              <button
+                                type="button"
+                                className="auth-dropdown-option"
+                                data-country-code={countryOption.code}
+                                role="option"
+                                aria-selected={selectedPhoneCodeCountry?.code === countryOption.code}
+                                onClick={() => {
+                                  setFormValues((previousValues) => ({
+                                    ...previousValues,
+                                    phoneCountryCode: countryOption.code
+                                  }));
+                                  setIsPhoneCodeDropdownOpen(false);
+                                }}
+                              >
+                                <span>{getCountryFlag(countryOption.code)}</span>
+                                <span>
+                                  {countryOption.name} ({countryOption.dialCode})
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    required
+                    value={formValues.phone}
+                    onChange={onInputChange}
+                  />
+                </div>
 
                 <label htmlFor="photo">Photo</label>
                 <input id="photo" name="photo" type="file" accept="image/*" onChange={onPhotoSelect} />
