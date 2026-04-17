@@ -31,6 +31,20 @@ const COUNTRY_CITY_OPTIONS = {
   US: ["New York", "Los Angeles", "Austin", "Miami"]
 };
 const REGIONAL_INDICATOR_OFFSET = 127397;
+const REQUIRED_HOST_CONSENTS = [
+  {
+    field: "agreeTermsAndConditions",
+    message: "Please agree to Terms & Conditions."
+  },
+  {
+    field: "agreePromotionsAndMarketingEmails",
+    message: "Please agree to receive Promotions & Marketing emails."
+  },
+  {
+    field: "agreeHostingRelatedEmailsAndCalls",
+    message: "Please agree to receive hosting related emails and calls."
+  }
+];
 
 const createEmptySportConfig = () => ({
   sport: "",
@@ -393,21 +407,9 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
     if (stripeFields.some((value) => !value.trim())) {
       return "Complete all bank details before saving.";
     }
-    const requiredConsents = [
-      {
-        isChecked: hostProfileDraft.consents?.agreeTermsAndConditions,
-        message: "Please agree to Terms & Conditions."
-      },
-      {
-        isChecked: hostProfileDraft.consents?.agreePromotionsAndMarketingEmails,
-        message: "Please agree to receive Promotions & Marketing emails."
-      },
-      {
-        isChecked: hostProfileDraft.consents?.agreeHostingRelatedEmailsAndCalls,
-        message: "Please agree to receive hosting related emails and calls."
-      }
-    ];
-    const missingConsent = requiredConsents.find((consentConfig) => !consentConfig.isChecked);
+    const missingConsent = REQUIRED_HOST_CONSENTS.find(
+      (consentConfig) => !hostProfileDraft.consents?.[consentConfig.field]
+    );
     if (missingConsent) {
       return missingConsent.message;
     }

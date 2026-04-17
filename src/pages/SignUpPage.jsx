@@ -156,10 +156,12 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       setErrorMessage("Please select a valid country from the list.");
       return;
     }
-    if (!formValues.agreeTermsAndConditions || !formValues.agreePromotionsAndMarketingEmails) {
-      setErrorMessage(
-        "Please agree to Terms & Conditions and Promotions & Marketing emails to continue."
-      );
+    if (!formValues.agreeTermsAndConditions) {
+      setErrorMessage("Please agree to Terms & Conditions to continue.");
+      return;
+    }
+    if (!formValues.agreePromotionsAndMarketingEmails) {
+      setErrorMessage("Please agree to receive Promotions & Marketing emails to continue.");
       return;
     }
 
