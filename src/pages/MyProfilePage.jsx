@@ -49,10 +49,16 @@ const LANGUAGE_OPTIONS = [
   "Urdu"
 ];
 const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
+const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
+const SPORT_SLOT_LABELS = ["Favorite", "Add new", "Add new", "Add new"];
 const REGIONAL_INDICATOR_OFFSET = 127397;
 const getLanguageSlots = (userLanguages) =>
   Array.from({ length: 4 }, (_, index) =>
     typeof userLanguages?.[index] === "string" ? userLanguages[index] : ""
+  );
+const getSportSlots = (userSports) =>
+  Array.from({ length: 4 }, (_, index) =>
+    typeof userSports?.[index] === "string" ? userSports[index] : ""
   );
 const getAddressLines = (address) => {
   if (!address) {
@@ -154,6 +160,7 @@ const getInitialFormValues = (user) => {
     phoneCountryCode: phoneDetails.phoneCountryCode,
     phone: phoneDetails.phone,
     languages: getLanguageSlots(user?.languages),
+    sports: getSportSlots(user?.sports),
     country: user?.country ?? "",
     city: user?.city ?? "",
     addressLine1,
@@ -340,6 +347,17 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
     });
   };
 
+  const onSportChange = (sportIndex, sportValue) => {
+    setFormValues((previousValues) => {
+      const nextSports = [...previousValues.sports];
+      nextSports[sportIndex] = sportValue;
+      return {
+        ...previousValues,
+        sports: nextSports
+      };
+    });
+  };
+
   const onPhotoSelect = (event) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) {
@@ -422,6 +440,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       countryDialCode: selectedDialCodeCountry.dialCode,
       phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
       languages: formValues.languages.map((languageOption) => languageOption.trim()),
+      sports: formValues.sports.map((sportOption) => sportOption.trim()),
       country: selectedCountry.name,
       city: formValues.city.trim(),
       address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
@@ -756,6 +775,27 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
               <datalist id="profile-language-options">
                 {LANGUAGE_OPTIONS.map((languageOption) => (
                   <option key={languageOption} value={languageOption} />
+                ))}
+              </datalist>
+
+              <label htmlFor="profile-sport-0">Sports</label>
+              <div className="auth-language-row">
+                {SPORT_SLOT_LABELS.map((sportSlotLabel, sportIndex) => (
+                  <input
+                    key={`profile-sport-${sportIndex}`}
+                    id={`profile-sport-${sportIndex}`}
+                    list="profile-sport-options"
+                    placeholder={sportSlotLabel}
+                    aria-label={`Sport ${sportSlotLabel}`}
+                    value={formValues.sports[sportIndex] ?? ""}
+                    onChange={(event) => onSportChange(sportIndex, event.target.value)}
+                    required={sportIndex === 0}
+                  />
+                ))}
+              </div>
+              <datalist id="profile-sport-options">
+                {SPORT_OPTIONS.map((sportOption) => (
+                  <option key={sportOption} value={sportOption} />
                 ))}
               </datalist>
             </div>

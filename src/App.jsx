@@ -56,6 +56,10 @@ const normalizeLanguages = (languages) =>
   Array.from({ length: 4 }, (_, index) =>
     typeof languages?.[index] === "string" ? languages[index].trim() : ""
   );
+const normalizeSports = (sports) =>
+  Array.from({ length: 4 }, (_, index) =>
+    typeof sports?.[index] === "string" ? sports[index].trim() : ""
+  );
 
 const hashPassword = async (rawPassword) => {
   const encodedPassword = new TextEncoder().encode(rawPassword);
@@ -135,6 +139,7 @@ function App() {
           email: normalizedEmail,
           passwordHash,
           languages: normalizeLanguages(newUser.languages),
+          sports: normalizeSports(newUser.sports),
           isHost: false,
           history: newUser.history ?? []
         };
@@ -188,6 +193,7 @@ function App() {
           phone: "",
           address: "",
           languages: normalizeLanguages(),
+          sports: normalizeSports(),
           photo:
             providerName === "Apple"
               ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&h=300&q=80"
@@ -313,6 +319,7 @@ function App() {
               address: profileUpdates.address ?? currentUser.address ?? "",
               photo: profileUpdates.photo ?? currentUser.photo ?? "",
               languages: normalizeLanguages(profileUpdates.languages ?? currentUser.languages),
+              sports: normalizeSports(profileUpdates.sports ?? currentUser.sports),
               country: profileUpdates.country ?? currentUser.hostProfile.country,
               city: profileCity !== undefined ? profileCity : currentUser.hostProfile.city ?? "",
               stripe: {
@@ -330,6 +337,7 @@ function App() {
           fullName: currentUser.fullName,
           email: nextEmail,
           phone: nextPhone,
+          sports: normalizeSports(profileUpdates.sports ?? currentUser.sports),
           hostProfile: nextHostProfile
         };
 

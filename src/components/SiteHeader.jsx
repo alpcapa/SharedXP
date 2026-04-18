@@ -15,7 +15,7 @@ const SiteHeader = ({ currentUser, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const isLoggedIn = Boolean(currentUser);
-  const hostRoute = currentUser?.isHost ? "/host-settings" : "/become-a-host";
+  const hostRoute = "/host-settings";
   const hostLabel = currentUser?.isHost ? "Host Settings" : "Become A Host";
   const navHostRoute = isLoggedIn ? hostRoute : "/become-a-host";
   const navHostLabel = isLoggedIn ? hostLabel : "Become a Host";
