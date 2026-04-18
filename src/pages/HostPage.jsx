@@ -304,8 +304,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
         index === activeSportIndex
           ? {
               ...sportConfig,
-              equipmentAvailable: isAvailable,
-              equipmentDetails: isAvailable ? sportConfig.equipmentDetails : ""
+              equipmentAvailable: isAvailable
             }
           : sportConfig
       )

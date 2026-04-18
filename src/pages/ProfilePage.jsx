@@ -151,7 +151,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             <div className="host-sport-tabs booking-sport-tabs" aria-label={`${hostDisplayName} sports`}>
               {hostSports.map((sportConfig, sportIndex) => (
                 <button
-                  key={`${sportConfig.sport || `Sport ${sportIndex + 1}`}-${sportIndex}`}
+                  key={sportIndex}
                   type="button"
                   className={`host-sport-tab${sportIndex === 0 ? " active" : ""}`}
                   disabled
