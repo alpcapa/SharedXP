@@ -35,13 +35,16 @@ const normalizePhotoGallery = (value, primaryPhoto) => {
     : typeof value === "string"
       ? [value]
       : [];
-  const normalized = fromList
-    .map((photo) => String(photo ?? "").trim())
-    .filter(Boolean);
-  if (primaryPhoto) {
-    normalized.unshift(String(primaryPhoto).trim());
+  const uniquePhotos = new Set();
+  const primaryPhotoValue = String(primaryPhoto ?? "").trim();
+  if (primaryPhotoValue) {
+    uniquePhotos.add(primaryPhotoValue);
   }
-  const unique = Array.from(new Set(normalized.filter(Boolean)));
+  fromList
+    .map((photo) => String(photo ?? "").trim())
+    .filter(Boolean)
+    .forEach((photo) => uniquePhotos.add(photo));
+  const unique = Array.from(uniquePhotos);
   return unique.length ? unique : [FALLBACK_EVENT_PHOTO];
 };
 
@@ -268,9 +271,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
   );
 
   const openGallery = useCallback((item, startIndex = 0) => {
-    const photos = Array.isArray(item.photoGallery) && item.photoGallery.length
-      ? item.photoGallery
-      : [item.photo || FALLBACK_EVENT_PHOTO];
+    const photos = item.photoGallery?.length ? item.photoGallery : [item.photo || FALLBACK_EVENT_PHOTO];
     const safeStartIndex = Math.max(0, Math.min(photos.length - 1, startIndex));
     setActiveGallery({
       eventName: item.eventName,
