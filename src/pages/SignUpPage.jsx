@@ -71,6 +71,8 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     addressLine1: "",
     addressLine2: "",
     photo: "",
+    birthday: "",
+    gender: "Not Sharing",
     agreeTermsAndConditions: false,
     agreePromotionsAndMarketingEmails: false
   });
@@ -287,6 +289,8 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
         .filter(Boolean)
         .join(", "),
       photo: formValues.photo,
+      birthday: formValues.birthday.trim(),
+      gender: formValues.gender,
       agreedToTermsAndConditions: formValues.agreeTermsAndConditions,
       agreedToPromotionsAndMarketingEmails: formValues.agreePromotionsAndMarketingEmails
     });
@@ -634,6 +638,26 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 {formValues.photo && (
                   <img src={formValues.photo} alt="Selected profile" className="auth-photo-preview" />
                 )}
+
+                <label htmlFor="birthday">Birthday</label>
+                <input
+                  id="birthday"
+                  name="birthday"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="01/01/1980"
+                  pattern="^(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])/\d{4}$"
+                  title="Please use MM/DD/YYYY format, for example 01/01/1980."
+                  value={formValues.birthday}
+                  onChange={onInputChange}
+                />
+
+                <label htmlFor="gender">Gender</label>
+                <select id="gender" name="gender" value={formValues.gender} onChange={onInputChange}>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Not Sharing">Not Sharing</option>
+                </select>
 
                 <label htmlFor="signup-language-0">Language</label>
                 <div className="auth-language-row">
