@@ -297,6 +297,21 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
     }));
   };
 
+  const updateEquipmentAvailability = (isAvailable) => {
+    setHostProfileDraft((previousDraft) => ({
+      ...previousDraft,
+      sports: previousDraft.sports.map((sportConfig, index) =>
+        index === activeSportIndex
+          ? {
+              ...sportConfig,
+              equipmentAvailable: isAvailable,
+              equipmentDetails: isAvailable ? sportConfig.equipmentDetails : ""
+            }
+          : sportConfig
+      )
+    }));
+  };
+
   const toggleAvailabilityDay = (day) => {
     setHostProfileDraft((previousDraft) => ({
       ...previousDraft,
@@ -642,7 +657,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                       type="radio"
                       name="equipmentAvailability"
                       checked={Boolean(activeSport.equipmentAvailable)}
-                      onChange={() => updateSportField("equipmentAvailable", true)}
+                      onChange={() => updateEquipmentAvailability(true)}
                     />
                     Yes
                   </label>
@@ -651,20 +666,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                       type="radio"
                       name="equipmentAvailability"
                       checked={!activeSport.equipmentAvailable}
-                      onChange={() =>
-                        setHostProfileDraft((previousDraft) => ({
-                          ...previousDraft,
-                          sports: previousDraft.sports.map((sportConfig, index) =>
-                            index === activeSportIndex
-                              ? {
-                                  ...sportConfig,
-                                  equipmentAvailable: false,
-                                  equipmentDetails: ""
-                                }
-                              : sportConfig
-                          )
-                        }))
-                      }
+                      onChange={() => updateEquipmentAvailability(false)}
                     />
                     No
                   </label>
@@ -792,7 +794,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                   onChange={(event) => updateStripeField("citizenIdNumber", event.target.value)}
                 />
 
-                <label htmlFor="taxNumber">Tax number</label>
+                <label htmlFor="taxNumber">Tax Number</label>
                 <input
                   id="taxNumber"
                   type="text"
