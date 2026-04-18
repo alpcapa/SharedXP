@@ -358,26 +358,28 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
       return;
     }
 
-    setHostProfileDraft((previousDraft) => {
-      if (previousDraft.sports.length <= 1) {
-        return {
-          ...previousDraft,
-          sports: [createEmptySportConfig()]
-        };
-      }
-
-      return {
+    if (hostProfileDraft.sports.length <= 1) {
+      setHostProfileDraft((previousDraft) => ({
         ...previousDraft,
-        sports: previousDraft.sports.filter((_, index) => index !== sportIndexToRemove)
-      };
-    });
+        sports: [createEmptySportConfig()]
+      }));
+      setActiveSportIndex(0);
+      setErrorMessage("");
+      setSuccessMessage("");
+      return;
+    }
 
+    const nextSports = hostProfileDraft.sports.filter((_, index) => index !== sportIndexToRemove);
+    setHostProfileDraft((previousDraft) => ({
+      ...previousDraft,
+      sports: nextSports
+    }));
     setActiveSportIndex((previousIndex) => {
       if (sportIndexToRemove < previousIndex) {
         return previousIndex - 1;
       }
       if (sportIndexToRemove === previousIndex) {
-        return Math.max(0, previousIndex - 1);
+        return Math.min(previousIndex, nextSports.length - 1);
       }
       return previousIndex;
     });
@@ -536,14 +538,17 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                   Add Sport
                 </button>
               </div>
-              <label className="host-pause-toggle">
+              <div className="host-pause-toggle">
                 <input
+                  id={`pauseSport-${activeSportIndex}`}
                   type="checkbox"
                   checked={Boolean(activeSport.paused)}
                   onChange={(event) => updateSportField("paused", event.target.checked)}
                 />
-                {`Pause ${activeSport.sport || `Sport ${activeSportIndex + 1}`}`}
-              </label>
+                <label htmlFor={`pauseSport-${activeSportIndex}`}>
+                  {`Pause ${activeSport.sport || `Sport ${activeSportIndex + 1}`}`}
+                </label>
+              </div>
 
               <div className="host-sport-tabs" role="tablist" aria-label="Host sports tabs">
                 {hostProfileDraft.sports.map((sportConfig, index) => (
@@ -651,8 +656,9 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
 
                 <label>Equipment Availability</label>
                 <div className="host-toggle-group" role="radiogroup" aria-label="Equipment availability">
-                  <label>
+                  <label htmlFor={`equipment-yes-${activeSportIndex}`}>
                     <input
+                      id={`equipment-yes-${activeSportIndex}`}
                       type="radio"
                       name="equipmentAvailability"
                       checked={Boolean(activeSport.equipmentAvailable)}
@@ -660,8 +666,9 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                     />
                     Yes
                   </label>
-                  <label>
+                  <label htmlFor={`equipment-no-${activeSportIndex}`}>
                     <input
+                      id={`equipment-no-${activeSportIndex}`}
                       type="radio"
                       name="equipmentAvailability"
                       checked={!activeSport.equipmentAvailable}
