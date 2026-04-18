@@ -10,10 +10,9 @@ const FALLBACK_EVENT_PHOTO =
 const FALLBACK_PARTICIPANT_PHOTO =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='40' fill='%2393c5fd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='24' font-weight='700' fill='%231e3a8a'%3ESP%3C/text%3E%3C/svg%3E";
 
-const DEFAULT_HOST_LAST_NAME = "Silva";
-const DEFAULT_PARTICIPANT_LAST_NAME = "Costa";
-const DEFAULT_HOST_NAME = `Host ${DEFAULT_HOST_LAST_NAME}`;
-const DEFAULT_PARTICIPANT_NAME = `Participant ${DEFAULT_PARTICIPANT_LAST_NAME}`;
+const DEFAULT_FALLBACK_LAST_NAME = "User";
+const DEFAULT_HOST_FALLBACK_FIRST_NAME = "Host";
+const DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME = "Participant";
 
 const clampRating = (value) => {
   const numericRating = Number(value);
@@ -33,16 +32,15 @@ const normalizeName = (value, fallbackValue) => {
   return text || fallbackValue;
 };
 
-const normalizeFullName = (value, fallbackFullName) => {
+const normalizeFullName = (value, fallbackFirstName, fallbackLastName = DEFAULT_FALLBACK_LAST_NAME) => {
   const text = String(value ?? "").trim();
   if (!text) {
-    return fallbackFullName;
+    return `${fallbackFirstName} ${fallbackLastName}`;
   }
   if (/\s/.test(text)) {
     return text;
   }
-  const fallbackLastName = fallbackFullName.split(/\s+/).slice(1).join(" ").trim();
-  return fallbackLastName ? `${text} ${fallbackLastName}` : text;
+  return `${text} ${fallbackLastName}`;
 };
 
 const normalizePhotoGallery = (value, primaryPhoto) => {
@@ -70,7 +68,10 @@ const normalizeAttended = (items) => {
     const item = rawItem && typeof rawItem === "object" ? rawItem : {};
     const fallbackName = typeof rawItem === "string" ? rawItem : "";
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
-    const hostName = normalizeFullName(item.hostName ?? item.host, DEFAULT_HOST_NAME);
+    const hostName = normalizeFullName(
+      item.hostName ?? item.host,
+      DEFAULT_HOST_FALLBACK_FIRST_NAME
+    );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
     const photoGallery = normalizePhotoGallery(
@@ -106,7 +107,7 @@ const normalizeHosted = (items) => {
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
     const participantName = normalizeFullName(
       item.participantName ?? item.userName ?? item.attendeeName,
-      DEFAULT_PARTICIPANT_NAME
+      DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
