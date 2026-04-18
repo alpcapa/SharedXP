@@ -390,7 +390,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                           <p className="history-host-line">
                             Hosted by <strong>{item.hostName}</strong>
                             {item.rating > 0 && (
-                              <span className="history-host-stars" aria-label={`Your rating: ${item.rating} stars`}>
+                              <span className="history-stars" aria-label={`Your rating: ${item.rating} stars`}>
                                 {renderStars(item.rating)}
                               </span>
                             )}
@@ -410,7 +410,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                             <span className="participant-name">{item.participantName}</span>
                             {item.attendeeRating > 0 && (
                               <span
-                                className="history-host-stars history-participant-stars"
+                                className="history-stars history-participant-stars"
                                 aria-label={`Attendee rating: ${item.attendeeRating} stars`}
                               >
                                 {renderStars(item.attendeeRating)}
@@ -538,7 +538,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                   </button>
                 </div>
                 <p className="history-gallery-counter">
-                  {Math.min(activeGallery.currentIndex + 1, activeGalleryCount)} of {activeGalleryCount}
+                  {activeGallery.currentIndex + 1} of {activeGalleryCount}
                 </p>
               </div>
             </div>
