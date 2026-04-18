@@ -13,6 +13,7 @@ const FALLBACK_PARTICIPANT_PHOTO =
 const DEFAULT_FALLBACK_LAST_NAME = "User";
 const DEFAULT_HOST_FALLBACK_FIRST_NAME = "Host";
 const DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME = "Participant";
+const CONFIRMATION_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 const clampRating = (value) => {
   const numericRating = Number(value);
@@ -32,6 +33,18 @@ const normalizeName = (value, fallbackValue) => {
   return text || fallbackValue;
 };
 
+const formatEventDate = (dateValue) => {
+  const timestamp = toTimestamp(dateValue);
+  if (timestamp === null) {
+    return "Date unavailable";
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).format(new Date(timestamp));
+};
+
 const normalizeFullName = (value, fallbackFirstName, fallbackLastName = DEFAULT_FALLBACK_LAST_NAME) => {
   const text = String(value ?? "").trim();
   if (!text) {
@@ -41,6 +54,32 @@ const normalizeFullName = (value, fallbackFirstName, fallbackLastName = DEFAULT_
     return text;
   }
   return `${text} ${fallbackLastName}`;
+};
+
+const normalizeConfirmationState = (item, completedAtTimestamp) => {
+  const rawStatus = String(item.confirmationStatus ?? item.status ?? "").toLowerCase();
+  const explicitlyCompleted =
+    rawStatus === "completed" ||
+    rawStatus === "confirmed" ||
+    item.confirmed === true ||
+    item.paymentReleased === true ||
+    String(item.confirmedAt ?? "").trim().length > 0;
+  const autoConfirmed =
+    !explicitlyCompleted &&
+    completedAtTimestamp !== null &&
+    Date.now() - completedAtTimestamp >= CONFIRMATION_WINDOW_MS;
+  const confirmationStatus = explicitlyCompleted || autoConfirmed ? "completed" : "pending";
+  const paymentReleased = confirmationStatus === "completed";
+  const confirmedAt =
+    confirmationStatus === "completed"
+      ? String(item.confirmedAt ?? "").trim() || new Date().toISOString()
+      : "";
+  return {
+    confirmationStatus,
+    paymentReleased,
+    confirmedAt,
+    autoConfirmed
+  };
 };
 
 const normalizePhotoGallery = (value, primaryPhoto) => {
@@ -73,6 +112,8 @@ const normalizeAttended = (items) => {
       DEFAULT_HOST_FALLBACK_FIRST_NAME
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
+    const completedAtTimestamp = toTimestamp(completedAt);
+    const confirmation = normalizeConfirmationState(item, completedAtTimestamp);
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
     const photoGallery = normalizePhotoGallery(
       item.photoGallery ?? item.photos ?? item.images ?? item.gallery,
@@ -94,7 +135,10 @@ const normalizeAttended = (items) => {
       rating: clampRating(item.rating ?? 0),
       attendeeRating: clampRating(item.attendeeRating ?? item.participantRatingForHost ?? 0),
       review: String(item.review ?? item.comment ?? ""),
-      completedAt: String(completedAt)
+      completedAt: String(completedAt),
+      completedAtTimestamp,
+      eventDateLabel: formatEventDate(completedAt),
+      ...confirmation
     };
   });
 };
@@ -110,6 +154,8 @@ const normalizeHosted = (items) => {
       DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
+    const completedAtTimestamp = toTimestamp(completedAt);
+    const confirmation = normalizeConfirmationState(item, completedAtTimestamp);
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
     const photoGallery = normalizePhotoGallery(
       item.photoGallery ?? item.photos ?? item.images ?? item.gallery,
@@ -135,7 +181,10 @@ const normalizeHosted = (items) => {
       photoGallery,
       rating: clampRating(item.rating ?? 0),
       review: String(item.review ?? item.comment ?? ""),
-      completedAt: String(completedAt)
+      completedAt: String(completedAt),
+      completedAtTimestamp,
+      eventDateLabel: formatEventDate(completedAt),
+      ...confirmation
     };
   });
 };
@@ -173,7 +222,10 @@ const toStoredAttended = (items) =>
         rating: item.rating,
         attendeeRating: item.attendeeRating,
         review: item.review,
-        completedAt: item.completedAt
+        completedAt: item.completedAt,
+        confirmationStatus: item.confirmationStatus,
+        confirmedAt: item.confirmedAt,
+        paymentReleased: item.paymentReleased
       };
     });
 
@@ -195,7 +247,10 @@ const toStoredHosted = (items) =>
         photoGallery: item.photoGallery,
         rating: item.rating,
         review: item.review,
-        completedAt: item.completedAt
+        completedAt: item.completedAt,
+        confirmationStatus: item.confirmationStatus,
+        confirmedAt: item.confirmedAt,
+        paymentReleased: item.paymentReleased
       };
     });
 
@@ -248,6 +303,14 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeGallery]);
+
+  useEffect(() => {
+    if (!allItems.some((item) => item.autoConfirmed)) {
+      return;
+    }
+    onSaveHistory?.(toStoredAttended(allItems));
+    onSaveHostHistory?.(toStoredHosted(allItems));
+  }, [allItems, onSaveHistory, onSaveHostHistory]);
 
   const availableSports = useMemo(
     () => ["All", ...new Set(allItems.map((item) => item.sport).filter(Boolean))],
@@ -313,6 +376,29 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
       };
     });
   }, []);
+
+  const confirmCompletion = useCallback(
+    (itemId) => {
+      const nowIso = new Date().toISOString();
+      setAllItems((prev) => {
+        const next = prev.map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                confirmationStatus: "completed",
+                confirmedAt: nowIso,
+                paymentReleased: true,
+                autoConfirmed: false
+              }
+            : item
+        );
+        onSaveHistory?.(toStoredAttended(next));
+        onSaveHostHistory?.(toStoredHosted(next));
+        return next;
+      });
+    },
+    [onSaveHistory, onSaveHostHistory]
+  );
 
   const activeGalleryPhoto = activeGallery?.photos?.[activeGallery.currentIndex] || FALLBACK_EVENT_PHOTO;
   const activeGalleryCount = activeGallery?.photos?.length ?? 0;
@@ -398,11 +484,29 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                     >
                       Photo Gallery
                     </button>
+                    {item.confirmationStatus === "pending" ? (
+                      <button
+                        type="button"
+                        className={`history-confirmation-btn${item.role === "hosted" ? " is-readonly" : ""}`}
+                        onClick={item.role === "attended" ? () => confirmCompletion(item.id) : undefined}
+                        disabled={item.role === "hosted"}
+                      >
+                        {item.role === "attended" ? "Confirm Completion" : "Confirmation Pending"}
+                      </button>
+                    ) : (
+                      <span className="history-completed-status">Completed</span>
+                    )}
+                    <span className={`history-payment-status ${item.paymentReleased ? "released" : "pending"}`}>
+                      {item.paymentReleased ? "Payment released to host" : "Payment release pending"}
+                    </span>
                   </div>
                   <div className="history-card-body">
                     <div className="history-card-head">
                       <div>
-                        <h2>{item.eventName}</h2>
+                        <div className="history-event-title-row">
+                          <h2>{item.eventName}</h2>
+                          <span className="history-event-date">{item.eventDateLabel}</span>
+                        </div>
                         {item.role === "attended" ? (
                           <p className="history-host-line">
                             Hosted by <strong>{item.hostName}</strong>
