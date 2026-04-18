@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
+import SiteFooter from "../components/SiteFooter";
 
 const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
 const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced", "I’m Flexible"];
@@ -1032,6 +1033,8 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
             </button>
           </form>
         </main>
+
+        <SiteFooter />
       </div>
     </div>
   );
