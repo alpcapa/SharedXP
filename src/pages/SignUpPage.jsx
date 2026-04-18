@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
+import SiteFooter from "../components/SiteFooter";
 
 const COUNTRY_OPTIONS = [
   { name: "Brazil", code: "BR", dialCode: "+55" },
@@ -692,6 +693,8 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
             </p>
           </section>
         </main>
+
+        <SiteFooter />
       </div>
     </div>
   );

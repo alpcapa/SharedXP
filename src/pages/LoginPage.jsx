@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
+import SiteFooter from "../components/SiteFooter";
 
 const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
   const navigate = useNavigate();
@@ -93,6 +94,8 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
             </p>
           </section>
         </main>
+
+        <SiteFooter />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
+import SiteFooter from "../components/SiteFooter";
 
 const formatStarRating = (rating) => `${Math.max(0, Math.min(5, Math.round(rating)))}⭐`;
 
@@ -696,6 +697,8 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
             </div>
           )}
         </main>
+
+        <SiteFooter />
       </div>
     </div>
   );
