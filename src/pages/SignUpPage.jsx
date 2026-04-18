@@ -53,7 +53,7 @@ const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
 const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
 const SPORT_SLOT_LABELS = ["Favorite", "Add new", "Add new", "Add new"];
 const REGIONAL_INDICATOR_OFFSET = 127397;
-const BIRTHDAY_PATTERN_SOURCE = "(0[1-9]|1[0-2])/(0[1-9]|[12]\\d|3[01])/\\d{4}";
+const BIRTHDAY_PATTERN_SOURCE = "(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}";
 const BIRTHDAY_PATTERN = new RegExp(`^${BIRTHDAY_PATTERN_SOURCE}$`);
 
 const normalizeBirthdayInput = (value) =>
@@ -67,9 +67,9 @@ const isValidBirthday = (value) => {
     return false;
   }
 
-  const [monthPart, dayPart, yearPart] = value.split("/");
-  const month = Number(monthPart);
+  const [dayPart, monthPart, yearPart] = value.split("/");
   const day = Number(dayPart);
+  const month = Number(monthPart);
   const year = Number(yearPart);
   const normalizedDate = new Date(Date.UTC(year, month - 1, day));
   const now = new Date();
@@ -300,7 +300,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       : phoneDigitsOnly;
     const normalizedBirthday = normalizeBirthdayInput(formValues.birthday);
     if (normalizedBirthday && !isValidBirthday(normalizedBirthday)) {
-      setErrorMessage("Please enter a valid birthday in MM/DD/YYYY format.");
+      setErrorMessage("Please enter a valid birthday in DD/MM/YYYY format.");
       return;
     }
 
@@ -678,9 +678,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                   name="birthday"
                   type="text"
                   inputMode="numeric"
-                  placeholder="01/01/1980"
+                  placeholder="31/01/1980"
                   pattern={BIRTHDAY_PATTERN_SOURCE}
-                  title="Please use MM/DD/YYYY format, for example 01/01/1980."
+                  title="Please use DD/MM/YYYY format, for example 31/01/1980."
                   value={formValues.birthday}
                   onChange={onInputChange}
                 />

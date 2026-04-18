@@ -53,6 +53,34 @@ const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
 const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
 const SPORT_SLOT_LABELS = ["Favorite", "Add new", "Add new", "Add new"];
 const REGIONAL_INDICATOR_OFFSET = 127397;
+const BIRTHDAY_PATTERN_SOURCE = "(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}";
+const BIRTHDAY_PATTERN = new RegExp(`^${BIRTHDAY_PATTERN_SOURCE}$`);
+
+const normalizeBirthdayInput = (value) =>
+  String(value ?? "")
+    .replace(/\s*\/\s*/g, "/")
+    .replace(/\s+/g, "")
+    .trim();
+
+const isValidBirthday = (value) => {
+  if (!BIRTHDAY_PATTERN.test(value)) {
+    return false;
+  }
+
+  const [dayPart, monthPart, yearPart] = value.split("/");
+  const day = Number(dayPart);
+  const month = Number(monthPart);
+  const year = Number(yearPart);
+  const normalizedDate = new Date(Date.UTC(year, month - 1, day));
+  const now = new Date();
+  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return (
+    normalizedDate.getUTCFullYear() === year &&
+    normalizedDate.getUTCMonth() === month - 1 &&
+    normalizedDate.getUTCDate() === day &&
+    normalizedDate <= todayUtc
+  );
+};
 const getLanguageSlots = (userLanguages) =>
   Array.from({ length: 4 }, (_, index) =>
     typeof userLanguages?.[index] === "string" ? userLanguages[index] : ""
@@ -167,6 +195,8 @@ const getInitialFormValues = (user) => {
     addressLine1,
     addressLine2,
     photo: user?.photo ?? "",
+    birthday: user?.birthday ?? "",
+    gender: user?.gender ?? "Not Sharing",
     agreedToTermsAndConditions: Boolean(user?.agreedToTermsAndConditions),
     agreedToPromotionsAndMarketingEmails: Boolean(user?.agreedToPromotionsAndMarketingEmails)
   };
@@ -434,6 +464,12 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
     const localPhoneDigits = phoneDigitsOnly.startsWith(dialCodeDigits)
       ? phoneDigitsOnly.slice(dialCodeDigits.length)
       : phoneDigitsOnly;
+    const normalizedBirthday = normalizeBirthdayInput(formValues.birthday);
+    if (normalizedBirthday && !isValidBirthday(normalizedBirthday)) {
+      setSuccessMessage("");
+      setErrorMessage("Please enter a valid birthday in DD/MM/YYYY format.");
+      return;
+    }
 
     const profilePayload = {
       email: formValues.email.trim().toLowerCase(),
@@ -448,6 +484,8 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
         .filter(Boolean)
         .join(", "),
       photo: nextPhoto,
+      birthday: normalizedBirthday,
+      gender: formValues.gender,
       agreedToPromotionsAndMarketingEmails: formValues.agreedToPromotionsAndMarketingEmails
     };
 
@@ -757,6 +795,26 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
                 value={formValues.addressLine2}
                 onChange={onInputChange}
               />
+
+              <label htmlFor="birthday">Birthday</label>
+              <input
+                id="birthday"
+                name="birthday"
+                type="text"
+                inputMode="numeric"
+                placeholder="31/01/1980"
+                pattern={BIRTHDAY_PATTERN_SOURCE}
+                title="Please use DD/MM/YYYY format, for example 31/01/1980."
+                value={formValues.birthday}
+                onChange={onInputChange}
+              />
+
+              <label htmlFor="gender">Gender</label>
+              <select id="gender" name="gender" value={formValues.gender} onChange={onInputChange}>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Not Sharing">Not Sharing</option>
+              </select>
 
               <label htmlFor="profile-language-0">Language</label>
               <div className="auth-language-row">
