@@ -28,6 +28,14 @@ const normalizeName = (value, fallbackValue) => {
   return text || fallbackValue;
 };
 
+const ensureLastName = (value, fallbackLastName) => {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    return text;
+  }
+  return /\s/.test(text) ? text : `${text} ${fallbackLastName}`;
+};
+
 const normalizePhotoGallery = (value, primaryPhoto) => {
   const fromList = Array.isArray(value)
     ? value
@@ -53,7 +61,10 @@ const normalizeAttended = (items) => {
     const item = rawItem && typeof rawItem === "object" ? rawItem : {};
     const fallbackName = typeof rawItem === "string" ? rawItem : "";
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
-    const hostName = normalizeName(item.hostName ?? item.host, "Host");
+    const hostName = ensureLastName(
+      normalizeName(item.hostName ?? item.host, "Host"),
+      "Silva"
+    );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
     const photoGallery = normalizePhotoGallery(
@@ -87,9 +98,9 @@ const normalizeHosted = (items) => {
     const item = rawItem && typeof rawItem === "object" ? rawItem : {};
     const fallbackName = typeof rawItem === "string" ? rawItem : "";
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
-    const participantName = normalizeName(
-      item.participantName ?? item.userName ?? item.attendeeName,
-      "Participant"
+    const participantName = ensureLastName(
+      normalizeName(item.participantName ?? item.userName ?? item.attendeeName, "Participant"),
+      "Costa"
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const photoSrc = String(item.photo ?? item.image ?? "").trim();

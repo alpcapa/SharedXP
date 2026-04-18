@@ -1471,6 +1471,8 @@ body {
   position: relative;
   width: 100%;
   align-self: start;
+  display: flex;
+  flex-direction: column;
 }
 
 .history-card-photo {
@@ -1492,6 +1494,7 @@ body {
   text-underline-offset: 2px;
   cursor: pointer;
   padding: 0;
+  align-self: flex-end;
 }
 
 .history-role-stamp {
