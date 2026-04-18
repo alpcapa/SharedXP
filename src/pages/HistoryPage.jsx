@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 
-const formatStarRating = (rating) => `${Math.max(0, Math.min(5, Math.round(rating)))}x⭐`;
+const formatStarRating = (rating) => `${Math.max(0, Math.min(5, Math.round(rating)))}⭐`;
 
 const FALLBACK_EVENT_PHOTO =
-  "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=420&h=240&q=80";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='840' height='480' viewBox='0 0 840 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2384cc16'/%3E%3Cstop offset='1' stop-color='%23065f46'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='840' height='480' fill='url(%23g)'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='52' fill='white'%3ESharedXP Event%3C/text%3E%3C/svg%3E";
 
 const FALLBACK_PARTICIPANT_PHOTO =
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='40' fill='%2393c5fd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='24' font-weight='700' fill='%231e3a8a'%3ESP%3C/text%3E%3C/svg%3E";
 
 const clampRating = (value) => {
   const numericRating = Number(value);
@@ -436,11 +436,11 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                           }
                         >
                           <option value="0">Not rated</option>
-                          <option value="1">1x⭐</option>
-                          <option value="2">2x⭐</option>
-                          <option value="3">3x⭐</option>
-                          <option value="4">4x⭐</option>
-                          <option value="5">5x⭐</option>
+                          <option value="1">1⭐</option>
+                          <option value="2">2⭐</option>
+                          <option value="3">3⭐</option>
+                          <option value="4">4⭐</option>
+                          <option value="5">5⭐</option>
                         </select>
                       </label>
 
