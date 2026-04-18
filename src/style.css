@@ -1443,8 +1443,12 @@ body {
   color: #6b7280;
 }
 
+.history-role-tabs {
+  margin-top: 16px;
+}
+
 .history-sport-tabs {
-  margin-top: 18px;
+  margin-top: 12px;
 }
 
 .history-list {
@@ -1475,6 +1479,19 @@ body {
   border-radius: 10px;
   object-fit: cover;
   display: block;
+}
+
+.history-photo-gallery-link {
+  margin-top: 8px;
+  border: none;
+  background: none;
+  color: #3b82f6;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  padding: 0;
 }
 
 .history-role-stamp {
@@ -1578,6 +1595,10 @@ body {
   color: #374151;
 }
 
+.history-participant-stars {
+  margin-left: 2px;
+}
+
 .history-edit-grid {
   display: grid;
   gap: 10px;
@@ -1604,6 +1625,54 @@ body {
 
 .history-field textarea {
   resize: vertical;
+}
+
+.history-gallery-backdrop {
+  z-index: 60;
+}
+
+.history-gallery-modal {
+  width: min(760px, 100%);
+}
+
+.history-gallery-carousel {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  align-items: center;
+  gap: 10px;
+}
+
+.history-gallery-photo {
+  width: 100%;
+  max-height: min(58vh, 480px);
+  border-radius: 10px;
+  object-fit: cover;
+  display: block;
+}
+
+.history-gallery-nav {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.history-gallery-nav:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.history-gallery-counter {
+  margin: 10px 0 0;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
 }
 
 .profile-thumbnail-large {
@@ -2215,6 +2284,17 @@ body {
 
   .history-card-photo {
     height: 180px;
+  }
+
+  .history-gallery-carousel {
+    grid-template-columns: 36px 1fr 36px;
+    gap: 8px;
+  }
+
+  .history-gallery-nav {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
   }
 
   .booking-modal-actions {
