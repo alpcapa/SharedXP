@@ -408,9 +408,9 @@ body {
 .how-what-quote {
   margin: 16px 0 0;
   padding: 24px 28px;
-  border-left: 4px solid #8abd35;
+  border: 2px solid #5f9032;
   background: #f7faf2;
-  border-radius: 0 14px 14px 0;
+  border-radius: 14px;
 }
 
 .how-what-quote p {
@@ -422,6 +422,8 @@ body {
 }
 
 .how-what-attribution {
+  display: block;
+  text-align: right;
   font-size: 15px;
   font-weight: 700;
   color: #5f9032;
@@ -496,14 +498,7 @@ body {
   margin-top: 36px;
 }
 
-.how-testimonials-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.testimonial-next-button {
+.testimonial-page-button {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -519,6 +514,13 @@ body {
   margin-top: 16px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.testimonial-paging {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
   gap: 12px;
 }
 
