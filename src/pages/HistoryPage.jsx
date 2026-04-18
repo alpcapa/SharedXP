@@ -305,11 +305,20 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
   }, [activeGallery]);
 
   useEffect(() => {
-    if (!allItems.some((item) => item.autoConfirmed)) {
+    const autoConfirmedIds = allItems
+      .filter((item) => item.autoConfirmed)
+      .map((item) => item.id);
+    if (!autoConfirmedIds.length) {
       return;
     }
     onSaveHistory?.(toStoredAttended(allItems));
     onSaveHostHistory?.(toStoredHosted(allItems));
+    const autoConfirmedIdSet = new Set(autoConfirmedIds);
+    setAllItems((prev) =>
+      prev.map((item) =>
+        autoConfirmedIdSet.has(item.id) ? { ...item, autoConfirmed: false } : item
+      )
+    );
   }, [allItems, onSaveHistory, onSaveHostHistory]);
 
   const availableSports = useMemo(
@@ -461,9 +470,11 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
 
           {visibleItems.length ? (
             <div className="history-list">
-              {visibleItems.map((item) => (
-                <article key={item.id} className="history-card">
-                  <div className="history-card-photo-wrap">
+              {visibleItems.map((item) => {
+                const isAttendee = item.role === "attended";
+                return (
+                  <article key={item.id} className="history-card">
+                    <div className="history-card-photo-wrap">
                     <img
                       className="history-card-photo"
                       src={item.photo}
@@ -487,11 +498,11 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                     {item.confirmationStatus === "pending" ? (
                       <button
                         type="button"
-                        className={`history-confirmation-btn${item.role === "hosted" ? " is-readonly" : ""}`}
-                        onClick={item.role === "attended" ? () => confirmCompletion(item.id) : undefined}
-                        disabled={item.role === "hosted"}
+                        className={`history-confirmation-btn${isAttendee ? "" : " is-readonly"}`}
+                        onClick={isAttendee ? () => confirmCompletion(item.id) : undefined}
+                        disabled={!isAttendee}
                       >
-                        {item.role === "attended" ? "Confirm Completion" : "Confirmation Pending"}
+                        {isAttendee ? "Confirm Completion" : "Confirmation Pending"}
                       </button>
                     ) : (
                       <span className="history-completed-status">Completed</span>
@@ -499,107 +510,108 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                     <span className={`history-payment-status ${item.paymentReleased ? "released" : "pending"}`}>
                       {item.paymentReleased ? "Payment released to host" : "Payment release pending"}
                     </span>
-                  </div>
-                  <div className="history-card-body">
-                    <div className="history-card-head">
-                      <div>
-                        <div className="history-event-title-row">
-                          <h2>{item.eventName}</h2>
-                          <span className="history-event-date">{item.eventDateLabel}</span>
+                    </div>
+                    <div className="history-card-body">
+                      <div className="history-card-head">
+                        <div>
+                          <div className="history-event-title-row">
+                            <h2>{item.eventName}</h2>
+                            <span className="history-event-date">{item.eventDateLabel}</span>
+                          </div>
+                          {isAttendee ? (
+                            <p className="history-host-line">
+                              Hosted by <strong>{item.hostName}</strong>
+                              {item.rating > 0 && (
+                                <span className="history-stars" aria-label={`Your rating: ${item.rating} stars`}>
+                                  {formatStarRating(item.rating)}
+                                </span>
+                              )}
+                            </p>
+                          ) : (
+                            <div className="host-history-participant">
+                              <img
+                                className="participant-photo"
+                                src={item.participantPhoto}
+                                alt={item.participantName}
+                                onError={(event) => {
+                                  if (event.currentTarget.src !== FALLBACK_PARTICIPANT_PHOTO) {
+                                    event.currentTarget.src = FALLBACK_PARTICIPANT_PHOTO;
+                                  }
+                                }}
+                              />
+                              <span className="participant-name">{item.participantName}</span>
+                              {item.attendeeRating > 0 && (
+                                <span
+                                  className="history-stars history-participant-stars participant-gave-stars"
+                                  aria-label={`Attendee rating: ${item.attendeeRating} stars`}
+                                >
+                                  (gave you {formatStarRating(item.attendeeRating)})
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        {item.role === "attended" ? (
-                          <p className="history-host-line">
-                            Hosted by <strong>{item.hostName}</strong>
-                            {item.rating > 0 && (
-                              <span className="history-stars" aria-label={`Your rating: ${item.rating} stars`}>
-                                {formatStarRating(item.rating)}
-                              </span>
-                            )}
-                          </p>
-                        ) : (
-                          <div className="host-history-participant">
-                            <img
-                              className="participant-photo"
-                              src={item.participantPhoto}
-                              alt={item.participantName}
-                              onError={(event) => {
-                                if (event.currentTarget.src !== FALLBACK_PARTICIPANT_PHOTO) {
-                                  event.currentTarget.src = FALLBACK_PARTICIPANT_PHOTO;
-                                }
-                              }}
-                            />
-                            <span className="participant-name">{item.participantName}</span>
-                            {item.attendeeRating > 0 && (
-                              <span
-                                className="history-stars history-participant-stars participant-gave-stars"
-                                aria-label={`Attendee rating: ${item.attendeeRating} stars`}
-                              >
-                                (gave you {formatStarRating(item.attendeeRating)})
-                              </span>
-                            )}
+                        <span className="sport-pill">{item.sport}</span>
+                      </div>
+
+                      <div className="history-edit-grid">
+                        <label className="history-field">
+                          {isAttendee ? "Rate Host" : "Rate participant"}
+                          <select
+                            value={String(item.rating)}
+                            aria-label={
+                              isAttendee
+                                ? `Rate host for ${item.eventName}`
+                                : `Rating for ${item.participantName}`
+                            }
+                            onChange={(event) =>
+                              updateItem(item.id, "rating", clampRating(event.target.value))
+                            }
+                          >
+                            <option value="0">Not rated</option>
+                            <option value="1">1⭐</option>
+                            <option value="2">2⭐</option>
+                            <option value="3">3⭐</option>
+                            <option value="4">4⭐</option>
+                            <option value="5">5⭐</option>
+                          </select>
+                        </label>
+
+                        <label className="history-field">
+                          {isAttendee ? "Review Host" : "Review participant"}
+                          <textarea
+                            value={item.review}
+                            rows={3}
+                            placeholder={
+                              isAttendee
+                                ? "Write your review of the host"
+                                : "Write your review of this participant"
+                            }
+                            aria-label={
+                              isAttendee
+                                ? `Review host for ${item.eventName}`
+                                : `Review for ${item.participantName}`
+                            }
+                            onChange={(event) => updateItem(item.id, "review", event.target.value)}
+                          />
+                        </label>
+
+                        {dirtyIds.has(item.id) && (
+                          <div className="history-save-row">
+                            <button
+                              type="button"
+                              className="btn btn-primary history-save-btn"
+                              onClick={() => saveItem(item.id)}
+                            >
+                              Save
+                            </button>
                           </div>
                         )}
                       </div>
-                      <span className="sport-pill">{item.sport}</span>
                     </div>
-
-                    <div className="history-edit-grid">
-                      <label className="history-field">
-                        {item.role === "attended" ? "Rate Host" : "Rate participant"}
-                        <select
-                          value={String(item.rating)}
-                          aria-label={
-                            item.role === "attended"
-                              ? `Rate host for ${item.eventName}`
-                              : `Rating for ${item.participantName}`
-                          }
-                          onChange={(event) =>
-                            updateItem(item.id, "rating", clampRating(event.target.value))
-                          }
-                        >
-                          <option value="0">Not rated</option>
-                          <option value="1">1⭐</option>
-                          <option value="2">2⭐</option>
-                          <option value="3">3⭐</option>
-                          <option value="4">4⭐</option>
-                          <option value="5">5⭐</option>
-                        </select>
-                      </label>
-
-                      <label className="history-field">
-                        {item.role === "attended" ? "Review Host" : "Review participant"}
-                        <textarea
-                          value={item.review}
-                          rows={3}
-                          placeholder={
-                            item.role === "attended"
-                              ? "Write your review of the host"
-                              : "Write your review of this participant"
-                          }
-                          aria-label={
-                            item.role === "attended"
-                              ? `Review host for ${item.eventName}`
-                              : `Review for ${item.participantName}`
-                          }
-                          onChange={(event) => updateItem(item.id, "review", event.target.value)}
-                        />
-                      </label>
-
-                      {dirtyIds.has(item.id) && (
-                        <div className="history-save-row">
-                          <button
-                            type="button"
-                            className="btn btn-primary history-save-btn"
-                            onClick={() => saveItem(item.id)}
-                          >
-                            Save
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <p>
