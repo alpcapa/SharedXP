@@ -10,6 +10,9 @@ const FALLBACK_EVENT_PHOTO =
 const FALLBACK_PARTICIPANT_PHOTO =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='40' fill='%2393c5fd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='24' font-weight='700' fill='%231e3a8a'%3ESP%3C/text%3E%3C/svg%3E";
 
+const DEFAULT_HOST_LAST_NAME = "Silva";
+const DEFAULT_PARTICIPANT_LAST_NAME = "Costa";
+
 const clampRating = (value) => {
   const numericRating = Number(value);
   if (!Number.isFinite(numericRating)) {
@@ -63,7 +66,7 @@ const normalizeAttended = (items) => {
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
     const hostName = ensureLastName(
       normalizeName(item.hostName ?? item.host, "Host"),
-      "Silva"
+      DEFAULT_HOST_LAST_NAME
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
@@ -100,7 +103,7 @@ const normalizeHosted = (items) => {
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
     const participantName = ensureLastName(
       normalizeName(item.participantName ?? item.userName ?? item.attendeeName, "Participant"),
-      "Costa"
+      DEFAULT_PARTICIPANT_LAST_NAME
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
