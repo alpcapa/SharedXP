@@ -1,15 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 
-const STAR_CHARS = ["", "⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"];
-const renderStars = (rating) => STAR_CHARS[Math.max(0, Math.min(5, Math.round(rating)))] || null;
+const formatStarRating = (rating) => `${Math.max(0, Math.min(5, Math.round(rating)))}⭐`;
 
 const FALLBACK_EVENT_PHOTO =
-  "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=420&h=240&q=80";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='840' height='480' viewBox='0 0 840 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2384cc16'/%3E%3Cstop offset='1' stop-color='%23065f46'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='840' height='480' fill='url(%23g)'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='52' fill='white'%3ESharedXP Event%3C/text%3E%3C/svg%3E";
 
 const FALLBACK_PARTICIPANT_PHOTO =
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='40' fill='%2393c5fd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='24' font-weight='700' fill='%231e3a8a'%3ESP%3C/text%3E%3C/svg%3E";
+
+const DEFAULT_FALLBACK_LAST_NAME = "User";
+const DEFAULT_HOST_FALLBACK_FIRST_NAME = "Host";
+const DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME = "Participant";
+const CONFIRMATION_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 const clampRating = (value) => {
   const numericRating = Number(value);
@@ -29,15 +33,96 @@ const normalizeName = (value, fallbackValue) => {
   return text || fallbackValue;
 };
 
+const formatEventDate = (dateValue) => {
+  const timestamp = toTimestamp(dateValue);
+  if (timestamp === null) {
+    return "Date unavailable";
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).format(new Date(timestamp));
+};
+
+const normalizeFullName = (value, fallbackFirstName, fallbackLastName = DEFAULT_FALLBACK_LAST_NAME) => {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    return `${fallbackFirstName} ${fallbackLastName}`;
+  }
+  if (/\s/.test(text)) {
+    return text;
+  }
+  return `${text} ${fallbackLastName}`;
+};
+
+const normalizeConfirmationState = (item, completedAtValue, completedAtTimestamp) => {
+  const rawStatus = String(item.confirmationStatus ?? item.status ?? "").toLowerCase();
+  const explicitlyCompleted =
+    rawStatus === "completed" ||
+    rawStatus === "confirmed" ||
+    item.confirmed === true ||
+    item.paymentReleased === true ||
+    String(item.confirmedAt ?? "").trim().length > 0;
+  const autoConfirmed =
+    !explicitlyCompleted &&
+    completedAtTimestamp !== null &&
+    Date.now() - completedAtTimestamp >= CONFIRMATION_WINDOW_MS;
+  const confirmationStatus = explicitlyCompleted || autoConfirmed ? "completed" : "pending";
+  const paymentReleased = confirmationStatus === "completed";
+  const autoConfirmedAt =
+    completedAtTimestamp !== null
+      ? new Date(completedAtTimestamp + CONFIRMATION_WINDOW_MS).toISOString()
+      : "";
+  const confirmedAt =
+    confirmationStatus === "completed"
+      ? String(item.confirmedAt ?? "").trim() || (autoConfirmed ? autoConfirmedAt : String(completedAtValue ?? "").trim())
+      : "";
+  return {
+    confirmationStatus,
+    paymentReleased,
+    confirmedAt,
+    autoConfirmed
+  };
+};
+
+const normalizePhotoGallery = (value, primaryPhoto) => {
+  const fromList = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? [value]
+      : [];
+  const uniquePhotos = new Set();
+  const primaryPhotoValue = String(primaryPhoto ?? "").trim();
+  if (primaryPhotoValue) {
+    uniquePhotos.add(primaryPhotoValue);
+  }
+  fromList
+    .map((photo) => String(photo ?? "").trim())
+    .filter(Boolean)
+    .forEach((photo) => uniquePhotos.add(photo));
+  const unique = Array.from(uniquePhotos);
+  return unique.length ? unique : [FALLBACK_EVENT_PHOTO];
+};
+
 const normalizeAttended = (items) => {
   const arr = Array.isArray(items) ? items : [];
   return arr.map((rawItem, index) => {
     const item = rawItem && typeof rawItem === "object" ? rawItem : {};
     const fallbackName = typeof rawItem === "string" ? rawItem : "";
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
-    const hostName = normalizeName(item.hostName ?? item.host, "Host");
+    const hostName = normalizeFullName(
+      item.hostName ?? item.host,
+      DEFAULT_HOST_FALLBACK_FIRST_NAME
+    );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
+    const completedAtTimestamp = toTimestamp(completedAt);
+    const confirmation = normalizeConfirmationState(item, completedAt, completedAtTimestamp);
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
+    const photoGallery = normalizePhotoGallery(
+      item.photoGallery ?? item.photos ?? item.images ?? item.gallery,
+      photoSrc
+    );
     const rawId = item.id !== undefined && item.id !== null ? String(item.id) : null;
     const id = rawId !== null ? `att:${rawId}` : `att-${index}-${eventName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     return {
@@ -49,10 +134,15 @@ const normalizeAttended = (items) => {
       eventName,
       hostName,
       sport: String(item.sport ?? "Other"),
-      photo: photoSrc || FALLBACK_EVENT_PHOTO,
+      photo: photoGallery[0] || FALLBACK_EVENT_PHOTO,
+      photoGallery,
       rating: clampRating(item.rating ?? 0),
+      attendeeRating: clampRating(item.attendeeRating ?? item.participantRatingForHost ?? 0),
       review: String(item.review ?? item.comment ?? ""),
-      completedAt: String(completedAt)
+      completedAt: String(completedAt),
+      completedAtTimestamp,
+      eventDateLabel: formatEventDate(completedAt),
+      ...confirmation
     };
   });
 };
@@ -63,12 +153,18 @@ const normalizeHosted = (items) => {
     const item = rawItem && typeof rawItem === "object" ? rawItem : {};
     const fallbackName = typeof rawItem === "string" ? rawItem : "";
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
-    const participantName = normalizeName(
+    const participantName = normalizeFullName(
       item.participantName ?? item.userName ?? item.attendeeName,
-      "Participant"
+      DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
+    const completedAtTimestamp = toTimestamp(completedAt);
+    const confirmation = normalizeConfirmationState(item, completedAt, completedAtTimestamp);
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
+    const photoGallery = normalizePhotoGallery(
+      item.photoGallery ?? item.photos ?? item.images ?? item.gallery,
+      photoSrc
+    );
     const participantPhotoSrc = String(
       item.participantPhoto ?? item.userPhoto ?? item.attendeePhoto ?? ""
     ).trim();
@@ -85,10 +181,14 @@ const normalizeHosted = (items) => {
       participantPhoto: participantPhotoSrc || FALLBACK_PARTICIPANT_PHOTO,
       attendeeRating: clampRating(item.attendeeRating ?? item.participantRatingForHost ?? 0),
       sport: String(item.sport ?? "Other"),
-      photo: photoSrc || FALLBACK_EVENT_PHOTO,
+      photo: photoGallery[0] || FALLBACK_EVENT_PHOTO,
+      photoGallery,
       rating: clampRating(item.rating ?? 0),
       review: String(item.review ?? item.comment ?? ""),
-      completedAt: String(completedAt)
+      completedAt: String(completedAt),
+      completedAtTimestamp,
+      eventDateLabel: formatEventDate(completedAt),
+      ...confirmation
     };
   });
 };
@@ -122,9 +222,14 @@ const toStoredAttended = (items) =>
         hostName: item.hostName,
         sport: item.sport,
         photo: item.photo,
+        photoGallery: item.photoGallery,
         rating: item.rating,
+        attendeeRating: item.attendeeRating,
         review: item.review,
-        completedAt: item.completedAt
+        completedAt: item.completedAt,
+        confirmationStatus: item.confirmationStatus,
+        confirmedAt: item.confirmedAt,
+        paymentReleased: item.paymentReleased
       };
     });
 
@@ -143,9 +248,13 @@ const toStoredHosted = (items) =>
         attendeeRating: item.attendeeRating,
         sport: item.sport,
         photo: item.photo,
+        photoGallery: item.photoGallery,
         rating: item.rating,
         review: item.review,
-        completedAt: item.completedAt
+        completedAt: item.completedAt,
+        confirmationStatus: item.confirmationStatus,
+        confirmedAt: item.confirmedAt,
+        paymentReleased: item.paymentReleased
       };
     });
 
@@ -173,7 +282,10 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     mergeAndSort(normalizeAttended(currentUser.history), normalizeHosted(currentUser.hostHistory))
   );
   const [selectedSport, setSelectedSport] = useState("All");
+  const [selectedRole, setSelectedRole] = useState("all");
   const [dirtyIds, setDirtyIds] = useState(() => new Set());
+  const [activeGallery, setActiveGallery] = useState(null);
+  const lastAutoConfirmPersistKeyRef = useRef("");
 
   useEffect(() => {
     setAllItems(
@@ -182,14 +294,65 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     setDirtyIds(new Set());
   }, [currentUser.history, currentUser.hostHistory]);
 
+  useEffect(() => {
+    if (!activeGallery) {
+      return undefined;
+    }
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setActiveGallery(null);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeGallery]);
+
+  useEffect(() => {
+    const autoConfirmedIds = allItems
+      .filter((item) => item.autoConfirmed)
+      .map((item) => item.id);
+    if (!autoConfirmedIds.length) {
+      lastAutoConfirmPersistKeyRef.current = "";
+      return;
+    }
+    const persistKey = [...autoConfirmedIds].sort().join("|");
+    if (lastAutoConfirmPersistKeyRef.current === persistKey) {
+      return;
+    }
+    lastAutoConfirmPersistKeyRef.current = persistKey;
+    const hasAttendedAutoConfirm = allItems.some(
+      (item) => item.autoConfirmed && item.role === "attended"
+    );
+    const hasHostedAutoConfirm = allItems.some((item) => item.autoConfirmed && item.role === "hosted");
+    if (hasAttendedAutoConfirm) {
+      onSaveHistory?.(toStoredAttended(allItems));
+    }
+    if (hasHostedAutoConfirm) {
+      onSaveHostHistory?.(toStoredHosted(allItems));
+    }
+    const autoConfirmedIdSet = new Set(autoConfirmedIds);
+    setAllItems((prev) =>
+      prev.map((item) =>
+        autoConfirmedIdSet.has(item.id) ? { ...item, autoConfirmed: false } : item
+      )
+    );
+  }, [allItems, onSaveHistory, onSaveHostHistory]);
+
   const availableSports = useMemo(
     () => ["All", ...new Set(allItems.map((item) => item.sport).filter(Boolean))],
     [allItems]
   );
 
   const visibleItems = useMemo(
-    () => allItems.filter((item) => selectedSport === "All" || item.sport === selectedSport),
-    [allItems, selectedSport]
+    () =>
+      allItems.filter(
+        (item) =>
+          (selectedSport === "All" || item.sport === selectedSport) &&
+          (selectedRole === "all" || item.role === selectedRole)
+      ),
+    [allItems, selectedSport, selectedRole]
   );
 
   const updateItem = useCallback((itemId, fieldName, fieldValue) => {
@@ -215,6 +378,59 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     [onSaveHistory, onSaveHostHistory]
   );
 
+  const openGallery = useCallback((item, startIndex = 0) => {
+    const photos = item.photoGallery?.length ? item.photoGallery : [item.photo || FALLBACK_EVENT_PHOTO];
+    const safeStartIndex = Math.max(0, Math.min(photos.length - 1, startIndex));
+    setActiveGallery({
+      eventName: item.eventName,
+      photos,
+      currentIndex: safeStartIndex
+    });
+  }, []);
+
+  const closeGallery = useCallback(() => {
+    setActiveGallery(null);
+  }, []);
+
+  const shiftGallery = useCallback((step) => {
+    setActiveGallery((previous) => {
+      if (!previous || previous.photos.length <= 1) {
+        return previous;
+      }
+      const total = previous.photos.length;
+      return {
+        ...previous,
+        currentIndex: (previous.currentIndex + step + total) % total
+      };
+    });
+  }, []);
+
+  const confirmCompletion = useCallback(
+    (itemId) => {
+      const nowIso = new Date().toISOString();
+      setAllItems((prev) => {
+        const next = prev.map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                confirmationStatus: "completed",
+                confirmedAt: nowIso,
+                paymentReleased: true,
+                autoConfirmed: false
+              }
+            : item
+        );
+        onSaveHistory?.(toStoredAttended(next));
+        onSaveHostHistory?.(toStoredHosted(next));
+        return next;
+      });
+    },
+    [onSaveHistory, onSaveHostHistory]
+  );
+
+  const activeGalleryPhoto = activeGallery?.photos?.[activeGallery.currentIndex] || FALLBACK_EVENT_PHOTO;
+  const activeGalleryCount = activeGallery?.photos?.length ?? 0;
+
   return (
     <div className="home-page">
       <div className="middle-page-frame">
@@ -224,6 +440,35 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
         <main className="middle-section simple-page history-page">
           <h1>History</h1>
           <p className="history-subtitle">Your completed experiences, shown from latest to oldest.</p>
+          <div className="host-sport-tabs history-role-tabs" role="tablist" aria-label="Filter history by role">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={selectedRole === "all"}
+              className={`host-sport-tab${selectedRole === "all" ? " active" : ""}`}
+              onClick={() => setSelectedRole("all")}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={selectedRole === "hosted"}
+              className={`host-sport-tab${selectedRole === "hosted" ? " active" : ""}`}
+              onClick={() => setSelectedRole("hosted")}
+            >
+              Hosted
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={selectedRole === "attended"}
+              className={`host-sport-tab${selectedRole === "attended" ? " active" : ""}`}
+              onClick={() => setSelectedRole("attended")}
+            >
+              Attended
+            </button>
+          </div>
 
           {availableSports.length > 1 && (
             <div className="host-sport-tabs history-sport-tabs" role="tablist" aria-label="Filter history by sport">
@@ -244,9 +489,11 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
 
           {visibleItems.length ? (
             <div className="history-list">
-              {visibleItems.map((item) => (
-                <article key={item.id} className="history-card">
-                  <div className="history-card-photo-wrap">
+              {visibleItems.map((item) => {
+                const isAttendee = item.role === "attended";
+                return (
+                  <article key={item.id} className="history-card">
+                    <div className="history-card-photo-wrap">
                     <img
                       className="history-card-photo"
                       src={item.photo}
@@ -260,101 +507,130 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                     <span className={`history-role-stamp role-${item.role}`}>
                       {item.role === "attended" ? "Attended" : "Hosted"}
                     </span>
-                  </div>
-                  <div className="history-card-body">
-                    <div className="history-card-head">
-                      <div>
-                        <h2>{item.eventName}</h2>
-                        {item.role === "attended" ? (
-                          <p className="history-host-line">
-                            Hosted by <strong>{item.hostName}</strong>
-                            {item.rating > 0 && (
-                              <span className="history-host-stars" aria-label={`Your rating: ${item.rating} stars`}>
-                                {renderStars(item.rating)}
-                              </span>
-                            )}
-                          </p>
-                        ) : (
-                          <div className="host-history-participant">
-                            <img
-                              className="participant-photo"
-                              src={item.participantPhoto}
-                              alt={item.participantName}
-                              onError={(event) => {
-                                if (event.currentTarget.src !== FALLBACK_PARTICIPANT_PHOTO) {
-                                  event.currentTarget.src = FALLBACK_PARTICIPANT_PHOTO;
-                                }
-                              }}
-                            />
-                            <span className="participant-name">{item.participantName}</span>
-                            {item.attendeeRating > 0 && (
-                              <span className="participant-gave-stars">
-                                (gave you {item.attendeeRating} {item.attendeeRating === 1 ? "star" : "stars"} for this event)
-                              </span>
-                            )}
+                    <button
+                      type="button"
+                      className="history-photo-gallery-link"
+                      onClick={() => openGallery(item)}
+                    >
+                      Photo Gallery
+                    </button>
+                    {item.confirmationStatus === "pending" ? (
+                      <button
+                        type="button"
+                        className={`history-confirmation-btn${isAttendee ? "" : " is-readonly"}`}
+                        onClick={isAttendee ? () => confirmCompletion(item.id) : undefined}
+                        disabled={!isAttendee}
+                      >
+                        {isAttendee ? "Confirm Completion" : "Confirmation Pending"}
+                      </button>
+                    ) : (
+                      <span className="history-completed-status">Completed</span>
+                    )}
+                    <span className={`history-payment-status ${item.paymentReleased ? "released" : "pending"}`}>
+                      {item.paymentReleased ? "Payment released to host" : "Payment release pending"}
+                    </span>
+                    </div>
+                    <div className="history-card-body">
+                      <div className="history-card-head">
+                        <div>
+                          <div className="history-event-title-row">
+                            <h2>{item.eventName}</h2>
+                            <span className="history-event-date">{item.eventDateLabel}</span>
+                          </div>
+                          {isAttendee ? (
+                            <p className="history-host-line">
+                              Hosted by <strong>{item.hostName}</strong>
+                              {item.rating > 0 && (
+                                <span className="history-stars" aria-label={`Your rating: ${item.rating} stars`}>
+                                  {formatStarRating(item.rating)}
+                                </span>
+                              )}
+                            </p>
+                          ) : (
+                            <div className="host-history-participant">
+                              <img
+                                className="participant-photo"
+                                src={item.participantPhoto}
+                                alt={item.participantName}
+                                onError={(event) => {
+                                  if (event.currentTarget.src !== FALLBACK_PARTICIPANT_PHOTO) {
+                                    event.currentTarget.src = FALLBACK_PARTICIPANT_PHOTO;
+                                  }
+                                }}
+                              />
+                              <span className="participant-name">{item.participantName}</span>
+                              {item.attendeeRating > 0 && (
+                                <span
+                                  className="history-stars history-participant-stars participant-gave-stars"
+                                  aria-label={`Attendee rating: ${item.attendeeRating} stars`}
+                                >
+                                  (gave you {formatStarRating(item.attendeeRating)})
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <span className="sport-pill">{item.sport}</span>
+                      </div>
+
+                      <div className="history-edit-grid">
+                        <label className="history-field">
+                          {isAttendee ? "Rate Host" : "Rate participant"}
+                          <select
+                            value={String(item.rating)}
+                            aria-label={
+                              isAttendee
+                                ? `Rate host for ${item.eventName}`
+                                : `Rating for ${item.participantName}`
+                            }
+                            onChange={(event) =>
+                              updateItem(item.id, "rating", clampRating(event.target.value))
+                            }
+                          >
+                            <option value="0">Not rated</option>
+                            <option value="1">1⭐</option>
+                            <option value="2">2⭐</option>
+                            <option value="3">3⭐</option>
+                            <option value="4">4⭐</option>
+                            <option value="5">5⭐</option>
+                          </select>
+                        </label>
+
+                        <label className="history-field">
+                          {isAttendee ? "Review Host" : "Review participant"}
+                          <textarea
+                            value={item.review}
+                            rows={3}
+                            placeholder={
+                              isAttendee
+                                ? "Write your review of the host"
+                                : "Write your review of this participant"
+                            }
+                            aria-label={
+                              isAttendee
+                                ? `Review host for ${item.eventName}`
+                                : `Review for ${item.participantName}`
+                            }
+                            onChange={(event) => updateItem(item.id, "review", event.target.value)}
+                          />
+                        </label>
+
+                        {dirtyIds.has(item.id) && (
+                          <div className="history-save-row">
+                            <button
+                              type="button"
+                              className="btn btn-primary history-save-btn"
+                              onClick={() => saveItem(item.id)}
+                            >
+                              Save
+                            </button>
                           </div>
                         )}
                       </div>
-                      <span className="sport-pill">{item.sport}</span>
                     </div>
-
-                    <div className="history-edit-grid">
-                      <label className="history-field">
-                        {item.role === "attended" ? "Rate Host" : "Rate participant"}
-                        <select
-                          value={String(item.rating)}
-                          aria-label={
-                            item.role === "attended"
-                              ? `Rate host for ${item.eventName}`
-                              : `Rating for ${item.participantName}`
-                          }
-                          onChange={(event) =>
-                            updateItem(item.id, "rating", clampRating(event.target.value))
-                          }
-                        >
-                          <option value="0">Not rated</option>
-                          <option value="1">1 ⭐</option>
-                          <option value="2">2 ⭐⭐</option>
-                          <option value="3">3 ⭐⭐⭐</option>
-                          <option value="4">4 ⭐⭐⭐⭐</option>
-                          <option value="5">5 ⭐⭐⭐⭐⭐</option>
-                        </select>
-                      </label>
-
-                      <label className="history-field">
-                        {item.role === "attended" ? "Review Host" : "Review participant"}
-                        <textarea
-                          value={item.review}
-                          rows={3}
-                          placeholder={
-                            item.role === "attended"
-                              ? "Write your review of the host"
-                              : "Write your review of this participant"
-                          }
-                          aria-label={
-                            item.role === "attended"
-                              ? `Review host for ${item.eventName}`
-                              : `Review for ${item.participantName}`
-                          }
-                          onChange={(event) => updateItem(item.id, "review", event.target.value)}
-                        />
-                      </label>
-
-                      {dirtyIds.has(item.id) && (
-                        <div className="history-save-row">
-                          <button
-                            type="button"
-                            className="btn btn-primary history-save-btn"
-                            onClick={() => saveItem(item.id)}
-                          >
-                            Save
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <p>
@@ -362,6 +638,62 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                 ? "No completed experiences for this sport yet."
                 : "No completed experiences yet."}
             </p>
+          )}
+
+          {activeGallery && (
+            <div className="booking-modal-backdrop history-gallery-backdrop" onClick={closeGallery}>
+              <div
+                className="booking-modal history-gallery-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label={`${activeGallery.eventName} photo gallery`}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="booking-modal-close"
+                  aria-label="Close photo gallery"
+                  onClick={closeGallery}
+                >
+                  ×
+                </button>
+                <h3>Photo Gallery</h3>
+                <p className="booking-modal-meta">{activeGallery.eventName}</p>
+                <div className="history-gallery-carousel">
+                  <button
+                    type="button"
+                    className="history-gallery-nav"
+                    onClick={() => shiftGallery(-1)}
+                    aria-label="Previous photo"
+                    disabled={activeGalleryCount <= 1}
+                  >
+                    ‹
+                  </button>
+                  <img
+                    className="history-gallery-photo"
+                    src={activeGalleryPhoto}
+                    alt={`${activeGallery.eventName} gallery`}
+                    onError={(event) => {
+                      if (event.currentTarget.src !== FALLBACK_EVENT_PHOTO) {
+                        event.currentTarget.src = FALLBACK_EVENT_PHOTO;
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="history-gallery-nav"
+                    onClick={() => shiftGallery(1)}
+                    aria-label="Next photo"
+                    disabled={activeGalleryCount <= 1}
+                  >
+                    ›
+                  </button>
+                </div>
+                <p className="history-gallery-counter">
+                  {activeGallery.currentIndex + 1} of {activeGalleryCount}
+                </p>
+              </div>
+            </div>
           )}
         </main>
       </div>
