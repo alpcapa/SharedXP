@@ -1526,6 +1526,36 @@ body {
   color: #4b5563;
 }
 
+.history-host-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+  color: #4b5563;
+}
+
+.history-host-stars {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.participant-gave-stars {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.history-save-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.history-save-btn {
+  padding: 8px 20px;
+  font-size: 13px;
+}
+
 .host-history-participant {
   display: flex;
   align-items: center;

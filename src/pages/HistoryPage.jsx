@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
+
+const STAR_CHARS = ["", "⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"];
+const renderStars = (rating) => STAR_CHARS[Math.max(0, Math.min(5, Math.round(rating)))] || null;
 
 const FALLBACK_EVENT_PHOTO =
   "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=420&h=240&q=80";
@@ -80,6 +83,7 @@ const normalizeHosted = (items) => {
       eventName,
       participantName,
       participantPhoto: participantPhotoSrc || FALLBACK_PARTICIPANT_PHOTO,
+      attendeeRating: clampRating(item.attendeeRating ?? item.participantRatingForHost ?? 0),
       sport: String(item.sport ?? "Other"),
       photo: photoSrc || FALLBACK_EVENT_PHOTO,
       rating: clampRating(item.rating ?? 0),
@@ -136,6 +140,7 @@ const toStoredHosted = (items) =>
         label: item.eventName,
         participantName: item.participantName,
         participantPhoto: item.participantPhoto,
+        attendeeRating: item.attendeeRating,
         sport: item.sport,
         photo: item.photo,
         rating: item.rating,
@@ -168,11 +173,13 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     mergeAndSort(normalizeAttended(currentUser.history), normalizeHosted(currentUser.hostHistory))
   );
   const [selectedSport, setSelectedSport] = useState("All");
+  const [dirtyIds, setDirtyIds] = useState(() => new Set());
 
   useEffect(() => {
     setAllItems(
       mergeAndSort(normalizeAttended(currentUser.history), normalizeHosted(currentUser.hostHistory))
     );
+    setDirtyIds(new Set());
   }, [currentUser.history, currentUser.hostHistory]);
 
   const availableSports = useMemo(
@@ -185,16 +192,28 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     [allItems, selectedSport]
   );
 
-  const updateItem = (itemId, fieldName, fieldValue) => {
-    setAllItems((prev) => {
-      const next = prev.map((item) =>
-        item.id === itemId ? { ...item, [fieldName]: fieldValue } : item
-      );
-      onSaveHistory?.(toStoredAttended(next));
-      onSaveHostHistory?.(toStoredHosted(next));
-      return next;
-    });
-  };
+  const updateItem = useCallback((itemId, fieldName, fieldValue) => {
+    setAllItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, [fieldName]: fieldValue } : item))
+    );
+    setDirtyIds((prev) => new Set([...prev, itemId]));
+  }, []);
+
+  const saveItem = useCallback(
+    (itemId) => {
+      setAllItems((prev) => {
+        onSaveHistory?.(toStoredAttended(prev));
+        onSaveHostHistory?.(toStoredHosted(prev));
+        return prev;
+      });
+      setDirtyIds((prev) => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
+    },
+    [onSaveHistory, onSaveHostHistory]
+  );
 
   return (
     <div className="home-page">
@@ -247,8 +266,13 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                       <div>
                         <h2>{item.eventName}</h2>
                         {item.role === "attended" ? (
-                          <p>
+                          <p className="history-host-line">
                             Hosted by <strong>{item.hostName}</strong>
+                            {item.rating > 0 && (
+                              <span className="history-host-stars" aria-label={`Your rating: ${item.rating} stars`}>
+                                {renderStars(item.rating)}
+                              </span>
+                            )}
                           </p>
                         ) : (
                           <div className="host-history-participant">
@@ -263,6 +287,11 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                               }}
                             />
                             <span className="participant-name">{item.participantName}</span>
+                            {item.attendeeRating > 0 && (
+                              <span className="participant-gave-stars">
+                                (gave you {item.attendeeRating} {item.attendeeRating === 1 ? "star" : "stars"} for this event)
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -271,12 +300,12 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
 
                     <div className="history-edit-grid">
                       <label className="history-field">
-                        {item.role === "attended" ? "Rating" : "Rate participant"}
+                        {item.role === "attended" ? "Rate Host" : "Rate participant"}
                         <select
                           value={String(item.rating)}
                           aria-label={
                             item.role === "attended"
-                              ? `Rating for ${item.eventName}`
+                              ? `Rate host for ${item.eventName}`
                               : `Rating for ${item.participantName}`
                           }
                           onChange={(event) =>
@@ -293,23 +322,35 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                       </label>
 
                       <label className="history-field">
-                        {item.role === "attended" ? "Review" : "Review participant"}
+                        {item.role === "attended" ? "Review Host" : "Review participant"}
                         <textarea
                           value={item.review}
                           rows={3}
                           placeholder={
                             item.role === "attended"
-                              ? "Write your review"
+                              ? "Write your review of the host"
                               : "Write your review of this participant"
                           }
                           aria-label={
                             item.role === "attended"
-                              ? `Review for ${item.eventName}`
+                              ? `Review host for ${item.eventName}`
                               : `Review for ${item.participantName}`
                           }
                           onChange={(event) => updateItem(item.id, "review", event.target.value)}
                         />
                       </label>
+
+                      {dirtyIds.has(item.id) && (
+                        <div className="history-save-row">
+                          <button
+                            type="button"
+                            className="btn btn-primary history-save-btn"
+                            onClick={() => saveItem(item.id)}
+                          >
+                            Save
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </article>
