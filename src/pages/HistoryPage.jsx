@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 
@@ -56,7 +56,7 @@ const normalizeFullName = (value, fallbackFirstName, fallbackLastName = DEFAULT_
   return `${text} ${fallbackLastName}`;
 };
 
-const normalizeConfirmationState = (item, completedAtTimestamp) => {
+const normalizeConfirmationState = (item, completedAtValue, completedAtTimestamp) => {
   const rawStatus = String(item.confirmationStatus ?? item.status ?? "").toLowerCase();
   const explicitlyCompleted =
     rawStatus === "completed" ||
@@ -70,9 +70,13 @@ const normalizeConfirmationState = (item, completedAtTimestamp) => {
     Date.now() - completedAtTimestamp >= CONFIRMATION_WINDOW_MS;
   const confirmationStatus = explicitlyCompleted || autoConfirmed ? "completed" : "pending";
   const paymentReleased = confirmationStatus === "completed";
+  const autoConfirmedAt =
+    completedAtTimestamp !== null
+      ? new Date(completedAtTimestamp + CONFIRMATION_WINDOW_MS).toISOString()
+      : "";
   const confirmedAt =
     confirmationStatus === "completed"
-      ? String(item.confirmedAt ?? "").trim() || new Date().toISOString()
+      ? String(item.confirmedAt ?? "").trim() || (autoConfirmed ? autoConfirmedAt : String(completedAtValue ?? "").trim())
       : "";
   return {
     confirmationStatus,
@@ -113,7 +117,7 @@ const normalizeAttended = (items) => {
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const completedAtTimestamp = toTimestamp(completedAt);
-    const confirmation = normalizeConfirmationState(item, completedAtTimestamp);
+    const confirmation = normalizeConfirmationState(item, completedAt, completedAtTimestamp);
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
     const photoGallery = normalizePhotoGallery(
       item.photoGallery ?? item.photos ?? item.images ?? item.gallery,
@@ -155,7 +159,7 @@ const normalizeHosted = (items) => {
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const completedAtTimestamp = toTimestamp(completedAt);
-    const confirmation = normalizeConfirmationState(item, completedAtTimestamp);
+    const confirmation = normalizeConfirmationState(item, completedAt, completedAtTimestamp);
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
     const photoGallery = normalizePhotoGallery(
       item.photoGallery ?? item.photos ?? item.images ?? item.gallery,
@@ -281,6 +285,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
   const [selectedRole, setSelectedRole] = useState("all");
   const [dirtyIds, setDirtyIds] = useState(() => new Set());
   const [activeGallery, setActiveGallery] = useState(null);
+  const lastAutoConfirmPersistKeyRef = useRef("");
 
   useEffect(() => {
     setAllItems(
@@ -309,10 +314,24 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
       .filter((item) => item.autoConfirmed)
       .map((item) => item.id);
     if (!autoConfirmedIds.length) {
+      lastAutoConfirmPersistKeyRef.current = "";
       return;
     }
-    onSaveHistory?.(toStoredAttended(allItems));
-    onSaveHostHistory?.(toStoredHosted(allItems));
+    const persistKey = [...autoConfirmedIds].sort().join("|");
+    if (lastAutoConfirmPersistKeyRef.current === persistKey) {
+      return;
+    }
+    lastAutoConfirmPersistKeyRef.current = persistKey;
+    const hasAttendedAutoConfirm = allItems.some(
+      (item) => item.autoConfirmed && item.role === "attended"
+    );
+    const hasHostedAutoConfirm = allItems.some((item) => item.autoConfirmed && item.role === "hosted");
+    if (hasAttendedAutoConfirm) {
+      onSaveHistory?.(toStoredAttended(allItems));
+    }
+    if (hasHostedAutoConfirm) {
+      onSaveHostHistory?.(toStoredHosted(allItems));
+    }
     const autoConfirmedIdSet = new Set(autoConfirmedIds);
     setAllItems((prev) =>
       prev.map((item) =>
