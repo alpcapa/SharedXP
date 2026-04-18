@@ -18,23 +18,42 @@ const toTimestamp = (dateValue) => {
   return Number.isFinite(timestamp) ? timestamp : null;
 };
 
+const normalizeName = (value, fallbackValue) => {
+  const text = String(value ?? "").trim();
+  return text || fallbackValue;
+};
+
+const createHistoryId = (item, index, eventName, hostName) => {
+  if (item && typeof item === "object" && item.id !== undefined && item.id !== null) {
+    return String(item.id);
+  }
+
+  const slug = `${eventName}-${hostName}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  return `history-${index}-${slug || "item"}`;
+};
+
 const normalizeHistory = (historyItems) => {
   const normalizedItems = Array.isArray(historyItems) ? historyItems : [];
   return normalizedItems
     .map((rawItem, index) => {
       const item = rawItem && typeof rawItem === "object" ? rawItem : {};
-      const eventName = (item.eventName ?? item.label ?? item.title ?? String(rawItem ?? "Experience")).trim();
-      const hostName = (item.hostName ?? item.host ?? "Host").trim();
+      const fallbackEventName = typeof rawItem === "string" ? rawItem : "";
+      const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackEventName, "Experience");
+      const hostName = normalizeName(item.hostName ?? item.host, "Host");
       const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
+      const photoSource = String(item.photo ?? item.image ?? "").trim();
       return {
         source: rawItem,
         fallbackIndex: index,
         sortKey: toTimestamp(completedAt),
-        id: String(item.id ?? `${eventName}-${index}-${hostName}`),
-        eventName: eventName || "Experience",
-        hostName: hostName || "Host",
+        id: createHistoryId(item, index, eventName, hostName),
+        eventName,
+        hostName,
         sport: String(item.sport ?? "Other"),
-        photo: String(item.photo ?? item.image ?? FALLBACK_EVENT_PHOTO),
+        photo: photoSource || FALLBACK_EVENT_PHOTO,
         rating: clampRating(item.rating ?? 0),
         review: String(item.review ?? item.comment ?? ""),
         completedAt: String(completedAt)
@@ -155,7 +174,16 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
             <div className="history-list">
               {visibleHistoryItems.map((item) => (
                 <article key={item.id} className="history-card">
-                  <img className="history-card-photo" src={item.photo} alt={`${item.eventName} hosted by ${item.hostName}`} />
+                  <img
+                    className="history-card-photo"
+                    src={item.photo}
+                    alt={`Photo of ${item.eventName} hosted by ${item.hostName}`}
+                    onError={(event) => {
+                      if (event.currentTarget.src !== FALLBACK_EVENT_PHOTO) {
+                        event.currentTarget.src = FALLBACK_EVENT_PHOTO;
+                      }
+                    }}
+                  />
                   <div className="history-card-body">
                     <div className="history-card-head">
                       <div>
@@ -191,6 +219,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
                           value={item.review}
                           rows={3}
                           placeholder="Write your review"
+                          aria-label={`Review for ${item.eventName}`}
                           onChange={(event) => updateHistoryItem(item.id, "review", event.target.value)}
                         />
                       </label>
@@ -200,7 +229,11 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
               ))}
             </div>
           ) : (
-            <p>No completed experiences for this sport yet.</p>
+            <p>
+              {historyItems.length
+                ? "No completed experiences for this sport yet."
+                : "No completed experiences yet."}
+            </p>
           )}
         </main>
       </div>
