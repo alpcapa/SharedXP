@@ -12,6 +12,8 @@ const FALLBACK_PARTICIPANT_PHOTO =
 
 const DEFAULT_HOST_LAST_NAME = "Silva";
 const DEFAULT_PARTICIPANT_LAST_NAME = "Costa";
+const DEFAULT_HOST_NAME = `Host ${DEFAULT_HOST_LAST_NAME}`;
+const DEFAULT_PARTICIPANT_NAME = `Participant ${DEFAULT_PARTICIPANT_LAST_NAME}`;
 
 const clampRating = (value) => {
   const numericRating = Number(value);
@@ -31,12 +33,16 @@ const normalizeName = (value, fallbackValue) => {
   return text || fallbackValue;
 };
 
-const ensureLastName = (value, fallbackLastName) => {
+const normalizeFullName = (value, fallbackFullName) => {
   const text = String(value ?? "").trim();
   if (!text) {
+    return fallbackFullName;
+  }
+  if (/\s/.test(text)) {
     return text;
   }
-  return /\s/.test(text) ? text : `${text} ${fallbackLastName}`;
+  const fallbackLastName = fallbackFullName.split(/\s+/).slice(1).join(" ").trim();
+  return fallbackLastName ? `${text} ${fallbackLastName}` : text;
 };
 
 const normalizePhotoGallery = (value, primaryPhoto) => {
@@ -64,10 +70,7 @@ const normalizeAttended = (items) => {
     const item = rawItem && typeof rawItem === "object" ? rawItem : {};
     const fallbackName = typeof rawItem === "string" ? rawItem : "";
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
-    const hostName = ensureLastName(
-      normalizeName(item.hostName ?? item.host, "Host"),
-      DEFAULT_HOST_LAST_NAME
-    );
+    const hostName = normalizeFullName(item.hostName ?? item.host, DEFAULT_HOST_NAME);
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
     const photoGallery = normalizePhotoGallery(
@@ -101,9 +104,9 @@ const normalizeHosted = (items) => {
     const item = rawItem && typeof rawItem === "object" ? rawItem : {};
     const fallbackName = typeof rawItem === "string" ? rawItem : "";
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
-    const participantName = ensureLastName(
-      normalizeName(item.participantName ?? item.userName ?? item.attendeeName, "Participant"),
-      DEFAULT_PARTICIPANT_LAST_NAME
+    const participantName = normalizeFullName(
+      item.participantName ?? item.userName ?? item.attendeeName,
+      DEFAULT_PARTICIPANT_NAME
     );
     const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
     const photoSrc = String(item.photo ?? item.image ?? "").trim();
