@@ -50,6 +50,8 @@ const LANGUAGE_OPTIONS = [
   "Urdu"
 ];
 const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
+const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
+const SPORT_SLOT_LABELS = ["Favorite", "Add new", "Add new", "Add new"];
 const REGIONAL_INDICATOR_OFFSET = 127397;
 
 const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => {
@@ -65,6 +67,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     phoneCountryCode: "",
     phone: "",
     languages: ["", "", "", ""],
+    sports: ["", "", "", ""],
     addressLine1: "",
     addressLine2: "",
     photo: "",
@@ -201,6 +204,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     });
   };
 
+  const onSportChange = (sportIndex, sportValue) => {
+    setFormValues((previousValues) => {
+      const nextSports = [...previousValues.sports];
+      nextSports[sportIndex] = sportValue;
+      return {
+        ...previousValues,
+        sports: nextSports
+      };
+    });
+  };
+
   const onPhotoSelect = (event) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) {
@@ -268,6 +282,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       countryDialCode: selectedDialCodeCountry.dialCode,
       phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
       languages: formValues.languages.map((languageOption) => languageOption.trim()),
+      sports: formValues.sports.map((sportOption) => sportOption.trim()),
       address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
         .filter(Boolean)
         .join(", "),
@@ -638,6 +653,27 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 <datalist id="signup-language-options">
                   {LANGUAGE_OPTIONS.map((languageOption) => (
                     <option key={languageOption} value={languageOption} />
+                  ))}
+                </datalist>
+
+                <label htmlFor="signup-sport-0">Sports</label>
+                <div className="auth-language-row">
+                  {SPORT_SLOT_LABELS.map((sportSlotLabel, sportIndex) => (
+                    <input
+                      key={`signup-sport-${sportIndex}`}
+                      id={`signup-sport-${sportIndex}`}
+                      list="signup-sport-options"
+                      placeholder={sportSlotLabel}
+                      aria-label={`Sport ${sportSlotLabel}`}
+                      value={formValues.sports[sportIndex] ?? ""}
+                      onChange={(event) => onSportChange(sportIndex, event.target.value)}
+                      required={sportIndex === 0}
+                    />
+                  ))}
+                </div>
+                <datalist id="signup-sport-options">
+                  {SPORT_OPTIONS.map((sportOption) => (
+                    <option key={sportOption} value={sportOption} />
                   ))}
                 </datalist>
 

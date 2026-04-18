@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 
@@ -122,9 +122,8 @@ const getInitialHostProfile = (user) => {
   };
 };
 
-const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) => {
+const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const isHostSettingsRoute = location.pathname === "/host-settings";
   const initialProfile = useMemo(() => getInitialHostProfile(currentUser), [currentUser]);
   const [hostProfileDraft, setHostProfileDraft] = useState(initialProfile);
@@ -231,30 +230,8 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
     );
   }
 
-  if (!currentUser.isHost && !isHostSettingsRoute) {
-    return (
-      <div className="home-page">
-        <div className="middle-page-frame">
-          <section className="hero auth-hero">
-            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-          </section>
-          <main className="middle-section simple-page">
-            <h1>Become A Host</h1>
-            <p>Start hosting experiences and earn from your sport expertise.</p>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
-                onToggleHost?.();
-                navigate("/host-settings");
-              }}
-            >
-              Activate Host Profile
-            </button>
-          </main>
-        </div>
-      </div>
-    );
+  if (!isHostSettingsRoute) {
+    return <Navigate to="/host-settings" replace />;
   }
 
   const activeSport = hostProfileDraft.sports[activeSportIndex] ?? createEmptySportConfig();
