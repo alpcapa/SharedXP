@@ -1024,6 +1024,12 @@ body {
   font-family: inherit;
 }
 
+.auth-language-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .form-consent-group {
   display: grid;
   gap: 8px;
@@ -1251,6 +1257,11 @@ body {
   gap: 8px;
 }
 
+.host-sport-tab-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
 .host-sport-tab {
   border: 1px solid #d1d5db;
   background: #fff;
@@ -1265,6 +1276,51 @@ body {
   border-color: #8ab944;
   background: #dceab8;
   color: #2f4f12;
+}
+
+.host-sport-delete {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #7f1d1d;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.host-pause-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.host-toggle-group {
+  display: flex;
+  gap: 12px;
+}
+
+.host-toggle-group label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.host-equipment-details:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
 }
 
 .host-availability-block,
@@ -1508,6 +1564,14 @@ body {
 .booking-engine h3 {
   margin: 0;
   font-size: 21px;
+}
+
+.booking-sport-tabs {
+  margin-top: 8px;
+}
+
+.booking-sport-tabs .host-sport-tab {
+  cursor: default;
 }
 
 .booking-subtitle {

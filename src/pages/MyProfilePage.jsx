@@ -26,7 +26,34 @@ const COUNTRY_CITY_OPTIONS = {
   GB: ["London", "Manchester", "Bristol", "Edinburgh"],
   US: ["New York", "Los Angeles", "Austin", "Miami"]
 };
+const LANGUAGE_OPTIONS = [
+  "Arabic",
+  "Bengali",
+  "Dutch",
+  "English",
+  "French",
+  "German",
+  "Greek",
+  "Hindi",
+  "Italian",
+  "Japanese",
+  "Korean",
+  "Mandarin",
+  "Polish",
+  "Portuguese",
+  "Punjabi",
+  "Russian",
+  "Spanish",
+  "Swedish",
+  "Turkish",
+  "Urdu"
+];
+const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
 const REGIONAL_INDICATOR_OFFSET = 127397;
+const getLanguageSlots = (userLanguages) =>
+  Array.from({ length: 4 }, (_, index) =>
+    typeof userLanguages?.[index] === "string" ? userLanguages[index] : ""
+  );
 const getAddressLines = (address) => {
   if (!address) {
     return {
@@ -126,6 +153,7 @@ const getInitialFormValues = (user) => {
     email: user?.email ?? "",
     phoneCountryCode: phoneDetails.phoneCountryCode,
     phone: phoneDetails.phone,
+    languages: getLanguageSlots(user?.languages),
     country: user?.country ?? "",
     city: user?.city ?? "",
     addressLine1,
@@ -301,6 +329,17 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
     }));
   };
 
+  const onLanguageChange = (languageIndex, languageValue) => {
+    setFormValues((previousValues) => {
+      const nextLanguages = [...previousValues.languages];
+      nextLanguages[languageIndex] = languageValue;
+      return {
+        ...previousValues,
+        languages: nextLanguages
+      };
+    });
+  };
+
   const onPhotoSelect = (event) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) {
@@ -382,6 +421,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       phoneCountryCode: selectedDialCodeCountry.code,
       countryDialCode: selectedDialCodeCountry.dialCode,
       phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
+      languages: formValues.languages.map((languageOption) => languageOption.trim()),
       country: selectedCountry.name,
       city: formValues.city.trim(),
       address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
@@ -697,6 +737,27 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
                 value={formValues.addressLine2}
                 onChange={onInputChange}
               />
+
+              <label htmlFor="profile-language-0">Language</label>
+              <div className="auth-language-row">
+                {LANGUAGE_SLOT_LABELS.map((languageSlotLabel, languageIndex) => (
+                  <input
+                    key={`profile-language-${languageIndex}`}
+                    id={`profile-language-${languageIndex}`}
+                    list="profile-language-options"
+                    placeholder={languageSlotLabel}
+                    aria-label={`Language ${languageSlotLabel}`}
+                    value={formValues.languages[languageIndex] ?? ""}
+                    onChange={(event) => onLanguageChange(languageIndex, event.target.value)}
+                    required={languageIndex === 0}
+                  />
+                ))}
+              </div>
+              <datalist id="profile-language-options">
+                {LANGUAGE_OPTIONS.map((languageOption) => (
+                  <option key={languageOption} value={languageOption} />
+                ))}
+              </datalist>
             </div>
 
             <div className="form-consent-group">

@@ -26,6 +26,29 @@ const COUNTRY_CITY_OPTIONS = {
   GB: ["London", "Manchester", "Bristol", "Edinburgh"],
   US: ["New York", "Los Angeles", "Austin", "Miami"]
 };
+const LANGUAGE_OPTIONS = [
+  "Arabic",
+  "Bengali",
+  "Dutch",
+  "English",
+  "French",
+  "German",
+  "Greek",
+  "Hindi",
+  "Italian",
+  "Japanese",
+  "Korean",
+  "Mandarin",
+  "Polish",
+  "Portuguese",
+  "Punjabi",
+  "Russian",
+  "Spanish",
+  "Swedish",
+  "Turkish",
+  "Urdu"
+];
+const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
 const REGIONAL_INDICATOR_OFFSET = 127397;
 
 const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => {
@@ -40,6 +63,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     city: "",
     phoneCountryCode: "",
     phone: "",
+    languages: ["", "", "", ""],
     addressLine1: "",
     addressLine2: "",
     photo: "",
@@ -165,6 +189,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     }));
   };
 
+  const onLanguageChange = (languageIndex, languageValue) => {
+    setFormValues((previousValues) => {
+      const nextLanguages = [...previousValues.languages];
+      nextLanguages[languageIndex] = languageValue;
+      return {
+        ...previousValues,
+        languages: nextLanguages
+      };
+    });
+  };
+
   const onPhotoSelect = (event) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) {
@@ -231,6 +266,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       city: formValues.city.trim(),
       countryDialCode: selectedDialCodeCountry.dialCode,
       phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
+      languages: formValues.languages.map((languageOption) => languageOption.trim()),
       address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
         .filter(Boolean)
         .join(", "),
@@ -582,6 +618,28 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 {formValues.photo && (
                   <img src={formValues.photo} alt="Selected profile" className="auth-photo-preview" />
                 )}
+
+                <label htmlFor="signup-language-0">Language</label>
+                <div className="auth-language-row">
+                  {LANGUAGE_SLOT_LABELS.map((languageSlotLabel, languageIndex) => (
+                    <input
+                      key={`signup-language-${languageIndex}`}
+                      id={`signup-language-${languageIndex}`}
+                      list="signup-language-options"
+                      placeholder={languageSlotLabel}
+                      aria-label={`Language ${languageSlotLabel}`}
+                      value={formValues.languages[languageIndex] ?? ""}
+                      onChange={(event) => onLanguageChange(languageIndex, event.target.value)}
+                      required={languageIndex === 0}
+                    />
+                  ))}
+                </div>
+                <datalist id="signup-language-options">
+                  {LANGUAGE_OPTIONS.map((languageOption) => (
+                    <option key={languageOption} value={languageOption} />
+                  ))}
+                </datalist>
+
                 <div className="form-consent-group">
                   <label className="form-consent-option" htmlFor="agreeTermsAndConditions">
                     <input

@@ -32,6 +32,11 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const recommendations = buddies.filter((item) => item.id !== buddy.id).slice(0, 2);
   const hostDisplayName = buddy.fullName ?? buddy.name;
   const perLabel = buddy.sport === "Cycling" ? "per ride" : "per session";
+  const hostSports = Array.isArray(buddy.sports)
+    ? buddy.sports
+    : buddy.sport
+      ? [{ sport: buddy.sport }]
+      : [];
   const availableDates = buddy.availableDates ?? [];
   const availableTimes = buddy.availableTimes ?? [];
   const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
@@ -142,6 +147,20 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       <section className="booking-engine-section" aria-label="Booking engine">
         <div className="booking-engine">
           <h3>Book with {hostDisplayName}</h3>
+          {hostSports.length > 0 && (
+            <div className="host-sport-tabs booking-sport-tabs" aria-label={`${hostDisplayName} sports`}>
+              {hostSports.map((sportConfig, sportIndex) => (
+                <button
+                  key={sportIndex}
+                  type="button"
+                  className={`host-sport-tab${sportIndex === 0 ? " active" : ""}`}
+                  disabled
+                >
+                  {sportConfig.sport || `Sport ${sportIndex + 1}`}
+                </button>
+              ))}
+            </div>
+          )}
           <p className="booking-subtitle">Choose one available date and time.</p>
 
           <p className="booking-label">Date</p>
