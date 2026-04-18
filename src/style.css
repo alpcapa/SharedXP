@@ -1498,17 +1498,6 @@ body {
   color: #6b7280;
 }
 
-.profile-host-sports {
-  margin-top: 16px;
-  display: grid;
-  gap: 8px;
-}
-
-.profile-host-sports h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
 .profile-page .site-header {
   margin: 10px;
 }

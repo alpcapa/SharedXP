@@ -320,7 +320,6 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
   const profilePhoto =
     selectedPhotoPreviewUrl ||
     getSafeImageSource(formValues.photo || currentUser.photo, DEFAULT_PROFILE_PHOTO);
-  const hostSports = currentUser.hostProfile?.sports ?? [];
 
   const onInputChange = (event) => {
     const { name, value, checked, type } = event.target;
@@ -760,24 +759,6 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
                 ))}
               </datalist>
             </div>
-
-            {currentUser.isHost && hostSports.length > 0 && (
-              <section className="profile-host-sports">
-                <h3>Book with {currentUser.fullName}</h3>
-                <div className="host-sport-tabs booking-sport-tabs" aria-label="Your host sports">
-                  {hostSports.map((sportConfig, sportIndex) => (
-                    <button
-                      key={`my-host-sport-${sportIndex}`}
-                      type="button"
-                      className={`host-sport-tab${sportIndex === 0 ? " active" : ""}`}
-                      disabled
-                    >
-                      {sportConfig.sport || `Sport ${sportIndex + 1}`}
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
 
             <div className="form-consent-group">
               <label className="form-consent-option" htmlFor="agreedToTermsAndConditions">
