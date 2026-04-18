@@ -354,6 +354,30 @@ function App() {
           success: true,
           requiresReauthentication: false
         };
+      },
+      onSaveHistory: (historyItems) => {
+        if (!currentUser) {
+          return;
+        }
+
+        const normalizedHistoryItems = Array.isArray(historyItems) ? historyItems : [];
+        const normalizedEmail = currentUser.email.toLowerCase();
+        const updatedUser = {
+          ...currentUser,
+          history: normalizedHistoryItems
+        };
+
+        setCurrentUser(updatedUser);
+        setRegisteredUsers((previousUsers) =>
+          previousUsers.map((user) =>
+            user.email.toLowerCase() === normalizedEmail
+              ? {
+                  ...user,
+                  history: normalizedHistoryItems
+                }
+              : user
+          )
+        );
       }
     }),
     [currentUser, registeredUsers]
