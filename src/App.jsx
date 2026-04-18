@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import HostPage from "./pages/HostPage";
 import HistoryPage from "./pages/HistoryPage";
+import HostHistoryPage from "./pages/HostHistoryPage";
 import LoginPage from "./pages/LoginPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import ProfilePage from "./pages/ProfilePage";
@@ -378,6 +379,30 @@ function App() {
               : user
           )
         );
+      },
+      onSaveHostHistory: (hostHistoryItems) => {
+        if (!currentUser) {
+          return;
+        }
+
+        const normalizedItems = Array.isArray(hostHistoryItems) ? hostHistoryItems : [];
+        const normalizedEmail = currentUser.email.toLowerCase();
+        const updatedUser = {
+          ...currentUser,
+          hostHistory: normalizedItems
+        };
+
+        setCurrentUser(updatedUser);
+        setRegisteredUsers((previousUsers) =>
+          previousUsers.map((user) =>
+            user.email.toLowerCase() === normalizedEmail
+              ? {
+                  ...user,
+                  hostHistory: normalizedItems
+                }
+              : user
+          )
+        );
       }
     }),
     [currentUser, registeredUsers]
@@ -395,6 +420,7 @@ function App() {
       <Route path="/become-a-host" element={<HostPage {...authActions} />} />
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />
+      <Route path="/host-history" element={<HostHistoryPage {...authActions} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

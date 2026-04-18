@@ -1423,6 +1423,21 @@ body {
   width: min(960px, 100%);
 }
 
+.history-page-nav {
+  margin-bottom: 4px;
+}
+
+.history-switch-link {
+  font-size: 14px;
+  font-weight: 700;
+  color: #6ca43b;
+  text-decoration: none;
+}
+
+.history-switch-link:hover {
+  text-decoration: underline;
+}
+
 .history-subtitle {
   margin: 8px 0 0;
   color: #6b7280;
@@ -1475,6 +1490,28 @@ body {
 .history-card-head p {
   margin: 6px 0 0;
   color: #4b5563;
+}
+
+.host-history-participant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.participant-photo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #e5e7eb;
+}
+
+.participant-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
 }
 
 .history-edit-grid {

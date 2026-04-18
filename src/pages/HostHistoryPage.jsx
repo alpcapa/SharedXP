@@ -5,6 +5,9 @@ import SiteHeader from "../components/SiteHeader";
 const FALLBACK_EVENT_PHOTO =
   "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=420&h=240&q=80";
 
+const FALLBACK_PARTICIPANT_PHOTO =
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80";
+
 const clampRating = (value) => {
   const numericRating = Number(value);
   if (!Number.isFinite(numericRating)) {
@@ -23,37 +26,45 @@ const normalizeName = (value, fallbackValue) => {
   return text || fallbackValue;
 };
 
-const createHistoryId = (item, index, eventName, hostName) => {
+const createHostHistoryId = (item, index, eventName, participantName) => {
   if (item && typeof item === "object" && item.id !== undefined && item.id !== null) {
     return String(item.id);
   }
 
-  const slug = `${eventName}-${hostName}`
+  const slug = `${eventName}-${participantName}`
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-  return `history-${index}-${slug || "item"}`;
+  return `hh-${index}-${slug || "item"}`;
 };
 
-const normalizeHistory = (historyItems) => {
+const normalizeHostHistory = (historyItems) => {
   const normalizedItems = Array.isArray(historyItems) ? historyItems : [];
   return normalizedItems
     .map((rawItem, index) => {
       const item = rawItem && typeof rawItem === "object" ? rawItem : {};
       const fallbackEventName = typeof rawItem === "string" ? rawItem : "";
-      const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackEventName, "Experience");
-      const hostName = normalizeName(item.hostName ?? item.host, "Host");
+      const eventName = normalizeName(
+        item.eventName ?? item.label ?? item.title ?? fallbackEventName,
+        "Experience"
+      );
+      const participantName = normalizeName(
+        item.participantName ?? item.userName ?? item.attendeeName,
+        "Participant"
+      );
       const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
-      const photoSource = String(item.photo ?? item.image ?? "").trim();
+      const eventPhotoSrc = String(item.photo ?? item.image ?? "").trim();
+      const participantPhotoSrc = String(item.participantPhoto ?? item.userPhoto ?? item.attendeePhoto ?? "").trim();
       return {
         source: rawItem,
         fallbackIndex: index,
         sortKey: toTimestamp(completedAt),
-        id: createHistoryId(item, index, eventName, hostName),
+        id: createHostHistoryId(item, index, eventName, participantName),
         eventName,
-        hostName,
+        participantName,
+        participantPhoto: participantPhotoSrc || FALLBACK_PARTICIPANT_PHOTO,
         sport: String(item.sport ?? "Other"),
-        photo: photoSource || FALLBACK_EVENT_PHOTO,
+        photo: eventPhotoSrc || FALLBACK_EVENT_PHOTO,
         rating: clampRating(item.rating ?? 0),
         review: String(item.review ?? item.comment ?? ""),
         completedAt: String(completedAt)
@@ -73,7 +84,7 @@ const normalizeHistory = (historyItems) => {
     });
 };
 
-const toStoredHistory = (historyItems) =>
+const toStoredHostHistory = (historyItems) =>
   historyItems.map((item) => {
     const baseItem = item.source && typeof item.source === "object" ? { ...item.source } : {};
     return {
@@ -81,7 +92,8 @@ const toStoredHistory = (historyItems) =>
       id: item.id,
       eventName: item.eventName,
       label: item.eventName,
-      hostName: item.hostName,
+      participantName: item.participantName,
+      participantPhoto: item.participantPhoto,
       sport: item.sport,
       photo: item.photo,
       rating: item.rating,
@@ -90,7 +102,7 @@ const toStoredHistory = (historyItems) =>
     };
   });
 
-const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
+const HostHistoryPage = ({ currentUser, onLogout, onSaveHostHistory }) => {
   if (!currentUser) {
     return (
       <div className="home-page">
@@ -100,7 +112,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
           </section>
           <main className="middle-section simple-page">
             <h1>Please log in</h1>
-            <p>You need to log in to view your experience history.</p>
+            <p>You need to log in to view your host history.</p>
             <Link to="/login" className="btn btn-primary">
               Go to Login
             </Link>
@@ -110,12 +122,30 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
     );
   }
 
-  const [historyItems, setHistoryItems] = useState(() => normalizeHistory(currentUser.history));
+  if (!currentUser.isHost) {
+    return (
+      <div className="home-page">
+        <div className="middle-page-frame">
+          <section className="hero auth-hero">
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          </section>
+          <main className="middle-section simple-page">
+            <h1>Host History</h1>
+            <p>You are not registered as a host. <Link to="/become-a-host">Become a host</Link> to start hosting experiences.</p>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  const [historyItems, setHistoryItems] = useState(() =>
+    normalizeHostHistory(currentUser.hostHistory)
+  );
   const [selectedSport, setSelectedSport] = useState("All");
 
   useEffect(() => {
-    setHistoryItems(normalizeHistory(currentUser.history));
-  }, [currentUser.history]);
+    setHistoryItems(normalizeHostHistory(currentUser.hostHistory));
+  }, [currentUser.hostHistory]);
 
   const availableSports = useMemo(
     () => ["All", ...new Set(historyItems.map((item) => item.sport).filter(Boolean))],
@@ -131,14 +161,9 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
   const updateHistoryItem = (itemId, fieldName, fieldValue) => {
     setHistoryItems((previousItems) => {
       const nextItems = previousItems.map((item) =>
-        item.id === itemId
-          ? {
-              ...item,
-              [fieldName]: fieldValue
-            }
-          : item
+        item.id === itemId ? { ...item, [fieldName]: fieldValue } : item
       );
-      onSaveHistory?.(toStoredHistory(nextItems));
+      onSaveHostHistory?.(toStoredHostHistory(nextItems));
       return nextItems;
     });
   };
@@ -150,19 +175,23 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
         <main className="middle-section simple-page history-page">
-          {currentUser.isHost && (
-            <div className="history-page-nav">
-              <Link to="/host-history" className="history-switch-link">
-                Host History →
-              </Link>
-            </div>
-          )}
+          <div className="history-page-nav">
+            <Link to="/history" className="history-switch-link">
+              ← Attendee History
+            </Link>
+          </div>
 
-          <h1>History</h1>
-          <p className="history-subtitle">Your completed experiences are shown from latest to oldest.</p>
+          <h1>Host History</h1>
+          <p className="history-subtitle">
+            Experiences you have hosted, shown from latest to oldest. Rate and review your participants.
+          </p>
 
           {availableSports.length > 1 && (
-            <div className="host-sport-tabs history-sport-tabs" role="tablist" aria-label="Filter history by sport">
+            <div
+              className="host-sport-tabs history-sport-tabs"
+              role="tablist"
+              aria-label="Filter host history by sport"
+            >
               {availableSports.map((sportName) => (
                 <button
                   key={sportName}
@@ -185,7 +214,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
                   <img
                     className="history-card-photo"
                     src={item.photo}
-                    alt={`Photo of ${item.eventName} hosted by ${item.hostName}`}
+                    alt={`Photo of ${item.eventName}`}
                     onError={(event) => {
                       if (event.currentTarget.src !== FALLBACK_EVENT_PHOTO) {
                         event.currentTarget.src = FALLBACK_EVENT_PHOTO;
@@ -196,18 +225,29 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
                     <div className="history-card-head">
                       <div>
                         <h2>{item.eventName}</h2>
-                        <p>
-                          Hosted by <strong>{item.hostName}</strong>
-                        </p>
+                        <div className="host-history-participant">
+                          <img
+                            className="participant-photo"
+                            src={item.participantPhoto}
+                            alt={item.participantName}
+                            onError={(event) => {
+                              if (event.currentTarget.src !== FALLBACK_PARTICIPANT_PHOTO) {
+                                event.currentTarget.src = FALLBACK_PARTICIPANT_PHOTO;
+                              }
+                            }}
+                          />
+                          <span className="participant-name">{item.participantName}</span>
+                        </div>
                       </div>
                       <span className="sport-pill">{item.sport}</span>
                     </div>
 
                     <div className="history-edit-grid">
                       <label className="history-field">
-                        Rating
+                        Rate participant
                         <select
                           value={String(item.rating)}
+                          aria-label={`Rating for ${item.participantName}`}
                           onChange={(event) =>
                             updateHistoryItem(item.id, "rating", clampRating(event.target.value))
                           }
@@ -222,13 +262,15 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
                       </label>
 
                       <label className="history-field">
-                        Review
+                        Review participant
                         <textarea
                           value={item.review}
                           rows={3}
-                          placeholder="Write your review"
-                          aria-label={`Review for ${item.eventName}`}
-                          onChange={(event) => updateHistoryItem(item.id, "review", event.target.value)}
+                          placeholder="Write your review of this participant"
+                          aria-label={`Review for ${item.participantName}`}
+                          onChange={(event) =>
+                            updateHistoryItem(item.id, "review", event.target.value)
+                          }
                         />
                       </label>
                     </div>
@@ -239,8 +281,8 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
           ) : (
             <p>
               {historyItems.length
-                ? "No completed experiences for this sport yet."
-                : "No completed experiences yet."}
+                ? "No hosted experiences for this sport yet."
+                : "No hosted experiences yet."}
             </p>
           )}
         </main>
@@ -249,4 +291,4 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
   );
 };
 
-export default HistoryPage;
+export default HostHistoryPage;
