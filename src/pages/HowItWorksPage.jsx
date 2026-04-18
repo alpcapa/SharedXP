@@ -115,11 +115,6 @@ const HowItWorksPage = ({ currentUser, onLogout }) => {
           </section>
 
           <section className="how-testimonials">
-            <div className="how-testimonials-head">
-              <button type="button" className="testimonial-next-button" aria-label="See more testimonials">
-                →
-              </button>
-            </div>
             <div className="testimonial-list">
               {testimonials.map((testimonial, index) => (
                 <article key={index} className="testimonial-card">
@@ -133,6 +128,14 @@ const HowItWorksPage = ({ currentUser, onLogout }) => {
                   <blockquote className="testimonial-quote">{testimonial.quote}</blockquote>
                 </article>
               ))}
+            </div>
+            <div className="testimonial-paging" aria-label="Testimonials paging controls">
+              <button type="button" className="testimonial-page-button" aria-label="See previous testimonials">
+                ←
+              </button>
+              <button type="button" className="testimonial-page-button" aria-label="See more testimonials">
+                →
+              </button>
             </div>
           </section>
         </main>
