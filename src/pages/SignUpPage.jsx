@@ -53,6 +53,34 @@ const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
 const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
 const SPORT_SLOT_LABELS = ["Favorite", "Add new", "Add new", "Add new"];
 const REGIONAL_INDICATOR_OFFSET = 127397;
+const BIRTHDAY_PATTERN_SOURCE = "(0[1-9]|1[0-2])/(0[1-9]|[12]\\d|3[01])/\\d{4}";
+const BIRTHDAY_PATTERN = new RegExp(`^${BIRTHDAY_PATTERN_SOURCE}$`);
+
+const normalizeBirthdayInput = (value) =>
+  String(value ?? "")
+    .replace(/\s*\/\s*/g, "/")
+    .replace(/\s+/g, "")
+    .trim();
+
+const isValidBirthday = (value) => {
+  if (!BIRTHDAY_PATTERN.test(value)) {
+    return false;
+  }
+
+  const [monthPart, dayPart, yearPart] = value.split("/");
+  const month = Number(monthPart);
+  const day = Number(dayPart);
+  const year = Number(yearPart);
+  const normalizedDate = new Date(Date.UTC(year, month - 1, day));
+  const now = new Date();
+  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return (
+    normalizedDate.getUTCFullYear() === year &&
+    normalizedDate.getUTCMonth() === month - 1 &&
+    normalizedDate.getUTCDate() === day &&
+    normalizedDate <= todayUtc
+  );
+};
 
 const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => {
   const navigate = useNavigate();
@@ -270,6 +298,11 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     const localPhoneDigits = phoneDigitsOnly.startsWith(dialCodeDigits)
       ? phoneDigitsOnly.slice(dialCodeDigits.length)
       : phoneDigitsOnly;
+    const normalizedBirthday = normalizeBirthdayInput(formValues.birthday);
+    if (normalizedBirthday && !isValidBirthday(normalizedBirthday)) {
+      setErrorMessage("Please enter a valid birthday in MM/DD/YYYY format.");
+      return;
+    }
 
     setErrorMessage("");
     setPendingVerification({
@@ -289,7 +322,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
         .filter(Boolean)
         .join(", "),
       photo: formValues.photo,
-      birthday: formValues.birthday.trim(),
+      birthday: normalizedBirthday,
       gender: formValues.gender,
       agreedToTermsAndConditions: formValues.agreeTermsAndConditions,
       agreedToPromotionsAndMarketingEmails: formValues.agreePromotionsAndMarketingEmails
@@ -646,7 +679,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                   type="text"
                   inputMode="numeric"
                   placeholder="01/01/1980"
-                  pattern="^(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])/\d{4}$"
+                  pattern={BIRTHDAY_PATTERN_SOURCE}
                   title="Please use MM/DD/YYYY format, for example 01/01/1980."
                   value={formValues.birthday}
                   onChange={onInputChange}
