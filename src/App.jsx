@@ -354,6 +354,54 @@ function App() {
           success: true,
           requiresReauthentication: false
         };
+      },
+      onSaveHistory: (historyItems) => {
+        if (!currentUser) {
+          return;
+        }
+
+        const normalizedHistoryItems = Array.isArray(historyItems) ? historyItems : [];
+        const normalizedEmail = currentUser.email.toLowerCase();
+        const updatedUser = {
+          ...currentUser,
+          history: normalizedHistoryItems
+        };
+
+        setCurrentUser(updatedUser);
+        setRegisteredUsers((previousUsers) =>
+          previousUsers.map((user) =>
+            user.email.toLowerCase() === normalizedEmail
+              ? {
+                  ...user,
+                  history: normalizedHistoryItems
+                }
+              : user
+          )
+        );
+      },
+      onSaveHostHistory: (hostHistoryItems) => {
+        if (!currentUser) {
+          return;
+        }
+
+        const normalizedItems = Array.isArray(hostHistoryItems) ? hostHistoryItems : [];
+        const normalizedEmail = currentUser.email.toLowerCase();
+        const updatedUser = {
+          ...currentUser,
+          hostHistory: normalizedItems
+        };
+
+        setCurrentUser(updatedUser);
+        setRegisteredUsers((previousUsers) =>
+          previousUsers.map((user) =>
+            user.email.toLowerCase() === normalizedEmail
+              ? {
+                  ...user,
+                  hostHistory: normalizedItems
+                }
+              : user
+          )
+        );
       }
     }),
     [currentUser, registeredUsers]
@@ -371,6 +419,7 @@ function App() {
       <Route path="/become-a-host" element={<HostPage {...authActions} />} />
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />
+      <Route path="/host-history" element={<Navigate to="/history" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
