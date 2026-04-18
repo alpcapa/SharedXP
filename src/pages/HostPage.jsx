@@ -6,6 +6,12 @@ const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "B
 const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced", "I’m Flexible"];
 const AVAILABILITY_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR", "BRL"];
+const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, index) => {
+  const totalMinutes = index * 15;
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+  const minutes = String(totalMinutes % 60).padStart(2, "0");
+  return `${hours}:${minutes}`;
+});
 const COUNTRY_OPTIONS = [
   { name: "Brazil", code: "BR" },
   { name: "Canada", code: "CA" },
@@ -49,6 +55,9 @@ const createEmptySportConfig = () => ({
   pricing: "",
   pricingCurrency: "",
   level: "",
+  paused: false,
+  equipmentAvailable: false,
+  equipmentDetails: "",
   availability: {
     days: [],
     startTime: "",
@@ -94,6 +103,8 @@ const getInitialHostProfile = (user) => {
     stripe: {
       stripeEmail: existingProfile.stripe?.stripeEmail ?? user?.email ?? "",
       accountHolderName: existingProfile.stripe?.accountHolderName ?? user?.fullName ?? "",
+      citizenIdNumber: existingProfile.stripe?.citizenIdNumber ?? "",
+      taxNumber: existingProfile.stripe?.taxNumber ?? "",
       bankName: existingProfile.stripe?.bankName ?? "",
       accountNumber: existingProfile.stripe?.accountNumber ?? "",
       routingNumber: existingProfile.stripe?.routingNumber ?? "",
@@ -327,6 +338,39 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
     }));
   };
 
+  const removeSport = (sportIndexToRemove) => {
+    const shouldDelete = window.confirm("Are you sure you want to delete this sport?");
+    if (!shouldDelete) {
+      return;
+    }
+
+    setHostProfileDraft((previousDraft) => {
+      if (previousDraft.sports.length <= 1) {
+        return {
+          ...previousDraft,
+          sports: [createEmptySportConfig()]
+        };
+      }
+
+      return {
+        ...previousDraft,
+        sports: previousDraft.sports.filter((_, index) => index !== sportIndexToRemove)
+      };
+    });
+
+    setActiveSportIndex((previousIndex) => {
+      if (sportIndexToRemove < previousIndex) {
+        return previousIndex - 1;
+      }
+      if (sportIndexToRemove === previousIndex) {
+        return Math.max(0, previousIndex - 1);
+      }
+      return previousIndex;
+    });
+    setErrorMessage("");
+    setSuccessMessage("");
+  };
+
   const onSportImageSelect = async (event) => {
     const selectedFiles = Array.from(event.target.files ?? []);
     if (selectedFiles.length === 0) {
@@ -395,6 +439,8 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
     const stripeFields = [
       hostProfileDraft.stripe.stripeEmail,
       hostProfileDraft.stripe.accountHolderName,
+      hostProfileDraft.stripe.citizenIdNumber,
+      hostProfileDraft.stripe.taxNumber,
       hostProfileDraft.stripe.bankName,
       hostProfileDraft.stripe.accountNumber,
       hostProfileDraft.stripe.routingNumber,
@@ -420,6 +466,7 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
         Number(sportConfig.pricing) < 1 ||
         !sportConfig.pricingCurrency.trim() ||
         !sportConfig.level.trim() ||
+        (sportConfig.equipmentAvailable && !sportConfig.equipmentDetails.trim()) ||
         availability.days.length === 0 ||
         !availability.startTime ||
         !availability.endTime ||
@@ -475,19 +522,36 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                   Add Sport
                 </button>
               </div>
+              <label className="host-pause-toggle">
+                <input
+                  type="checkbox"
+                  checked={Boolean(activeSport.paused)}
+                  onChange={(event) => updateSportField("paused", event.target.checked)}
+                />
+                {`Pause ${activeSport.sport || `Sport ${activeSportIndex + 1}`}`}
+              </label>
 
               <div className="host-sport-tabs" role="tablist" aria-label="Host sports tabs">
                 {hostProfileDraft.sports.map((sportConfig, index) => (
-                  <button
-                    key={`sport-tab-${index}`}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeSportIndex === index}
-                    className={`host-sport-tab${activeSportIndex === index ? " active" : ""}`}
-                    onClick={() => setActiveSportIndex(index)}
-                  >
-                    {sportConfig.sport || `Sport ${index + 1}`}
-                  </button>
+                  <div key={`sport-tab-${index}`} className="host-sport-tab-wrap">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={activeSportIndex === index}
+                      className={`host-sport-tab${activeSportIndex === index ? " active" : ""}`}
+                      onClick={() => setActiveSportIndex(index)}
+                    >
+                      {sportConfig.sport || `Sport ${index + 1}`}
+                    </button>
+                    <button
+                      type="button"
+                      className="host-sport-delete"
+                      aria-label={`Delete ${sportConfig.sport || `Sport ${index + 1}`}`}
+                      onClick={() => removeSport(index)}
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
               </div>
 
@@ -570,6 +634,52 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                     </option>
                   ))}
                 </select>
+
+                <label>Equipment Availability</label>
+                <div className="host-toggle-group" role="radiogroup" aria-label="Equipment availability">
+                  <label>
+                    <input
+                      type="radio"
+                      name="equipmentAvailability"
+                      checked={Boolean(activeSport.equipmentAvailable)}
+                      onChange={() => updateSportField("equipmentAvailable", true)}
+                    />
+                    Yes
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="equipmentAvailability"
+                      checked={!activeSport.equipmentAvailable}
+                      onChange={() =>
+                        setHostProfileDraft((previousDraft) => ({
+                          ...previousDraft,
+                          sports: previousDraft.sports.map((sportConfig, index) =>
+                            index === activeSportIndex
+                              ? {
+                                  ...sportConfig,
+                                  equipmentAvailable: false,
+                                  equipmentDetails: ""
+                                }
+                              : sportConfig
+                          )
+                        }))
+                      }
+                    />
+                    No
+                  </label>
+                </div>
+
+                <label htmlFor="equipmentDetails">Equipment Details</label>
+                <textarea
+                  id="equipmentDetails"
+                  rows={3}
+                  placeholder="List the equipment you will provide"
+                  value={activeSport.equipmentDetails}
+                  onChange={(event) => updateSportField("equipmentDetails", event.target.value)}
+                  disabled={!activeSport.equipmentAvailable}
+                  className="host-equipment-details"
+                />
               </div>
 
               <div className="host-availability-block">
@@ -590,23 +700,35 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                 <div className="host-availability-time">
                   <div>
                     <label htmlFor="availabilityStart">From</label>
-                    <input
+                    <select
                       id="availabilityStart"
-                      type="time"
                       required
                       value={activeSport.availability.startTime}
                       onChange={(event) => updateAvailabilityTime("startTime", event.target.value)}
-                    />
+                    >
+                      <option value="">Select start time</option>
+                      {TIME_OPTIONS.map((timeOption) => (
+                        <option key={`start-${timeOption}`} value={timeOption}>
+                          {timeOption}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label htmlFor="availabilityEnd">To</label>
-                    <input
+                    <select
                       id="availabilityEnd"
-                      type="time"
                       required
                       value={activeSport.availability.endTime}
                       onChange={(event) => updateAvailabilityTime("endTime", event.target.value)}
-                    />
+                    >
+                      <option value="">Select end time</option>
+                      {TIME_OPTIONS.map((timeOption) => (
+                        <option key={`end-${timeOption}`} value={timeOption}>
+                          {timeOption}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
@@ -659,6 +781,24 @@ const HostPage = ({ currentUser, onLogout, onToggleHost, onSaveHostProfile }) =>
                   required
                   value={hostProfileDraft.stripe.accountHolderName}
                   onChange={(event) => updateStripeField("accountHolderName", event.target.value)}
+                />
+
+                <label htmlFor="citizenIdNumber">Citizen ID number</label>
+                <input
+                  id="citizenIdNumber"
+                  type="text"
+                  required
+                  value={hostProfileDraft.stripe.citizenIdNumber}
+                  onChange={(event) => updateStripeField("citizenIdNumber", event.target.value)}
+                />
+
+                <label htmlFor="taxNumber">Tax number</label>
+                <input
+                  id="taxNumber"
+                  type="text"
+                  required
+                  value={hostProfileDraft.stripe.taxNumber}
+                  onChange={(event) => updateStripeField("taxNumber", event.target.value)}
                 />
 
                 <label htmlFor="bankName">Bank name</label>
