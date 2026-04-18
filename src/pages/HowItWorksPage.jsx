@@ -75,39 +75,24 @@ const HowItWorksPage = ({ currentUser, onLogout }) => {
             <h2 className="section-title">What is SharedXP?</h2>
             <div className="how-what-description">
               <p>
-                SharedXP is an experience-sharing platform designed for sports enthusiasts who love to travel. When
-                exploring new places, it’s often difficult to find opportunities to do what you enjoy most — whether
-                that’s cycling, hiking, or any other sport. Carrying equipment while traveling can also be a major
-                challenge.
-              </p>
-              <p>
-                SharedXP solves these problems by connecting you with local people who are eager to welcome you and
-                share their sports experiences wherever you go.
-              </p>
-              <p>
-                You can join as a host — helping others do what they love while earning money — or sign up as a user
-                to take part in unique, local experiences.
-              </p>
-              <p>
-                No more missing out, carrying heavy gear, or feeling lost in a new place. With SharedXP, you can stay
-                active, connected, and inspired — anywhere in the world.
+                SharedXP is an experience-sharing platform designed for sports enthusiasts who love to travel. When exploring new places, it’s often difficult to find opportunities to do what you enjoy most — whether that’s cycling, hiking, or any other sport. Carrying equipment while traveling can also be a major challenge. SharedXP solves these problems by connecting you with local people who are eager to welcome you and share their sports experiences wherever you go. You can join as a host — helping others do what they love while earning money — or sign up as a user to take part in unique, local experiences. No more missing out, carrying heavy gear, or feeling lost in a new place. With SharedXP, you can stay active, connected, and inspired — anywhere in the world.
               </p>
             </div>
             <blockquote className="how-what-quote">
               <p>
-                I am a triathlete who loves cycling, running and swimming. My first passion mountain biking is also
+                “I am a triathlete who loves cycling, running and swimming. My first passion mountain biking is also
                 something I cherish so much. But, there is a problem. Every time I travel, I have to stop doing some
                 of the things I do regularly back home. So, I thought of this idea to engage locals to help travelers
                 with their sport expertise, equipment and guidance. In return, hosts can make money for their service
                 and travelers are more than happy to pay for it. It's a win-win for all. Both enjoy being with
-                different people and create new experiences together.
+                different people and create new experiences together.”
               </p>
               <footer className="how-what-attribution">Alp R. Capa — Founder/CEO</footer>
             </blockquote>
           </section>
 
           <section className="how-flow-section">
-            <h2 className="section-title">The flow</h2>
+            <h2 className="section-title">How It Works?</h2>
 
             <ol className="how-steps-list">
               {flowSteps.map((step, index) => (
@@ -131,7 +116,6 @@ const HowItWorksPage = ({ currentUser, onLogout }) => {
 
           <section className="how-testimonials">
             <div className="how-testimonials-head">
-              <h2 className="section-title">Testimonials</h2>
               <button type="button" className="testimonial-next-button" aria-label="See more testimonials">
                 →
               </button>
