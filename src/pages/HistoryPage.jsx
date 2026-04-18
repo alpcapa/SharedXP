@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 
-const STAR_CHARS = ["", "⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"];
-const renderStars = (rating) => STAR_CHARS[Math.max(0, Math.min(5, Math.round(rating)))] || null;
+const formatStarRating = (rating) => `${Math.max(0, Math.min(5, Math.round(rating)))}x⭐`;
 
 const FALLBACK_EVENT_PHOTO =
   "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=420&h=240&q=80";
@@ -391,7 +390,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                             Hosted by <strong>{item.hostName}</strong>
                             {item.rating > 0 && (
                               <span className="history-stars" aria-label={`Your rating: ${item.rating} stars`}>
-                                {renderStars(item.rating)}
+                                {formatStarRating(item.rating)}
                               </span>
                             )}
                           </p>
@@ -410,10 +409,10 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                             <span className="participant-name">{item.participantName}</span>
                             {item.attendeeRating > 0 && (
                               <span
-                                className="history-stars history-participant-stars"
+                                className="history-stars history-participant-stars participant-gave-stars"
                                 aria-label={`Attendee rating: ${item.attendeeRating} stars`}
                               >
-                                {renderStars(item.attendeeRating)}
+                                (gave you {formatStarRating(item.attendeeRating)})
                               </span>
                             )}
                           </div>
@@ -437,11 +436,11 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                           }
                         >
                           <option value="0">Not rated</option>
-                          <option value="1">1 ⭐</option>
-                          <option value="2">2 ⭐⭐</option>
-                          <option value="3">3 ⭐⭐⭐</option>
-                          <option value="4">4 ⭐⭐⭐⭐</option>
-                          <option value="5">5 ⭐⭐⭐⭐⭐</option>
+                          <option value="1">1x⭐</option>
+                          <option value="2">2x⭐</option>
+                          <option value="3">3x⭐</option>
+                          <option value="4">4x⭐</option>
+                          <option value="5">5x⭐</option>
                         </select>
                       </label>
 
