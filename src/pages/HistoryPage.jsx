@@ -24,7 +24,7 @@ const normalizeHistory = (historyItems) => {
     .map((rawItem, index) => {
       const item = rawItem && typeof rawItem === "object" ? rawItem : {};
       const eventName = (item.eventName ?? item.label ?? item.title ?? String(rawItem ?? "Experience")).trim();
-      const hostName = (item.hostName ?? item.host ?? item.localName ?? "Host").trim();
+      const hostName = (item.hostName ?? item.host ?? "Host").trim();
       const completedAt = item.completedAt ?? item.date ?? item.createdAt ?? item.updatedAt ?? "";
       return {
         source: rawItem,
@@ -155,7 +155,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
             <div className="history-list">
               {visibleHistoryItems.map((item) => (
                 <article key={item.id} className="history-card">
-                  <img className="history-card-photo" src={item.photo} alt={`${item.hostName} hosting ${item.eventName}`} />
+                  <img className="history-card-photo" src={item.photo} alt={`${item.eventName} hosted by ${item.hostName}`} />
                   <div className="history-card-body">
                     <div className="history-card-head">
                       <div>
@@ -185,7 +185,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory }) => {
                         </select>
                       </label>
 
-                      <label className="history-field history-review-field">
+                      <label className="history-field">
                         Review
                         <textarea
                           value={item.review}
