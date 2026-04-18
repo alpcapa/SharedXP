@@ -1024,6 +1024,12 @@ body {
   font-family: inherit;
 }
 
+.auth-language-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .form-consent-group {
   display: grid;
   gap: 8px;
@@ -1490,6 +1496,17 @@ body {
 .profile-form-grid input:disabled {
   background: #f3f4f6;
   color: #6b7280;
+}
+
+.profile-host-sports {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.profile-host-sports h3 {
+  margin: 0;
+  font-size: 18px;
 }
 
 .profile-page .site-header {

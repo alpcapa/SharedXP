@@ -52,6 +52,11 @@ const inferCityFromAddress = (address) => {
   return addressParts[0] ?? "";
 };
 
+const normalizeLanguages = (languages) =>
+  Array.from({ length: 4 }, (_, index) =>
+    typeof languages?.[index] === "string" ? languages[index].trim() : ""
+  );
+
 const hashPassword = async (rawPassword) => {
   const encodedPassword = new TextEncoder().encode(rawPassword);
   const digestBuffer = await crypto.subtle.digest("SHA-256", encodedPassword);
@@ -129,6 +134,7 @@ function App() {
           ...restProfile,
           email: normalizedEmail,
           passwordHash,
+          languages: normalizeLanguages(newUser.languages),
           isHost: false,
           history: newUser.history ?? []
         };
@@ -181,6 +187,7 @@ function App() {
           passwordHash: "",
           phone: "",
           address: "",
+          languages: normalizeLanguages(),
           photo:
             providerName === "Apple"
               ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&h=300&q=80"
@@ -199,7 +206,23 @@ function App() {
 
         const updatedUser = {
           ...currentUser,
-          isHost: true
+          isHost: true,
+          hostProfile: {
+            ...(currentUser.hostProfile ?? {}),
+            firstName: currentUser.firstName ?? "",
+            lastName: currentUser.lastName ?? "",
+            fullName: currentUser.fullName ?? "",
+            email: currentUser.email ?? "",
+            phone: currentUser.phone ?? "",
+            address: currentUser.address ?? "",
+            country: currentUser.country ?? currentUser.hostProfile?.country ?? "",
+            city:
+              currentUser.city ??
+              currentUser.hostProfile?.city ??
+              inferCityFromAddress(currentUser.address),
+            photo: currentUser.photo ?? "",
+            languages: normalizeLanguages(currentUser.languages)
+          }
         };
 
         setCurrentUser(updatedUser);
@@ -216,10 +239,24 @@ function App() {
           return;
         }
 
+        const syncedHostProfile = {
+          ...hostProfile,
+          firstName: currentUser.firstName ?? "",
+          lastName: currentUser.lastName ?? "",
+          fullName: currentUser.fullName ?? "",
+          email: currentUser.email ?? "",
+          phone: currentUser.phone ?? "",
+          address: currentUser.address ?? "",
+          country: hostProfile.country ?? currentUser.country ?? "",
+          city: hostProfile.city ?? currentUser.city ?? inferCityFromAddress(currentUser.address),
+          photo: currentUser.photo ?? "",
+          languages: normalizeLanguages(currentUser.languages)
+        };
+
         const updatedUser = {
           ...currentUser,
           isHost: true,
-          hostProfile
+          hostProfile: syncedHostProfile
         };
 
         setCurrentUser(updatedUser);
@@ -268,6 +305,14 @@ function App() {
         const nextHostProfile = shouldSyncHostProfile
           ? {
               ...currentUser.hostProfile,
+              firstName: currentUser.firstName ?? "",
+              lastName: currentUser.lastName ?? "",
+              fullName: currentUser.fullName ?? "",
+              email: nextEmail,
+              phone: nextPhone,
+              address: profileUpdates.address ?? currentUser.address ?? "",
+              photo: profileUpdates.photo ?? currentUser.photo ?? "",
+              languages: normalizeLanguages(profileUpdates.languages ?? currentUser.languages),
               country: profileUpdates.country ?? currentUser.hostProfile.country,
               city: profileCity !== undefined ? profileCity : currentUser.hostProfile.city ?? "",
               stripe: {

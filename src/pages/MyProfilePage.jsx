@@ -26,7 +26,34 @@ const COUNTRY_CITY_OPTIONS = {
   GB: ["London", "Manchester", "Bristol", "Edinburgh"],
   US: ["New York", "Los Angeles", "Austin", "Miami"]
 };
+const LANGUAGE_OPTIONS = [
+  "Arabic",
+  "Bengali",
+  "Dutch",
+  "English",
+  "French",
+  "German",
+  "Greek",
+  "Hindi",
+  "Italian",
+  "Japanese",
+  "Korean",
+  "Mandarin",
+  "Polish",
+  "Portuguese",
+  "Punjabi",
+  "Russian",
+  "Spanish",
+  "Swedish",
+  "Turkish",
+  "Urdu"
+];
+const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
 const REGIONAL_INDICATOR_OFFSET = 127397;
+const getLanguageSlots = (userLanguages) =>
+  Array.from({ length: 4 }, (_, index) =>
+    typeof userLanguages?.[index] === "string" ? userLanguages[index] : ""
+  );
 const getAddressLines = (address) => {
   if (!address) {
     return {
@@ -126,6 +153,7 @@ const getInitialFormValues = (user) => {
     email: user?.email ?? "",
     phoneCountryCode: phoneDetails.phoneCountryCode,
     phone: phoneDetails.phone,
+    languages: getLanguageSlots(user?.languages),
     country: user?.country ?? "",
     city: user?.city ?? "",
     addressLine1,
@@ -292,6 +320,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
   const profilePhoto =
     selectedPhotoPreviewUrl ||
     getSafeImageSource(formValues.photo || currentUser.photo, DEFAULT_PROFILE_PHOTO);
+  const hostSports = currentUser.hostProfile?.sports ?? [];
 
   const onInputChange = (event) => {
     const { name, value, checked, type } = event.target;
@@ -299,6 +328,17 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       ...previousValues,
       [name]: type === "checkbox" ? checked : value
     }));
+  };
+
+  const onLanguageChange = (languageIndex, languageValue) => {
+    setFormValues((previousValues) => {
+      const nextLanguages = [...previousValues.languages];
+      nextLanguages[languageIndex] = languageValue;
+      return {
+        ...previousValues,
+        languages: nextLanguages
+      };
+    });
   };
 
   const onPhotoSelect = (event) => {
@@ -382,6 +422,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       phoneCountryCode: selectedDialCodeCountry.code,
       countryDialCode: selectedDialCodeCountry.dialCode,
       phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
+      languages: formValues.languages.map((languageOption) => languageOption.trim()),
       country: selectedCountry.name,
       city: formValues.city.trim(),
       address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
@@ -697,7 +738,46 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
                 value={formValues.addressLine2}
                 onChange={onInputChange}
               />
+
+              <label htmlFor="profile-language-0">Language</label>
+              <div className="auth-language-row">
+                {LANGUAGE_SLOT_LABELS.map((languageSlotLabel, languageIndex) => (
+                  <input
+                    key={`profile-language-${languageIndex}`}
+                    id={`profile-language-${languageIndex}`}
+                    list="profile-language-options"
+                    placeholder={languageSlotLabel}
+                    aria-label={`Language ${languageSlotLabel}`}
+                    value={formValues.languages[languageIndex] ?? ""}
+                    onChange={(event) => onLanguageChange(languageIndex, event.target.value)}
+                    required={languageIndex === 0}
+                  />
+                ))}
+              </div>
+              <datalist id="profile-language-options">
+                {LANGUAGE_OPTIONS.map((languageOption) => (
+                  <option key={languageOption} value={languageOption} />
+                ))}
+              </datalist>
             </div>
+
+            {currentUser.isHost && hostSports.length > 0 && (
+              <section className="profile-host-sports">
+                <h3>Book with {currentUser.fullName}</h3>
+                <div className="host-sport-tabs booking-sport-tabs" aria-label="Your host sports">
+                  {hostSports.map((sportConfig, sportIndex) => (
+                    <button
+                      key={`my-host-sport-${sportIndex}`}
+                      type="button"
+                      className={`host-sport-tab${sportIndex === 0 ? " active" : ""}`}
+                      disabled
+                    >
+                      {sportConfig.sport || `Sport ${sportIndex + 1}`}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <div className="form-consent-group">
               <label className="form-consent-option" htmlFor="agreedToTermsAndConditions">
