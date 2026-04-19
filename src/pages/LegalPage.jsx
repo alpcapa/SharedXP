@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 
@@ -31,31 +32,31 @@ const LegalPage = ({ currentUser, onLogout }) => {
               <h2>2. Core Legal Documents</h2>
               <ul>
                 <li>
-                  <strong>Terms &amp; Conditions</strong> (available at <a href="/terms-and-conditions">/terms-and-conditions</a>):
+                  <strong>Terms &amp; Conditions</strong> (available at <Link to="/terms-and-conditions">/terms-and-conditions</Link>):
                   governs account use, bookings, conduct rules, and platform limitations.
                 </li>
                 <li>
                   <strong>Privacy Notice</strong>: explains what account, booking, and usage data is collected, how it is
-                  processed, and user rights by jurisdiction. Read at <a href="/privacy-notice">/privacy-notice</a>.
+                  processed, and user rights by jurisdiction. Read at <Link to="/privacy-notice">/privacy-notice</Link>.
                 </li>
                 <li>
                   <strong>Payments and Payout Terms</strong>: defines payment processor roles, fee logic, payout timing,
                   verification checks, reserves, and reversals. Read at{" "}
-                  <a href="/payments-and-payout-terms">/payments-and-payout-terms</a>.
+                  <Link to="/payments-and-payout-terms">/payments-and-payout-terms</Link>.
                 </li>
                 <li>
                   <strong>Safety and Risk Policy</strong>: sets user and host safety expectations, prohibited conduct,
                   escalation, and emergency-reporting pathways. Read at{" "}
-                  <a href="/safety-and-risk-policy">/safety-and-risk-policy</a>.
+                  <Link to="/safety-and-risk-policy">/safety-and-risk-policy</Link>.
                 </li>
                 <li>
                   <strong>Content and Intellectual Property Policy</strong>: covers rights in user content, infringements,
                   takedowns, and repeat-violation handling. Read at{" "}
-                  <a href="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</a>.
+                  <Link to="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</Link>.
                 </li>
                 <li>
                   <strong>Disclaimers Notice</strong>: consolidates marketplace role, risk, insurance, and warranty
-                  disclaimers. Read at <a href="/disclaimers">/disclaimers</a>.
+                  disclaimers. Read at <Link to="/disclaimers">/disclaimers</Link>.
                 </li>
               </ul>
             </section>
@@ -113,7 +114,7 @@ const LegalPage = ({ currentUser, onLogout }) => {
                   legal requirements.
                 </li>
                 <li>
-                  Full disclaimers notice available at <a href="/disclaimers">/disclaimers</a>.
+                  Full disclaimers notice available at <Link to="/disclaimers">/disclaimers</Link>.
                 </li>
               </ul>
             </section>
