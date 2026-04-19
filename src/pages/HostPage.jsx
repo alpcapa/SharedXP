@@ -966,9 +966,9 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
                   />
                   <span>
                     I agree to{" "}
-                    <a href="/terms-and-conditions">
+                    <Link to="/terms-and-conditions">
                       Terms &amp; Conditions
-                    </a>
+                    </Link>
                   </span>
                 </label>
                 <label

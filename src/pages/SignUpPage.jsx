@@ -745,9 +745,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                     />
                     <span>
                       I agree to{" "}
-                      <a href="/terms-and-conditions">
+                      <Link to="/terms-and-conditions">
                         Terms &amp; Conditions
-                      </a>
+                      </Link>
                     </span>
                   </label>
                   <label className="form-consent-option" htmlFor="agreePromotionsAndMarketingEmails">
