@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import ProfilePage from "./pages/ProfilePage";
 import SignUpPage from "./pages/SignUpPage";
+import LegalPage from "./pages/LegalPage";
 import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
 
 const USER_STORAGE_KEY = "sharedxp-users";
@@ -432,7 +433,7 @@ function App() {
       <Route path="/follow" element={<FollowPage {...authActions} />} />
       <Route path="/host-history" element={<Navigate to="/history" replace />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditionsPage {...authActions} />} />
-      <Route path="/legal" element={<Navigate to="/terms-and-conditions" replace />} />
+      <Route path="/legal" element={<LegalPage {...authActions} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
