@@ -27,7 +27,7 @@ const footerLinks = [
   { label: "About", href: "/about" },
   { label: "Follow", href: "/follow" },
   { label: "Help", href: "/help" },
-  { label: "Legal", href: "/terms-and-conditions" }
+  { label: "Legal", href: "/legal" }
 ];
 
 const SiteFooter = () => {

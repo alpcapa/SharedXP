@@ -9,6 +9,12 @@ import LoginPage from "./pages/LoginPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import ProfilePage from "./pages/ProfilePage";
 import SignUpPage from "./pages/SignUpPage";
+import ContentAndIntellectualPropertyPolicyPage from "./pages/ContentAndIntellectualPropertyPolicyPage";
+import DisclaimersPage from "./pages/DisclaimersPage";
+import LegalPage from "./pages/LegalPage";
+import PaymentsAndPayoutTermsPage from "./pages/PaymentsAndPayoutTermsPage";
+import PrivacyNoticePage from "./pages/PrivacyNoticePage";
+import SafetyAndRiskPolicyPage from "./pages/SafetyAndRiskPolicyPage";
 import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
 
 const USER_STORAGE_KEY = "sharedxp-users";
@@ -432,7 +438,18 @@ function App() {
       <Route path="/follow" element={<FollowPage {...authActions} />} />
       <Route path="/host-history" element={<Navigate to="/history" replace />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditionsPage {...authActions} />} />
-      <Route path="/legal" element={<Navigate to="/terms-and-conditions" replace />} />
+      <Route path="/legal" element={<LegalPage {...authActions} />} />
+      <Route path="/privacy-notice" element={<PrivacyNoticePage {...authActions} />} />
+      <Route
+        path="/payments-and-payout-terms"
+        element={<PaymentsAndPayoutTermsPage {...authActions} />}
+      />
+      <Route path="/safety-and-risk-policy" element={<SafetyAndRiskPolicyPage {...authActions} />} />
+      <Route
+        path="/content-and-intellectual-property-policy"
+        element={<ContentAndIntellectualPropertyPolicyPage {...authActions} />}
+      />
+      <Route path="/disclaimers" element={<DisclaimersPage {...authActions} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
