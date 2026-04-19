@@ -74,6 +74,10 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
 
             <section className="legal-section">
               <h2>5. Pricing, Payments, and Payouts</h2>
+              <p>
+                Detailed payment and payout processing terms are available at{" "}
+                <a href="/payments-and-payout-terms">/payments-and-payout-terms</a>.
+              </p>
               <ul>
                 <li>Hosts are responsible for setting accurate pricing and payout details.</li>
                 <li>
@@ -118,11 +122,18 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                 organizer for each session, and users are responsible for their own decisions, preparation, and
                 behavior.
               </p>
+              <p>
+                Detailed safety standards are available at <a href="/safety-and-risk-policy">/safety-and-risk-policy</a>.
+              </p>
               <p>You must not use the Platform for unlawful, fraudulent, harmful, or abusive activity.</p>
             </section>
 
             <section className="legal-section">
               <h2>9. User Content, Reviews, and Media</h2>
+              <p>
+                Content rights and infringement process details are available at{" "}
+                <a href="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</a>.
+              </p>
               <ul>
                 <li>
                   You retain ownership of the content you submit (such as photos, profile data, and reviews), but
@@ -159,6 +170,9 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                 product store data locally in your browser environment. By using the Platform, you agree to such
                 processing as required to operate account, booking, host, and history functions.
               </p>
+              <p>
+                Full privacy terms are available at <a href="/privacy-notice">/privacy-notice</a>.
+              </p>
             </section>
 
             <section className="legal-section">
@@ -167,6 +181,9 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                 The Platform is provided on an &quot;as is&quot; and &quot;as available&quot; basis, without warranties of any
                 kind to the maximum extent permitted by law. SharedXP does not guarantee uninterrupted availability,
                 error-free operation, or outcomes from any experience.
+              </p>
+              <p>
+                Full disclaimer document available at <a href="/disclaimers">/disclaimers</a>.
               </p>
             </section>
 

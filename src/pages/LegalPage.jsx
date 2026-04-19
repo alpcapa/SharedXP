@@ -53,6 +53,10 @@ const LegalPage = ({ currentUser, onLogout }) => {
                   takedowns, and repeat-violation handling. Read at{" "}
                   <a href="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</a>.
                 </li>
+                <li>
+                  <strong>Disclaimers Notice</strong>: consolidates marketplace role, risk, insurance, and warranty
+                  disclaimers. Read at <a href="/disclaimers">/disclaimers</a>.
+                </li>
               </ul>
             </section>
 
@@ -107,6 +111,9 @@ const LegalPage = ({ currentUser, onLogout }) => {
                 <li>
                   Users and hosts should independently obtain insurance coverage suitable for their activities and local
                   legal requirements.
+                </li>
+                <li>
+                  Full disclaimers notice available at <a href="/disclaimers">/disclaimers</a>.
                 </li>
               </ul>
             </section>

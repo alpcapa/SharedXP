@@ -10,6 +10,7 @@ import MyProfilePage from "./pages/MyProfilePage";
 import ProfilePage from "./pages/ProfilePage";
 import SignUpPage from "./pages/SignUpPage";
 import ContentAndIntellectualPropertyPolicyPage from "./pages/ContentAndIntellectualPropertyPolicyPage";
+import DisclaimersPage from "./pages/DisclaimersPage";
 import LegalPage from "./pages/LegalPage";
 import PaymentsAndPayoutTermsPage from "./pages/PaymentsAndPayoutTermsPage";
 import PrivacyNoticePage from "./pages/PrivacyNoticePage";
@@ -448,6 +449,7 @@ function App() {
         path="/content-and-intellectual-property-policy"
         element={<ContentAndIntellectualPropertyPolicyPage {...authActions} />}
       />
+      <Route path="/disclaimers" element={<DisclaimersPage {...authActions} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
