@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import HostPage from "./pages/HostPage";
 import HistoryPage from "./pages/HistoryPage";
+import FollowPage from "./pages/FollowPage";
 import LoginPage from "./pages/LoginPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import ProfilePage from "./pages/ProfilePage";
@@ -428,6 +429,7 @@ function App() {
       <Route path="/become-a-host" element={<HostPage {...authActions} />} />
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />
+      <Route path="/follow" element={<FollowPage {...authActions} />} />
       <Route path="/host-history" element={<Navigate to="/history" replace />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditionsPage {...authActions} />} />
       <Route path="/legal" element={<Navigate to="/terms-and-conditions" replace />} />
