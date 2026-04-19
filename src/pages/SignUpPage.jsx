@@ -745,7 +745,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                     />
                     <span>
                       I agree to{" "}
-                      <a href="/terms-and-conditions" target="_blank" rel="noreferrer">
+                      <a href="/terms-and-conditions">
                         Terms &amp; Conditions
                       </a>
                     </span>
