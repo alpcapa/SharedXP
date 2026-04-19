@@ -25,6 +25,18 @@ const socialChannels = [
     icon: "🎵",
     description: "Catch short clips from travelers and hosts around the world.",
     href: "https://www.tiktok.com"
+  },
+  {
+    name: "X",
+    icon: "𝕏",
+    description: "Get real-time updates, announcements, and quick highlights.",
+    href: "https://x.com"
+  },
+  {
+    name: "LinkedIn",
+    icon: "💼",
+    description: "Follow our company news, milestones, and partnership updates.",
+    href: "https://www.linkedin.com"
   }
 ];
 
