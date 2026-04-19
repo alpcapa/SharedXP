@@ -56,7 +56,7 @@ const FollowPage = ({ currentUser, onLogout }) => {
                     <h2>{channel.name}</h2>
                   </div>
                   <p>{channel.description}</p>
-                  <a href={channel.href} target="_blank" rel="noreferrer noopener">
+                  <a href={channel.href} target="_blank" rel="noopener noreferrer">
                     Follow on {channel.name}
                   </a>
                 </article>
