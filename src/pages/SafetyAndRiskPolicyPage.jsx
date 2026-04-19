@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 
@@ -95,10 +96,10 @@ const SafetyAndRiskPolicyPage = ({ currentUser, onLogout }) => {
               <h2>9. Related Documents</h2>
               <ul>
                 <li>
-                  Terms &amp; Conditions: <a href="/terms-and-conditions">/terms-and-conditions</a>
+                  Terms &amp; Conditions: <Link to="/terms-and-conditions">/terms-and-conditions</Link>
                 </li>
                 <li>
-                  Disclaimers Notice: <a href="/disclaimers">/disclaimers</a>
+                  Disclaimers Notice: <Link to="/disclaimers">/disclaimers</Link>
                 </li>
               </ul>
             </section>

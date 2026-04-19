@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 
@@ -76,7 +77,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
               <h2>5. Pricing, Payments, and Payouts</h2>
               <p>
                 Detailed payment and payout processing terms are available at{" "}
-                <a href="/payments-and-payout-terms">/payments-and-payout-terms</a>.
+                <Link to="/payments-and-payout-terms">/payments-and-payout-terms</Link>.
               </p>
               <ul>
                 <li>Hosts are responsible for setting accurate pricing and payout details.</li>
@@ -123,7 +124,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                 behavior.
               </p>
               <p>
-                Detailed safety standards are available at <a href="/safety-and-risk-policy">/safety-and-risk-policy</a>.
+                Detailed safety standards are available at <Link to="/safety-and-risk-policy">/safety-and-risk-policy</Link>.
               </p>
               <p>You must not use the Platform for unlawful, fraudulent, harmful, or abusive activity.</p>
             </section>
@@ -132,7 +133,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
               <h2>9. User Content, Reviews, and Media</h2>
               <p>
                 Content rights and infringement process details are available at{" "}
-                <a href="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</a>.
+                <Link to="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</Link>.
               </p>
               <ul>
                 <li>
@@ -171,7 +172,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                 processing as required to operate account, booking, host, and history functions.
               </p>
               <p>
-                Full privacy terms are available at <a href="/privacy-notice">/privacy-notice</a>.
+                Full privacy terms are available at <Link to="/privacy-notice">/privacy-notice</Link>.
               </p>
             </section>
 
@@ -183,7 +184,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                 error-free operation, or outcomes from any experience.
               </p>
               <p>
-                Full disclaimer document available at <a href="/disclaimers">/disclaimers</a>.
+                Full disclaimer document available at <Link to="/disclaimers">/disclaimers</Link>.
               </p>
             </section>
 

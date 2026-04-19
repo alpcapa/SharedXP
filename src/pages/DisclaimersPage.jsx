@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 
@@ -92,23 +93,23 @@ const DisclaimersPage = ({ currentUser, onLogout }) => {
               <h2>9. Related Legal Documents</h2>
               <ul>
                 <li>
-                  Terms &amp; Conditions: <a href="/terms-and-conditions">/terms-and-conditions</a>
+                  Terms &amp; Conditions: <Link to="/terms-and-conditions">/terms-and-conditions</Link>
                 </li>
                 <li>
-                  Legal Center: <a href="/legal">/legal</a>
+                  Legal Center: <Link to="/legal">/legal</Link>
                 </li>
                 <li>
-                  Privacy Notice: <a href="/privacy-notice">/privacy-notice</a>
+                  Privacy Notice: <Link to="/privacy-notice">/privacy-notice</Link>
                 </li>
                 <li>
-                  Payments and Payout Terms: <a href="/payments-and-payout-terms">/payments-and-payout-terms</a>
+                  Payments and Payout Terms: <Link to="/payments-and-payout-terms">/payments-and-payout-terms</Link>
                 </li>
                 <li>
-                  Safety and Risk Policy: <a href="/safety-and-risk-policy">/safety-and-risk-policy</a>
+                  Safety and Risk Policy: <Link to="/safety-and-risk-policy">/safety-and-risk-policy</Link>
                 </li>
                 <li>
                   Content and Intellectual Property Policy:{" "}
-                  <a href="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</a>
+                  <Link to="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</Link>
                 </li>
               </ul>
             </section>
