@@ -966,7 +966,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
                   />
                   <span>
                     I agree to{" "}
-                    <a href="https://sharedxp.app/terms-and-conditions" target="_blank" rel="noreferrer">
+                    <a href="/terms-and-conditions" target="_blank" rel="noreferrer">
                       Terms &amp; Conditions
                     </a>
                   </span>

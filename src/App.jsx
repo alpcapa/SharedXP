@@ -8,6 +8,7 @@ import LoginPage from "./pages/LoginPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import ProfilePage from "./pages/ProfilePage";
 import SignUpPage from "./pages/SignUpPage";
+import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
 
 const USER_STORAGE_KEY = "sharedxp-users";
 const SESSION_STORAGE_KEY = "sharedxp-session";
@@ -428,6 +429,8 @@ function App() {
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />
       <Route path="/host-history" element={<Navigate to="/history" replace />} />
+      <Route path="/terms-and-conditions" element={<TermsAndConditionsPage {...authActions} />} />
+      <Route path="/legal" element={<Navigate to="/terms-and-conditions" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
