@@ -51,17 +51,6 @@ const HelpPage = ({ currentUser, onLogout }) => {
               </ul>
             </section>
 
-            <section className="legal-section">
-              <h2>4. AI WhatsApp Chat Availability</h2>
-              <p>
-                We checked feasibility for AI WhatsApp support. It is not currently available in this app because there
-                is no configured WhatsApp Business/API integration in the platform today.
-              </p>
-              <p>
-                Until that integration is introduced, support remains available only via{" "}
-                <a href="mailto:support@sharedxp.com">support@sharedxp.com</a>.
-              </p>
-            </section>
           </article>
         </main>
 
