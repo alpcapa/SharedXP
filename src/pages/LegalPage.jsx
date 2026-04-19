@@ -36,19 +36,22 @@ const LegalPage = ({ currentUser, onLogout }) => {
                 </li>
                 <li>
                   <strong>Privacy Notice</strong>: explains what account, booking, and usage data is collected, how it is
-                  processed, and user rights by jurisdiction.
+                  processed, and user rights by jurisdiction. Read at <a href="/privacy-notice">/privacy-notice</a>.
                 </li>
                 <li>
                   <strong>Payments and Payout Terms</strong>: defines payment processor roles, fee logic, payout timing,
-                  verification checks, reserves, and reversals.
+                  verification checks, reserves, and reversals. Read at{" "}
+                  <a href="/payments-and-payout-terms">/payments-and-payout-terms</a>.
                 </li>
                 <li>
                   <strong>Safety and Risk Policy</strong>: sets user and host safety expectations, prohibited conduct,
-                  escalation, and emergency-reporting pathways.
+                  escalation, and emergency-reporting pathways. Read at{" "}
+                  <a href="/safety-and-risk-policy">/safety-and-risk-policy</a>.
                 </li>
                 <li>
                   <strong>Content and Intellectual Property Policy</strong>: covers rights in user content, infringements,
-                  takedowns, and repeat-violation handling.
+                  takedowns, and repeat-violation handling. Read at{" "}
+                  <a href="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</a>.
                 </li>
               </ul>
             </section>
