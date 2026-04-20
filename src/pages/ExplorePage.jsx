@@ -105,10 +105,29 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     () => ["All", ...new Set(buddies.map((buddy) => buddy.gender).filter(Boolean))],
     []
   );
-  const locationOptions = useMemo(
-    () => [USER_LOCATION_FILTER, ...new Set(buddies.map((buddy) => buddy.location).filter(Boolean))],
-    []
-  );
+  const locationOptions = useMemo(() => {
+    const nearestDistanceByLocation = new Map();
+
+    buddies.forEach((buddy) => {
+      if (!buddy.location) {
+        return;
+      }
+
+      const coordinates = buddy.coordinates ?? DEFAULT_CENTER;
+      const distanceKm = getDistanceKm(userLocation, coordinates);
+      const currentNearest = nearestDistanceByLocation.get(buddy.location);
+
+      if (currentNearest === undefined || distanceKm < currentNearest) {
+        nearestDistanceByLocation.set(buddy.location, distanceKm);
+      }
+    });
+
+    const nearbyLocations = [...nearestDistanceByLocation.entries()]
+      .sort((leftLocation, rightLocation) => leftLocation[1] - rightLocation[1])
+      .map(([locationName]) => locationName);
+
+    return [USER_LOCATION_FILTER, ...nearbyLocations];
+  }, [userLocation]);
   const levelOptions = useMemo(
     () => ["All", ...new Set(buddies.map((buddy) => buddy.level).filter(Boolean))],
     []

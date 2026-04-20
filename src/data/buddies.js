@@ -19,7 +19,7 @@ export const buddies = [
     bio: "Love coastal rides & coffee stops ☕",
     bikeAvailable: true,
     price: 30,
-    priceUnit: "per ride",
+    priceUnit: "per session",
     rating: 4.9,
     reviewCount: 32,
     image: "https://randomuser.me/api/portraits/men/32.jpg",
