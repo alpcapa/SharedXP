@@ -15,7 +15,7 @@ const sports = [
   { name: "Surfing", count: "320 locals", icon: "🏄" },
   { name: "Basketball", count: "211 locals", icon: "🏀" },
   { name: "Volleyball", count: "189 locals", icon: "🏐" },
-  { name: "More", count: "+8 sports", icon: "···" }
+  { name: "More", count: "+7 sports", icon: "···" }
 ];
 
 const steps = [
