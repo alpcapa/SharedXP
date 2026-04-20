@@ -20,7 +20,10 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
     typeof hostingPausedOverride === "boolean"
       ? hostingPausedOverride
       : Boolean(currentUser?.isHost && currentUser?.hostProfile?.pauseHosting);
-  const hostLabel = currentUser?.isHost ? (isHostingPaused ? "Hosting Paused" : "Host Settings") : "Become A Host";
+  let hostLabel = "Become A Host";
+  if (currentUser?.isHost) {
+    hostLabel = isHostingPaused ? "Hosting Paused" : "Host Settings";
+  }
   const navHostRoute = isLoggedIn ? hostRoute : "/become-a-host";
   const navHostLabel = isLoggedIn ? hostLabel : "Become a Host";
   const isHostLabelPaused = Boolean(isLoggedIn && currentUser?.isHost && isHostingPaused);

@@ -1678,7 +1678,7 @@ body {
 }
 
 .hosting-pause-toggle input:focus-visible + .hosting-pause-switch {
-  outline: 2px solid #166534;
+  outline: 2px solid #111827;
   outline-offset: 2px;
 }
 

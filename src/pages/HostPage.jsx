@@ -516,7 +516,11 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
               <h1 className={isHostingPaused ? "host-settings-title-paused" : ""}>
                 {isHostingPaused ? "Hosting Paused" : "Host Settings"}
               </h1>
-              <p>Complete sport setup and bank details to start hosting.</p>
+              <p>
+                {isHostingPaused
+                  ? "Hosting is currently paused. Resume hosting when you're ready."
+                  : "Complete sport setup and bank details to start hosting."}
+              </p>
             </div>
             <label className="hosting-pause-toggle" htmlFor="pauseHosting">
               <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
