@@ -1732,6 +1732,10 @@ body {
   background: #fafaf9;
 }
 
+.history-card-attendee .history-attendee-summary {
+  grid-column: 1 / -1;
+}
+
 .history-card-photo-wrap {
   position: relative;
   width: 100%;
@@ -1824,31 +1828,13 @@ body {
   pointer-events: none;
 }
 
-.history-photo-summary {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.74), rgba(17, 24, 39, 0.42));
-  color: #f9fafb;
-  pointer-events: none;
-}
-
-.history-photo-summary h2 {
+.history-attendee-summary h2 {
   margin: 0;
   font-size: 22px;
-  color: #fff;
 }
 
-.history-photo-summary .history-event-date {
-  color: #e5e7eb;
-}
-
-.history-photo-summary .history-host-line {
+.history-attendee-summary .history-host-line {
   margin-top: 6px;
-  color: #f3f4f6;
 }
 
 .role-attended {
@@ -1873,10 +1859,6 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-}
-
-.history-card-head-attendee {
-  justify-content: flex-end;
 }
 
 .history-card-head h2 {
@@ -1972,6 +1954,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.history-host-rating-title-wrap {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
