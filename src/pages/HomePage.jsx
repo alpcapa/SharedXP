@@ -5,7 +5,7 @@ import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
 
 const featuredStatuses = ["Online", "New", "Online", "Online"];
-const featuredLocals = buddies.slice(0, 4);
+const LOCALS_PER_PAGE = 4;
 
 const sports = [
   { name: "Cycling", count: "1,248 locals", icon: "🚲", active: true },
@@ -14,7 +14,8 @@ const sports = [
   { name: "Football", count: "512 locals", icon: "⚽" },
   { name: "Surfing", count: "320 locals", icon: "🏄" },
   { name: "Basketball", count: "211 locals", icon: "🏀" },
-  { name: "More", count: "+8 sports", icon: "···" }
+  { name: "Volleyball", count: "189 locals", icon: "🏐" },
+  { name: "More", count: "+7 sports", icon: "···" }
 ];
 
 const steps = [
@@ -80,6 +81,7 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [localsPage, setLocalsPage] = useState(0);
   const searchBarRef = useRef(null);
 
   useEffect(() => {
@@ -115,6 +117,12 @@ const HomePage = ({ currentUser, onLogout }) => {
       .filter((location) => location.toLowerCase().includes(locationQuery.toLowerCase()))
       .slice(0, 5);
   }, [locationQuery]);
+
+  const totalLocalsPages = Math.max(1, Math.ceil(buddies.length / LOCALS_PER_PAGE));
+  const featuredLocals = useMemo(() => {
+    const startIndex = localsPage * LOCALS_PER_PAGE;
+    return buddies.slice(startIndex, startIndex + LOCALS_PER_PAGE);
+  }, [localsPage, buddies]);
 
   const handleFindBuddies = () => {
     const params = new URLSearchParams();
@@ -317,14 +325,17 @@ const HomePage = ({ currentUser, onLogout }) => {
 
             <div className="locals-grid-wrap">
               <div className="locals-grid">
-                {featuredLocals.map((buddy, index) => (
+                {featuredLocals.map((buddy, index) => {
+                  const statusIndex =
+                    (localsPage * LOCALS_PER_PAGE + index) % featuredStatuses.length;
+                  return (
                   <Link to={`/buddy/${buddy.id}`} key={buddy.id} className="local-card-link">
                     <article className="local-card">
                       <div className="local-image-wrap">
                         <img src={buddy.image} alt={buddy.name} />
                         <span className="status-badge">
                           <span className="status-dot" />
-                          {featuredStatuses[index]}
+                          {featuredStatuses[statusIndex]}
                         </span>
                       </div>
                       <div className="local-body">
@@ -354,11 +365,31 @@ const HomePage = ({ currentUser, onLogout }) => {
                       </div>
                     </article>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
-              <Link to="/locals" className="locals-next" aria-label="See more locals">
-                ›
-              </Link>
+              <div className="locals-nav-row">
+                <button
+                  type="button"
+                  className="locals-nav"
+                  aria-label="Show previous 4 locals"
+                  onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
+                  disabled={localsPage === 0}
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="locals-nav"
+                  aria-label="Show next 4 locals"
+                  onClick={() =>
+                    setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
+                  }
+                  disabled={localsPage >= totalLocalsPages - 1}
+                >
+                  ›
+                </button>
+              </div>
             </div>
           </section>
 

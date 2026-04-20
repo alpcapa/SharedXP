@@ -58,11 +58,10 @@ body {
 
 /* ── Local cards grid ──────────────────────────── */
 .locals-grid-wrap {
-  position: relative;
+  margin-top: 16px;
 }
 
 .locals-grid {
-  margin-top: 16px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
@@ -190,11 +189,7 @@ body {
   color: #1f2937;
 }
 
-.locals-next {
-  position: absolute;
-  right: -20px;
-  top: 50%;
-  transform: translateY(-50%);
+.locals-nav {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -205,8 +200,20 @@ body {
   background: #fff;
   font-size: 28px;
   color: #4b5563;
-  text-decoration: none;
+  cursor: pointer;
   z-index: 1;
+}
+
+.locals-nav-row {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.locals-nav:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 /* ── Explore by sport ──────────────────────────── */
@@ -987,6 +994,37 @@ body {
   font-weight: 700;
   letter-spacing: 0.02em;
   padding: 6px 10px;
+}
+
+.locals-pagination {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.locals-pagination-button {
+  min-width: 88px;
+  border: 1px solid #d6ddd0;
+  border-radius: 10px;
+  background: #fff;
+  color: #334155;
+  font-weight: 700;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.locals-pagination-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.locals-pagination-status {
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .trust-points {
@@ -2452,20 +2490,12 @@ body {
 }
 
 @media (max-width: 1100px) {
-  .locals-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .sports-scroll {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .how-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .locals-next {
-    display: none;
   }
 
   .site-header {
@@ -2569,7 +2599,7 @@ body {
     min-height: 56px;
   }
 
-   .explore-filters {
+  .explore-filters {
     grid-template-columns: 1fr;
   }
 

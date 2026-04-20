@@ -6,6 +6,7 @@ import { buddies } from "../data/buddies";
 
 const DEFAULT_CENTER = { lat: 38.7223, lng: -9.1393 };
 const USER_LOCATION_FILTER = "Your location";
+const EXPLORE_LOCALS_PER_PAGE = 12;
 
 const SPORT_ICONS = {
   Cycling: "🚲",
@@ -73,6 +74,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const [selectedGender, setSelectedGender] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All");
   const [selectedEquipment, setSelectedEquipment] = useState("All");
+  const [resultsPage, setResultsPage] = useState(1);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -216,6 +218,29 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     userLocation
   ]);
 
+  useEffect(() => {
+    setResultsPage(1);
+  }, [
+    searchQuery,
+    selectedSport,
+    selectedLocation,
+    selectedGender,
+    selectedLevel,
+    selectedEquipment
+  ]);
+
+  const totalResultsPages = Math.max(1, Math.ceil(visibleBuddies.length / EXPLORE_LOCALS_PER_PAGE));
+  const pagedBuddies = useMemo(() => {
+    const startIndex = (resultsPage - 1) * EXPLORE_LOCALS_PER_PAGE;
+    return visibleBuddies.slice(startIndex, startIndex + EXPLORE_LOCALS_PER_PAGE);
+  }, [resultsPage, visibleBuddies]);
+
+  useEffect(() => {
+    if (resultsPage > totalResultsPages) {
+      setResultsPage(totalResultsPages);
+    }
+  }, [resultsPage, totalResultsPages]);
+
   const mapPoints = useMemo(() => {
     const points = [userLocation, ...visibleBuddies.map((buddy) => buddy.coordinates)];
     const bounds = calculateBounds(points);
@@ -328,7 +353,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
             </div>
 
             <div className="locals-grid">
-              {visibleBuddies.map((buddy) => (
+              {pagedBuddies.map((buddy) => (
                 <Link to={`/buddy/${buddy.id}`} key={buddy.id} className="local-card-link">
                   <article className="local-card">
                     <div className="local-image-wrap">
@@ -354,6 +379,27 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                   </article>
                 </Link>
               ))}
+            </div>
+            <div className="locals-pagination" aria-label="Explore results pagination">
+              <button
+                type="button"
+                className="locals-pagination-button"
+                onClick={() => setResultsPage((page) => Math.max(page - 1, 1))}
+                disabled={resultsPage === 1}
+              >
+                Previous
+              </button>
+              <p className="locals-pagination-status">
+                Page {resultsPage} of {totalResultsPages}
+              </p>
+              <button
+                type="button"
+                className="locals-pagination-button"
+                onClick={() => setResultsPage((page) => Math.min(page + 1, totalResultsPages))}
+                disabled={resultsPage >= totalResultsPages}
+              >
+                Next
+              </button>
             </div>
           </section>
         </main>
