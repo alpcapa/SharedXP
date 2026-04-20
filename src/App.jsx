@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import ExplorePage from "./pages/ExplorePage";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import HostPage from "./pages/HostPage";
 import HistoryPage from "./pages/HistoryPage";
@@ -427,7 +428,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage {...authActions} />} />
-      <Route path="/locals" element={<HomePage {...authActions} />} />
+      <Route path="/locals" element={<ExplorePage {...authActions} />} />
       <Route path="/how-it-works" element={<HowItWorksPage {...authActions} />} />
       <Route path="/buddy/:buddyId" element={<ProfilePage {...authActions} />} />
       <Route path="/signup" element={<SignUpPage {...authActions} />} />

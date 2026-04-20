@@ -139,9 +139,11 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       <section className="about">
         <h3>About</h3>
         <p>{buddy.about}</p>
-        <p>
-          Bike: {buddy.bike.brand} {buddy.bike.model} ({buddy.bike.type})
-        </p>
+        {buddy.bike && (
+          <p>
+            Bike: {buddy.bike.brand} {buddy.bike.model} ({buddy.bike.type})
+          </p>
+        )}
       </section>
 
       <section className="booking-engine-section" aria-label="Booking engine">

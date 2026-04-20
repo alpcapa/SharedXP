@@ -55,7 +55,7 @@ const SiteHeader = ({ currentUser, onLogout }) => {
       </Link>
 
       <nav className="site-nav">
-        <Link to="/" className="site-nav-link">
+        <Link to="/locals" className="site-nav-link">
           Explore
         </Link>
         <button type="button" className="nav-link-button">
