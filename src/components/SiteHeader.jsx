@@ -58,9 +58,9 @@ const SiteHeader = ({ currentUser, onLogout }) => {
         <Link to="/locals" className="site-nav-link">
           Explore
         </Link>
-        <button type="button" className="nav-link-button">
+        <Link to="/the-field" className="site-nav-link">
           The Field
-        </button>
+        </Link>
         <Link to={navHostRoute} className="site-nav-link">
           {navHostLabel}
         </Link>

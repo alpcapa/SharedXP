@@ -46,12 +46,22 @@ export const buddies = [
     reviews: [
       {
         author: "Lena",
-        rating: 5,
+        overall: 5,
+        punctuality: 5,
+        equipmentQuality: 5,
+        localKnowledge: 4,
+        friendliness: 5,
+        value: 4,
         comment: "João planned a safe and beautiful route near the river."
       },
       {
         author: "Carlos",
-        rating: 5,
+        overall: 4,
+        punctuality: 4,
+        equipmentQuality: 4,
+        localKnowledge: 4,
+        friendliness: 5,
+        value: 4,
         comment: "Great pace and very friendly host."
       }
     ]
@@ -88,12 +98,22 @@ export const buddies = [
     reviews: [
       {
         author: "Iris",
-        rating: 5,
+        overall: 5,
+        punctuality: 5,
+        equipmentQuality: 4,
+        localKnowledge: 5,
+        friendliness: 5,
+        value: 4,
         comment: "Amazing coach with clear feedback and a super fun tennis session."
       },
       {
         author: "Pedro",
-        rating: 5,
+        overall: 4,
+        punctuality: 5,
+        equipmentQuality: 5,
+        localKnowledge: 4,
+        friendliness: 4,
+        value: 4,
         comment: "Great communication and a really strong hitting partner."
       }
     ]
@@ -130,12 +150,20 @@ export const buddies = [
     reviews: [
       {
         author: "Mia",
-        rating: 5,
+        overall: 5,
+        punctuality: 5,
+        localKnowledge: 4,
+        friendliness: 5,
+        value: 4,
         comment: "Super welcoming and set the perfect running pace for me."
       },
       {
         author: "Tom",
-        rating: 4,
+        overall: 4,
+        punctuality: 4,
+        localKnowledge: 4,
+        friendliness: 4,
+        value: 4,
         comment: "Great route, good coaching cues, and easy coordination."
       }
     ]
@@ -172,12 +200,20 @@ export const buddies = [
     reviews: [
       {
         author: "Alex",
-        rating: 5,
+        overall: 5,
+        punctuality: 5,
+        localKnowledge: 4,
+        friendliness: 5,
+        value: 4,
         comment: "Great rally partner and very punctual."
       },
       {
         author: "Sara",
-        rating: 4,
+        overall: 4,
+        punctuality: 4,
+        localKnowledge: 4,
+        friendliness: 5,
+        value: 4,
         comment: "Helpful tips and a really fun game."
       }
     ]

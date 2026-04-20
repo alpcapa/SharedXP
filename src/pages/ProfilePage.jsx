@@ -7,6 +7,7 @@ import { buddies } from "../data/buddies";
 import { getDateKey } from "../utils/date";
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const getStars = (value) => `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
 
 const ProfilePage = ({ currentUser, onLogout }) => {
   const { buddyId } = useParams();
@@ -279,8 +280,23 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         {buddy.reviews.map((review) => (
           <article key={`${review.author}-${review.comment}`} className="review-card">
             <p>
-              <strong>{review.author}</strong> · ⭐ {review.rating}
+              <strong>{review.author}</strong> · ⭐ {review.overall ?? review.rating}
             </p>
+            {review.overall != null && (
+              <div className="review-breakdown">
+                {review.punctuality != null && <span>Punctuality {getStars(review.punctuality)}</span>}
+                {review.equipmentQuality != null && (
+                  <span>Equipment {getStars(review.equipmentQuality)}</span>
+                )}
+                {review.localKnowledge != null && (
+                  <span>Local knowledge {getStars(review.localKnowledge)}</span>
+                )}
+                {review.friendliness != null && (
+                  <span>Friendliness {getStars(review.friendliness)}</span>
+                )}
+                {review.value != null && <span>Value {getStars(review.value)}</span>}
+              </div>
+            )}
             <p>{review.comment}</p>
           </article>
         ))}
