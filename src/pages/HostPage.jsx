@@ -99,6 +99,7 @@ const getInitialHostProfile = (user) => {
     : [createEmptySportConfig()];
 
   return {
+    pauseHosting: existingProfile.pauseHosting ?? false,
     country: existingProfile.country ?? user?.country ?? "",
     city: existingProfile.city ?? user?.city ?? inferCityFromAddress(user?.address) ?? "",
     stripe: {
@@ -235,6 +236,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
   }
 
   const activeSport = hostProfileDraft.sports[activeSportIndex] ?? createEmptySportConfig();
+  const isHostingPaused = Boolean(hostProfileDraft.pauseHosting);
 
   const getCountryFlag = (countryCode) =>
     countryCode
@@ -502,11 +504,36 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
     <div className="home-page">
       <div className="middle-page-frame">
         <section className="hero auth-hero">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          <SiteHeader
+            currentUser={currentUser}
+            onLogout={onLogout}
+            hostingPausedOverride={isHostingPaused}
+          />
         </section>
         <main className="middle-section simple-page host-settings-page">
-          <h1>Host Settings</h1>
-          <p>Complete sport setup and bank details to start hosting.</p>
+          <div className="host-settings-top-bar">
+            <div>
+              <h1 className={isHostingPaused ? "host-settings-title-paused" : ""}>
+                {isHostingPaused ? "Hosting Paused" : "Host Settings"}
+              </h1>
+              <p>Complete sport setup and bank details to start hosting.</p>
+            </div>
+            <label className="hosting-pause-toggle">
+              <span>Pause Hosting</span>
+              <input
+                id="pauseHosting"
+                type="checkbox"
+                checked={isHostingPaused}
+                onChange={(event) =>
+                  setHostProfileDraft((previousDraft) => ({
+                    ...previousDraft,
+                    pauseHosting: event.target.checked
+                  }))
+                }
+              />
+              <span className="hosting-pause-switch" aria-hidden="true" />
+            </label>
+          </div>
 
           <form className="host-onboarding-form" onSubmit={onSubmit}>
             <section className="host-onboarding-card">
@@ -516,18 +543,6 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
                   Add Sport
                 </button>
               </div>
-              <div className="host-pause-toggle">
-                <input
-                  id={`pauseSport-${activeSportIndex}`}
-                  type="checkbox"
-                  checked={Boolean(activeSport.paused)}
-                  onChange={(event) => updateSportField("paused", event.target.checked)}
-                />
-                <label htmlFor={`pauseSport-${activeSportIndex}`}>
-                  {`Pause ${activeSport.sport || `Sport ${activeSportIndex + 1}`}`}
-                </label>
-              </div>
-
               <div className="host-sport-tabs" role="tablist" aria-label="Host sports tabs">
                 {hostProfileDraft.sports.map((sportConfig, index) => (
                   <div key={`sport-tab-${index}`} className="host-sport-tab-wrap">

@@ -11,14 +11,19 @@ const createInitials = (name) =>
 
 const sanitizeInitials = (initials) => initials.replace(/[^A-Z0-9]/g, "").slice(0, 2) || "U";
 
-const SiteHeader = ({ currentUser, onLogout }) => {
+const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const isLoggedIn = Boolean(currentUser);
   const hostRoute = "/host-settings";
-  const hostLabel = currentUser?.isHost ? "Host Settings" : "Become A Host";
+  const isHostingPaused =
+    typeof hostingPausedOverride === "boolean"
+      ? hostingPausedOverride
+      : Boolean(currentUser?.isHost && currentUser?.hostProfile?.pauseHosting);
+  const hostLabel = currentUser?.isHost ? (isHostingPaused ? "Hosting Paused" : "Host Settings") : "Become A Host";
   const navHostRoute = isLoggedIn ? hostRoute : "/become-a-host";
   const navHostLabel = isLoggedIn ? hostLabel : "Become a Host";
+  const isHostLabelPaused = Boolean(isLoggedIn && currentUser?.isHost && isHostingPaused);
 
   const fallbackPhoto = useMemo(() => {
     if (!currentUser?.fullName) {
@@ -61,7 +66,7 @@ const SiteHeader = ({ currentUser, onLogout }) => {
         <Link to="/the-field" className="site-nav-link">
           The Field
         </Link>
-        <Link to={navHostRoute} className="site-nav-link">
+        <Link to={navHostRoute} className={`site-nav-link${isHostLabelPaused ? " site-nav-link-paused" : ""}`}>
           {navHostLabel}
         </Link>
         <Link to="/how-it-works" className="site-nav-link">
@@ -92,7 +97,11 @@ const SiteHeader = ({ currentUser, onLogout }) => {
               <Link to="/my-profile" className="user-dropdown-link" role="menuitem">
                 My Profile
               </Link>
-              <Link to={hostRoute} className="user-dropdown-link" role="menuitem">
+              <Link
+                to={hostRoute}
+                className={`user-dropdown-link${isHostLabelPaused ? " user-dropdown-link-paused" : ""}`}
+                role="menuitem"
+              >
                 {hostLabel}
               </Link>
               <Link to="/history" className="user-dropdown-link" role="menuitem">
