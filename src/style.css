@@ -1670,7 +1670,7 @@ body {
 }
 
 .hosting-pause-toggle input:checked + .hosting-pause-switch {
-  background: #4ad66d;
+  background: #16a34a;
 }
 
 .hosting-pause-toggle input:checked + .hosting-pause-switch::after {

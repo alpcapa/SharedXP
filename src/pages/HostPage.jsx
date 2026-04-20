@@ -513,13 +513,13 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
         <main className="middle-section simple-page host-settings-page">
           <div className="host-settings-top-bar">
             <div>
-              <h1 aria-live="polite" className={isHostingPaused ? "host-settings-title-paused" : ""}>
+              <h1 className={isHostingPaused ? "host-settings-title-paused" : ""}>
                 {isHostingPaused ? "Hosting Paused" : "Host Settings"}
               </h1>
               <p>Complete sport setup and bank details to start hosting.</p>
             </div>
             <label className="hosting-pause-toggle" htmlFor="pauseHosting">
-              <span>Pause Hosting</span>
+              <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
               <input
                 id="pauseHosting"
                 type="checkbox"
