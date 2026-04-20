@@ -115,8 +115,9 @@ const ExplorePage = ({ currentUser, onLogout }) => {
       return;
     }
 
+    const normalizedParam = selectedSportParam.toLowerCase();
     const matchingSport = sportOptions.find(
-      (sportOption) => sportOption.toLowerCase() === selectedSportParam.toLowerCase()
+      (sportOption) => sportOption.toLowerCase() === normalizedParam
     );
 
     setSelectedSport(matchingSport ?? "All");
