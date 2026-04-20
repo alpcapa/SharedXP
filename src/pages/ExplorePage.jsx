@@ -153,10 +153,13 @@ const ExplorePage = ({ currentUser, onLogout }) => {
           selectedLocation === USER_LOCATION_FILTER || buddy.location === selectedLocation;
         const matchesGender = selectedGender === "All" || buddy.gender === selectedGender;
         const matchesLevel = selectedLevel === "All" || buddy.level === selectedLevel;
-        const hasEquipment = buddy.equipmentAvailable ?? buddy.bikeAvailable ?? null;
+        const hasEquipment = buddy.equipmentAvailable ?? buddy.bikeAvailable;
         const matchesEquipment =
-          selectedEquipment === "All" ||
-          (selectedEquipment === "Yes" ? hasEquipment === true : hasEquipment === false);
+          selectedEquipment === "Yes"
+            ? hasEquipment === true
+            : selectedEquipment === "No"
+              ? hasEquipment !== true
+              : true;
 
         return (
           matchesQuery &&
