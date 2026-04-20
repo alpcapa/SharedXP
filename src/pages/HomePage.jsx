@@ -121,7 +121,7 @@ const HomePage = ({ currentUser, onLogout }) => {
   const featuredLocals = useMemo(() => {
     const startIndex = localsPage * LOCALS_PER_PAGE;
     return buddies.slice(startIndex, startIndex + LOCALS_PER_PAGE);
-  }, [localsPage]);
+  }, [localsPage, buddies]);
 
   const handleFindBuddies = () => {
     const params = new URLSearchParams();
@@ -324,14 +324,17 @@ const HomePage = ({ currentUser, onLogout }) => {
 
             <div className="locals-grid-wrap">
               <div className="locals-grid">
-                {featuredLocals.map((buddy, index) => (
+                {featuredLocals.map((buddy, index) => {
+                  const statusIndex =
+                    (localsPage * LOCALS_PER_PAGE + index) % featuredStatuses.length;
+                  return (
                   <Link to={`/buddy/${buddy.id}`} key={buddy.id} className="local-card-link">
                     <article className="local-card">
                       <div className="local-image-wrap">
                         <img src={buddy.image} alt={buddy.name} />
                         <span className="status-badge">
                           <span className="status-dot" />
-                          {featuredStatuses[(localsPage * LOCALS_PER_PAGE + index) % featuredStatuses.length]}
+                          {featuredStatuses[statusIndex]}
                         </span>
                       </div>
                       <div className="local-body">
@@ -361,7 +364,8 @@ const HomePage = ({ currentUser, onLogout }) => {
                       </div>
                     </article>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
               <button
                 type="button"
