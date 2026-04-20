@@ -99,11 +99,11 @@ const ExplorePage = ({ currentUser, onLogout }) => {
 
   const sportOptions = useMemo(
     () => ["All", ...new Set(buddies.map((buddy) => buddy.sport).filter(Boolean))],
-    []
+    [buddies]
   );
   const genderOptions = useMemo(
     () => ["All", ...new Set(buddies.map((buddy) => buddy.gender).filter(Boolean))],
-    []
+    [buddies]
   );
   const locationOptions = useMemo(() => {
     const nearestDistanceByLocation = new Map();
@@ -130,7 +130,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   }, [userLocation, buddies]);
   const levelOptions = useMemo(
     () => ["All", ...new Set(buddies.map((buddy) => buddy.level).filter(Boolean))],
-    []
+    [buddies]
   );
 
   useEffect(() => {
