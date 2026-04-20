@@ -15,6 +15,14 @@ const DEFAULT_FALLBACK_LAST_NAME = "User";
 const DEFAULT_HOST_FALLBACK_FIRST_NAME = "Host";
 const DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME = "Participant";
 const CONFIRMATION_WINDOW_MS = 48 * 60 * 60 * 1000;
+const HOST_RATING_FIELDS = [
+  { key: "overall", label: "Overall" },
+  { key: "punctuality", label: "Punctuality" },
+  { key: "equipmentQuality", label: "Equipment Quality" },
+  { key: "localKnowledge", label: "Local Knowledge" },
+  { key: "friendliness", label: "Friendliness" },
+  { key: "value", label: "Value" }
+];
 
 const clampRating = (value) => {
   const numericRating = Number(value);
@@ -22,6 +30,18 @@ const clampRating = (value) => {
     return 0;
   }
   return Math.max(0, Math.min(5, Math.round(numericRating)));
+};
+
+const normalizeHostRatings = (item) => {
+  const source = item?.hostRatings && typeof item.hostRatings === "object" ? item.hostRatings : {};
+  return {
+    overall: clampRating(source.overall ?? item?.rating ?? 0),
+    punctuality: clampRating(source.punctuality ?? item?.punctualityRating ?? 0),
+    equipmentQuality: clampRating(source.equipmentQuality ?? item?.equipmentQualityRating ?? 0),
+    localKnowledge: clampRating(source.localKnowledge ?? item?.localKnowledgeRating ?? 0),
+    friendliness: clampRating(source.friendliness ?? item?.friendlinessRating ?? 0),
+    value: clampRating(source.value ?? item?.valueRating ?? 0)
+  };
 };
 
 const toTimestamp = (dateValue) => {
@@ -110,6 +130,7 @@ const normalizeAttended = (items) => {
   const arr = Array.isArray(items) ? items : [];
   return arr.map((rawItem, index) => {
     const item = rawItem && typeof rawItem === "object" ? rawItem : {};
+    const hostRatings = normalizeHostRatings(item);
     const fallbackName = typeof rawItem === "string" ? rawItem : "";
     const eventName = normalizeName(item.eventName ?? item.label ?? item.title ?? fallbackName, "Experience");
     const hostName = normalizeFullName(
@@ -137,7 +158,8 @@ const normalizeAttended = (items) => {
       sport: String(item.sport ?? "Other"),
       photo: photoGallery[0] || FALLBACK_EVENT_PHOTO,
       photoGallery,
-      rating: clampRating(item.rating ?? 0),
+      rating: hostRatings.overall,
+      hostRatings,
       attendeeRating: clampRating(item.attendeeRating ?? item.participantRatingForHost ?? 0),
       review: String(item.review ?? item.comment ?? ""),
       completedAt: String(completedAt),
@@ -224,7 +246,8 @@ const toStoredAttended = (items) =>
         sport: item.sport,
         photo: item.photo,
         photoGallery: item.photoGallery,
-        rating: item.rating,
+        rating: item.hostRatings?.overall ?? item.rating,
+        hostRatings: item.hostRatings,
         attendeeRating: item.attendeeRating,
         review: item.review,
         completedAt: item.completedAt,
@@ -359,6 +382,27 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
   const updateItem = useCallback((itemId, fieldName, fieldValue) => {
     setAllItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, [fieldName]: fieldValue } : item))
+    );
+    setDirtyIds((prev) => new Set([...prev, itemId]));
+  }, []);
+
+  const updateHostRating = useCallback((itemId, ratingField, fieldValue) => {
+    const nextRating = clampRating(fieldValue);
+    setAllItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== itemId) {
+          return item;
+        }
+        const hostRatings = {
+          ...normalizeHostRatings(item),
+          [ratingField]: nextRating
+        };
+        return {
+          ...item,
+          hostRatings,
+          rating: hostRatings.overall
+        };
+      })
     );
     setDirtyIds((prev) => new Set([...prev, itemId]));
   }, []);
@@ -575,27 +619,50 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                       </div>
 
                       <div className="history-edit-grid">
-                        <label className="history-field">
-                          {isAttendee ? "Rate Host" : "Rate participant"}
-                          <select
-                            value={String(item.rating)}
-                            aria-label={
-                              isAttendee
-                                ? `Rate host for ${item.eventName}`
-                                : `Rating for ${item.participantName}`
-                            }
-                            onChange={(event) =>
-                              updateItem(item.id, "rating", clampRating(event.target.value))
-                            }
-                          >
-                            <option value="0">Not rated</option>
-                            <option value="1">1⭐</option>
-                            <option value="2">2⭐</option>
-                            <option value="3">3⭐</option>
-                            <option value="4">4⭐</option>
-                            <option value="5">5⭐</option>
-                          </select>
-                        </label>
+                        {isAttendee ? (
+                          <div className="history-host-rating-section">
+                            <span className="history-host-rating-title">Rate Host</span>
+                            <div className="history-host-rating-grid">
+                              {HOST_RATING_FIELDS.map((ratingField) => (
+                                <label className="history-field" key={ratingField.key}>
+                                  {ratingField.label}
+                                  <select
+                                    value={String(item.hostRatings?.[ratingField.key] ?? 0)}
+                                    aria-label={`${ratingField.label} rating for host of ${item.eventName}`}
+                                    onChange={(event) =>
+                                      updateHostRating(item.id, ratingField.key, event.target.value)
+                                    }
+                                  >
+                                    <option value="0">Not rated</option>
+                                    <option value="1">1⭐</option>
+                                    <option value="2">2⭐</option>
+                                    <option value="3">3⭐</option>
+                                    <option value="4">4⭐</option>
+                                    <option value="5">5⭐</option>
+                                  </select>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="history-field">
+                            Rate participant
+                            <select
+                              value={String(item.rating)}
+                              aria-label={`Rating for ${item.participantName}`}
+                              onChange={(event) =>
+                                updateItem(item.id, "rating", clampRating(event.target.value))
+                              }
+                            >
+                              <option value="0">Not rated</option>
+                              <option value="1">1⭐</option>
+                              <option value="2">2⭐</option>
+                              <option value="3">3⭐</option>
+                              <option value="4">4⭐</option>
+                              <option value="5">5⭐</option>
+                            </select>
+                          </label>
+                        )}
 
                         <label className="history-field">
                           {isAttendee ? "Review Host" : "Review participant"}
