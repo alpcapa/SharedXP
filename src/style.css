@@ -76,21 +76,6 @@
   padding: 16px;
 }
 
-.field-card-open-slot {
-  background: #f0f7e8;
-  border: 1px solid #c3e0a0;
-}
-
-.field-open-slot-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  color: #36521f;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-
 .field-host-row {
   display: flex;
   align-items: center;
@@ -135,32 +120,6 @@
   margin: 10px 0 0;
   color: #596164;
   font-size: 13px;
-}
-
-.field-slot-details {
-  display: grid;
-  gap: 8px;
-  margin-top: 2px;
-  color: #273033;
-}
-
-.field-slot-details p {
-  margin: 0;
-}
-
-.field-view-host-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 14px;
-  text-decoration: none;
-  border: none;
-  border-radius: 12px;
-  background: #97ca3f;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  padding: 10px 14px;
 }
 
 .field-empty-state {

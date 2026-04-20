@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { fieldPosts } from "../data/fieldPosts";
@@ -30,15 +29,6 @@ const getRelativePostedLabel = (postedAt) => {
   return `${dayDiff} days ago`;
 };
 
-const formatSlotDate = (slotDate) =>
-  new Intl.DateTimeFormat("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short"
-  })
-    .format(new Date(`${slotDate}T00:00:00`))
-    .replace(",", "");
-
 const FieldPage = ({ currentUser, onLogout }) => {
   const [selectedCity, setSelectedCity] = useState("All");
 
@@ -51,13 +41,10 @@ const FieldPage = ({ currentUser, onLogout }) => {
     () =>
       fieldPosts
         .filter((post) => selectedCity === "All" || post.city === selectedCity)
-        .sort((leftPost, rightPost) => {
-          if (leftPost.type !== rightPost.type) {
-            return leftPost.type === "open_slot" ? -1 : 1;
-          }
-
-          return new Date(rightPost.postedAt).getTime() - new Date(leftPost.postedAt).getTime();
-        }),
+        .sort(
+          (leftPost, rightPost) =>
+            new Date(rightPost.postedAt).getTime() - new Date(leftPost.postedAt).getTime()
+        ),
     [selectedCity]
   );
 
@@ -89,14 +76,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
         ) : (
           <div className="field-feed">
             {visiblePosts.map((post) => (
-              <article
-                key={post.id}
-                className={`field-card${post.type === "open_slot" ? " field-card-open-slot" : ""}`}
-              >
-                {post.type === "open_slot" && (
-                  <span className="field-open-slot-badge">🟢 Open Slot</span>
-                )}
-
+              <article key={post.id} className="field-card">
                 <div className="field-host-row">
                   <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
                   <div>
@@ -107,32 +87,11 @@ const FieldPage = ({ currentUser, onLogout }) => {
                     <span className="sport-pill">{post.sport}</span>
                   </div>
                 </div>
-
-                {post.type === "experience" ? (
-                  <>
-                    <img src={post.photo} alt={post.sport} className="field-post-photo" />
-                    <p className="field-caption">{post.caption}</p>
-                    <p className="field-meta">
-                      🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div className="field-slot-details">
-                      <p>
-                        📅 {formatSlotDate(post.slotDate)} · {post.slotTime}
-                      </p>
-                      <p>💶 €{post.priceEur} per session</p>
-                      <p>
-                        👤 {post.spotsAvailable}{" "}
-                        {post.spotsAvailable === 1 ? "spot left" : "spots left"}
-                      </p>
-                    </div>
-                    <Link to={`/buddy/${post.hostId}`} className="field-view-host-btn">
-                      View Host →
-                    </Link>
-                  </>
-                )}
+                <img src={post.photo} alt={post.sport} className="field-post-photo" />
+                <p className="field-caption">{post.caption}</p>
+                <p className="field-meta">
+                  🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
+                </p>
               </article>
             ))}
           </div>
