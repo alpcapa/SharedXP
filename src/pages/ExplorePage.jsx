@@ -245,7 +245,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                       <span className="sport-pill">{buddy.sport}</span>
                       <p className="local-bio">{buddy.bio}</p>
                       <ul className="local-meta">
-                        <li>⚧ {buddy.gender ?? "Any"}</li>
+                        <li>👤 {buddy.gender ?? "Any"}</li>
                         <li>🏅 {buddy.level}</li>
                         <li>📏 {buddy.distanceKm.toFixed(1)} km away</li>
                       </ul>

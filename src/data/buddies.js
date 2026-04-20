@@ -79,11 +79,7 @@ export const buddies = [
       "https://images.unsplash.com/photo-1511994298241-608e28f14fde?auto=format&fit=crop&w=600&q=80",
       "https://images.unsplash.com/photo-1520975693412-3f6de3d8158f?auto=format&fit=crop&w=600&q=80"
     ],
-    bike: {
-      brand: "N/A",
-      model: "N/A",
-      type: "No bike"
-    },
+    bike: null,
     availableDates: buildAvailableDates([2, 4, 6, 9, 13, 16, 22, 29]),
     availableTimes: ["06:30", "09:00", "17:30"],
     availabilitySchedule: ["Tuesday and Thursday 17:30", "Sunday 09:00"],
@@ -124,11 +120,7 @@ export const buddies = [
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=600&q=80",
       "https://images.unsplash.com/photo-1622279457486-62dcc4a431d8?auto=format&fit=crop&w=600&q=80"
     ],
-    bike: {
-      brand: "N/A",
-      model: "N/A",
-      type: "No bike"
-    },
+    bike: null,
     availableDates: buildAvailableDates([1, 4, 7, 10, 12, 18, 24, 30]),
     availableTimes: ["07:30", "10:00", "19:00"],
     availabilitySchedule: ["Weeknights after 19:00", "Saturday afternoon"],
@@ -169,11 +161,7 @@ export const buddies = [
       "https://images.unsplash.com/photo-1499510318569-0c17cf6d1eb3?auto=format&fit=crop&w=600&q=80",
       "https://images.unsplash.com/photo-1560012057-437c6a8bf77f?auto=format&fit=crop&w=600&q=80"
     ],
-    bike: {
-      brand: "N/A",
-      model: "N/A",
-      type: "No bike"
-    },
+    bike: null,
     availableDates: buildAvailableDates([3, 5, 8, 11, 15, 19, 25, 31]),
     availableTimes: ["08:00", "11:00", "18:30"],
     availabilitySchedule: ["Monday and Wednesday 18:30", "Sunday afternoon"],
