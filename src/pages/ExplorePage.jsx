@@ -72,6 +72,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const [selectedLocation, setSelectedLocation] = useState(USER_LOCATION_FILTER);
   const [selectedGender, setSelectedGender] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All");
+  const [selectedEquipment, setSelectedEquipment] = useState("All");
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -152,11 +153,29 @@ const ExplorePage = ({ currentUser, onLogout }) => {
           selectedLocation === USER_LOCATION_FILTER || buddy.location === selectedLocation;
         const matchesGender = selectedGender === "All" || buddy.gender === selectedGender;
         const matchesLevel = selectedLevel === "All" || buddy.level === selectedLevel;
+        const matchesEquipment =
+          selectedEquipment === "All" ||
+          (selectedEquipment === "Yes" ? Boolean(buddy.bikeAvailable) : !buddy.bikeAvailable);
 
-        return matchesQuery && matchesSport && matchesLocation && matchesGender && matchesLevel;
+        return (
+          matchesQuery &&
+          matchesSport &&
+          matchesLocation &&
+          matchesGender &&
+          matchesLevel &&
+          matchesEquipment
+        );
       })
       .sort((leftBuddy, rightBuddy) => leftBuddy.distanceKm - rightBuddy.distanceKm);
-  }, [searchQuery, selectedSport, selectedLocation, selectedGender, selectedLevel, userLocation]);
+  }, [
+    searchQuery,
+    selectedSport,
+    selectedLocation,
+    selectedGender,
+    selectedLevel,
+    selectedEquipment,
+    userLocation
+  ]);
 
   const mapPoints = useMemo(() => {
     const points = [userLocation, ...visibleBuddies.map((buddy) => buddy.coordinates)];
@@ -226,6 +245,14 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                   Level: {levelOption}
                 </option>
               ))}
+            </select>
+            <select
+              value={selectedEquipment}
+              onChange={(event) => setSelectedEquipment(event.target.value)}
+            >
+              <option value="All">Equipment: All</option>
+              <option value="Yes">Equipment: Yes</option>
+              <option value="No">Equipment: No</option>
             </select>
           </section>
 
