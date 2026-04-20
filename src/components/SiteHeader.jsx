@@ -59,7 +59,7 @@ const SiteHeader = ({ currentUser, onLogout }) => {
           Explore
         </Link>
         <button type="button" className="nav-link-button">
-          Messages
+          The Field
         </button>
         <Link to={navHostRoute} className="site-nav-link">
           {navHostLabel}

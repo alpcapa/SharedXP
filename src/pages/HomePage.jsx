@@ -367,26 +367,28 @@ const HomePage = ({ currentUser, onLogout }) => {
                   );
                 })}
               </div>
-              <button
-                type="button"
-                className="locals-nav locals-prev"
-                aria-label="Show previous 4 locals"
-                onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
-                disabled={localsPage === 0}
-              >
-                ‹
-              </button>
-              <button
-                type="button"
-                className="locals-nav locals-next"
-                aria-label="Show next 4 locals"
-                onClick={() =>
-                  setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
-                }
-                disabled={localsPage >= totalLocalsPages - 1}
-              >
-                ›
-              </button>
+              <div className="locals-nav-row">
+                <button
+                  type="button"
+                  className="locals-nav"
+                  aria-label="Show previous 4 locals"
+                  onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
+                  disabled={localsPage === 0}
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="locals-nav"
+                  aria-label="Show next 4 locals"
+                  onClick={() =>
+                    setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
+                  }
+                  disabled={localsPage >= totalLocalsPages - 1}
+                >
+                  ›
+                </button>
+              </div>
             </div>
           </section>
 
