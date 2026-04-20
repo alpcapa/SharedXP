@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 
 const BuddyCard = ({ buddy }) => {
   const actionLabel = buddy.sport === "Cycling" ? "Ride with" : "Play with";
+  const hasEquipment = buddy.equipmentAvailable ?? buddy.bikeAvailable;
 
   return (
     <Link to={`/buddy/${buddy.id}`} className="card-link">
@@ -9,7 +10,7 @@ const BuddyCard = ({ buddy }) => {
         <img src={buddy.image} alt={buddy.name} />
         <h3>{buddy.name}</h3>
         <p>{buddy.bio}</p>
-        <p>{buddy.bikeAvailable ? "🚲 Bike available" : ""}</p>
+        <p>{hasEquipment ? "🧰 Equipment available" : "🧰 Equipment not available"}</p>
         <p>⭐ {buddy.rating}</p>
         <p className="price">€{buddy.price}</p>
         <span className="card-cta">
