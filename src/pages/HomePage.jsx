@@ -348,7 +348,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                           <li>🏅 {buddy.level}</li>
                           <li>
                             💶 €{buddy.price}{" "}
-                            {buddy.priceUnit ?? (buddy.sport === "Cycling" ? "per ride" : "per session")}
+                            {buddy.priceUnit ?? "per session"}
                           </li>
                         </ul>
                       </div>
