@@ -1,7 +1,6 @@
 export const fieldPosts = [
   {
     id: 1,
-    type: "open_slot",
     hostId: 1,
     hostName: "João Oliveira",
     hostPhoto: "https://randomuser.me/api/portraits/men/32.jpg",
@@ -9,19 +8,14 @@ export const fieldPosts = [
     city: "Lisbon",
     country: "Portugal",
     caption:
-      "I am opening one sunrise slot this weekend for a riverfront interval ride and coffee cooldown.",
+      "I had a great sunrise ride along the waterfront this morning, mixed in short intervals, and wrapped up with coffee by the river.",
     photo:
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1400&q=80",
     postedAt: "2026-04-20T08:10:00Z",
-    likes: 14,
-    slotDate: "2026-04-26",
-    slotTime: "09:00",
-    spotsAvailable: 1,
-    priceEur: 30
+    likes: 18
   },
   {
     id: 2,
-    type: "open_slot",
     hostId: 2,
     hostName: "Marta Santos",
     hostPhoto: "https://randomuser.me/api/portraits/women/44.jpg",
@@ -29,19 +23,14 @@ export const fieldPosts = [
     city: "Lisbon",
     country: "Portugal",
     caption:
-      "I am hosting a tactical baseline session focused on consistency and first-serve placement.",
+      "I ran a tactical baseline session this afternoon focused on consistency and first-serve placement, and we finished with long rally drills.",
     photo:
       "https://images.unsplash.com/photo-1529422643029-d4585747aaf2?auto=format&fit=crop&w=1400&q=80",
     postedAt: "2026-04-19T16:20:00Z",
-    likes: 11,
-    slotDate: "2026-05-02",
-    slotTime: "10:30",
-    spotsAvailable: 2,
-    priceEur: 35
+    likes: 15
   },
   {
     id: 3,
-    type: "open_slot",
     hostId: 5,
     hostName: "Clara Méndez",
     hostPhoto:
@@ -50,19 +39,14 @@ export const fieldPosts = [
     city: "Barcelona",
     country: "Spain",
     caption:
-      "I have room for two runners on my Montjuïc hill loop, steady effort with form cues on climbs.",
+      "I led a steady Montjuïc hill loop at sunrise today, focused on form cues on the climbs, and everyone finished strong.",
     photo:
       "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1400&q=80",
     postedAt: "2026-04-18T09:40:00Z",
-    likes: 8,
-    slotDate: "2026-04-30",
-    slotTime: "07:30",
-    spotsAvailable: 2,
-    priceEur: 28
+    likes: 12
   },
   {
     id: 4,
-    type: "experience",
     hostId: 3,
     hostName: "Rafael Costa",
     hostPhoto: "https://randomuser.me/api/portraits/men/55.jpg",
@@ -78,7 +62,6 @@ export const fieldPosts = [
   },
   {
     id: 5,
-    type: "experience",
     hostId: 4,
     hostName: "Inês Ferreira",
     hostPhoto: "https://randomuser.me/api/portraits/women/65.jpg",
@@ -94,7 +77,6 @@ export const fieldPosts = [
   },
   {
     id: 6,
-    type: "experience",
     hostId: 6,
     hostName: "Lukas Schneider",
     hostPhoto:
@@ -111,7 +93,6 @@ export const fieldPosts = [
   },
   {
     id: 7,
-    type: "experience",
     hostId: 7,
     hostName: "Elena Rossi",
     hostPhoto:
@@ -128,7 +109,6 @@ export const fieldPosts = [
   },
   {
     id: 8,
-    type: "experience",
     hostId: 1,
     hostName: "João Oliveira",
     hostPhoto: "https://randomuser.me/api/portraits/men/32.jpg",
@@ -143,4 +123,3 @@ export const fieldPosts = [
     likes: 13
   }
 ];
-
