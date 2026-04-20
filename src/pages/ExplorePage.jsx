@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
@@ -64,6 +64,7 @@ const projectPoint = (point, bounds) => {
 };
 
 const ExplorePage = ({ currentUser, onLogout }) => {
+  const [searchParams] = useSearchParams();
   const [userLocation, setUserLocation] = useState(DEFAULT_CENTER);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSport, setSelectedSport] = useState("All");
@@ -105,6 +106,21 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     () => ["All", ...new Set(buddies.map((buddy) => buddy.level).filter(Boolean))],
     []
   );
+
+  useEffect(() => {
+    const selectedSportParam = searchParams.get("sport");
+
+    if (!selectedSportParam) {
+      setSelectedSport("All");
+      return;
+    }
+
+    const matchingSport = sportOptions.find(
+      (sportOption) => sportOption.toLowerCase() === selectedSportParam.toLowerCase()
+    );
+
+    setSelectedSport(matchingSport ?? "All");
+  }, [searchParams, sportOptions]);
 
   const visibleBuddies = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();

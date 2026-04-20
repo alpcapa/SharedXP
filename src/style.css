@@ -232,6 +232,8 @@ body {
   text-align: center;
   gap: 0;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 }
 
 .sport-icon {
@@ -911,7 +913,7 @@ body {
 }
 
 .explore-page-content {
-  padding-top: 18px;
+  padding-top: 0;
 }
 
 .explore-filters {

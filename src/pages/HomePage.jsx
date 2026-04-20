@@ -335,14 +335,15 @@ const HomePage = ({ currentUser, onLogout }) => {
             <p className="section-sub">All sports. All levels. All people.</p>
             <div className="sports-scroll">
               {sports.map((sport) => (
-                <article
+                <Link
                   key={sport.name}
+                  to={sport.name === "More" ? "/locals" : `/locals?sport=${encodeURIComponent(sport.name)}`}
                   className={`sport-chip${sport.active ? " active" : ""}`}
                 >
                   <span className="sport-icon">{sport.icon}</span>
                   <h3>{sport.name}</h3>
                   <p>{sport.count}</p>
-                </article>
+                </Link>
               ))}
             </div>
           </section>
