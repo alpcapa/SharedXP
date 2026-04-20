@@ -130,6 +130,22 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     setSelectedSport(matchingSport ?? "All");
   }, [searchParams, sportOptions]);
 
+  useEffect(() => {
+    const selectedLocationParam = searchParams.get("location");
+
+    if (!selectedLocationParam) {
+      setSelectedLocation(USER_LOCATION_FILTER);
+      return;
+    }
+
+    const normalizedParam = selectedLocationParam.toLowerCase();
+    const matchingLocation = locationOptions.find(
+      (locationOption) => locationOption.toLowerCase() === normalizedParam
+    );
+
+    setSelectedLocation(matchingLocation ?? USER_LOCATION_FILTER);
+  }, [searchParams, locationOptions]);
+
   const visibleBuddies = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 

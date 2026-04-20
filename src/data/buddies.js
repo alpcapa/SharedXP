@@ -19,6 +19,7 @@ export const buddies = [
     bio: "Love coastal rides & coffee stops ☕",
     bikeAvailable: true,
     price: 30,
+    priceUnit: "per ride",
     rating: 4.9,
     reviewCount: 32,
     image: "https://randomuser.me/api/portraits/men/32.jpg",
@@ -64,6 +65,7 @@ export const buddies = [
     bio: "Court sessions with local tennis tips.",
     bikeAvailable: true,
     price: 35,
+    priceUnit: "per session",
     rating: 5.0,
     reviewCount: 18,
     image: "https://randomuser.me/api/portraits/women/44.jpg",
@@ -73,7 +75,7 @@ export const buddies = [
     level: "Advanced",
     language: "Portuguese, English",
     about:
-      "I host gravel and endurance rides around Sintra and can share tips for local trails.",
+      "I host dynamic tennis sessions in Lisbon, from controlled rallies to match-play with tactical tips.",
     gallery: [
       "https://images.unsplash.com/photo-1529422643029-d4585747aaf2?auto=format&fit=crop&w=600&q=80",
       "https://images.unsplash.com/photo-1511994298241-608e28f14fde?auto=format&fit=crop&w=600&q=80",
@@ -87,12 +89,12 @@ export const buddies = [
       {
         author: "Iris",
         rating: 5,
-        comment: "Amazing guide with tons of local knowledge."
+        comment: "Amazing coach with clear feedback and a super fun tennis session."
       },
       {
         author: "Pedro",
         rating: 5,
-        comment: "Great communication and excellent bike condition."
+        comment: "Great communication and a really strong hitting partner."
       }
     ]
   },
@@ -105,6 +107,7 @@ export const buddies = [
     bio: "Fast intervals and scenic city runs.",
     bikeAvailable: false,
     price: 25,
+    priceUnit: "per session",
     rating: 4.8,
     reviewCount: 27,
     image: "https://randomuser.me/api/portraits/men/55.jpg",
@@ -114,7 +117,7 @@ export const buddies = [
     level: "Advanced",
     language: "Portuguese, English",
     about:
-      "I lead fast-paced group rides around Lisbon and love helping cyclists push their limits.",
+      "I lead city runs and interval sessions along Lisbon routes, adapting the pace to your level and goals.",
     gallery: [
       "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=600&q=80",
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=600&q=80",
@@ -128,12 +131,12 @@ export const buddies = [
       {
         author: "Mia",
         rating: 5,
-        comment: "Super welcoming and found a great court quickly."
+        comment: "Super welcoming and set the perfect running pace for me."
       },
       {
         author: "Tom",
         rating: 4,
-        comment: "Fun match and easy to coordinate."
+        comment: "Great route, good coaching cues, and easy coordination."
       }
     ]
   },
@@ -146,6 +149,7 @@ export const buddies = [
     bio: "Friendly pickup games and shooting drills.",
     bikeAvailable: true,
     price: 28,
+    priceUnit: "per session",
     rating: 4.9,
     reviewCount: 21,
     image: "https://randomuser.me/api/portraits/women/65.jpg",
@@ -155,7 +159,7 @@ export const buddies = [
     level: "Intermediate",
     language: "Portuguese, English",
     about:
-      "I enjoy scenic climbs around Serra de Sintra and love riding at a comfortable pace with good company.",
+      "I organize friendly pickup basketball games and shooting drills focused on fundamentals and confidence.",
     gallery: [
       "https://images.unsplash.com/photo-1622279457486-62dcc4a431d8?auto=format&fit=crop&w=600&q=80",
       "https://images.unsplash.com/photo-1499510318569-0c17cf6d1eb3?auto=format&fit=crop&w=600&q=80",
