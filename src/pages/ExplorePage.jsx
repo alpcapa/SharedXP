@@ -127,7 +127,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
       .map(([locationName]) => locationName);
 
     return [USER_LOCATION_FILTER, ...nearbyLocations];
-  }, [userLocation]);
+  }, [userLocation, buddies]);
   const levelOptions = useMemo(
     () => ["All", ...new Set(buddies.map((buddy) => buddy.level).filter(Boolean))],
     []
