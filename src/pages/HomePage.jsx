@@ -314,7 +314,12 @@ const HomePage = ({ currentUser, onLogout }) => {
                         <span className="sport-pill">{buddy.sport}</span>
                         <p className="local-bio">{buddy.bio}</p>
                         <ul className="local-meta">
-                          <li>🚲 {buddy.bikeAvailable ? "Bike available" : "No bike"}</li>
+                          <li>
+                            🧰{" "}
+                            {buddy.equipmentAvailable ?? buddy.bikeAvailable
+                              ? "Equipment available"
+                              : "Equipment not available"}
+                          </li>
                           <li>🏅 {buddy.level}</li>
                           <li>💶 €{buddy.price} per ride</li>
                         </ul>
