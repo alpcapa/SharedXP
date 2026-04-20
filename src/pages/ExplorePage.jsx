@@ -5,6 +5,7 @@ import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
 
 const DEFAULT_CENTER = { lat: 38.7223, lng: -9.1393 };
+const USER_LOCATION_FILTER = "Your location";
 
 const SPORT_ICONS = {
   Cycling: "🚲",
@@ -68,6 +69,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const [userLocation, setUserLocation] = useState(DEFAULT_CENTER);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSport, setSelectedSport] = useState("All");
+  const [selectedLocation, setSelectedLocation] = useState(USER_LOCATION_FILTER);
   const [selectedGender, setSelectedGender] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All");
 
@@ -100,6 +102,10 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   );
   const genderOptions = useMemo(
     () => ["All", ...new Set(buddies.map((buddy) => buddy.gender).filter(Boolean))],
+    []
+  );
+  const locationOptions = useMemo(
+    () => [USER_LOCATION_FILTER, ...new Set(buddies.map((buddy) => buddy.location).filter(Boolean))],
     []
   );
   const levelOptions = useMemo(
@@ -142,13 +148,15 @@ const ExplorePage = ({ currentUser, onLogout }) => {
             .filter(Boolean)
             .some((value) => value.toLowerCase().includes(normalizedQuery));
         const matchesSport = selectedSport === "All" || buddy.sport === selectedSport;
+        const matchesLocation =
+          selectedLocation === USER_LOCATION_FILTER || buddy.location === selectedLocation;
         const matchesGender = selectedGender === "All" || buddy.gender === selectedGender;
         const matchesLevel = selectedLevel === "All" || buddy.level === selectedLevel;
 
-        return matchesQuery && matchesSport && matchesGender && matchesLevel;
+        return matchesQuery && matchesSport && matchesLocation && matchesGender && matchesLevel;
       })
       .sort((leftBuddy, rightBuddy) => leftBuddy.distanceKm - rightBuddy.distanceKm);
-  }, [searchQuery, selectedSport, selectedGender, selectedLevel, userLocation]);
+  }, [searchQuery, selectedSport, selectedLocation, selectedGender, selectedLevel, userLocation]);
 
   const mapPoints = useMemo(() => {
     const points = [userLocation, ...visibleBuddies.map((buddy) => buddy.coordinates)];
@@ -192,6 +200,16 @@ const ExplorePage = ({ currentUser, onLogout }) => {
               {sportOptions.map((sportOption) => (
                 <option key={sportOption} value={sportOption}>
                   Sport: {sportOption}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedLocation}
+              onChange={(event) => setSelectedLocation(event.target.value)}
+            >
+              {locationOptions.map((locationOption) => (
+                <option key={locationOption} value={locationOption}>
+                  Location: {locationOption}
                 </option>
               ))}
             </select>
