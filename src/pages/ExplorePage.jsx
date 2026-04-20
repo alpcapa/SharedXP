@@ -123,7 +123,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     });
 
     const nearbyLocations = [...nearestDistanceByLocation.entries()]
-      .sort((leftLocation, rightLocation) => leftLocation[1] - rightLocation[1])
+      .sort((entryA, entryB) => entryA[1] - entryB[1])
       .map(([locationName]) => locationName);
 
     return [USER_LOCATION_FILTER, ...nearbyLocations];
