@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
+import FieldPage from "./pages/FieldPage";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import HostPage from "./pages/HostPage";
 import HistoryPage from "./pages/HistoryPage";
@@ -37,6 +38,7 @@ function App() {
       <Route path="/history" element={<HistoryPage {...authActions} />} />
       <Route path="/follow" element={<FollowPage {...authActions} />} />
       <Route path="/help" element={<HelpPage {...authActions} />} />
+      <Route path="/the-field" element={<FieldPage {...authActions} />} />
       <Route path="/host-history" element={<Navigate to="/history" replace />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditionsPage {...authActions} />} />
       <Route path="/legal" element={<LegalPage {...authActions} />} />

@@ -2,6 +2,200 @@
   box-sizing: border-box;
 }
 
+/* ── The Field page ───────────────────────── */
+.field-page {
+  min-height: 100vh;
+  background: #f5f5f2;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.field-page .site-header {
+  margin: 10px;
+}
+
+.field-hero {
+  max-width: 1080px;
+  margin: 6px auto 0;
+  padding: 18px 20px 10px;
+}
+
+.field-hero h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.1;
+}
+
+.field-hero p {
+  margin: 10px 0 0;
+  color: #596164;
+  font-size: 17px;
+}
+
+.field-main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 10px 20px 26px;
+}
+
+.field-city-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.field-city-pill {
+  border: 0;
+  border-radius: 999px;
+  background: #f0f0ec;
+  color: #3a3f2b;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.field-city-pill.active {
+  background: #6ca43b;
+  color: #fff;
+  font-weight: 700;
+}
+
+.field-feed {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.field-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e8e9e4;
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 16px;
+}
+
+.field-card-open-slot {
+  background: #f0f7e8;
+  border: 1px solid #c3e0a0;
+}
+
+.field-open-slot-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: #36521f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.field-host-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.field-host-row p {
+  margin: 0;
+}
+
+.field-host-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #d7dccf;
+}
+
+.field-host-name {
+  font-weight: 700;
+}
+
+.field-host-city {
+  color: #596164;
+}
+
+.field-post-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.field-caption {
+  margin: 12px 0 0;
+  color: #273033;
+  line-height: 1.5;
+}
+
+.field-meta {
+  margin: 10px 0 0;
+  color: #596164;
+  font-size: 13px;
+}
+
+.field-slot-details {
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+  color: #273033;
+}
+
+.field-slot-details p {
+  margin: 0;
+}
+
+.field-view-host-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  text-decoration: none;
+  border: none;
+  border-radius: 12px;
+  background: #97ca3f;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 14px;
+}
+
+.field-empty-state {
+  text-align: center;
+  color: #596164;
+  padding: 32px 16px;
+}
+
+/* ── Review breakdown (ProfilePage) ──────── */
+.review-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 4px 0 8px;
+}
+
+.review-breakdown span {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  color: #596164;
+}
+
+.review-breakdown span + span::before {
+  content: "·";
+  margin-right: 12px;
+  color: #596164;
+}
+
+@media (min-width: 768px) {
+  .field-feed {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 :root {
   --brand-font-size: 39px;
   --hero-min-height: min(690px, 82vh);
