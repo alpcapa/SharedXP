@@ -552,6 +552,17 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                     <span className={`history-role-stamp role-${item.role}`}>
                       {item.role === "attended" ? "Attended" : "Hosted"}
                     </span>
+                    {isAttendee && (
+                      <div className="history-photo-summary">
+                        <div className="history-event-title-row">
+                          <h2>{item.eventName}</h2>
+                          <span className="history-event-date">{item.eventDateLabel}</span>
+                        </div>
+                        <p className="history-host-line">
+                          Hosted by <strong>{item.hostName}</strong>
+                        </p>
+                      </div>
+                    )}
                     <button
                       type="button"
                       className="history-photo-gallery-link"
@@ -576,22 +587,13 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                     </span>
                     </div>
                     <div className="history-card-body">
-                      <div className="history-card-head">
-                        <div>
-                          <div className="history-event-title-row">
-                            <h2>{item.eventName}</h2>
-                            <span className="history-event-date">{item.eventDateLabel}</span>
-                          </div>
-                          {isAttendee ? (
-                            <p className="history-host-line">
-                              Hosted by <strong>{item.hostName}</strong>
-                              {item.rating > 0 && (
-                                <span className="history-stars" aria-label={`Your rating: ${item.rating} stars`}>
-                                  {formatStarRating(item.rating)}
-                                </span>
-                              )}
-                            </p>
-                          ) : (
+                      <div className={`history-card-head${isAttendee ? " history-card-head-attendee" : ""}`}>
+                        {!isAttendee && (
+                          <div>
+                            <div className="history-event-title-row">
+                              <h2>{item.eventName}</h2>
+                              <span className="history-event-date">{item.eventDateLabel}</span>
+                            </div>
                             <div className="host-history-participant">
                               <img
                                 className="participant-photo"
@@ -611,17 +613,24 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                                 >
                                   (gave you {formatStarRating(item.attendeeRating)})
                                 </span>
-                              )}
+                                )}
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                         <span className="sport-pill">{item.sport}</span>
                       </div>
 
                       <div className="history-edit-grid">
                         {isAttendee ? (
                           <div className="history-host-rating-section">
-                            <span className="history-host-rating-title">Rate Host</span>
+                            <div className="history-host-rating-head">
+                              <span className="history-host-rating-title">Rate Host</span>
+                              {item.rating > 0 && (
+                                <span className="history-stars" aria-label={`Your rating: ${item.rating} stars`}>
+                                  {formatStarRating(item.rating)}
+                                </span>
+                              )}
+                            </div>
                             <div className="history-host-rating-grid">
                               {HOST_RATING_FIELDS.map((ratingField) => (
                                 <label className="history-field" key={ratingField.key}>

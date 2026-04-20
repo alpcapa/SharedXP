@@ -1824,6 +1824,33 @@ body {
   pointer-events: none;
 }
 
+.history-photo-summary {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.74), rgba(17, 24, 39, 0.42));
+  color: #f9fafb;
+  pointer-events: none;
+}
+
+.history-photo-summary h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #fff;
+}
+
+.history-photo-summary .history-event-date {
+  color: #e5e7eb;
+}
+
+.history-photo-summary .history-host-line {
+  margin-top: 6px;
+  color: #f3f4f6;
+}
+
 .role-attended {
   background: rgba(220, 234, 184, 0.92);
   color: #476526;
@@ -1846,6 +1873,10 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+}
+
+.history-card-head-attendee {
+  justify-content: flex-end;
 }
 
 .history-card-head h2 {
@@ -1934,6 +1965,13 @@ body {
 
 .history-host-rating-section {
   display: grid;
+  gap: 8px;
+}
+
+.history-host-rating-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
