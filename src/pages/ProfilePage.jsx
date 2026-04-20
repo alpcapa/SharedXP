@@ -31,7 +31,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
   const recommendations = buddies.filter((item) => item.id !== buddy.id).slice(0, 2);
   const hostDisplayName = buddy.fullName ?? buddy.name;
-  const perLabel = buddy.sport === "Cycling" ? "per ride" : "per session";
+  const perLabel = buddy.priceUnit ?? (buddy.sport === "Cycling" ? "per ride" : "per session");
   const hostSports = Array.isArray(buddy.sports)
     ? buddy.sports
     : buddy.sport

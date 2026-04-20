@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
@@ -72,6 +72,7 @@ const LockIcon = () => (
 );
 
 const HomePage = ({ currentUser, onLogout }) => {
+  const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState("Cycling");
   const [selectedLocation, setSelectedLocation] = useState("Lisbon, Portugal");
   const [sportQuery, setSportQuery] = useState("");
@@ -114,6 +115,25 @@ const HomePage = ({ currentUser, onLogout }) => {
       .filter((location) => location.toLowerCase().includes(locationQuery.toLowerCase()))
       .slice(0, 5);
   }, [locationQuery]);
+
+  const handleFindBuddies = () => {
+    const params = new URLSearchParams();
+
+    if (selectedSport) {
+      params.set("sport", selectedSport);
+    }
+    if (selectedLocation) {
+      params.set("location", selectedLocation);
+    }
+    if (dateFrom) {
+      params.set("dateFrom", dateFrom);
+    }
+    if (dateTo) {
+      params.set("dateTo", dateTo);
+    }
+
+    navigate(`/locals?${params.toString()}`);
+  };
 
   return (
     <div className="home-page">
@@ -268,7 +288,12 @@ const HomePage = ({ currentUser, onLogout }) => {
                   />
                 </div>
               </div>
-              <button type="button" className="find-button" aria-label="Find buddies">
+              <button
+                type="button"
+                className="find-button"
+                aria-label="Find buddies"
+                onClick={handleFindBuddies}
+              >
                 Find Buddies
               </button>
             </div>
@@ -321,7 +346,10 @@ const HomePage = ({ currentUser, onLogout }) => {
                               : "Equipment not available"}
                           </li>
                           <li>🏅 {buddy.level}</li>
-                          <li>💶 €{buddy.price} per ride</li>
+                          <li>
+                            💶 €{buddy.price}{" "}
+                            {buddy.priceUnit ?? (buddy.sport === "Cycling" ? "per ride" : "per session")}
+                          </li>
                         </ul>
                       </div>
                     </article>
