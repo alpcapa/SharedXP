@@ -196,13 +196,6 @@ const ExplorePage = ({ currentUser, onLogout }) => {
               onChange={(event) => setSearchQuery(event.target.value)}
               aria-label="Search buddies"
             />
-            <select value={selectedSport} onChange={(event) => setSelectedSport(event.target.value)}>
-              {sportOptions.map((sportOption) => (
-                <option key={sportOption} value={sportOption}>
-                  Sport: {sportOption}
-                </option>
-              ))}
-            </select>
             <select
               value={selectedLocation}
               onChange={(event) => setSelectedLocation(event.target.value)}
@@ -210,6 +203,13 @@ const ExplorePage = ({ currentUser, onLogout }) => {
               {locationOptions.map((locationOption) => (
                 <option key={locationOption} value={locationOption}>
                   Location: {locationOption}
+                </option>
+              ))}
+            </select>
+            <select value={selectedSport} onChange={(event) => setSelectedSport(event.target.value)}>
+              {sportOptions.map((sportOption) => (
+                <option key={sportOption} value={sportOption}>
+                  Sport: {sportOption}
                 </option>
               ))}
             </select>
