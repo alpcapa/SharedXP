@@ -153,9 +153,10 @@ const ExplorePage = ({ currentUser, onLogout }) => {
           selectedLocation === USER_LOCATION_FILTER || buddy.location === selectedLocation;
         const matchesGender = selectedGender === "All" || buddy.gender === selectedGender;
         const matchesLevel = selectedLevel === "All" || buddy.level === selectedLevel;
+        const hasEquipment = buddy.equipmentAvailable ?? buddy.bikeAvailable;
         const matchesEquipment =
           selectedEquipment === "All" ||
-          (selectedEquipment === "Yes" ? Boolean(buddy.bikeAvailable) : !buddy.bikeAvailable);
+          (selectedEquipment === "Yes" ? Boolean(hasEquipment) : !hasEquipment);
 
         return (
           matchesQuery &&
