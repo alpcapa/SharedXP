@@ -1732,6 +1732,10 @@ body {
   background: #fafaf9;
 }
 
+.history-card-attendee .history-attendee-summary {
+  grid-column: 1 / -1;
+}
+
 .history-card-photo-wrap {
   position: relative;
   width: 100%;
@@ -1822,6 +1826,15 @@ body {
   border-width: 2px;
   border-style: solid;
   pointer-events: none;
+}
+
+.history-attendee-summary h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.history-attendee-summary .history-host-line {
+  margin-top: 6px;
 }
 
 .role-attended {
@@ -1934,6 +1947,19 @@ body {
 
 .history-host-rating-section {
   display: grid;
+  gap: 8px;
+}
+
+.history-host-rating-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.history-host-rating-title-wrap {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
