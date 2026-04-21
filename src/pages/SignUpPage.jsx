@@ -62,6 +62,22 @@ const normalizeBirthdayInput = (value) =>
     .replace(/\s+/g, "")
     .trim();
 
+const formatBirthdayFromDigits = (value) => {
+  const birthdayDigits = String(value ?? "")
+    .replace(/\D/g, "")
+    .slice(0, 8);
+
+  if (birthdayDigits.length <= 2) {
+    return birthdayDigits;
+  }
+
+  if (birthdayDigits.length <= 4) {
+    return `${birthdayDigits.slice(0, 2)}/${birthdayDigits.slice(2)}`;
+  }
+
+  return `${birthdayDigits.slice(0, 2)}/${birthdayDigits.slice(2, 4)}/${birthdayDigits.slice(4)}`;
+};
+
 const isValidBirthday = (value) => {
   if (!BIRTHDAY_PATTERN.test(value)) {
     return false;
@@ -217,9 +233,11 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
 
   const onInputChange = (event) => {
     const { name, value, type, checked } = event.target;
+    const nextValue =
+      name === "birthday" && type !== "checkbox" ? formatBirthdayFromDigits(value) : value;
     setFormValues((previousValues) => ({
       ...previousValues,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === "checkbox" ? checked : nextValue
     }));
   };
 
@@ -695,44 +713,44 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 <label htmlFor="signup-language-0">Language</label>
                 <div className="auth-language-row">
                   {LANGUAGE_SLOT_LABELS.map((languageSlotLabel, languageIndex) => (
-                    <input
+                    <select
                       key={`signup-language-${languageIndex}`}
                       id={`signup-language-${languageIndex}`}
-                      list="signup-language-options"
-                      placeholder={languageSlotLabel}
                       aria-label={`Language ${languageSlotLabel}`}
                       value={formValues.languages[languageIndex] ?? ""}
                       onChange={(event) => onLanguageChange(languageIndex, event.target.value)}
                       required={languageIndex === 0}
-                    />
+                    >
+                      <option value="">{languageSlotLabel}</option>
+                      {LANGUAGE_OPTIONS.map((languageOption) => (
+                        <option key={languageOption} value={languageOption}>
+                          {languageOption}
+                        </option>
+                      ))}
+                    </select>
                   ))}
                 </div>
-                <datalist id="signup-language-options">
-                  {LANGUAGE_OPTIONS.map((languageOption) => (
-                    <option key={languageOption} value={languageOption} />
-                  ))}
-                </datalist>
 
                 <label htmlFor="signup-sport-0">Sports</label>
                 <div className="auth-language-row">
                   {SPORT_SLOT_LABELS.map((sportSlotLabel, sportIndex) => (
-                    <input
+                    <select
                       key={`signup-sport-${sportIndex}`}
                       id={`signup-sport-${sportIndex}`}
-                      list="signup-sport-options"
-                      placeholder={sportSlotLabel}
                       aria-label={`Sport ${sportSlotLabel}`}
                       value={formValues.sports[sportIndex] ?? ""}
                       onChange={(event) => onSportChange(sportIndex, event.target.value)}
                       required={sportIndex === 0}
-                    />
+                    >
+                      <option value="">{sportSlotLabel}</option>
+                      {SPORT_OPTIONS.map((sportOption) => (
+                        <option key={sportOption} value={sportOption}>
+                          {sportOption}
+                        </option>
+                      ))}
+                    </select>
                   ))}
                 </div>
-                <datalist id="signup-sport-options">
-                  {SPORT_OPTIONS.map((sportOption) => (
-                    <option key={sportOption} value={sportOption} />
-                  ))}
-                </datalist>
 
                 <div className="form-consent-group">
                   <label className="form-consent-option" htmlFor="agreeTermsAndConditions">

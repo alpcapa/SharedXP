@@ -1319,7 +1319,8 @@ body {
 }
 
 .auth-form input,
-.auth-form textarea {
+.auth-form textarea,
+.auth-form select {
   border: 1px solid #d1d5db;
   border-radius: 9px;
   padding: 10px 12px;
