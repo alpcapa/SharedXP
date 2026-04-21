@@ -20,6 +20,7 @@ import SafetyAndRiskPolicyPage from "./pages/SafetyAndRiskPolicyPage";
 import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
 import useAuth from "./hooks/useAuth";
 import NotFoundPage from "./pages/NotFoundPage";
+import AboutPage from "./pages/AboutPage";
 
 function App() {
   const authActions = useAuth();
@@ -53,6 +54,7 @@ function App() {
         element={<ContentAndIntellectualPropertyPolicyPage {...authActions} />}
       />
       <Route path="/disclaimers" element={<DisclaimersPage {...authActions} />} />
+      <Route path="/about" element={<AboutPage {...authActions} />} />
       <Route path="*" element={<NotFoundPage {...authActions} />} />
     </Routes>
   );
