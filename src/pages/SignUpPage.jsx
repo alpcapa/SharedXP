@@ -721,7 +721,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                       onChange={(event) => onLanguageChange(languageIndex, event.target.value)}
                       required={languageIndex === 0}
                     >
-                      <option value="">{languageSlotLabel}</option>
+                      <option value="" disabled>
+                        {languageSlotLabel}
+                      </option>
                       {LANGUAGE_OPTIONS.map((languageOption) => (
                         <option key={languageOption} value={languageOption}>
                           {languageOption}
@@ -742,7 +744,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                       onChange={(event) => onSportChange(sportIndex, event.target.value)}
                       required={sportIndex === 0}
                     >
-                      <option value="">{sportSlotLabel}</option>
+                      <option value="" disabled>
+                        {sportSlotLabel}
+                      </option>
                       {SPORT_OPTIONS.map((sportOption) => (
                         <option key={sportOption} value={sportOption}>
                           {sportOption}
