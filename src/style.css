@@ -770,6 +770,10 @@ body {
   cursor: pointer;
 }
 
+.site-nav-link-paused {
+  color: #b91c1c;
+}
+
 .auth-actions {
   display: flex;
   gap: 12px;
@@ -858,6 +862,10 @@ body {
 
 .user-dropdown-link:hover {
   background: #f3f4f6;
+}
+
+.user-dropdown-link-paused {
+  color: #b91c1c;
 }
 
 .user-dropdown-logout {
@@ -1311,7 +1319,8 @@ body {
 }
 
 .auth-form input,
-.auth-form textarea {
+.auth-form textarea,
+.auth-form select {
   border: 1px solid #d1d5db;
   border-radius: 9px;
   padding: 10px 12px;
@@ -1612,6 +1621,68 @@ body {
   width: min(920px, 100%);
 }
 
+.host-settings-top-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.host-settings-title-paused {
+  color: #b91c1c;
+}
+
+.hosting-pause-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+}
+
+.hosting-pause-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.hosting-pause-switch {
+  position: relative;
+  width: 72px;
+  height: 44px;
+  border-radius: 999px;
+  background: #d1d5db;
+  transition: background-color 0.2s ease;
+}
+
+.hosting-pause-switch::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+}
+
+.hosting-pause-toggle input:checked + .hosting-pause-switch {
+  background: #16a34a;
+}
+
+.hosting-pause-toggle input:checked + .hosting-pause-switch::after {
+  transform: translateX(28px);
+}
+
+.hosting-pause-toggle input:focus-visible + .hosting-pause-switch {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
 .host-onboarding-form {
   display: grid;
   gap: 14px;
@@ -1734,6 +1805,13 @@ body {
   padding: 6px 10px;
   background: #fff;
   font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .host-settings-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .host-equipment-details:disabled {
