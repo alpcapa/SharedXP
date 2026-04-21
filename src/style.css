@@ -726,7 +726,8 @@ body {
   padding: 10px;
   background-image:
     linear-gradient(90deg, rgba(244, 243, 235, 0.97) 0%, rgba(244, 243, 235, 0.7) 31%, rgba(244, 243, 235, 0.2) 56%, rgba(244, 243, 235, 0.05) 100%),
-    url("https://github.com/user-attachments/assets/28ee797c-d0b8-45ba-b48b-f80493c09984");
+    url("https://github.com/user-attachments/assets/28ee797c-d0b8-45ba-b48b-f80493c09984"),
+    url("./assets/home-hero-cycling.svg");
   background-size: cover;
   background-position: center;
 }
