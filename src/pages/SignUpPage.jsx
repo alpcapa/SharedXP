@@ -57,13 +57,13 @@ const BIRTHDAY_PATTERN_SOURCE = "(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}";
 const BIRTHDAY_PATTERN = new RegExp(`^${BIRTHDAY_PATTERN_SOURCE}$`);
 
 const normalizeBirthdayInput = (value) =>
-  String(value || "")
+  String(value ?? "")
     .replace(/\s*\/\s*/g, "/")
     .replace(/\s+/g, "")
     .trim();
 
 const formatBirthdayFromDigits = (value) => {
-  const birthdayDigits = String(value || "")
+  const birthdayDigits = String(value ?? "")
     .replace(/\D/g, "")
     .slice(0, 8);
 
