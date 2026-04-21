@@ -507,9 +507,8 @@ body {
   min-height: var(--hero-min-height);
   padding: 10px;
   background-image:
-    linear-gradient(90deg, rgba(244, 243, 235, 0.97) 0%, rgba(244, 243, 235, 0.7) 31%, rgba(244, 243, 235, 0.2) 56%, rgba(244, 243, 235, 0.05) 100%),
-    url("https://github.com/user-attachments/assets/71180c4f-7047-462a-9166-73cc3ef563ad"),
-    url("./assets/home-hero-cycling.svg");
+    linear-gradient(90deg, rgba(244, 243, 235, 0.97) 0%, rgba(244, 243, 235, 0.85) 45%, rgba(244, 243, 235, 0.4) 70%, rgba(244, 243, 235, 0.1) 100%),
+    url("./assets/BEEE9932-9032-4B9C-8E1B-577FFB6173E8.png");
   background-size: cover;
   background-position: center;
 }
