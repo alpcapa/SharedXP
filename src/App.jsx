@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
 import FieldPage from "./pages/FieldPage";
-import HowItWorksPage from "./pages/HowItWorksPage";
 import HostPage from "./pages/HostPage";
 import HistoryPage from "./pages/HistoryPage";
 import FollowPage from "./pages/FollowPage";
@@ -29,7 +28,7 @@ function App() {
     <Routes>
       <Route path="/" element={<HomePage {...authActions} />} />
       <Route path="/locals" element={<ExplorePage {...authActions} />} />
-      <Route path="/how-it-works" element={<HowItWorksPage {...authActions} />} />
+      <Route path="/how-it-works" element={<Navigate to="/about" replace />} />
       <Route path="/buddy/:buddyId" element={<ProfilePage {...authActions} />} />
       <Route path="/signup" element={<SignUpPage {...authActions} />} />
       <Route path="/login" element={<LoginPage {...authActions} />} />

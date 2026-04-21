@@ -359,224 +359,6 @@ body {
   margin-bottom: -4px;
 }
 
-/* ── Dedicated how-it-works page ───────────────── */
-.how-it-works-hero {
-  min-height: 380px;
-}
-
-.how-it-works-intro {
-  width: min(900px, 96%);
-  padding: 46px 18px 24px;
-}
-
-.how-it-works-intro h1 {
-  margin: 0;
-  font-size: clamp(38px, 5vw, 64px);
-  line-height: 1.06;
-  letter-spacing: -1px;
-}
-
-.how-it-works-intro p {
-  margin: 14px 0 0;
-  font-size: clamp(18px, 2.2vw, 30px);
-  color: #2d3033;
-}
-
-.how-flow-section,
-.how-friendly-note {
-  margin-top: 20px;
-}
-
-.how-what-section {
-  margin-top: 20px;
-}
-
-.how-what-section .section-title {
-  font-size: clamp(26px, 2.8vw, 38px);
-  margin-bottom: 16px;
-}
-
-.how-what-description {
-  border: 1px solid #e6e7e2;
-  border-radius: 14px;
-  background: #fff;
-  padding: 20px 24px;
-}
-
-.how-what-description p {
-  margin: 0;
-  font-size: clamp(16px, 1.6vw, 20px);
-  line-height: 1.7;
-  color: #2d3033;
-}
-
-.how-what-description p + p {
-  margin-top: 14px;
-}
-
-.how-what-quote {
-  margin: 16px 0 0;
-  padding: 24px 28px;
-  border: 2px solid #5f9032;
-  background: #f7faf2;
-  border-radius: 14px;
-}
-
-.how-what-quote p {
-  margin: 0 0 14px;
-  font-size: clamp(16px, 1.6vw, 20px);
-  line-height: 1.7;
-  color: #2d3033;
-  font-style: italic;
-}
-
-.how-what-attribution {
-  display: block;
-  text-align: right;
-  font-size: 15px;
-  font-weight: 700;
-  color: #5f9032;
-  font-style: normal;
-}
-
-.how-flow-section .section-title,
-.how-testimonials .section-title {
-  font-size: clamp(30px, 3vw, 42px);
-}
-
-.how-steps-list {
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 12px;
-}
-
-.how-step-item {
-  border: 1px solid #e6e7e2;
-  border-radius: 14px;
-  background: #fff;
-  padding: 18px 20px;
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.how-step-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #edf5df;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 21px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.how-step-number {
-  color: #5f9032;
-  font-weight: 800;
-  font-size: 28px;
-  line-height: 1.1;
-}
-
-.how-step-item p {
-  margin: 2px 0 0;
-  color: #374151;
-  font-size: 24px;
-  line-height: 1.4;
-}
-
-.how-friendly-note {
-  border: 1px solid #d9e4c5;
-  border-radius: 14px;
-  background: #ecf1e7;
-  padding: 18px;
-}
-
-.how-friendly-note p {
-  margin: 10px 0 0;
-  font-size: 17px;
-  line-height: 1.5;
-  color: #3c4743;
-}
-
-.how-testimonials {
-  margin-top: 36px;
-}
-
-.testimonial-page-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid #c7d9a6;
-  background: #edf5df;
-  color: #345220;
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.testimonial-list {
-  margin-top: 16px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.testimonial-paging {
-  margin-top: 14px;
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.testimonial-card {
-  margin: 0;
-  background: #fff;
-  border: 1px solid #e6e7e2;
-  border-radius: 12px;
-  padding: 14px;
-}
-
-.testimonial-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.testimonial-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.testimonial-meta h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: #202626;
-}
-
-.testimonial-meta p {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: #6b7478;
-}
-
-.testimonial-quote {
-  margin: 12px 0 0;
-  padding: 0;
-  color: #3f4a45;
-  font-size: 16px;
-  font-style: italic;
-  line-height: 1.45;
-}
-
 .site-header {
   display: flex;
   align-items: center;
@@ -2666,17 +2448,12 @@ body {
   .locals-grid,
   .sports-scroll,
   .how-grid,
-  .testimonial-list,
   .follow-grid {
     grid-template-columns: 1fr;
   }
 
   .auth-social-grid {
     grid-template-columns: 1fr;
-  }
-
-  .how-step-item p {
-    font-size: 20px;
   }
 
   .sport-chip {
@@ -3219,4 +2996,134 @@ body {
   .field-feed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* ── About page — steps section ──────────── */
+.about-steps {
+  max-width: 720px;
+  margin: 64px auto 0;
+  padding: 0 20px;
+}
+
+.about-steps > h2 {
+  margin: 8px 0 24px;
+  font-size: clamp(22px, 2.5vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.about-steps-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.about-step-item {
+  border: 1px solid #e6e7e2;
+  border-radius: 14px;
+  background: #fff;
+  padding: 18px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.about-step-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #edf5df;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.about-step-number {
+  color: #5f9032;
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+
+.about-step-item p {
+  margin: 4px 0 0;
+  color: #374151;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* ── About page — testimonials section ───── */
+.about-testimonials {
+  max-width: 1080px;
+  margin: 64px auto 0;
+  padding: 0 20px;
+}
+
+.about-testimonials > h2 {
+  margin: 8px 0 24px;
+  font-size: clamp(22px, 2.5vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.about-testimonials-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .about-testimonials-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.about-testimonial-card {
+  margin: 0;
+  background: #fff;
+  border: 1px solid #e8e9e4;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.about-testimonial-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.about-testimonial-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.about-testimonial-meta h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #202626;
+}
+
+.about-testimonial-meta p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #6b7478;
+}
+
+.about-testimonial-quote {
+  margin: 14px 0 0;
+  padding: 0;
+  color: #3f4a45;
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.55;
 }

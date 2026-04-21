@@ -434,7 +434,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                     You pay when you book. We hold the payment and release it after the
                     experience.
                   </p>
-                  <Link to="/how-it-works" className="learn-more-link">
+                  <Link to="/about" className="learn-more-link">
                     Learn more
                   </Link>
                 </div>
