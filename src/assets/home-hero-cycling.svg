@@ -1,0 +1,58 @@
+<svg width="1800" height="920" viewBox="0 0 1800 920" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cyclists riding by the river at sunset">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7efe0"/>
+      <stop offset="0.45" stop-color="#f2d6b8"/>
+      <stop offset="1" stop-color="#b9b1ab"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8fa2b2"/>
+      <stop offset="1" stop-color="#b9c4cf"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b5a396"/>
+      <stop offset="0.55" stop-color="#8a7467"/>
+      <stop offset="1" stop-color="#5f5048"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(620 370) rotate(90) scale(200 250)">
+      <stop offset="0" stop-color="#fff8e4" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#fff8e4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1800" height="920" fill="url(#sky)"/>
+  <ellipse cx="620" cy="390" rx="340" ry="220" fill="url(#sun)"/>
+
+  <path d="M860 360H1800V550H930C890 520 875 470 860 360Z" fill="url(#water)" opacity="0.92"/>
+  <path d="M910 350C1060 260 1280 270 1510 265C1650 262 1730 250 1800 218V478H940C922 443 915 401 910 350Z" fill="#7c7976" opacity="0.38"/>
+
+  <rect x="880" y="260" width="8" height="170" fill="#6a6058" opacity="0.8"/>
+  <rect x="1280" y="250" width="10" height="190" fill="#6a6058" opacity="0.8"/>
+  <path d="M884 286C972 314 1092 324 1284 300" stroke="#7f746b" stroke-width="9" stroke-linecap="round" opacity="0.8"/>
+
+  <path d="M430 920L1180 420L1800 500V920H430Z" fill="url(#road)"/>
+  <path d="M890 920L1220 462" stroke="#d2cbc5" stroke-opacity="0.65" stroke-width="13" stroke-dasharray="26 20"/>
+  <path d="M1180 425L1800 505" stroke="#e8ddd3" stroke-opacity="0.35" stroke-width="8"/>
+
+  <g opacity="0.9" fill="#2f3139" stroke="#2f3139" stroke-width="4" stroke-linecap="round">
+    <circle cx="1260" cy="610" r="34" fill="none"/>
+    <circle cx="1350" cy="620" r="34" fill="none"/>
+    <path d="M1260 610L1308 578L1350 620M1308 578L1322 547M1322 547L1346 566"/>
+    <circle cx="1330" cy="520" r="18" fill="#1f2227" stroke="none"/>
+    <path d="M1328 539L1316 576"/>
+  </g>
+
+  <g opacity="0.62" fill="#3a3d45" stroke="#3a3d45" stroke-width="3.3" stroke-linecap="round">
+    <circle cx="1110" cy="560" r="23" fill="none"/>
+    <circle cx="1169" cy="565" r="23" fill="none"/>
+    <path d="M1110 560L1138 538L1169 565M1138 538L1148 520"/>
+    <circle cx="1146" cy="503" r="12" fill="#2b2d32" stroke="none"/>
+  </g>
+
+  <g opacity="0.48" fill="#4b4e55" stroke="#4b4e55" stroke-width="2.7" stroke-linecap="round">
+    <circle cx="1010" cy="520" r="18" fill="none"/>
+    <circle cx="1057" cy="524" r="18" fill="none"/>
+    <path d="M1010 520L1034 504L1057 524M1034 504L1042 490"/>
+    <circle cx="1040" cy="477" r="10" fill="#393b40" stroke="none"/>
+  </g>
+</svg>
