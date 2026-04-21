@@ -16,6 +16,28 @@ const getUserFieldPosts = () => {
   }
 };
 
+const toSafeImageUrl = (value) => {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    return "";
+  }
+
+  if (text.startsWith("data:image/") || text.startsWith("blob:") || text.startsWith("/")) {
+    return text;
+  }
+
+  try {
+    const parsed = new URL(text, window.location.origin);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return text;
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+};
+
 const getRelativePostedLabel = (postedAt) => {
   const postDate = new Date(postedAt);
 
@@ -42,7 +64,7 @@ const getRelativePostedLabel = (postedAt) => {
 
 const FieldPage = ({ currentUser, onLogout }) => {
   const [selectedCity, setSelectedCity] = useState("All");
-  const [userPosts, setUserPosts] = useState(() => getUserFieldPosts());
+  const [userPosts] = useState(() => getUserFieldPosts());
   const [carouselIndex, setCarouselIndex] = useState({});
 
   const getCarouselIndex = (postId) => carouselIndex[postId] ?? 0;
@@ -102,7 +124,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
             {visiblePosts.map((post) => (
               <article key={post.id} className="field-card">
                 <div className="field-host-row">
-                  <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                  <img src={toSafeImageUrl(post.hostPhoto)} alt={post.hostName} className="field-host-avatar" />
                   <div>
                     <p>
                       <span className="field-host-name">{post.hostName}</span>
@@ -112,11 +134,12 @@ const FieldPage = ({ currentUser, onLogout }) => {
                   </div>
                 </div>
                 {(() => {
-                  const photos = Array.isArray(post.photos) && post.photos.length > 0
+                  const photoCandidates = Array.isArray(post.photos) && post.photos.length > 0
                     ? post.photos
                     : post.photo
                       ? [post.photo]
                       : [];
+                  const photos = photoCandidates.map(toSafeImageUrl).filter(Boolean);
                   if (photos.length === 0) return null;
                   const idx = getCarouselIndex(post.id);
                   return (
