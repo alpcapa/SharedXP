@@ -3,7 +3,18 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { fieldPosts } from "../data/fieldPosts";
 
+const FIELD_POSTS_STORAGE_KEY = "sharedxp-field-posts";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const getUserFieldPosts = () => {
+  try {
+    const raw = localStorage.getItem(FIELD_POSTS_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
 
 const getRelativePostedLabel = (postedAt) => {
   const postDate = new Date(postedAt);
@@ -31,21 +42,34 @@ const getRelativePostedLabel = (postedAt) => {
 
 const FieldPage = ({ currentUser, onLogout }) => {
   const [selectedCity, setSelectedCity] = useState("All");
+  const [userPosts, setUserPosts] = useState(() => getUserFieldPosts());
+  const [carouselIndex, setCarouselIndex] = useState({});
+
+  const getCarouselIndex = (postId) => carouselIndex[postId] ?? 0;
+
+  const shiftCarousel = (postId, photos, step) => {
+    setCarouselIndex((prev) => {
+      const current = prev[postId] ?? 0;
+      const next = (current + step + photos.length) % photos.length;
+      return { ...prev, [postId]: next };
+    });
+  };
 
   const cityOptions = useMemo(() => {
-    const sortedCities = [...new Set(fieldPosts.map((post) => post.city).filter(Boolean))].sort();
+    const allPosts = [...fieldPosts, ...userPosts];
+    const sortedCities = [...new Set(allPosts.map((post) => post.city).filter(Boolean))].sort();
     return ["All", ...sortedCities];
-  }, []);
+  }, [userPosts]);
 
   const visiblePosts = useMemo(
     () =>
-      fieldPosts
+      [...fieldPosts, ...userPosts]
         .filter((post) => selectedCity === "All" || post.city === selectedCity)
         .sort(
           (leftPost, rightPost) =>
             new Date(rightPost.postedAt).getTime() - new Date(leftPost.postedAt).getTime()
         ),
-    [selectedCity]
+    [selectedCity, userPosts]
   );
 
   return (
@@ -87,7 +111,47 @@ const FieldPage = ({ currentUser, onLogout }) => {
                     <span className="sport-pill">{post.sport}</span>
                   </div>
                 </div>
-                <img src={post.photo} alt={post.sport} className="field-post-photo" />
+                {(() => {
+                  const photos = Array.isArray(post.photos) && post.photos.length > 0
+                    ? post.photos
+                    : post.photo
+                      ? [post.photo]
+                      : [];
+                  if (photos.length === 0) return null;
+                  const idx = getCarouselIndex(post.id);
+                  return (
+                    <div className="field-carousel">
+                      {photos.length > 1 && (
+                        <button
+                          type="button"
+                          className="field-carousel-nav field-carousel-prev"
+                          aria-label="Previous photo"
+                          onClick={() => shiftCarousel(post.id, photos, -1)}
+                        >
+                          ‹
+                        </button>
+                      )}
+                      <img
+                        src={photos[idx]}
+                        alt={post.sport}
+                        className="field-post-photo"
+                      />
+                      {photos.length > 1 && (
+                        <button
+                          type="button"
+                          className="field-carousel-nav field-carousel-next"
+                          aria-label="Next photo"
+                          onClick={() => shiftCarousel(post.id, photos, 1)}
+                        >
+                          ›
+                        </button>
+                      )}
+                      {photos.length > 1 && (
+                        <p className="field-carousel-counter">{idx + 1} / {photos.length}</p>
+                      )}
+                    </div>
+                  );
+                })()}
                 <p className="field-caption">{post.caption}</p>
                 <p className="field-meta">
                   🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
