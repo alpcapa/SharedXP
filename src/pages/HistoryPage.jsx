@@ -14,7 +14,9 @@ const FALLBACK_PARTICIPANT_PHOTO =
 const DEFAULT_FALLBACK_LAST_NAME = "User";
 const DEFAULT_HOST_FALLBACK_FIRST_NAME = "Host";
 const DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME = "Participant";
+const DEFAULT_FIELD_POST_USER_NAME = "SharedXP User";
 const CONFIRMATION_WINDOW_MS = 48 * 60 * 60 * 1000;
+const FIELD_POSTS_STORAGE_KEY = "sharedxp-field-posts";
 const HOST_RATING_FIELDS = [
   { key: "overall", label: "Overall" },
   { key: "punctuality", label: "Punctuality" },
@@ -23,6 +25,26 @@ const HOST_RATING_FIELDS = [
   { key: "friendliness", label: "Friendliness" },
   { key: "value", label: "Value" }
 ];
+
+const getStoredFieldPosts = () => {
+  try {
+    const raw = localStorage.getItem(FIELD_POSTS_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveFieldPost = (post) => {
+  try {
+    const existing = getStoredFieldPosts();
+    const updated = [post, ...existing];
+    localStorage.setItem(FIELD_POSTS_STORAGE_KEY, JSON.stringify(updated));
+  } catch {
+    // silently fail — localStorage may be unavailable
+  }
+};
 
 const clampRating = (value) => {
   const numericRating = Number(value);
@@ -309,6 +331,10 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
   const [selectedRole, setSelectedRole] = useState("all");
   const [dirtyIds, setDirtyIds] = useState(() => new Set());
   const [activeGallery, setActiveGallery] = useState(null);
+  const [sharePromptItemId, setSharePromptItemId] = useState(null);
+  const [shareCaption, setShareCaption] = useState("");
+  const [shareCaptionError, setShareCaptionError] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(false);
   const lastAutoConfirmPersistKeyRef = useRef("");
 
   useEffect(() => {
@@ -419,9 +445,102 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
         next.delete(itemId);
         return next;
       });
+
+      // After saving, check if this item has real photos — if so, prompt to share
+      const savedItem = allItems.find((item) => item.id === itemId);
+      const hasRealPhotos = savedItem?.photoGallery?.some(
+        (p) => p && p !== FALLBACK_EVENT_PHOTO
+      );
+      if (hasRealPhotos) {
+        setShareCaption("");
+        setShareCaptionError(false);
+        setSharePromptItemId(itemId);
+      }
     },
-    [onSaveHistory, onSaveHostHistory]
+    [onSaveHistory, onSaveHostHistory, allItems]
   );
+
+  const handlePhotoUpload = useCallback((itemId, files) => {
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files);
+    fileArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = String(event.target?.result ?? "");
+        if (!dataUrl) return;
+        setAllItems((prev) =>
+          prev.map((item) => {
+            if (item.id !== itemId) return item;
+            const currentGallery = Array.isArray(item.photoGallery)
+              ? item.photoGallery.filter((p) => p !== FALLBACK_EVENT_PHOTO)
+              : [];
+            const updatedGallery = [...currentGallery, dataUrl];
+            return {
+              ...item,
+              photo: updatedGallery[0],
+              photoGallery: updatedGallery
+            };
+          })
+        );
+        setDirtyIds((prev) => new Set([...prev, itemId]));
+      };
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
+  const handlePhotoDelete = useCallback((itemId, photoIndex) => {
+    setAllItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== itemId) return item;
+        const currentGallery = Array.isArray(item.photoGallery)
+          ? item.photoGallery.filter((p) => p !== FALLBACK_EVENT_PHOTO)
+          : [];
+        const updatedGallery = currentGallery.filter((_, index) => index !== photoIndex);
+        return {
+          ...item,
+          photo: updatedGallery[0] || FALLBACK_EVENT_PHOTO,
+          photoGallery: updatedGallery.length ? updatedGallery : [FALLBACK_EVENT_PHOTO]
+        };
+      })
+    );
+    setDirtyIds((prev) => new Set([...prev, itemId]));
+  }, []);
+
+  const handleShareToField = useCallback((item) => {
+    if (!shareCaption.trim()) {
+      setShareCaptionError(true);
+      return;
+    }
+
+    const realPhotos = (item.photoGallery ?? []).filter(
+      (p) => p && p !== FALLBACK_EVENT_PHOTO
+    );
+
+    const post = {
+      id: typeof globalThis.crypto?.randomUUID === "function"
+        ? `user-${globalThis.crypto.randomUUID()}`
+        : `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      hostId: null,
+      hostName: currentUser?.fullName ?? DEFAULT_FIELD_POST_USER_NAME,
+      hostPhoto: currentUser?.photo ?? "",
+      sport: item.sport,
+      city: currentUser?.city ?? currentUser?.hostProfile?.city ?? "",
+      country: currentUser?.country ?? currentUser?.hostProfile?.country ?? "",
+      caption: shareCaption.trim(),
+      photos: realPhotos,
+      photo: realPhotos[0] ?? "",
+      postedAt: new Date().toISOString(),
+      likes: 0
+    };
+
+    saveFieldPost(post);
+    setShareCaption("");
+    setShareCaptionError(false);
+    setSharePromptItemId(null);
+    setShareSuccess(true);
+    setTimeout(() => setShareSuccess(false), 3000);
+  }, [shareCaption, currentUser]);
 
   const openGallery = useCallback((item, startIndex = 0) => {
     const photos = item.photoGallery?.length ? item.photoGallery : [item.photo || FALLBACK_EVENT_PHOTO];
@@ -573,6 +692,43 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                     >
                       Photo Gallery
                     </button>
+                    {/* Photo upload button */}
+                    <label className="history-photo-upload-label" aria-label="Add photos">
+                      + Add Photos
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="history-photo-upload-input"
+                        onChange={(event) => handlePhotoUpload(item.id, event.target.files)}
+                      />
+                    </label>
+
+                    {/* Thumbnail strip — only shown when real photos exist */}
+                    {(item.photoGallery ?? []).filter((p) => p !== FALLBACK_EVENT_PHOTO).length > 0 && (
+                      <div className="history-thumb-strip">
+                        {item.photoGallery
+                          .filter((p) => p !== FALLBACK_EVENT_PHOTO)
+                          .map((photo, photoIndex) => (
+                            <div key={photoIndex} className="history-thumb-wrap">
+                              <img
+                                src={photo}
+                                alt={`Photo ${photoIndex + 1}`}
+                                className="history-thumb"
+                                onClick={() => openGallery(item, photoIndex)}
+                              />
+                              <button
+                                type="button"
+                                className="history-thumb-delete"
+                                aria-label={`Delete photo ${photoIndex + 1}`}
+                                onClick={() => handlePhotoDelete(item.id, photoIndex)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                     {item.confirmationStatus === "pending" ? (
                       <button
                         type="button"
@@ -776,6 +932,97 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
                   {activeGallery.currentIndex + 1} of {activeGalleryCount}
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Share to The Field prompt */}
+          {sharePromptItemId && (() => {
+            const promptItem = allItems.find((item) => item.id === sharePromptItemId);
+            if (!promptItem) return null;
+            return (
+              <div
+                className="booking-modal-backdrop"
+                role="presentation"
+                onClick={() => setSharePromptItemId(null)}
+              >
+                <section
+                  className="booking-modal field-share-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Share experience to The Field"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    className="booking-modal-close"
+                    aria-label="Close"
+                    onClick={() => setSharePromptItemId(null)}
+                  >
+                    ×
+                  </button>
+
+                  <h3>Share your experience to The Field?</h3>
+                  <p className="field-share-modal-sub">
+                    Your photos will appear as a carousel on The Field — visible to other
+                    travelers and hosts.
+                  </p>
+
+                  <div className="field-share-photo-preview">
+                    {(promptItem.photoGallery ?? [])
+                      .filter((p) => p !== FALLBACK_EVENT_PHOTO)
+                      .slice(0, 4)
+                      .map((photo, index) => (
+                        <img
+                          key={index}
+                          src={photo}
+                          alt={`Preview ${index + 1}`}
+                          className="field-share-preview-thumb"
+                        />
+                      ))}
+                  </div>
+
+                  <label className="field-share-caption-label">
+                    Caption <span className="field-share-required">*</span>
+                    <textarea
+                      className={`field-share-caption-input${shareCaptionError ? " field-share-caption-error" : ""}`}
+                      rows={3}
+                      placeholder="Tell people about your experience..."
+                      value={shareCaption}
+                      onChange={(event) => {
+                        setShareCaption(event.target.value);
+                        if (event.target.value.trim()) setShareCaptionError(false);
+                      }}
+                    />
+                    {shareCaptionError && (
+                      <span className="field-share-error-msg">Caption is required before sharing.</span>
+                    )}
+                  </label>
+
+                  <div className="booking-modal-actions">
+                    <button
+                      type="button"
+                      className="btn btn-light"
+                      onClick={() => setSharePromptItemId(null)}
+                    >
+                      Keep private
+                    </button>
+                    <button
+                      type="button"
+                      className="find-button"
+                      onClick={() => handleShareToField(promptItem)}
+                    >
+                      Share to The Field
+                    </button>
+                  </div>
+                </section>
+              </div>
+            );
+          })()}
+
+          {/* Share success toast */}
+          {shareSuccess && (
+            <div className="field-share-toast" role="status" aria-live="polite">
+              ✅ Posted to The Field!
             </div>
           )}
         </main>
