@@ -259,67 +259,66 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   return (
     <div className="home-page">
       <div className="middle-page-frame">
-        <section className="hero explore-hero">
+        <section className="explore-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           <div className="explore-hero-content">
             <h1>
               Explore local sports buddies<span className="accent">.</span>
             </h1>
             <p>Filter by sport, gender, level, and search to refine map + list results.</p>
+            <section className="explore-filters">
+              <input
+                type="search"
+                className="explore-search-input"
+                placeholder="Search by name, sport, location, or vibe"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                aria-label="Search buddies"
+              />
+              <select
+                value={selectedLocation}
+                onChange={(event) => setSelectedLocation(event.target.value)}
+              >
+                {locationOptions.map((locationOption) => (
+                  <option key={locationOption} value={locationOption}>
+                    Location: {locationOption}
+                  </option>
+                ))}
+              </select>
+              <select value={selectedSport} onChange={(event) => setSelectedSport(event.target.value)}>
+                {sportOptions.map((sportOption) => (
+                  <option key={sportOption} value={sportOption}>
+                    Sport: {sportOption}
+                  </option>
+                ))}
+              </select>
+              <select value={selectedGender} onChange={(event) => setSelectedGender(event.target.value)}>
+                {genderOptions.map((genderOption) => (
+                  <option key={genderOption} value={genderOption}>
+                    Gender: {genderOption}
+                  </option>
+                ))}
+              </select>
+              <select value={selectedLevel} onChange={(event) => setSelectedLevel(event.target.value)}>
+                {levelOptions.map((levelOption) => (
+                  <option key={levelOption} value={levelOption}>
+                    Level: {levelOption}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedEquipment}
+                onChange={(event) => setSelectedEquipment(event.target.value)}
+              >
+                <option value="All">Equipment: All</option>
+                <option value="Yes">Equipment: Yes</option>
+                <option value="No">Equipment: No</option>
+              </select>
+            </section>
           </div>
         </section>
 
         <main className="middle-section explore-page-content">
-          <section className="explore-filters">
-            <input
-              type="search"
-              className="explore-search-input"
-              placeholder="Search by name, sport, location, or vibe"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              aria-label="Search buddies"
-            />
-            <select
-              value={selectedLocation}
-              onChange={(event) => setSelectedLocation(event.target.value)}
-            >
-              {locationOptions.map((locationOption) => (
-                <option key={locationOption} value={locationOption}>
-                  Location: {locationOption}
-                </option>
-              ))}
-            </select>
-            <select value={selectedSport} onChange={(event) => setSelectedSport(event.target.value)}>
-              {sportOptions.map((sportOption) => (
-                <option key={sportOption} value={sportOption}>
-                  Sport: {sportOption}
-                </option>
-              ))}
-            </select>
-            <select value={selectedGender} onChange={(event) => setSelectedGender(event.target.value)}>
-              {genderOptions.map((genderOption) => (
-                <option key={genderOption} value={genderOption}>
-                  Gender: {genderOption}
-                </option>
-              ))}
-            </select>
-            <select value={selectedLevel} onChange={(event) => setSelectedLevel(event.target.value)}>
-              {levelOptions.map((levelOption) => (
-                <option key={levelOption} value={levelOption}>
-                  Level: {levelOption}
-                </option>
-              ))}
-            </select>
-            <select
-              value={selectedEquipment}
-              onChange={(event) => setSelectedEquipment(event.target.value)}
-            >
-              <option value="All">Equipment: All</option>
-              <option value="Yes">Equipment: Yes</option>
-              <option value="No">Equipment: No</option>
-            </select>
-          </section>
-
           <section className="explore-map-section" aria-label="Map of nearby buddies">
             <div className="explore-map">
               <div
