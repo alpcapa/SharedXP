@@ -14,12 +14,6 @@ const LegalPage = ({ currentUser, onLogout }) => {
           <article className="simple-page legal-page">
             <h1>Legal Center</h1>
             <p className="legal-last-updated">Last updated: April 19, 2026</p>
-            <p>
-              Terms &amp; Conditions are necessary, but for a marketplace model like SharedXP they are not sufficient on
-              their own. A Legal Center provides a complete framework across participant and host liability, third-party
-              services, platform limits, safety, and compliance duties.
-            </p>
-
             <section className="legal-section">
               <h2>1. Scope of this Legal Center</h2>
               <p>
