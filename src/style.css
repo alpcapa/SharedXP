@@ -726,7 +726,8 @@ body {
   padding: 10px;
   background-image:
     linear-gradient(90deg, rgba(244, 243, 235, 0.97) 0%, rgba(244, 243, 235, 0.7) 31%, rgba(244, 243, 235, 0.2) 56%, rgba(244, 243, 235, 0.05) 100%),
-    url("https://github.com/user-attachments/assets/1c905934-0a25-4a90-9633-aa2d1e04d748");
+    url("https://github.com/user-attachments/assets/71180c4f-7047-462a-9166-73cc3ef563ad"),
+    url("./assets/home-hero-cycling.svg");
   background-size: cover;
   background-position: center;
 }
@@ -905,14 +906,13 @@ body {
 }
 
 .explore-hero {
-  min-height: auto;
-  background-image: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
+  margin: 10px 0 0;
 }
 
 .explore-hero-content {
-  margin-top: 18px;
+  max-width: 1080px;
+  margin: 6px auto 0;
+  padding: 18px 20px 10px;
 }
 
 .explore-hero-content h1 {
@@ -935,6 +935,7 @@ body {
   display: grid;
   grid-template-columns: 2fr repeat(4, minmax(0, 1fr));
   gap: 10px;
+  margin-top: 14px;
 }
 
 .explore-filters select,
