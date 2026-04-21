@@ -14,6 +14,7 @@ const FALLBACK_PARTICIPANT_PHOTO =
 const DEFAULT_FALLBACK_LAST_NAME = "User";
 const DEFAULT_HOST_FALLBACK_FIRST_NAME = "Host";
 const DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME = "Participant";
+const DEFAULT_FIELD_POST_USER_NAME = "SharedXP User";
 const CONFIRMATION_WINDOW_MS = 48 * 60 * 60 * 1000;
 const FIELD_POSTS_STORAGE_KEY = "sharedxp-field-posts";
 const HOST_RATING_FIELDS = [
@@ -517,9 +518,11 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     );
 
     const post = {
-      id: `user-${Date.now()}`,
+      id: typeof globalThis.crypto?.randomUUID === "function"
+        ? `user-${globalThis.crypto.randomUUID()}`
+        : `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       hostId: null,
-      hostName: currentUser?.fullName ?? "SharedXP User",
+      hostName: currentUser?.fullName ?? DEFAULT_FIELD_POST_USER_NAME,
       hostPhoto: currentUser?.photo ?? "",
       sport: item.sport,
       city: currentUser?.city ?? currentUser?.hostProfile?.city ?? "",

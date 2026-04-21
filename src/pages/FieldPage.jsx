@@ -6,36 +6,63 @@ import { fieldPosts } from "../data/fieldPosts";
 const FIELD_POSTS_STORAGE_KEY = "sharedxp-field-posts";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+const isSafeHttpImageUrl = (value) => {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    return false;
+  }
+  try {
+    const parsed = new URL(text);
+    return (parsed.protocol === "https:" || parsed.protocol === "http:") && /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(parsed.pathname);
+  } catch {
+    return false;
+  }
+};
+
+const isSafeDataImageUrl = (value) => {
+  const text = String(value ?? "").trim();
+  return /^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]+$/i.test(text);
+};
+
+const toSafeUserImageUrl = (value) => {
+  const text = String(value ?? "").trim();
+  if (isSafeDataImageUrl(text) || isSafeHttpImageUrl(text)) {
+    return text;
+  }
+  return "";
+};
+
+const sanitizeUserFieldPost = (post) => {
+  const source = post && typeof post === "object" ? post : {};
+  const rawPhotoList = Array.isArray(source.photos)
+    ? source.photos
+    : source.photo
+      ? [source.photo]
+      : [];
+  const photos = rawPhotoList.map(toSafeUserImageUrl).filter(Boolean);
+  return {
+    id: String(source.id ?? `user-post-${Math.random().toString(36).slice(2)}`),
+    hostName: String(source.hostName ?? "SharedXP User"),
+    hostPhoto: toSafeUserImageUrl(source.hostPhoto),
+    sport: String(source.sport ?? "Other"),
+    city: String(source.city ?? ""),
+    country: String(source.country ?? ""),
+    caption: String(source.caption ?? ""),
+    photos,
+    photo: photos[0] ?? "",
+    postedAt: String(source.postedAt ?? ""),
+    likes: Number.isFinite(Number(source.likes)) ? Number(source.likes) : 0
+  };
+};
+
 const getUserFieldPosts = () => {
   try {
     const raw = localStorage.getItem(FIELD_POSTS_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(sanitizeUserFieldPost) : [];
   } catch {
     return [];
   }
-};
-
-const toSafeImageUrl = (value) => {
-  const text = String(value ?? "").trim();
-  if (!text) {
-    return "";
-  }
-
-  if (text.startsWith("data:image/") || text.startsWith("blob:") || text.startsWith("/")) {
-    return text;
-  }
-
-  try {
-    const parsed = new URL(text, window.location.origin);
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-      return text;
-    }
-  } catch {
-    return "";
-  }
-
-  return "";
 };
 
 const getRelativePostedLabel = (postedAt) => {
@@ -124,7 +151,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
             {visiblePosts.map((post) => (
               <article key={post.id} className="field-card">
                 <div className="field-host-row">
-                  <img src={toSafeImageUrl(post.hostPhoto)} alt={post.hostName} className="field-host-avatar" />
+                  <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
                   <div>
                     <p>
                       <span className="field-host-name">{post.hostName}</span>
@@ -134,12 +161,11 @@ const FieldPage = ({ currentUser, onLogout }) => {
                   </div>
                 </div>
                 {(() => {
-                  const photoCandidates = Array.isArray(post.photos) && post.photos.length > 0
+                  const photos = Array.isArray(post.photos) && post.photos.length > 0
                     ? post.photos
                     : post.photo
                       ? [post.photo]
                       : [];
-                  const photos = photoCandidates.map(toSafeImageUrl).filter(Boolean);
                   if (photos.length === 0) return null;
                   const idx = getCarouselIndex(post.id);
                   return (
