@@ -82,6 +82,9 @@ const getMemberSinceLabel = (buddy) => {
   if (Number.isFinite(signedUpTimestamp)) {
     const now = new Date();
     const signedUpDate = new Date(signedUpTimestamp);
+    if (signedUpDate > now) {
+      return "0 months";
+    }
     let totalMonths =
       (now.getFullYear() - signedUpDate.getFullYear()) * 12 + (now.getMonth() - signedUpDate.getMonth());
     if (now.getDate() < signedUpDate.getDate()) {
@@ -126,6 +129,16 @@ const getSportConfigs = (buddy) => {
       pricingCurrency: "EUR"
     }
   ];
+};
+
+const getLanguageLine = (buddy) => {
+  if (Array.isArray(buddy.hostProfile?.languages)) {
+    return buddy.hostProfile.languages.filter(Boolean).join(", ");
+  }
+  if (Array.isArray(buddy.languages)) {
+    return buddy.languages.filter(Boolean).join(", ");
+  }
+  return String(buddy.language ?? "");
 };
 
 const formatPrice = (amount, currency) => {
@@ -179,12 +192,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const canRequestBooking = Boolean(selectedDate && selectedTime);
   const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
   const perLabel = buddy.priceUnit ?? "per session";
-  const languageLine = Array.isArray(buddy.hostProfile?.languages)
-    ? buddy.hostProfile.languages.filter(Boolean).join(", ")
-      : Array.isArray(buddy.languages)
-        ? buddy.languages.filter(Boolean).join(", ")
-        : buddy.language ?? "";
-  const locationLine = [city, country].filter(Boolean).join(", ") || buddy.location || "Location unavailable";
+  const languageLine = getLanguageLine(buddy);
+  const locationLine = [city, country].filter(Boolean).join(", ") || "Location unavailable";
   const monthYearLabel = new Intl.DateTimeFormat("en-GB", {
     month: "long",
     year: "numeric"
