@@ -82,14 +82,17 @@ const getMemberSinceLabel = (buddy) => {
   if (Number.isFinite(signedUpTimestamp)) {
     const now = new Date();
     const signedUpDate = new Date(signedUpTimestamp);
-    const totalMonths =
+    let totalMonths =
       (now.getFullYear() - signedUpDate.getFullYear()) * 12 + (now.getMonth() - signedUpDate.getMonth());
+    if (now.getDate() < signedUpDate.getDate()) {
+      totalMonths -= 1;
+    }
+    totalMonths = Math.max(0, totalMonths);
     if (totalMonths >= 12) {
       const years = Math.floor(totalMonths / 12);
       return `${years} year${years === 1 ? "" : "s"}`;
     }
-    const months = Math.max(0, totalMonths);
-    return `${months} month${months === 1 ? "" : "s"}`;
+    return `${totalMonths} month${totalMonths === 1 ? "" : "s"}`;
   }
 
   const fallbackYear = Number(buddy.memberSince);
@@ -178,9 +181,10 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const perLabel = buddy.priceUnit ?? "per session";
   const languageLine = Array.isArray(buddy.hostProfile?.languages)
     ? buddy.hostProfile.languages.filter(Boolean).join(", ")
-    : Array.isArray(buddy.languages)
-      ? buddy.languages.filter(Boolean).join(", ")
-      : buddy.language ?? "";
+      : Array.isArray(buddy.languages)
+        ? buddy.languages.filter(Boolean).join(", ")
+        : buddy.language ?? "";
+  const locationLine = [city, country].filter(Boolean).join(", ") || buddy.location || "Location unavailable";
   const monthYearLabel = new Intl.DateTimeFormat("en-GB", {
     month: "long",
     year: "numeric"
@@ -270,10 +274,10 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
           <div>
             <p>
-              {city && country ? `${city}, ${country}` : buddy.location} · Member since {memberSince}
+              {locationLine} · Member since {memberSince}
             </p>
             <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
-            <p>Level: {activeSport.level || buddy.level || "Not specified"}</p>
+            <p>Level: {activeSport.level ?? buddy.level ?? "Not specified"}</p>
           </div>
         </div>
       </section>
