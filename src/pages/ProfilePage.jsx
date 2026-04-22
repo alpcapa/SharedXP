@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
@@ -17,6 +17,25 @@ const CURRENCY_SYMBOLS = {
   JPY: "¥",
   INR: "₹",
   BRL: "R$"
+};
+const LOCALS_PER_PAGE = 4;
+const HISTORY_FALLBACK_EVENT_PHOTO =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='840' height='480' viewBox='0 0 840 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2384cc16'/%3E%3Cstop offset='1' stop-color='%23065f46'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='840' height='480' fill='url(%23g)'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='52' fill='white'%3ESharedXP Event%3C/text%3E%3C/svg%3E";
+
+const normalizeIdentifier = (value) => String(value ?? "").trim().toLowerCase();
+
+const isCurrentUserHostForBuddy = (currentUser, buddy) => {
+  if (!currentUser || !buddy) {
+    return false;
+  }
+  const currentUserEmail = normalizeIdentifier(currentUser.email);
+  const buddyEmail = normalizeIdentifier(buddy.email ?? buddy.hostProfile?.email);
+  if (currentUserEmail && buddyEmail && currentUserEmail === buddyEmail) {
+    return true;
+  }
+  const currentUserName = normalizeIdentifier(currentUser.fullName ?? currentUser.name);
+  const buddyName = normalizeIdentifier(buddy.fullName ?? buddy.name);
+  return Boolean(currentUserName && buddyName && currentUserName === buddyName);
 };
 
 const getNameParts = (buddy) => {
@@ -106,16 +125,26 @@ const getMemberSinceLabel = (buddy) => {
   return "New";
 };
 
-const getSportConfigs = (buddy) => {
-  if (Array.isArray(buddy.sports) && buddy.sports.length > 0) {
-    return buddy.sports.map((sportConfig) => ({
+const getSportConfigs = (buddy, currentUser) => {
+  const sourceSports =
+    isCurrentUserHostForBuddy(currentUser, buddy) &&
+    Array.isArray(currentUser?.hostProfile?.sports) &&
+    currentUser.hostProfile.sports.length > 0
+      ? currentUser.hostProfile.sports
+      : Array.isArray(buddy.sports) && buddy.sports.length > 0
+        ? buddy.sports
+        : null;
+
+  if (sourceSports) {
+    return sourceSports.map((sportConfig) => ({
       ...sportConfig,
       sport: sportConfig.sport ?? buddy.sport ?? "",
       level: sportConfig.level ?? buddy.level ?? "",
       description: sportConfig.description ?? "",
       about: sportConfig.about ?? "",
       pricing: sportConfig.pricing ?? buddy.price ?? "",
-      pricingCurrency: sportConfig.pricingCurrency ?? "EUR"
+      pricingCurrency: sportConfig.pricingCurrency ?? "EUR",
+      priceUnit: sportConfig.priceUnit ?? buddy.priceUnit ?? "per session"
     }));
   }
 
@@ -126,9 +155,35 @@ const getSportConfigs = (buddy) => {
       description: buddy.description ?? buddy.bio ?? "",
       about: buddy.about ?? "",
       pricing: buddy.price ?? "",
-      pricingCurrency: "EUR"
+      pricingCurrency: "EUR",
+      priceUnit: buddy.priceUnit ?? "per session"
     }
   ];
+};
+
+const getHistoryGalleryPhotos = (currentUser, buddy) => {
+  if (!isCurrentUserHostForBuddy(currentUser, buddy) || !Array.isArray(currentUser?.hostHistory)) {
+    return [];
+  }
+
+  const photos = currentUser.hostHistory.flatMap((historyItem) => {
+    const list =
+      historyItem.photoGallery ??
+      historyItem.photos ??
+      historyItem.images ??
+      historyItem.gallery ??
+      [];
+    const normalizedList = Array.isArray(list) ? list : [list];
+    return [historyItem.photo, ...normalizedList];
+  });
+
+  return Array.from(
+    new Set(
+      photos
+        .map((photo) => String(photo ?? "").trim())
+        .filter((photo) => photo && photo !== HISTORY_FALLBACK_EVENT_PHOTO)
+    )
+  );
 };
 
 const getLanguageLine = (buddy) => {
@@ -161,6 +216,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const { buddyId } = useParams();
   const buddy = buddies.find((item) => String(item.id) === buddyId);
   const [selectedSportIndex, setSelectedSportIndex] = useState(0);
+  const [recommendationsPage, setRecommendationsPage] = useState(0);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
@@ -179,21 +235,35 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     );
   }
 
-  const recommendations = buddies.filter((item) => item.id !== buddy.id).slice(0, 2);
+  const recommendations = buddies.filter((item) => item.id !== buddy.id);
   const { firstName, lastName, fullName: hostDisplayName } = getNameParts(buddy);
   const { rating: hostRating, reviewCount } = getHostRatingSummary(buddy);
   const { city, country } = getLocationParts(buddy);
   const memberSince = getMemberSinceLabel(buddy);
-  const hostSports = getSportConfigs(buddy);
+  const hostSports = getSportConfigs(buddy, currentUser);
   const activeSport = hostSports[selectedSportIndex] ?? hostSports[0] ?? {};
   const availableDates = activeSport.availableDates ?? buddy.availableDates ?? [];
   const availableTimes = activeSport.availableTimes ?? buddy.availableTimes ?? [];
   const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
   const canRequestBooking = Boolean(selectedDate && selectedTime);
   const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
-  const perLabel = buddy.priceUnit ?? "per session";
+  const perLabel = activeSport.priceUnit ?? buddy.priceUnit ?? "per session";
   const languageLine = getLanguageLine(buddy);
   const locationLine = [city, country].filter(Boolean).join(", ") || "Location unavailable";
+  const selectedLevel = activeSport.level ?? buddy.level ?? "Not specified";
+  const historyGalleryPhotos = getHistoryGalleryPhotos(currentUser, buddy);
+  const selectedSportGallery = Array.isArray(activeSport.images) ? activeSport.images.filter(Boolean) : [];
+  const galleryPhotos =
+    historyGalleryPhotos.length > 0
+      ? historyGalleryPhotos
+      : selectedSportGallery.length > 0
+        ? selectedSportGallery
+        : buddy.gallery ?? [];
+  const totalRecommendationPages = Math.max(1, Math.ceil(recommendations.length / LOCALS_PER_PAGE));
+  const visibleRecommendations = useMemo(() => {
+    const startIndex = recommendationsPage * LOCALS_PER_PAGE;
+    return recommendations.slice(startIndex, startIndex + LOCALS_PER_PAGE);
+  }, [recommendations, recommendationsPage]);
   const monthYearLabel = new Intl.DateTimeFormat("en-GB", {
     month: "long",
     year: "numeric"
@@ -260,6 +330,14 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     setIsRequestSubmitted(true);
   };
 
+  useEffect(() => {
+    setRecommendationsPage(0);
+  }, [buddy.id]);
+
+  useEffect(() => {
+    setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
+  }, [totalRecommendationPages]);
+
   return (
     <div className="profile-page">
       <SiteHeader currentUser={currentUser} onLogout={onLogout} />
@@ -280,13 +358,13 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           </p>
         </div>
         <div className="profile-summary-body">
-          <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
-          <div>
-            <p>
-              {locationLine} · Member since {memberSince}
-            </p>
-            <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
-            <p>Level: {activeSport.level ?? buddy.level ?? "Not specified"}</p>
+          <div className="profile-summary-photo-column">
+            <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
+            <div className="profile-summary-meta">
+              <p>{locationLine}</p>
+              <p>Member since {memberSince}</p>
+              <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
+            </div>
           </div>
         </div>
       </section>
@@ -401,6 +479,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               Price: {selectedPrice} {perLabel}
             </p>
           )}
+          <p className="booking-label">Level: {selectedLevel}</p>
 
           <p className="booking-selection-hint">
             {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
@@ -420,7 +499,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       <section className="gallery">
         <h3>Photo gallery</h3>
         <div className="gallery-grid">
-          {buddy.gallery.map((photo) => (
+          {galleryPhotos.map((photo) => (
             <img key={photo} src={photo} alt={`${buddy.name} gallery`} />
           ))}
         </div>
@@ -455,10 +534,34 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
       <section className="recommendations">
         <h3>More locals you might like</h3>
-        <div className="grid">
-          {recommendations.map((recommendation) => (
+        <div className="locals-grid-wrap">
+          <div className="locals-grid">
+          {visibleRecommendations.map((recommendation) => (
             <BuddyCard key={recommendation.id} buddy={recommendation} />
           ))}
+          </div>
+          <div className="locals-nav-row">
+            <button
+              type="button"
+              className="locals-nav"
+              aria-label="Show previous 4 locals"
+              onClick={() => setRecommendationsPage((page) => Math.max(page - 1, 0))}
+              disabled={recommendationsPage === 0}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="locals-nav"
+              aria-label="Show next 4 locals"
+              onClick={() =>
+                setRecommendationsPage((page) => Math.min(page + 1, totalRecommendationPages - 1))
+              }
+              disabled={recommendationsPage >= totalRecommendationPages - 1}
+            >
+              ›
+            </button>
+          </div>
         </div>
       </section>
 
