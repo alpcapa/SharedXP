@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useCallback, useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { fieldPosts } from "../data/fieldPosts";
@@ -66,6 +66,16 @@ const getUserFieldPosts = () => {
   }
 };
 
+const deleteUserFieldPost = (postId) => {
+  try {
+    const existing = getUserFieldPosts();
+    const updated = existing.filter((post) => post.id !== postId);
+    localStorage.setItem(FIELD_POSTS_STORAGE_KEY, JSON.stringify(updated));
+  } catch {
+    // silently fail
+  }
+};
+
 const getRelativePostedLabel = (postedAt) => {
   const postDate = new Date(postedAt);
 
@@ -93,7 +103,9 @@ const getRelativePostedLabel = (postedAt) => {
 const FieldPage = ({ currentUser, onLogout }) => {
   const location = useLocation();
   const [selectedCity, setSelectedCity] = useState("All");
+  const [selectedSport, setSelectedSport] = useState("All");
   const [carouselIndex, setCarouselIndex] = useState({});
+  const [deletedIds, setDeletedIds] = useState(() => new Set());
   const userPosts = useMemo(() => getUserFieldPosts(), [location.key]);
 
   const getCarouselIndex = (postId) => carouselIndex[postId] ?? 0;
@@ -106,24 +118,49 @@ const FieldPage = ({ currentUser, onLogout }) => {
     });
   };
 
+  const handleDeletePost = useCallback((postId) => {
+    if (!window.confirm("Remove this post from The Field?")) return;
+    deleteUserFieldPost(postId);
+    setDeletedIds((prev) => new Set([...prev, postId]));
+  }, []);
+
   const cityOptions = useMemo(() => {
-    const freshUserPosts = getUserFieldPosts();
+    const freshUserPosts = getUserFieldPosts().filter(
+      (post) => !deletedIds.has(post.id)
+    );
     const allPosts = [...fieldPosts, ...freshUserPosts];
     const sortedCities = [...new Set(allPosts.map((post) => post.city).filter(Boolean))].sort();
     return ["All", ...sortedCities];
-  }, [selectedCity]);
+  }, [deletedIds]);
+
+  const sportOptions = useMemo(() => {
+    const freshUserPosts = getUserFieldPosts().filter(
+      (post) => !deletedIds.has(post.id)
+    );
+    const allPosts = [...fieldPosts, ...freshUserPosts];
+    const sorted = [
+      ...new Set(allPosts.map((post) => post.sport).filter(Boolean))
+    ].sort();
+    return ["All", ...sorted];
+  }, [deletedIds]);
 
   const visiblePosts = useMemo(
     () => {
-      const freshUserPosts = getUserFieldPosts();
+      const freshUserPosts = getUserFieldPosts().filter(
+        (post) => !deletedIds.has(post.id)
+      );
       return [...fieldPosts, ...freshUserPosts]
-        .filter((post) => selectedCity === "All" || post.city === selectedCity)
+        .filter(
+          (post) =>
+            (selectedCity === "All" || post.city === selectedCity) &&
+            (selectedSport === "All" || post.sport === selectedSport)
+        )
         .sort(
           (leftPost, rightPost) =>
             new Date(rightPost.postedAt).getTime() - new Date(leftPost.postedAt).getTime()
         );
     },
-    [selectedCity]
+    [selectedCity, selectedSport, deletedIds]
   );
 
   return (
@@ -140,12 +177,30 @@ const FieldPage = ({ currentUser, onLogout }) => {
               key={cityOption}
               type="button"
               className={`field-city-pill${cityOption === selectedCity ? " active" : ""}`}
-              onClick={() => setSelectedCity(cityOption)}
+              onClick={() => {
+                setSelectedCity(cityOption);
+                setSelectedSport("All");
+              }}
             >
               {cityOption}
             </button>
           ))}
         </div>
+
+        {sportOptions.length > 2 && (
+          <div className="field-sport-filter">
+            {sportOptions.map((sportOption) => (
+              <button
+                key={sportOption}
+                type="button"
+                className={`field-city-pill${sportOption === selectedSport ? " active" : ""}`}
+                onClick={() => setSelectedSport(sportOption)}
+              >
+                {sportOption}
+              </button>
+            ))}
+          </div>
+        )}
 
         {visiblePosts.length === 0 ? (
           <p className="field-empty-state">
@@ -225,6 +280,24 @@ const FieldPage = ({ currentUser, onLogout }) => {
                 <p className="field-meta">
                   🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
                 </p>
+                {String(post.id).startsWith("user-") && currentUser && (
+                  <button
+                    type="button"
+                    className="field-delete-post-btn"
+                    aria-label="Delete this post"
+                    onClick={() => handleDeletePost(post.id)}
+                  >
+                    Remove post
+                  </button>
+                )}
+                {post.hostId != null && Number.isFinite(Number(post.hostId)) && (
+                  <Link
+                    to={`/buddy/${post.hostId}`}
+                    className="field-view-host-link"
+                  >
+                    View host profile →
+                  </Link>
+                )}
               </article>
             ))}
           </div>
