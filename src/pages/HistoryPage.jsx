@@ -274,11 +274,11 @@ const toStoredAttended = (items) =>
         hostRatings: item.hostRatings,
         attendeeRating: item.attendeeRating,
         review: item.review,
-        sharedToField: item.sharedToField === true,
         completedAt: item.completedAt,
         confirmationStatus: item.confirmationStatus,
         confirmedAt: item.confirmedAt,
-        paymentReleased: item.paymentReleased
+        paymentReleased: item.paymentReleased,
+        sharedToField: item.sharedToField ?? false
       };
     });
 
@@ -539,6 +539,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     };
 
     saveFieldPost(post);
+    updateItem(item.id, "sharedToField", true);
     setAllItems((prev) => {
       const next = prev.map((historyItem) =>
         historyItem.id === item.id ? { ...historyItem, sharedToField: true } : historyItem
