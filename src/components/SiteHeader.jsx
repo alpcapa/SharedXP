@@ -25,7 +25,6 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
     hostLabel = isHostingPaused ? "Hosting Paused" : "Host Settings";
   }
   const navHostRoute = isLoggedIn ? hostRoute : "/become-a-host";
-  const navHostLabel = hostLabel;
   const isHostLabelPaused = Boolean(isLoggedIn && currentUser?.isHost && isHostingPaused);
 
   const fallbackPhoto = useMemo(() => {
@@ -70,7 +69,7 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
           The Field
         </Link>
         <Link to={navHostRoute} className={`site-nav-link${isHostLabelPaused ? " site-nav-link-paused" : ""}`}>
-          {navHostLabel}
+          {hostLabel}
         </Link>
         <Link to="/about" className="site-nav-link">
           About
