@@ -94,7 +94,7 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
           </section>
           <main className="middle-section simple-page">
             <h1>Please log in</h1>
-            <p>You need to log in to view your user page.</p>
+            <p>You need to log in to view your profile.</p>
             <Link to="/login" className="btn btn-primary">
               Go to Login
             </Link>
@@ -137,6 +137,8 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
     .filter(Boolean)
     .join(", ");
   const galleryPhotos = getHistoryGalleryPhotos(currentUser.history);
+  const hostActionRoute = currentUser.isHost ? "/host-settings" : "/become-a-host";
+  const hostActionLabel = currentUser.isHost ? "Host Settings" : "Become a Host";
 
   useEffect(() => {
     setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
@@ -145,17 +147,22 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
   return (
     <div className="profile-page">
       <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-      <div className="profile-back-wrap">
-        <Link to="/my-profile" className="back-link">
-          ← Back to my profile
-        </Link>
-      </div>
 
       <section className="profile-summary">
         <div className="profile-summary-header">
-          <h1>{currentUser.fullName || "User"}</h1>
+          <div className="profile-summary-top-row">
+            <h1>My Profile</h1>
+            <div className="profile-summary-actions">
+              <Link to="/my-profile" className="btn btn-light">
+                Edit Profile
+              </Link>
+              <Link to={hostActionRoute} className="btn btn-light">
+                {hostActionLabel}
+              </Link>
+            </div>
+          </div>
           <p>
-            ⭐ {averageRating}
+            {currentUser.fullName || "User"} · ⭐ {averageRating}
             {hostRatings.length > 0 ? ` (${hostRatings.length})` : ""} · <span className="verified">Verified</span>
           </p>
         </div>
