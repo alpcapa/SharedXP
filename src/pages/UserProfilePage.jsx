@@ -36,35 +36,18 @@ const getMemberSinceLabel = (user) => {
 
 const toOverallHostReview = (historyItem, index) => {
   const item = historyItem && typeof historyItem === "object" ? historyItem : {};
-  const ratingCandidates = [
-    item.attendeeRating,
-    item.participantRatingForHost,
-    item.hostRatingForParticipant,
-    item.ratingFromHost,
-    item.reviewedParticipantRating
-  ];
-  const rating = ratingCandidates
-    .map((value) => Number(value))
-    .find((value) => Number.isFinite(value) && value > 0);
-  const review = String(
-    item.reviewFromHost ??
-      item.hostReview ??
-      item.attendeeReview ??
-      item.participantReview ??
-      item.reviewForParticipant ??
-      ""
-  ).trim();
-  const hostName = String(item.hostName ?? item.host ?? "Host").trim() || "Host";
-  const eventName = String(item.eventName ?? item.label ?? item.title ?? "").trim();
-  if (!rating && !review) {
+  const rating = Number(item.attendeeRating ?? 0);
+  const hasRating = Number.isFinite(rating) && rating > 0;
+  if (!hasRating) {
     return null;
   }
-
+  const hostName = String(item.hostName ?? item.host ?? "Host").trim() || "Host";
+  const eventName = String(item.eventName ?? item.label ?? item.title ?? "").trim();
   return {
     id: `${hostName}-${eventName || "event"}-${index}`,
     hostName,
-    rating: rating ?? 0,
-    review
+    eventName,
+    rating
   };
 };
 
@@ -207,9 +190,9 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
           overallHostReviews.map((review) => (
             <article key={review.id} className="review-card">
               <p>
-                <strong>{review.hostName}</strong> · ⭐ {review.rating || "Not rated"}
+                <strong>{review.hostName}</strong>
+                {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
               </p>
-              {review.review && <p>{review.review}</p>}
             </article>
           ))
         ) : (
