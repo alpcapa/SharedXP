@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { fieldPosts } from "../data/fieldPosts";
@@ -90,9 +91,10 @@ const getRelativePostedLabel = (postedAt) => {
 };
 
 const FieldPage = ({ currentUser, onLogout }) => {
+  const location = useLocation();
   const [selectedCity, setSelectedCity] = useState("All");
   const [carouselIndex, setCarouselIndex] = useState({});
-  const userPosts = getUserFieldPosts();
+  const userPosts = useMemo(() => getUserFieldPosts(), [location.key]);
 
   const getCarouselIndex = (postId) => carouselIndex[postId] ?? 0;
 
@@ -104,18 +106,22 @@ const FieldPage = ({ currentUser, onLogout }) => {
     });
   };
 
-  const cityOptions = (() => {
+  const cityOptions = useMemo(() => {
     const allPosts = [...fieldPosts, ...userPosts];
     const sortedCities = [...new Set(allPosts.map((post) => post.city).filter(Boolean))].sort();
     return ["All", ...sortedCities];
-  })();
+  }, [userPosts]);
 
-  const visiblePosts = [...fieldPosts, ...userPosts]
-    .filter((post) => selectedCity === "All" || post.city === selectedCity)
-    .sort(
-      (leftPost, rightPost) =>
-        new Date(rightPost.postedAt).getTime() - new Date(leftPost.postedAt).getTime()
-    );
+  const visiblePosts = useMemo(
+    () =>
+      [...fieldPosts, ...userPosts]
+        .filter((post) => selectedCity === "All" || post.city === selectedCity)
+        .sort(
+          (leftPost, rightPost) =>
+            new Date(rightPost.postedAt).getTime() - new Date(leftPost.postedAt).getTime()
+        ),
+    [selectedCity, userPosts]
+  );
 
   return (
     <div className="field-page">
