@@ -5,6 +5,7 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
 import { getDateKey } from "../utils/date";
+import { getProfileAge } from "../utils/profileAge";
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const getStars = (value) => `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
@@ -19,9 +20,6 @@ const CURRENCY_SYMBOLS = {
   BRL: "R$"
 };
 const LOCALS_PER_PAGE = 4;
-const HISTORY_PLACEHOLDER_EVENT_PHOTO =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='840' height='480' viewBox='0 0 840 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2384cc16'/%3E%3Cstop offset='1' stop-color='%23065f46'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='840' height='480' fill='url(%23g)'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='52' fill='white'%3ESharedXP Event%3C/text%3E%3C/svg%3E";
-
 const normalizeIdentifier = (value) => String(value ?? "").trim().toLowerCase();
 
 const isCurrentUserHostForBuddy = (currentUser, buddy) => {
@@ -125,56 +123,7 @@ const getMemberSinceLabel = (buddy) => {
   return "New";
 };
 
-const getAgeFromBirthday = (birthdayValue) => {
-  const normalizedBirthday = String(birthdayValue ?? "").trim();
-  if (!normalizedBirthday) {
-    return null;
-  }
-
-  let birthdayDate = null;
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalizedBirthday)) {
-    const [dayPart, monthPart, yearPart] = normalizedBirthday.split("/").map(Number);
-    const parsedDate = new Date(yearPart, monthPart - 1, dayPart);
-    if (
-      parsedDate.getFullYear() === yearPart &&
-      parsedDate.getMonth() === monthPart - 1 &&
-      parsedDate.getDate() === dayPart
-    ) {
-      birthdayDate = parsedDate;
-    }
-  } else {
-    const parsedTimestamp = Date.parse(normalizedBirthday);
-    if (Number.isFinite(parsedTimestamp)) {
-      birthdayDate = new Date(parsedTimestamp);
-    }
-  }
-
-  if (!birthdayDate) {
-    return null;
-  }
-
-  const now = new Date();
-  if (birthdayDate > now) {
-    return null;
-  }
-
-  let age = now.getFullYear() - birthdayDate.getFullYear();
-  const monthDifference = now.getMonth() - birthdayDate.getMonth();
-  if (monthDifference < 0 || (monthDifference === 0 && now.getDate() < birthdayDate.getDate())) {
-    age -= 1;
-  }
-  return age >= 0 ? age : null;
-};
-
-const getProfileAge = (profile) => {
-  const explicitAge = Number(profile?.age);
-  if (Number.isFinite(explicitAge) && explicitAge > 0) {
-    return Math.floor(explicitAge);
-  }
-  return getAgeFromBirthday(profile?.birthday ?? profile?.dateOfBirth ?? profile?.dob);
-};
-
-const getHostAge = (buddy, currentUser) => {
+const getDisplayedProfileAge = (buddy, currentUser) => {
   const buddyAge = getProfileAge(buddy);
   if (buddyAge != null) {
     return buddyAge;
@@ -286,7 +235,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
   const perLabel = activeSport.priceUnit ?? buddy.priceUnit ?? "per session";
   const languageLine = getLanguageLine(buddy);
-  const hostAge = getHostAge(buddy, currentUser);
+  const hostAge = getDisplayedProfileAge(buddy, currentUser);
   const locationLine = [city, country].filter(Boolean).join(", ") || "Location unavailable";
   const selectedLevel = activeSport.level ?? buddy.level ?? "Not specified";
   const isEquipmentAvailable =
@@ -298,7 +247,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       ? selectedSportGallery
       : fallbackGallery.length > 0
         ? fallbackGallery
-        : [HISTORY_PLACEHOLDER_EVENT_PHOTO];
+        : [];
   const totalRecommendationPages = Math.max(1, Math.ceil(recommendations.length / LOCALS_PER_PAGE));
   const visibleRecommendations = useMemo(() => {
     const startIndex = recommendationsPage * LOCALS_PER_PAGE;
@@ -391,7 +340,11 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         <div className="profile-summary-header">
           <h1 className="profile-name-with-age">
             {firstName} {lastName}
-            {hostAge != null && <span className="profile-name-age">({hostAge})</span>}
+            {hostAge != null && (
+              <span className="profile-name-age" aria-label={`age ${hostAge}`}>
+                ({hostAge})
+              </span>
+            )}
           </h1>
           <p>
             ⭐ {hostRating}
@@ -540,11 +493,15 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
       <section className="gallery">
         <h3>Photo gallery</h3>
-        <div className="gallery-grid">
-          {galleryPhotos.map((photo) => (
-            <img key={photo} src={photo} alt={`${buddy.name} gallery`} />
-          ))}
-        </div>
+        {galleryPhotos.length > 0 ? (
+          <div className="gallery-grid">
+            {galleryPhotos.map((photo) => (
+              <img key={photo} src={photo} alt={`${buddy.name} gallery`} />
+            ))}
+          </div>
+        ) : (
+          <p>No photos yet for this sport.</p>
+        )}
       </section>
 
       <section className="reviews">
