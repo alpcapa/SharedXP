@@ -33,6 +33,55 @@ const getMemberSinceLabel = (user) => {
   return `${totalMonths} month${totalMonths === 1 ? "" : "s"}`;
 };
 
+const getAgeFromBirthday = (birthdayValue) => {
+  const normalizedBirthday = String(birthdayValue ?? "").trim();
+  if (!normalizedBirthday) {
+    return null;
+  }
+
+  let birthdayDate = null;
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalizedBirthday)) {
+    const [dayPart, monthPart, yearPart] = normalizedBirthday.split("/").map(Number);
+    const parsedDate = new Date(yearPart, monthPart - 1, dayPart);
+    if (
+      parsedDate.getFullYear() === yearPart &&
+      parsedDate.getMonth() === monthPart - 1 &&
+      parsedDate.getDate() === dayPart
+    ) {
+      birthdayDate = parsedDate;
+    }
+  } else {
+    const parsedTimestamp = Date.parse(normalizedBirthday);
+    if (Number.isFinite(parsedTimestamp)) {
+      birthdayDate = new Date(parsedTimestamp);
+    }
+  }
+
+  if (!birthdayDate) {
+    return null;
+  }
+
+  const now = new Date();
+  if (birthdayDate > now) {
+    return null;
+  }
+
+  let age = now.getFullYear() - birthdayDate.getFullYear();
+  const monthDifference = now.getMonth() - birthdayDate.getMonth();
+  if (monthDifference < 0 || (monthDifference === 0 && now.getDate() < birthdayDate.getDate())) {
+    age -= 1;
+  }
+  return age >= 0 ? age : null;
+};
+
+const getProfileAge = (profile) => {
+  const explicitAge = Number(profile?.age);
+  if (Number.isFinite(explicitAge) && explicitAge > 0) {
+    return Math.floor(explicitAge);
+  }
+  return getAgeFromBirthday(profile?.birthday ?? profile?.dateOfBirth ?? profile?.dob);
+};
+
 const toOverallHostReview = (historyItem, index) => {
   const item = historyItem && typeof historyItem === "object" ? historyItem : {};
   const ratingCandidates = [
@@ -132,6 +181,7 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
     [String(currentUser.city ?? "").trim(), String(currentUser.country ?? "").trim()].filter(Boolean).join(", ") ||
     "Location unavailable";
   const memberSince = getMemberSinceLabel(currentUser);
+  const userAge = getProfileAge(currentUser);
   const languageLine = (Array.isArray(currentUser.languages) ? currentUser.languages : [])
     .map((language) => String(language ?? "").trim())
     .filter(Boolean)
@@ -151,7 +201,10 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
       <section className="profile-summary">
         <div className="profile-summary-header">
           <div className="profile-summary-top-row">
-            <h1>{currentUser.fullName || "User"}</h1>
+            <h1 className="profile-name-with-age">
+              {currentUser.fullName || "User"}
+              {userAge != null && <span className="profile-name-age">({userAge})</span>}
+            </h1>
             <div className="profile-summary-actions">
               <Link to="/my-profile" className="btn btn-primary">
                 Edit Profile

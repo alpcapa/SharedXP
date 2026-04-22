@@ -550,7 +550,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
             <section className="host-onboarding-card">
               <div className="host-sport-header">
                 <h2>Sports onboarding</h2>
-                <button type="button" className="btn btn-light" onClick={addSport}>
+                <button type="button" className="btn host-add-sport-button" onClick={addSport}>
                   Add Sport
                 </button>
               </div>
@@ -616,7 +616,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
                   onChange={(event) => updateSportField("about", event.target.value)}
                 />
 
-                <label htmlFor="sportPricing">Pricing</label>
+                <label htmlFor="sportPricing">How much do you charge per session?</label>
                 <div className="host-price-row">
                   <input
                     id="sportPricing"
@@ -624,7 +624,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
                     min="1"
                     step="1"
                     required
-                    placeholder="How much do you charge?"
+                    placeholder="How much do you charge per session?"
                     value={activeSport.pricing}
                     onChange={(event) => updateSportField("pricing", event.target.value)}
                   />

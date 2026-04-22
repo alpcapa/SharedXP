@@ -125,6 +125,66 @@ const getMemberSinceLabel = (buddy) => {
   return "New";
 };
 
+const getAgeFromBirthday = (birthdayValue) => {
+  const normalizedBirthday = String(birthdayValue ?? "").trim();
+  if (!normalizedBirthday) {
+    return null;
+  }
+
+  let birthdayDate = null;
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalizedBirthday)) {
+    const [dayPart, monthPart, yearPart] = normalizedBirthday.split("/").map(Number);
+    const parsedDate = new Date(yearPart, monthPart - 1, dayPart);
+    if (
+      parsedDate.getFullYear() === yearPart &&
+      parsedDate.getMonth() === monthPart - 1 &&
+      parsedDate.getDate() === dayPart
+    ) {
+      birthdayDate = parsedDate;
+    }
+  } else {
+    const parsedTimestamp = Date.parse(normalizedBirthday);
+    if (Number.isFinite(parsedTimestamp)) {
+      birthdayDate = new Date(parsedTimestamp);
+    }
+  }
+
+  if (!birthdayDate) {
+    return null;
+  }
+
+  const now = new Date();
+  if (birthdayDate > now) {
+    return null;
+  }
+
+  let age = now.getFullYear() - birthdayDate.getFullYear();
+  const monthDifference = now.getMonth() - birthdayDate.getMonth();
+  if (monthDifference < 0 || (monthDifference === 0 && now.getDate() < birthdayDate.getDate())) {
+    age -= 1;
+  }
+  return age >= 0 ? age : null;
+};
+
+const getProfileAge = (profile) => {
+  const explicitAge = Number(profile?.age);
+  if (Number.isFinite(explicitAge) && explicitAge > 0) {
+    return Math.floor(explicitAge);
+  }
+  return getAgeFromBirthday(profile?.birthday ?? profile?.dateOfBirth ?? profile?.dob);
+};
+
+const getHostAge = (buddy, currentUser) => {
+  const buddyAge = getProfileAge(buddy);
+  if (buddyAge != null) {
+    return buddyAge;
+  }
+  if (isCurrentUserHostForBuddy(currentUser, buddy)) {
+    return getProfileAge(currentUser);
+  }
+  return null;
+};
+
 const getSportConfigs = (buddy, currentUser) => {
   const sourceSports =
     isCurrentUserHostForBuddy(currentUser, buddy) &&
@@ -161,31 +221,6 @@ const getSportConfigs = (buddy, currentUser) => {
       priceUnit: buddy.priceUnit ?? "per session"
     }
   ];
-};
-
-const getHistoryGalleryPhotos = (currentUser, buddy) => {
-  if (!isCurrentUserHostForBuddy(currentUser, buddy) || !Array.isArray(currentUser?.hostHistory)) {
-    return [];
-  }
-
-  const photos = currentUser.hostHistory.flatMap((historyItem) => {
-    const list =
-      historyItem.photoGallery ??
-      historyItem.photos ??
-      historyItem.images ??
-      historyItem.gallery ??
-      [];
-    const normalizedList = Array.isArray(list) ? list : list ? [list] : [];
-    return [historyItem.photo, ...normalizedList];
-  });
-
-  return Array.from(
-    new Set(
-      photos
-        .map((photo) => String(photo ?? "").trim())
-        .filter((photo) => photo && photo !== HISTORY_PLACEHOLDER_EVENT_PHOTO)
-    )
-  );
 };
 
 const getLanguageLine = (buddy) => {
@@ -251,18 +286,19 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
   const perLabel = activeSport.priceUnit ?? buddy.priceUnit ?? "per session";
   const languageLine = getLanguageLine(buddy);
+  const hostAge = getHostAge(buddy, currentUser);
   const locationLine = [city, country].filter(Boolean).join(", ") || "Location unavailable";
   const selectedLevel = activeSport.level ?? buddy.level ?? "Not specified";
   const isEquipmentAvailable =
     activeSport.equipmentAvailable ?? buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false;
-  const historyGalleryPhotos = getHistoryGalleryPhotos(currentUser, buddy);
   const selectedSportGallery = Array.isArray(activeSport.images) ? activeSport.images.filter(Boolean) : [];
+  const fallbackGallery = Array.isArray(buddy.gallery) ? buddy.gallery.filter(Boolean) : [];
   const galleryPhotos =
-    historyGalleryPhotos.length > 0
-      ? historyGalleryPhotos
-      : selectedSportGallery.length > 0
-        ? selectedSportGallery
-        : buddy.gallery ?? [];
+    selectedSportGallery.length > 0
+      ? selectedSportGallery
+      : fallbackGallery.length > 0
+        ? fallbackGallery
+        : [HISTORY_PLACEHOLDER_EVENT_PHOTO];
   const totalRecommendationPages = Math.max(1, Math.ceil(recommendations.length / LOCALS_PER_PAGE));
   const visibleRecommendations = useMemo(() => {
     const startIndex = recommendationsPage * LOCALS_PER_PAGE;
@@ -353,8 +389,9 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
       <section className="profile-summary">
         <div className="profile-summary-header">
-          <h1>
+          <h1 className="profile-name-with-age">
             {firstName} {lastName}
+            {hostAge != null && <span className="profile-name-age">({hostAge})</span>}
           </h1>
           <p>
             ⭐ {hostRating}

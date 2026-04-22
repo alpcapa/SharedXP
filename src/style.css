@@ -429,6 +429,15 @@ body {
   color: #222;
 }
 
+.host-add-sport-button {
+  background: #96c93d;
+  color: #fff;
+}
+
+.host-add-sport-button:hover {
+  background: #84b633;
+}
+
 .btn-primary {
   background: #96c93d;
   color: #fff;
@@ -2012,6 +2021,19 @@ body {
 
 .profile-summary-header h1 {
   margin: 0;
+}
+
+.profile-name-with-age {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.profile-name-age {
+  font-size: 0.62em;
+  font-weight: 500;
+  color: #6b7280;
 }
 
 .profile-summary-header p {
