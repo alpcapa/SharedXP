@@ -151,18 +151,18 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
       <section className="profile-summary">
         <div className="profile-summary-header">
           <div className="profile-summary-top-row">
-            <h1>My Profile</h1>
+            <h1>{currentUser.fullName || "User"}</h1>
             <div className="profile-summary-actions">
-              <Link to="/my-profile" className="btn btn-light">
+              <Link to="/my-profile" className="btn btn-primary">
                 Edit Profile
               </Link>
-              <Link to={hostActionRoute} className="btn btn-light">
+              <Link to={hostActionRoute} className="btn btn-primary">
                 {hostActionLabel}
               </Link>
             </div>
           </div>
           <p>
-            {currentUser.fullName || "User"} · ⭐ {averageRating}
+            ⭐ {averageRating}
             {hostRatings.length > 0 ? ` (${hostRatings.length})` : ""} · <span className="verified">Verified</span>
           </p>
         </div>

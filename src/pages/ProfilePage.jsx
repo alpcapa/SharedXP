@@ -142,6 +142,7 @@ const getSportConfigs = (buddy, currentUser) => {
       level: sportConfig.level ?? buddy.level ?? "",
       description: sportConfig.description ?? "",
       about: sportConfig.about ?? "",
+      equipmentAvailable: sportConfig.equipmentAvailable ?? buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false,
       pricing: sportConfig.pricing ?? buddy.price ?? "",
       pricingCurrency: sportConfig.pricingCurrency ?? "EUR",
       priceUnit: sportConfig.priceUnit ?? buddy.priceUnit ?? "per session"
@@ -154,6 +155,7 @@ const getSportConfigs = (buddy, currentUser) => {
       level: buddy.level ?? "",
       description: buddy.description ?? buddy.bio ?? "",
       about: buddy.about ?? "",
+      equipmentAvailable: buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false,
       pricing: buddy.price ?? "",
       pricingCurrency: "EUR",
       priceUnit: buddy.priceUnit ?? "per session"
@@ -251,6 +253,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const languageLine = getLanguageLine(buddy);
   const locationLine = [city, country].filter(Boolean).join(", ") || "Location unavailable";
   const selectedLevel = activeSport.level ?? buddy.level ?? "Not specified";
+  const isEquipmentAvailable =
+    activeSport.equipmentAvailable ?? buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false;
   const historyGalleryPhotos = getHistoryGalleryPhotos(currentUser, buddy);
   const selectedSportGallery = Array.isArray(activeSport.images) ? activeSport.images.filter(Boolean) : [];
   const galleryPhotos =
@@ -480,6 +484,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             </p>
           )}
           <p className="booking-label">Level: {selectedLevel}</p>
+          <p className="booking-label">Equipment: {isEquipmentAvailable ? "Available" : "Not available"}</p>
 
           <p className="booking-selection-hint">
             {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
