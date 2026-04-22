@@ -156,7 +156,22 @@ const FieldPage = ({ currentUser, onLogout }) => {
             {visiblePosts.map((post) => (
               <article key={post.id} className="field-card">
                 <div className="field-host-row">
-                  <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                  {post.hostPhoto ? (
+                    <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                  ) : (
+                    <div
+                      className="field-host-avatar field-host-avatar-fallback"
+                      aria-hidden="true"
+                    >
+                      {String(post.hostName ?? "?")
+                        .trim()
+                        .split(" ")
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((word) => word[0].toUpperCase())
+                        .join("") || "?"}
+                    </div>
+                  )}
                   <div>
                     <p>
                       <span className="field-host-name">{post.hostName}</span>

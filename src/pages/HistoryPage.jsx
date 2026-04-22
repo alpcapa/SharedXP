@@ -17,6 +17,7 @@ const DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME = "Participant";
 const DEFAULT_FIELD_POST_USER_NAME = "SharedXP User";
 const CONFIRMATION_WINDOW_MS = 48 * 60 * 60 * 1000;
 const FIELD_POSTS_STORAGE_KEY = "sharedxp-field-posts";
+const MAX_PHOTOS_PER_SESSION = 5;
 const HOST_RATING_FIELDS = [
   { key: "overall", label: "Overall" },
   { key: "punctuality", label: "Punctuality" },
@@ -467,7 +468,18 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
   const handlePhotoUpload = useCallback((itemId, files) => {
     if (!files || files.length === 0) return;
 
-    const fileArray = Array.from(files);
+    const currentItem = allItems.find((item) => item.id === itemId);
+    const currentRealPhotos = (currentItem?.photoGallery ?? []).filter(
+      (p) => p && p !== FALLBACK_EVENT_PHOTO
+    );
+    const remainingSlots = MAX_PHOTOS_PER_SESSION - currentRealPhotos.length;
+
+    if (remainingSlots <= 0) {
+      alert(`You can add a maximum of ${MAX_PHOTOS_PER_SESSION} photos per session.`);
+      return;
+    }
+
+    const fileArray = Array.from(files).slice(0, remainingSlots);
     fileArray.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -491,7 +503,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
       };
       reader.readAsDataURL(file);
     });
-  }, []);
+  }, [allItems]);
 
   const handlePhotoDelete = useCallback((itemId, photoIndex) => {
     setAllItems((prev) =>
