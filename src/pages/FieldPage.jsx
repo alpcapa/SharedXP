@@ -107,20 +107,23 @@ const FieldPage = ({ currentUser, onLogout }) => {
   };
 
   const cityOptions = useMemo(() => {
-    const allPosts = [...fieldPosts, ...userPosts];
+    const freshUserPosts = getUserFieldPosts();
+    const allPosts = [...fieldPosts, ...freshUserPosts];
     const sortedCities = [...new Set(allPosts.map((post) => post.city).filter(Boolean))].sort();
     return ["All", ...sortedCities];
-  }, [userPosts]);
+  }, [selectedCity]);
 
   const visiblePosts = useMemo(
-    () =>
-      [...fieldPosts, ...userPosts]
+    () => {
+      const freshUserPosts = getUserFieldPosts();
+      return [...fieldPosts, ...freshUserPosts]
         .filter((post) => selectedCity === "All" || post.city === selectedCity)
         .sort(
           (leftPost, rightPost) =>
             new Date(rightPost.postedAt).getTime() - new Date(leftPost.postedAt).getTime()
-        ),
-    [selectedCity, userPosts]
+        );
+    },
+    [selectedCity]
   );
 
   return (
