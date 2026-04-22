@@ -2019,15 +2019,27 @@ body {
 }
 
 .profile-summary-body {
+  display: block;
+}
+
+.profile-summary-photo-column {
   display: grid;
-  grid-template-columns: minmax(220px, 300px) 1fr;
-  gap: 20px;
-  align-items: start;
+  gap: 10px;
+  max-width: min(100%, 300px);
 }
 
 .profile-main-image {
   width: 100%;
   border-radius: 10px;
+}
+
+.profile-summary-meta p {
+  margin: 0;
+  color: #374151;
+}
+
+.profile-summary-meta p + p {
+  margin-top: 4px;
 }
 
 .gallery-grid {
@@ -2065,6 +2077,10 @@ body {
 .booking-engine h3 {
   margin: 0;
   font-size: 21px;
+}
+
+.recommendations .locals-grid {
+  margin-top: 12px;
 }
 
 .booking-sport-tabs {
