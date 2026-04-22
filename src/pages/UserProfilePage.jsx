@@ -147,7 +147,7 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
       <SiteHeader currentUser={currentUser} onLogout={onLogout} />
       <div className="profile-back-wrap">
         <Link to="/my-profile" className="back-link">
-          ← Back to my profile settings
+          ← Back to my profile
         </Link>
       </div>
 
