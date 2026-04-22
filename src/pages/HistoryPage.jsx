@@ -184,6 +184,7 @@ const normalizeAttended = (items) => {
       hostRatings,
       attendeeRating: clampRating(item.attendeeRating ?? item.participantRatingForHost ?? 0),
       review: String(item.review ?? item.comment ?? ""),
+      sharedToField: item.sharedToField === true,
       completedAt: String(completedAt),
       completedAtTimestamp,
       eventDateLabel: formatEventDate(completedAt),
@@ -230,6 +231,7 @@ const normalizeHosted = (items) => {
       photoGallery,
       rating: clampRating(item.rating ?? 0),
       review: String(item.review ?? item.comment ?? ""),
+      sharedToField: item.sharedToField === true,
       completedAt: String(completedAt),
       completedAtTimestamp,
       eventDateLabel: formatEventDate(completedAt),
@@ -272,6 +274,7 @@ const toStoredAttended = (items) =>
         hostRatings: item.hostRatings,
         attendeeRating: item.attendeeRating,
         review: item.review,
+        sharedToField: item.sharedToField === true,
         completedAt: item.completedAt,
         confirmationStatus: item.confirmationStatus,
         confirmedAt: item.confirmedAt,
@@ -297,6 +300,7 @@ const toStoredHosted = (items) =>
         photoGallery: item.photoGallery,
         rating: item.rating,
         review: item.review,
+        sharedToField: item.sharedToField === true,
         completedAt: item.completedAt,
         confirmationStatus: item.confirmationStatus,
         confirmedAt: item.confirmedAt,
@@ -451,7 +455,7 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
       const hasRealPhotos = savedItem?.photoGallery?.some(
         (p) => p && p !== FALLBACK_EVENT_PHOTO
       );
-      if (hasRealPhotos) {
+      if (hasRealPhotos && !savedItem?.sharedToField) {
         setShareCaption("");
         setShareCaptionError(false);
         setSharePromptItemId(itemId);
@@ -535,12 +539,25 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     };
 
     saveFieldPost(post);
+    setAllItems((prev) => {
+      const next = prev.map((historyItem) =>
+        historyItem.id === item.id ? { ...historyItem, sharedToField: true } : historyItem
+      );
+      onSaveHistory?.(toStoredAttended(next));
+      onSaveHostHistory?.(toStoredHosted(next));
+      return next;
+    });
+    setDirtyIds((prev) => {
+      const next = new Set(prev);
+      next.delete(item.id);
+      return next;
+    });
     setShareCaption("");
     setShareCaptionError(false);
     setSharePromptItemId(null);
     setShareSuccess(true);
     setTimeout(() => setShareSuccess(false), 3000);
-  }, [shareCaption, currentUser]);
+  }, [shareCaption, currentUser, onSaveHistory, onSaveHostHistory]);
 
   const openGallery = useCallback((item, startIndex = 0) => {
     const photos = item.photoGallery?.length ? item.photoGallery : [item.photo || FALLBACK_EVENT_PHOTO];
