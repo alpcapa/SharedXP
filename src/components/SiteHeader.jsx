@@ -100,6 +100,9 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
               <Link to="/my-profile" className="user-dropdown-link" role="menuitem">
                 My Profile
               </Link>
+              <Link to="/user-profile" className="user-dropdown-link" role="menuitem">
+                User Page
+              </Link>
               <Link
                 to={hostRoute}
                 className={`user-dropdown-link${isHostLabelPaused ? " user-dropdown-link-paused" : ""}`}

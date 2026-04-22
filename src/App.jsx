@@ -20,6 +20,7 @@ import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
 import useAuth from "./hooks/useAuth";
 import NotFoundPage from "./pages/NotFoundPage";
 import AboutPage from "./pages/AboutPage";
+import UserProfilePage from "./pages/UserProfilePage";
 
 function App() {
   const authActions = useAuth();
@@ -33,6 +34,7 @@ function App() {
       <Route path="/signup" element={<SignUpPage {...authActions} />} />
       <Route path="/login" element={<LoginPage {...authActions} />} />
       <Route path="/my-profile" element={<MyProfilePage {...authActions} />} />
+      <Route path="/user-profile" element={<UserProfilePage {...authActions} />} />
       <Route path="/become-a-host" element={<HostPage {...authActions} />} />
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />
