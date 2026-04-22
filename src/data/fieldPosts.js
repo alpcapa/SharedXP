@@ -31,7 +31,7 @@ export const fieldPosts = [
   },
   {
     id: 3,
-    hostId: 5,
+    hostId: null,
     hostName: "Clara Méndez",
     hostPhoto:
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
@@ -77,7 +77,7 @@ export const fieldPosts = [
   },
   {
     id: 6,
-    hostId: 6,
+    hostId: null,
     hostName: "Lukas Schneider",
     hostPhoto:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
@@ -93,7 +93,7 @@ export const fieldPosts = [
   },
   {
     id: 7,
-    hostId: 7,
+    hostId: null,
     hostName: "Elena Rossi",
     hostPhoto:
       "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80",

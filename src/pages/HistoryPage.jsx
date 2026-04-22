@@ -480,6 +480,13 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     }
 
     const fileArray = Array.from(files).slice(0, remainingSlots);
+    const invalidFiles = fileArray.filter(
+      (file) => !/^image\/(png|jpe?g|gif|webp|bmp)$/i.test(file.type)
+    );
+    if (invalidFiles.length > 0) {
+      alert("Please upload PNG, JPG, GIF, WEBP, or BMP images only.");
+      return;
+    }
     fileArray.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {

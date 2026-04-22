@@ -129,7 +129,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           </p>
           <p>{buddy.bio}</p>
           <p>Level: {buddy.level}</p>
-          <p>Language: {buddy.language}</p>
+          <p>Languages: {buddy.languages.filter(Boolean).join(", ")}</p>
           <p className="price">
             €{buddy.price} {perLabel}
           </p>

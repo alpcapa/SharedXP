@@ -17,7 +17,7 @@ export const buddies = [
     sport: "Cycling",
     gender: "Male",
     bio: "Love coastal rides & coffee stops ☕",
-    bikeAvailable: true,
+    equipmentAvailable: true,
     price: 30,
     priceUnit: "per session",
     rating: 4.9,
@@ -27,7 +27,7 @@ export const buddies = [
     coordinates: { lat: 38.7223, lng: -9.1393 },
     memberSince: "2021",
     level: "Intermediate",
-    language: "Portuguese, English",
+    languages: ["Portuguese", "English"],
     about:
       "I ride local routes every weekend and love meeting visitors looking for scenic rides.",
     gallery: [
@@ -73,7 +73,7 @@ export const buddies = [
     sport: "Tennis",
     gender: "Female",
     bio: "Court sessions with local tennis tips.",
-    bikeAvailable: true,
+    equipmentAvailable: true,
     price: 35,
     priceUnit: "per session",
     rating: 5.0,
@@ -83,7 +83,7 @@ export const buddies = [
     coordinates: { lat: 38.7369, lng: -9.1427 },
     memberSince: "2020",
     level: "Advanced",
-    language: "Portuguese, English",
+    languages: ["Portuguese", "English"],
     about:
       "I host dynamic tennis sessions in Lisbon, from controlled rallies to match-play with tactical tips.",
     gallery: [
@@ -125,7 +125,7 @@ export const buddies = [
     sport: "Running",
     gender: "Male",
     bio: "Fast intervals and scenic city runs.",
-    bikeAvailable: false,
+    equipmentAvailable: false,
     price: 25,
     priceUnit: "per session",
     rating: 4.8,
@@ -135,7 +135,7 @@ export const buddies = [
     coordinates: { lat: 38.7104, lng: -9.1459 },
     memberSince: "2022",
     level: "Advanced",
-    language: "Portuguese, English",
+    languages: ["Portuguese", "English"],
     about:
       "I lead city runs and interval sessions along Lisbon routes, adapting the pace to your level and goals.",
     gallery: [
@@ -175,7 +175,7 @@ export const buddies = [
     sport: "Basketball",
     gender: "Female",
     bio: "Friendly pickup games and shooting drills.",
-    bikeAvailable: true,
+    equipmentAvailable: true,
     price: 28,
     priceUnit: "per session",
     rating: 4.9,
@@ -185,7 +185,7 @@ export const buddies = [
     coordinates: { lat: 38.7281, lng: -9.1635 },
     memberSince: "2023",
     level: "Intermediate",
-    language: "Portuguese, English",
+    languages: ["Portuguese", "English"],
     about:
       "I organize friendly pickup basketball games and shooting drills focused on fundamentals and confidence.",
     gallery: [

@@ -79,8 +79,6 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [sportQuery, setSportQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
   const [localsPage, setLocalsPage] = useState(0);
   const searchBarRef = useRef(null);
 
@@ -132,12 +130,6 @@ const HomePage = ({ currentUser, onLogout }) => {
     }
     if (selectedLocation) {
       params.set("location", selectedLocation);
-    }
-    if (dateFrom) {
-      params.set("dateFrom", dateFrom);
-    }
-    if (dateTo) {
-      params.set("dateTo", dateTo);
     }
 
     navigate(`/locals?${params.toString()}`);
@@ -271,30 +263,6 @@ const HomePage = ({ currentUser, onLogout }) => {
                     </div>
                   </div>
                 )}
-              </div>
-              <div className="search-field">
-                <label id="date-label" htmlFor="date-from">
-                  Date
-                </label>
-                <div className="date-range">
-                  <input
-                    id="date-from"
-                    className="date-input"
-                    type="date"
-                    value={dateFrom}
-                    aria-label="From date"
-                    onChange={(event) => setDateFrom(event.target.value)}
-                  />
-                  <span className="range-separator">to</span>
-                  <input
-                    id="date-to"
-                    className="date-input"
-                    type="date"
-                    value={dateTo}
-                    aria-label="To date"
-                    onChange={(event) => setDateTo(event.target.value)}
-                  />
-                </div>
               </div>
               <button
                 type="button"

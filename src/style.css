@@ -3388,3 +3388,11 @@ body {
 .field-view-host-link:hover {
   text-decoration: underline;
 }
+
+/* ── Not Found page ──────────────────────────── */
+.not-found-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}

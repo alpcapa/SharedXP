@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 const BuddyCard = ({ buddy }) => {
   const actionLabel = buddy.sport === "Cycling" ? "Ride with" : "Play with";
-  const hasEquipment = buddy.equipmentAvailable ?? buddy.bikeAvailable;
+  const hasEquipment = buddy.equipmentAvailable;
 
   return (
     <Link to={`/buddy/${buddy.id}`} className="card-link">

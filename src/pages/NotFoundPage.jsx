@@ -12,7 +12,7 @@ const NotFoundPage = ({ currentUser, onLogout }) => (
             Page not found<span className="dot">.</span>
           </h1>
           <p>The page you requested does not exist or has moved.</p>
-          <div style={{ display: "flex", gap: "12px", marginTop: "20px", flexWrap: "wrap" }}>
+          <div className="not-found-actions">
             <Link to="/" className="find-button" style={{ textDecoration: "none" }}>
               Go home
             </Link>
