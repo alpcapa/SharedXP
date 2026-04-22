@@ -97,18 +97,8 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
           {isMenuOpen && (
             <div className="user-dropdown" role="menu">
               <p className="user-dropdown-name">{currentUser.fullName}</p>
-              <Link to="/my-profile" className="user-dropdown-link" role="menuitem">
-                My Profile
-              </Link>
               <Link to="/user-profile" className="user-dropdown-link" role="menuitem">
-                User Page
-              </Link>
-              <Link
-                to={hostRoute}
-                className={`user-dropdown-link${isHostLabelPaused ? " user-dropdown-link-paused" : ""}`}
-                role="menuitem"
-              >
-                {hostLabel}
+                My Profile
               </Link>
               <Link to="/history" className="user-dropdown-link" role="menuitem">
                 History
