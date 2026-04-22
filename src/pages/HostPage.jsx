@@ -511,6 +511,11 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
           />
         </section>
         <main className="middle-section simple-page host-settings-page">
+          <div className="profile-back-wrap">
+            <Link to="/user-profile" className="back-link">
+              ← Back to My Profile
+            </Link>
+          </div>
           <div className="host-settings-top-bar">
             <div>
               <h1 className={isHostingPaused ? "host-settings-title-paused" : ""}>

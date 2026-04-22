@@ -521,7 +521,12 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
         <main className="middle-section simple-page">
-          <h1>My Profile</h1>
+          <div className="profile-back-wrap">
+            <Link to="/user-profile" className="back-link">
+              ← Back to My Profile
+            </Link>
+          </div>
+          <h1>Edit Profile</h1>
           <div className="profile-name-row">
             <h2>{currentUser.fullName}</h2>
             {currentUser.isHost && (
