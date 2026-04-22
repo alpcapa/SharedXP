@@ -4,6 +4,7 @@ import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
+import { getProfileAge } from "../utils/profileAge";
 
 const LOCALS_PER_PAGE = 4;
 const HISTORY_PLACEHOLDER_EVENT_PHOTO =
@@ -132,6 +133,7 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
     [String(currentUser.city ?? "").trim(), String(currentUser.country ?? "").trim()].filter(Boolean).join(", ") ||
     "Location unavailable";
   const memberSince = getMemberSinceLabel(currentUser);
+  const userAge = getProfileAge(currentUser);
   const languageLine = (Array.isArray(currentUser.languages) ? currentUser.languages : [])
     .map((language) => String(language ?? "").trim())
     .filter(Boolean)
@@ -151,7 +153,14 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
       <section className="profile-summary">
         <div className="profile-summary-header">
           <div className="profile-summary-top-row">
-            <h1>{currentUser.fullName || "User"}</h1>
+            <h1 className="profile-name-with-age">
+              {currentUser.fullName || "User"}
+              {userAge != null && (
+                <span className="profile-name-age" aria-label={`age ${userAge}`}>
+                  ({userAge})
+                </span>
+              )}
+            </h1>
             <div className="profile-summary-actions">
               <Link to="/my-profile" className="btn btn-primary">
                 Edit Profile
