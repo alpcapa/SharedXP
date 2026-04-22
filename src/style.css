@@ -2007,8 +2007,22 @@ body {
 
 .profile-summary {
   display: grid;
+  gap: 16px;
+}
+
+.profile-summary-header h1 {
+  margin: 0;
+}
+
+.profile-summary-header p {
+  margin: 6px 0 0;
+}
+
+.profile-summary-body {
+  display: grid;
   grid-template-columns: minmax(220px, 300px) 1fr;
   gap: 20px;
+  align-items: start;
 }
 
 .profile-main-image {
@@ -2505,7 +2519,7 @@ body {
     min-height: 300px;
   }
 
-  .profile-summary {
+  .profile-summary-body {
     grid-template-columns: 1fr;
   }
 

@@ -8,10 +8,159 @@ import { getDateKey } from "../utils/date";
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const getStars = (value) => `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
+const CURRENCY_SYMBOLS = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  CAD: "C$",
+  AUD: "A$",
+  JPY: "¥",
+  INR: "₹",
+  BRL: "R$"
+};
+
+const getNameParts = (buddy) => {
+  const fullName = String(buddy.fullName ?? buddy.name ?? "").trim();
+  if (!fullName) {
+    return {
+      firstName: "Host",
+      lastName: "User",
+      fullName: "Host User"
+    };
+  }
+  const nameParts = fullName.split(/\s+/);
+  const firstName = nameParts[0];
+  const lastName = nameParts.slice(1).join(" ").trim() || "User";
+  return {
+    firstName,
+    lastName,
+    fullName: `${firstName} ${lastName}`.trim()
+  };
+};
+
+const getLocationParts = (buddy) => {
+  const explicitCity = String(buddy.city ?? buddy.hostProfile?.city ?? "").trim();
+  const explicitCountry = String(buddy.country ?? buddy.hostProfile?.country ?? "").trim();
+  if (explicitCity || explicitCountry) {
+    return {
+      city: explicitCity,
+      country: explicitCountry
+    };
+  }
+  const [city = "", country = ""] = String(buddy.location ?? "")
+    .split(",")
+    .map((part) => part.trim());
+  return { city, country };
+};
+
+const getHostRatingSummary = (buddy) => {
+  const reviewRatings = Array.isArray(buddy.reviews)
+    ? buddy.reviews
+        .map((review) => Number(review.overall ?? review.rating))
+        .filter((rating) => Number.isFinite(rating) && rating > 0)
+    : [];
+  const fallbackRating = Number(buddy.rating);
+  const computedRating =
+    reviewRatings.length > 0
+      ? reviewRatings.reduce((sum, rating) => sum + rating, 0) / reviewRatings.length
+      : Number.isFinite(fallbackRating)
+        ? fallbackRating
+        : 0;
+  return {
+    rating: computedRating.toFixed(1),
+    reviewCount:
+      reviewRatings.length > 0
+        ? reviewRatings.length
+        : Number.isFinite(Number(buddy.reviewCount))
+          ? Number(buddy.reviewCount)
+          : 0
+  };
+};
+
+const getMemberSinceLabel = (buddy) => {
+  const signedUpTimestamp = Date.parse(String(buddy.signedUpAt ?? ""));
+  if (Number.isFinite(signedUpTimestamp)) {
+    const now = new Date();
+    const signedUpDate = new Date(signedUpTimestamp);
+    if (signedUpDate > now) {
+      return "0 months";
+    }
+    let totalMonths =
+      (now.getFullYear() - signedUpDate.getFullYear()) * 12 + (now.getMonth() - signedUpDate.getMonth());
+    if (now.getDate() < signedUpDate.getDate()) {
+      totalMonths -= 1;
+    }
+    totalMonths = Math.max(0, totalMonths);
+    if (totalMonths >= 12) {
+      const years = Math.floor(totalMonths / 12);
+      return `${years} year${years === 1 ? "" : "s"}`;
+    }
+    return `${totalMonths} month${totalMonths === 1 ? "" : "s"}`;
+  }
+
+  const fallbackYear = Number(buddy.memberSince);
+  if (Number.isFinite(fallbackYear) && fallbackYear > 1900) {
+    const years = Math.max(0, new Date().getFullYear() - fallbackYear);
+    return `${years} year${years === 1 ? "" : "s"}`;
+  }
+  return "New";
+};
+
+const getSportConfigs = (buddy) => {
+  if (Array.isArray(buddy.sports) && buddy.sports.length > 0) {
+    return buddy.sports.map((sportConfig) => ({
+      ...sportConfig,
+      sport: sportConfig.sport ?? buddy.sport ?? "",
+      level: sportConfig.level ?? buddy.level ?? "",
+      description: sportConfig.description ?? "",
+      about: sportConfig.about ?? "",
+      pricing: sportConfig.pricing ?? buddy.price ?? "",
+      pricingCurrency: sportConfig.pricingCurrency ?? "EUR"
+    }));
+  }
+
+  return [
+    {
+      sport: buddy.sport ?? "",
+      level: buddy.level ?? "",
+      description: buddy.description ?? buddy.bio ?? "",
+      about: buddy.about ?? "",
+      pricing: buddy.price ?? "",
+      pricingCurrency: "EUR"
+    }
+  ];
+};
+
+const getLanguageLine = (buddy) => {
+  if (Array.isArray(buddy.hostProfile?.languages)) {
+    return buddy.hostProfile.languages.filter(Boolean).join(", ");
+  }
+  if (Array.isArray(buddy.languages)) {
+    return buddy.languages.filter(Boolean).join(", ");
+  }
+  return String(buddy.language ?? "");
+};
+
+const formatPrice = (amount, currency) => {
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    return "";
+  }
+  const normalizedCurrency = String(currency ?? "").toUpperCase();
+  const currencySymbol = CURRENCY_SYMBOLS[normalizedCurrency];
+  if (currencySymbol) {
+    return `${currencySymbol}${numericAmount}`;
+  }
+  if (normalizedCurrency) {
+    return `${normalizedCurrency} ${numericAmount}`;
+  }
+  return String(numericAmount);
+};
 
 const ProfilePage = ({ currentUser, onLogout }) => {
   const { buddyId } = useParams();
   const buddy = buddies.find((item) => String(item.id) === buddyId);
+  const [selectedSportIndex, setSelectedSportIndex] = useState(0);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
@@ -31,17 +180,20 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   }
 
   const recommendations = buddies.filter((item) => item.id !== buddy.id).slice(0, 2);
-  const hostDisplayName = buddy.fullName ?? buddy.name;
-  const perLabel = buddy.priceUnit ?? "per session";
-  const hostSports = Array.isArray(buddy.sports)
-    ? buddy.sports
-    : buddy.sport
-      ? [{ sport: buddy.sport }]
-      : [];
-  const availableDates = buddy.availableDates ?? [];
-  const availableTimes = buddy.availableTimes ?? [];
+  const { firstName, lastName, fullName: hostDisplayName } = getNameParts(buddy);
+  const { rating: hostRating, reviewCount } = getHostRatingSummary(buddy);
+  const { city, country } = getLocationParts(buddy);
+  const memberSince = getMemberSinceLabel(buddy);
+  const hostSports = getSportConfigs(buddy);
+  const activeSport = hostSports[selectedSportIndex] ?? hostSports[0] ?? {};
+  const availableDates = activeSport.availableDates ?? buddy.availableDates ?? [];
+  const availableTimes = activeSport.availableTimes ?? buddy.availableTimes ?? [];
   const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
   const canRequestBooking = Boolean(selectedDate && selectedTime);
+  const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
+  const perLabel = buddy.priceUnit ?? "per session";
+  const languageLine = getLanguageLine(buddy);
+  const locationLine = [city, country].filter(Boolean).join(", ") || "Location unavailable";
   const monthYearLabel = new Intl.DateTimeFormat("en-GB", {
     month: "long",
     year: "numeric"
@@ -118,46 +270,40 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       </div>
 
       <section className="profile-summary">
-        <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
-        <div>
-          <h1>{hostDisplayName}</h1>
+        <div className="profile-summary-header">
+          <h1>
+            {firstName} {lastName}
+          </h1>
           <p>
-            ⭐ {buddy.rating} · <span className="verified">Verified</span>
+            ⭐ {hostRating}
+            {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
           </p>
-          <p>
-            {buddy.location} · Member since {buddy.memberSince}
-          </p>
-          <p>{buddy.bio}</p>
-          <p>Level: {buddy.level}</p>
-          <p>Language: {buddy.language}</p>
-          <p className="price">
-            €{buddy.price} {perLabel}
-          </p>
-          <p>{buddy.availabilitySchedule.join(" · ")}</p>
         </div>
-      </section>
-
-      <section className="about">
-        <h3>About</h3>
-        <p>{buddy.about}</p>
-        {buddy.bike && (
-          <p>
-            Bike: {buddy.bike.brand} {buddy.bike.model} ({buddy.bike.type})
-          </p>
-        )}
+        <div className="profile-summary-body">
+          <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
+          <div>
+            <p>
+              {locationLine} · Member since {memberSince}
+            </p>
+            <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
+            <p>Level: {activeSport.level ?? buddy.level ?? "Not specified"}</p>
+          </div>
+        </div>
       </section>
 
       <section className="booking-engine-section" aria-label="Booking engine">
         <div className="booking-engine">
-          <h3>Book with {hostDisplayName}</h3>
+          <h3>Booking with {hostDisplayName}</h3>
+          {activeSport.description && <p className="booking-subtitle">{activeSport.description}</p>}
+          {activeSport.about && <p>{activeSport.about}</p>}
           {hostSports.length > 0 && (
             <div className="host-sport-tabs booking-sport-tabs" aria-label={`${hostDisplayName} sports`}>
               {hostSports.map((sportConfig, sportIndex) => (
                 <button
                   key={sportIndex}
                   type="button"
-                  className={`host-sport-tab${sportIndex === 0 ? " active" : ""}`}
-                  disabled
+                  className={`host-sport-tab${sportIndex === selectedSportIndex ? " active" : ""}`}
+                  onClick={() => setSelectedSportIndex(sportIndex)}
                 >
                   {sportConfig.sport || `Sport ${sportIndex + 1}`}
                 </button>
@@ -250,6 +396,11 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               </option>
             ))}
           </select>
+          {selectedPrice && (
+            <p className="booking-label">
+              Price: {selectedPrice} {perLabel}
+            </p>
+          )}
 
           <p className="booking-selection-hint">
             {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
@@ -339,7 +490,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               <>
                 <h3>Confirm your booking request</h3>
                 <p className="booking-modal-meta">
-                  {hostDisplayName} · €{buddy.price} {perLabel}
+                  {hostDisplayName}
+                  {selectedPrice ? ` · ${selectedPrice} ${perLabel}` : ""}
                 </p>
                 <div className="booking-modal-list">
                   <p>
