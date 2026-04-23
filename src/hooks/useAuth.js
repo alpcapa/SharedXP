@@ -219,6 +219,7 @@ const useAuth = () => {
         const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password: newUser.password,
+          options: { emailRedirectTo: window.location.origin },
         });
 
         if (error) return { success: false, message: error.message };
