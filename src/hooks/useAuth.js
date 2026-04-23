@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase, supabaseUrl } from "../lib/supabase";
+import { supabase, supabaseUrl, supabaseAnonKey } from "../lib/supabase";
 
 const PENDING_PROFILE_KEY = "sharedxp-pending-profile";
 
@@ -254,15 +254,23 @@ const useAuth = () => {
       onEmailSignUp: async (newUser) => {
         const normalizedEmail = newUser.email.trim().toLowerCase();
 
-        // Quick connectivity check before signup
-        const healthUrl = `${supabaseUrl}/auth/v1/health`;
+        // Diagnose connectivity and key format before signup
+        const keyPrefix = supabaseAnonKey ? supabaseAnonKey.slice(0, 15) + "…" : "none";
         try {
-          await fetch(healthUrl);
-        } catch {
-          return {
-            success: false,
-            message: `Cannot reach Supabase (${supabaseUrl || "no URL set"}). Check Vercel env vars.`,
-          };
+          const res = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: supabaseAnonKey,
+              Authorization: `Bearer ${supabaseAnonKey}`,
+            },
+            body: JSON.stringify({ email: "probe@example.com", password: "probe-12345678" }),
+          });
+          if (!res.ok && res.status === 0) {
+            return { success: false, message: `Auth endpoint unreachable. URL: ${supabaseUrl}, key: ${keyPrefix}` };
+          }
+        } catch (e) {
+          return { success: false, message: `Fetch failed: ${e.message}. URL: ${supabaseUrl}, key: ${keyPrefix}` };
         }
 
         const { data, error } = await supabase.auth.signUp({
