@@ -739,6 +739,16 @@ body {
   background: #fff;
 }
 
+.explore-geo-notice {
+  font-size: 0.82rem;
+  color: #666;
+  background: #f5f5f0;
+  border: 1px solid #e0e0d8;
+  border-radius: 6px;
+  padding: 0.5rem 0.8rem;
+  margin-bottom: 10px;
+}
+
 .explore-map-section {
   margin-top: 14px;
 }
