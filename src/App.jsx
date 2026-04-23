@@ -25,6 +25,10 @@ import UserProfilePage from "./pages/UserProfilePage";
 function App() {
   const authActions = useAuth();
 
+  if (authActions.authLoading) {
+    return <div className="app-loading">Loading…</div>;
+  }
+
   return (
     <Routes>
       <Route path="/" element={<HomePage {...authActions} />} />

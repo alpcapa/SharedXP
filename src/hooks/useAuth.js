@@ -1,272 +1,376 @@
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabase";
 
-const USER_STORAGE_KEY = "sharedxp-users";
-const SESSION_STORAGE_KEY = "sharedxp-session";
+// History stays in localStorage for Phase 1 (moves to DB in Phase 3).
+// Keys are scoped to the Supabase user ID to avoid collisions.
+const historyKey = (userId) => `sharedxp-history-${userId}`;
+const hostHistoryKey = (userId) => `sharedxp-host-history-${userId}`;
 
-const getStoredUsers = () => {
+const getLocalHistory = (userId) => {
   try {
-    const rawUsers = localStorage.getItem(USER_STORAGE_KEY);
-    if (!rawUsers) {
-      return [];
-    }
-
-    const parsedUsers = JSON.parse(rawUsers);
-    return Array.isArray(parsedUsers) ? parsedUsers : [];
-  } catch (error) {
+    return JSON.parse(localStorage.getItem(historyKey(userId)) || "[]");
+  } catch {
+    return [];
+  }
+};
+const getLocalHostHistory = (userId) => {
+  try {
+    return JSON.parse(localStorage.getItem(hostHistoryKey(userId)) || "[]");
+  } catch {
     return [];
   }
 };
 
-const getStoredSession = () => {
-  try {
-    const rawUser = localStorage.getItem(SESSION_STORAGE_KEY);
-    return rawUser ? JSON.parse(rawUser) : null;
-  } catch (error) {
-    return null;
-  }
-};
-
-const inferCityFromAddress = (address) => {
-  if (!address) {
-    return "";
-  }
-
-  const addressParts = address
-    .split(",")
-    .map((addressPart) => addressPart.trim())
-    .filter(Boolean);
-
-  if (addressParts.length >= 2) {
-    return addressParts[1];
-  }
-
-  return addressParts[0] ?? "";
-};
-
 const normalizeLanguages = (languages) =>
-  Array.from({ length: 4 }, (_, index) =>
-    typeof languages?.[index] === "string" ? languages[index].trim() : ""
+  Array.from({ length: 4 }, (_, i) =>
+    typeof languages?.[i] === "string" ? languages[i].trim() : ""
   );
 const normalizeSports = (sports) =>
-  Array.from({ length: 4 }, (_, index) =>
-    typeof sports?.[index] === "string" ? sports[index].trim() : ""
+  Array.from({ length: 4 }, (_, i) =>
+    typeof sports?.[i] === "string" ? sports[i].trim() : ""
   );
 
-const hashPassword = async (rawPassword) => {
-  const encodedPassword = new TextEncoder().encode(rawPassword);
-  const digestBuffer = await crypto.subtle.digest("SHA-256", encodedPassword);
-  return Array.from(new Uint8Array(digestBuffer))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
+const inferCityFromAddress = (address) => {
+  if (!address) return "";
+  const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+  return parts.length >= 2 ? parts[1] : (parts[0] ?? "");
+};
+
+const buildHostProfileObject = (hostProfile, hostSports) => {
+  if (!hostProfile) return null;
+  return {
+    country: hostProfile.country || "",
+    city: hostProfile.city || "",
+    pauseHosting: hostProfile.pause_hosting || false,
+    bankDetailsComplete: hostProfile.bank_details_complete || false,
+    sports: (hostSports || []).map((hs) => ({
+      sport: hs.sport || "",
+      description: hs.description || "",
+      about: hs.about || "",
+      pricing: hs.pricing || 0,
+      pricingCurrency: hs.pricing_currency || "EUR",
+      level: hs.level || "",
+      paused: hs.paused || false,
+      equipmentAvailable: hs.equipment_available || false,
+      equipmentDetails: hs.equipment_details || "",
+      availability: {
+        days: hs.availability_days || [],
+        startTime: hs.availability_start_time || "09:00",
+        endTime: hs.availability_end_time || "18:00",
+      },
+      images: (hs.host_sport_images || [])
+        .sort((a, b) => a.position - b.position)
+        .map((img) => img.image_url),
+    })),
+    stripe: {
+      stripeEmail: hostProfile.stripe_email || "",
+      accountHolderName: hostProfile.account_holder_name || "",
+      citizenIdNumber: hostProfile.citizen_id_number || "",
+      taxNumber: hostProfile.tax_number || "",
+      bankName: hostProfile.bank_name || "",
+      accountNumber: hostProfile.account_number || "",
+      routingNumber: hostProfile.routing_number || "",
+      payoutCurrency: hostProfile.payout_currency || "EUR",
+    },
+    consents: {
+      agreeTermsAndConditions: hostProfile.agree_terms || false,
+      agreePromotionsAndMarketingEmails: hostProfile.agree_promotions || false,
+      agreeHostingRelatedEmailsAndCalls: hostProfile.agree_hosting_emails || false,
+    },
+  };
+};
+
+const buildUserObject = (authUser, profile, languages, sports, hostProfile, hostSports) => {
+  if (!authUser || !profile) return null;
+  return {
+    id: authUser.id,
+    email: profile.email || authUser.email || "",
+    fullName: profile.full_name || "",
+    firstName: profile.first_name || "",
+    lastName: profile.last_name || "",
+    phone: profile.phone || "",
+    phoneCountryCode: profile.phone_country_code || "",
+    countryDialCode: profile.country_dial_code || "",
+    address: profile.address || "",
+    country: profile.country || "",
+    city: profile.city || "",
+    photo: profile.photo_url || "",
+    birthday: profile.birthday || "",
+    gender: profile.gender || "",
+    languages: normalizeLanguages(
+      (languages || []).sort((a, b) => a.position - b.position).map((l) => l.language)
+    ),
+    sports: normalizeSports(
+      (sports || []).sort((a, b) => a.position - b.position).map((s) => s.sport)
+    ),
+    signedUpAt: profile.signed_up_at || authUser.created_at || new Date().toISOString(),
+    isHost: profile.is_host || false,
+    hostProfile: buildHostProfileObject(hostProfile, hostSports),
+    history: getLocalHistory(authUser.id),
+    hostHistory: getLocalHostHistory(authUser.id),
+    agreedToTermsAndConditions: profile.agreed_to_terms || false,
+    agreedToPromotionsAndMarketingEmails: profile.agreed_to_promotions || false,
+  };
+};
+
+const fetchUserProfile = async (authUser) => {
+  if (!authUser) return null;
+
+  const [profileResult, languagesResult, sportsResult] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", authUser.id).single(),
+    supabase.from("user_languages").select("*").eq("user_id", authUser.id).order("position"),
+    supabase.from("user_sports").select("*").eq("user_id", authUser.id).order("position"),
+  ]);
+
+  const profile = profileResult.data;
+  if (!profile) return null;
+
+  let hostProfile = null;
+  let hostSports = [];
+
+  if (profile.is_host) {
+    const { data: hp } = await supabase
+      .from("host_profiles")
+      .select("*")
+      .eq("user_id", authUser.id)
+      .single();
+
+    hostProfile = hp;
+
+    if (hostProfile) {
+      const { data: hs } = await supabase
+        .from("host_sports")
+        .select("*, host_sport_images(*)")
+        .eq("host_profile_id", hostProfile.id);
+      hostSports = hs || [];
+    }
+  }
+
+  return buildUserObject(
+    authUser,
+    profile,
+    languagesResult.data || [],
+    sportsResult.data || [],
+    hostProfile,
+    hostSports
+  );
+};
+
+const upsertLanguagesAndSports = async (userId, languages, sports) => {
+  const langRows = normalizeLanguages(languages)
+    .map((lang, i) => ({ user_id: userId, language: lang, position: i }))
+    .filter((r) => r.language);
+
+  const sportRows = normalizeSports(sports)
+    .map((sport, i) => ({ user_id: userId, sport, position: i }))
+    .filter((r) => r.sport);
+
+  await Promise.all([
+    supabase.from("user_languages").delete().eq("user_id", userId),
+    supabase.from("user_sports").delete().eq("user_id", userId),
+  ]);
+
+  await Promise.all([
+    langRows.length > 0 ? supabase.from("user_languages").insert(langRows) : Promise.resolve(),
+    sportRows.length > 0 ? supabase.from("user_sports").insert(sportRows) : Promise.resolve(),
+  ]);
 };
 
 const useAuth = () => {
-  const [registeredUsers, setRegisteredUsers] = useState(getStoredUsers);
-  const [currentUser, setCurrentUser] = useState(getStoredSession);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(registeredUsers));
-  }, [registeredUsers]);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const user = await fetchUserProfile(session.user);
+        setCurrentUser(user);
+      }
+      setAuthLoading(false);
+    });
 
-  useEffect(() => {
-    const hasLegacyPasswords = registeredUsers.some(
-      (user) => Boolean(user.password) && !user.passwordHash
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const user = await fetchUserProfile(session.user);
+        setCurrentUser(user);
+      } else {
+        setCurrentUser(null);
+      }
+    });
 
-    if (!hasLegacyPasswords) {
-      return;
-    }
-
-    const migrateLegacyPasswords = async () => {
-      const migratedUsers = await Promise.all(
-        registeredUsers.map(async (user) => {
-          if (!user.password || user.passwordHash) {
-            return user;
-          }
-
-          const passwordHash = await hashPassword(user.password);
-          const { password, ...migratedUser } = { ...user, passwordHash };
-          return migratedUser;
-        })
-      );
-
-      setRegisteredUsers(migratedUsers);
-      setCurrentUser((activeUser) => {
-        if (!activeUser) {
-          return activeUser;
-        }
-
-        return (
-          migratedUsers.find(
-            (user) => user.email.toLowerCase() === activeUser.email.toLowerCase()
-          ) ?? activeUser
-        );
-      });
-    };
-
-    migrateLegacyPasswords();
-  }, [registeredUsers]);
-
-  useEffect(() => {
-    if (!currentUser) {
-      localStorage.removeItem(SESSION_STORAGE_KEY);
-      return;
-    }
-
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentUser));
-  }, [currentUser]);
+    return () => subscription.unsubscribe();
+  }, []);
 
   return useMemo(
     () => ({
       currentUser,
-      onLogout: () => setCurrentUser(null),
+      authLoading,
+
+      onLogout: async () => {
+        await supabase.auth.signOut();
+        setCurrentUser(null);
+      },
+
       onEmailSignUp: async (newUser) => {
         const normalizedEmail = newUser.email.trim().toLowerCase();
-        const passwordHash = await hashPassword(newUser.password);
-        const restProfile = { ...newUser };
-        delete restProfile.password;
-        const userToSave = {
-          ...restProfile,
-          email: normalizedEmail,
-          passwordHash,
-          signedUpAt: newUser.signedUpAt ?? new Date().toISOString(),
-          languages: normalizeLanguages(newUser.languages),
-          sports: normalizeSports(newUser.sports),
-          isHost: false,
-          history: newUser.history ?? []
-        };
 
-        setRegisteredUsers((previousUsers) => {
-          const usersWithoutCurrentEmail = previousUsers.filter(
-            (user) => user.email.toLowerCase() !== normalizedEmail
-          );
-          return [...usersWithoutCurrentEmail, userToSave];
+        const { data, error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password: newUser.password,
         });
 
-        setCurrentUser(userToSave);
+        if (error) return { success: false, message: error.message };
+        if (!data.user) return { success: false, message: "Sign up failed." };
+
+        const userId = data.user.id;
+
+        await supabase.from("profiles").upsert({
+          id: userId,
+          email: normalizedEmail,
+          first_name: newUser.firstName || "",
+          last_name: newUser.lastName || "",
+          full_name:
+            newUser.fullName ||
+            `${newUser.firstName || ""} ${newUser.lastName || ""}`.trim(),
+          phone: newUser.phone || "",
+          phone_country_code: newUser.phoneCountryCode || "",
+          country_dial_code: newUser.countryDialCode || "",
+          address: newUser.address || "",
+          country: newUser.country || "",
+          city: newUser.city || inferCityFromAddress(newUser.address),
+          photo_url: newUser.photo || "",
+          birthday: newUser.birthday || "",
+          gender: newUser.gender || "",
+          is_host: false,
+          agreed_to_terms: newUser.agreedToTermsAndConditions || false,
+          agreed_to_promotions: newUser.agreedToPromotionsAndMarketingEmails || false,
+          signed_up_at: new Date().toISOString(),
+        });
+
+        await upsertLanguagesAndSports(userId, newUser.languages, newUser.sports);
+        return { success: true };
       },
+
       onEmailLogin: async (email, password) => {
-        const normalizedEmail = email.trim().toLowerCase();
-        const passwordHash = await hashPassword(password);
-        const matchedUser = registeredUsers.find(
-          (user) => user.email.toLowerCase() === normalizedEmail && user.passwordHash === passwordHash
-        );
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
 
-        if (!matchedUser) {
-          return {
-            success: false,
-            message: "Incorrect email or password."
-          };
-        }
-
-        setCurrentUser(matchedUser);
-        return {
-          success: true
-        };
+        if (error) return { success: false, message: "Incorrect email or password." };
+        return { success: true };
       },
-      onSocialLogin: (provider) => {
-        const providerName = provider === "apple" ? "Apple" : "Google";
-        const providerEmail = `${providerName.toLowerCase()}@sharedxp.app`;
-        const existingProviderUser = registeredUsers.find(
-          (user) => user.email.toLowerCase() === providerEmail
-        );
 
-        if (existingProviderUser) {
-          setCurrentUser(existingProviderUser);
-          return;
-        }
-
-        const createdProviderUser = {
-          fullName: `${providerName} Traveler`,
-          email: providerEmail,
-          passwordHash: "",
-          signedUpAt: new Date().toISOString(),
-          phone: "",
-          address: "",
-          languages: normalizeLanguages(),
-          sports: normalizeSports(),
-          photo:
-            providerName === "Apple"
-              ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&h=300&q=80"
-              : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&h=300&q=80",
-          isHost: false,
-          history: []
-        };
-
-        setRegisteredUsers((previousUsers) => [...previousUsers, createdProviderUser]);
-        setCurrentUser(createdProviderUser);
+      onSocialLogin: async (provider) => {
+        await supabase.auth.signInWithOAuth({
+          provider: provider === "apple" ? "apple" : "google",
+          options: { redirectTo: window.location.origin },
+        });
       },
-      onToggleHost: () => {
-        if (!currentUser) {
-          return;
+
+      onToggleHost: async () => {
+        if (!currentUser) return;
+
+        await supabase.from("profiles").update({ is_host: true }).eq("id", currentUser.id);
+
+        const { data: existing } = await supabase
+          .from("host_profiles")
+          .select("id")
+          .eq("user_id", currentUser.id)
+          .single();
+
+        if (!existing) {
+          await supabase.from("host_profiles").insert({
+            user_id: currentUser.id,
+            country: currentUser.country || "",
+            city: currentUser.city || inferCityFromAddress(currentUser.address),
+          });
         }
 
-        const updatedUser = {
-          ...currentUser,
-          isHost: true,
-          hostProfile: {
-            ...(currentUser.hostProfile ?? {}),
-            firstName: currentUser.firstName ?? "",
-            lastName: currentUser.lastName ?? "",
-            fullName: currentUser.fullName ?? "",
-            email: currentUser.email ?? "",
-            phone: currentUser.phone ?? "",
-            address: currentUser.address ?? "",
-            country: currentUser.country ?? currentUser.hostProfile?.country ?? "",
-            city:
-              currentUser.city ??
-              currentUser.hostProfile?.city ??
-              inferCityFromAddress(currentUser.address),
-            photo: currentUser.photo ?? "",
-            languages: normalizeLanguages(currentUser.languages)
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+        setCurrentUser(await fetchUserProfile(authUser));
+      },
+
+      onSaveHostProfile: async (hostProfile) => {
+        if (!currentUser) return;
+
+        const { data: savedHostProfile } = await supabase
+          .from("host_profiles")
+          .upsert(
+            {
+              user_id: currentUser.id,
+              country: hostProfile.country || currentUser.country || "",
+              city: hostProfile.city || currentUser.city || "",
+              pause_hosting: hostProfile.pauseHosting || false,
+              bank_details_complete: hostProfile.bankDetailsComplete || false,
+              stripe_email: hostProfile.stripe?.stripeEmail || currentUser.email,
+              account_holder_name: hostProfile.stripe?.accountHolderName || "",
+              citizen_id_number: hostProfile.stripe?.citizenIdNumber || "",
+              tax_number: hostProfile.stripe?.taxNumber || "",
+              bank_name: hostProfile.stripe?.bankName || "",
+              account_number: hostProfile.stripe?.accountNumber || "",
+              routing_number: hostProfile.stripe?.routingNumber || "",
+              payout_currency: hostProfile.stripe?.payoutCurrency || "EUR",
+              agree_terms: hostProfile.consents?.agreeTermsAndConditions || false,
+              agree_promotions: hostProfile.consents?.agreePromotionsAndMarketingEmails || false,
+              agree_hosting_emails: hostProfile.consents?.agreeHostingRelatedEmailsAndCalls || false,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" }
+          )
+          .select()
+          .single();
+
+        if (savedHostProfile && hostProfile.sports?.length > 0) {
+          await supabase.from("host_sports").delete().eq("host_profile_id", savedHostProfile.id);
+
+          for (const sportConfig of hostProfile.sports) {
+            const { data: savedSport } = await supabase
+              .from("host_sports")
+              .insert({
+                host_profile_id: savedHostProfile.id,
+                sport: sportConfig.sport || "",
+                description: sportConfig.description || "",
+                about: sportConfig.about || "",
+                pricing: sportConfig.pricing || 0,
+                pricing_currency: sportConfig.pricingCurrency || "EUR",
+                level: sportConfig.level || "",
+                paused: sportConfig.paused || false,
+                equipment_available: sportConfig.equipmentAvailable || false,
+                equipment_details: sportConfig.equipmentDetails || "",
+                availability_days: sportConfig.availability?.days || [],
+                availability_start_time: sportConfig.availability?.startTime || "09:00",
+                availability_end_time: sportConfig.availability?.endTime || "18:00",
+              })
+              .select()
+              .single();
+
+            if (savedSport && sportConfig.images?.length > 0) {
+              const imageRows = sportConfig.images
+                .filter(Boolean)
+                .map((url, i) => ({ host_sport_id: savedSport.id, image_url: url, position: i }));
+              if (imageRows.length > 0) {
+                await supabase.from("host_sport_images").insert(imageRows);
+              }
+            }
           }
-        };
-
-        setCurrentUser(updatedUser);
-        setRegisteredUsers((previousUsers) =>
-          previousUsers.map((user) =>
-            user.email.toLowerCase() === currentUser.email.toLowerCase() ? updatedUser : user
-          )
-        );
-      },
-      onSaveHostProfile: (hostProfile) => {
-        if (!currentUser) {
-          return;
         }
 
-        const syncedHostProfile = {
-          ...hostProfile,
-          firstName: currentUser.firstName ?? "",
-          lastName: currentUser.lastName ?? "",
-          fullName: currentUser.fullName ?? "",
-          email: currentUser.email ?? "",
-          phone: currentUser.phone ?? "",
-          address: currentUser.address ?? "",
-          country: hostProfile.country ?? currentUser.country ?? "",
-          city: hostProfile.city ?? currentUser.city ?? inferCityFromAddress(currentUser.address),
-          photo: currentUser.photo ?? "",
-          languages: normalizeLanguages(currentUser.languages)
-        };
+        await supabase.from("profiles").update({ is_host: true }).eq("id", currentUser.id);
 
-        const updatedUser = {
-          ...currentUser,
-          isHost: true,
-          hostProfile: syncedHostProfile
-        };
-
-        setCurrentUser(updatedUser);
-        setRegisteredUsers((previousUsers) =>
-          previousUsers.map((user) =>
-            user.email.toLowerCase() === currentUser.email.toLowerCase() ? updatedUser : user
-          )
-        );
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+        setCurrentUser(await fetchUserProfile(authUser));
       },
+
       onUpdateProfile: async (profileUpdates) => {
         if (!currentUser) {
-          return {
-            success: false,
-            message: "Please log in to update your profile."
-          };
+          return { success: false, message: "Please log in to update your profile." };
         }
 
         const previousEmail = currentUser.email.trim().toLowerCase();
@@ -275,127 +379,85 @@ const useAuth = () => {
         const hasCriticalChanges =
           nextEmail !== previousEmail || nextPhone !== (currentUser.phone ?? "").trim();
 
-        const isEmailAlreadyInUse = registeredUsers.some((user) => {
-          const normalizedUserEmail = user.email.toLowerCase();
-          return normalizedUserEmail === nextEmail && normalizedUserEmail !== previousEmail;
-        });
-        if (isEmailAlreadyInUse) {
-          return {
-            success: false,
-            message: "This email is already in use by another account."
-          };
+        if (nextEmail !== previousEmail) {
+          const { data: existing } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("email", nextEmail)
+            .neq("id", currentUser.id)
+            .maybeSingle();
+
+          if (existing) {
+            return { success: false, message: "This email is already in use by another account." };
+          }
         }
 
-        const normalizedProfileCity =
-          typeof profileUpdates.city === "string" ? profileUpdates.city.trim() : undefined;
-        const profileCity =
-          normalizedProfileCity !== undefined
-            ? normalizedProfileCity
+        const normalizedCity =
+          typeof profileUpdates.city === "string"
+            ? profileUpdates.city.trim()
             : inferCityFromAddress(profileUpdates.address);
-        const shouldSyncHostProfile = Boolean(currentUser.isHost && currentUser.hostProfile);
-        const nextHostProfile = shouldSyncHostProfile
-          ? {
-              ...currentUser.hostProfile,
-              firstName: currentUser.firstName ?? "",
-              lastName: currentUser.lastName ?? "",
-              fullName: currentUser.fullName ?? "",
-              email: nextEmail,
-              phone: nextPhone,
-              address: profileUpdates.address ?? currentUser.address ?? "",
-              photo: profileUpdates.photo ?? currentUser.photo ?? "",
-              languages: normalizeLanguages(profileUpdates.languages ?? currentUser.languages),
-              sports: normalizeSports(profileUpdates.sports ?? currentUser.sports),
-              country: profileUpdates.country ?? currentUser.hostProfile.country,
-              city: profileCity !== undefined ? profileCity : currentUser.hostProfile.city ?? "",
-              stripe: {
-                ...(currentUser.hostProfile.stripe ?? {}),
-                stripeEmail: nextEmail
-              }
-            }
-          : currentUser.hostProfile;
 
-        const updatedUser = {
-          ...currentUser,
-          ...profileUpdates,
-          firstName: currentUser.firstName,
-          lastName: currentUser.lastName,
-          fullName: currentUser.fullName,
-          email: nextEmail,
-          phone: nextPhone,
-          sports: normalizeSports(profileUpdates.sports ?? currentUser.sports),
-          hostProfile: nextHostProfile
-        };
+        await supabase
+          .from("profiles")
+          .update({
+            email: nextEmail,
+            phone: nextPhone,
+            phone_country_code: profileUpdates.phoneCountryCode ?? currentUser.phoneCountryCode ?? "",
+            country_dial_code: profileUpdates.countryDialCode ?? currentUser.countryDialCode ?? "",
+            address: profileUpdates.address ?? currentUser.address ?? "",
+            country: profileUpdates.country ?? currentUser.country ?? "",
+            city: normalizedCity || currentUser.city || "",
+            photo_url: profileUpdates.photo ?? currentUser.photo ?? "",
+            birthday: profileUpdates.birthday ?? currentUser.birthday ?? "",
+            gender: profileUpdates.gender ?? currentUser.gender ?? "",
+            agreed_to_promotions:
+              profileUpdates.agreedToPromotionsAndMarketingEmails ??
+              currentUser.agreedToPromotionsAndMarketingEmails ??
+              false,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", currentUser.id);
 
-        setRegisteredUsers((previousUsers) =>
-          previousUsers.map((user) =>
-            user.email.toLowerCase() === previousEmail ? updatedUser : user
-          )
-        );
+        if (profileUpdates.languages || profileUpdates.sports) {
+          await upsertLanguagesAndSports(
+            currentUser.id,
+            profileUpdates.languages ?? currentUser.languages,
+            profileUpdates.sports ?? currentUser.sports
+          );
+        }
+
+        if (hasCriticalChanges && nextEmail !== previousEmail) {
+          await supabase.auth.updateUser({ email: nextEmail });
+        }
 
         if (hasCriticalChanges) {
+          await supabase.auth.signOut();
           setCurrentUser(null);
-          return {
-            success: true,
-            requiresReauthentication: true
-          };
+          return { success: true, requiresReauthentication: true };
         }
 
-        setCurrentUser(updatedUser);
-        return {
-          success: true,
-          requiresReauthentication: false
-        };
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+        setCurrentUser(await fetchUserProfile(authUser));
+        return { success: true, requiresReauthentication: false };
       },
+
       onSaveHistory: (historyItems) => {
-        if (!currentUser) {
-          return;
-        }
-
-        const normalizedHistoryItems = Array.isArray(historyItems) ? historyItems : [];
-        const normalizedEmail = currentUser.email.toLowerCase();
-        const updatedUser = {
-          ...currentUser,
-          history: normalizedHistoryItems
-        };
-
-        setCurrentUser(updatedUser);
-        setRegisteredUsers((previousUsers) =>
-          previousUsers.map((user) =>
-            user.email.toLowerCase() === normalizedEmail
-              ? {
-                  ...user,
-                  history: normalizedHistoryItems
-                }
-              : user
-          )
-        );
+        if (!currentUser) return;
+        const items = Array.isArray(historyItems) ? historyItems : [];
+        localStorage.setItem(historyKey(currentUser.id), JSON.stringify(items));
+        setCurrentUser((prev) => (prev ? { ...prev, history: items } : null));
       },
+
       onSaveHostHistory: (hostHistoryItems) => {
-        if (!currentUser) {
-          return;
-        }
-
-        const normalizedItems = Array.isArray(hostHistoryItems) ? hostHistoryItems : [];
-        const normalizedEmail = currentUser.email.toLowerCase();
-        const updatedUser = {
-          ...currentUser,
-          hostHistory: normalizedItems
-        };
-
-        setCurrentUser(updatedUser);
-        setRegisteredUsers((previousUsers) =>
-          previousUsers.map((user) =>
-            user.email.toLowerCase() === normalizedEmail
-              ? {
-                  ...user,
-                  hostHistory: normalizedItems
-                }
-              : user
-          )
-        );
-      }
+        if (!currentUser) return;
+        const items = Array.isArray(hostHistoryItems) ? hostHistoryItems : [];
+        localStorage.setItem(hostHistoryKey(currentUser.id), JSON.stringify(items));
+        setCurrentUser((prev) => (prev ? { ...prev, hostHistory: items } : null));
+      },
     }),
-    [currentUser, registeredUsers]
+    [currentUser, authLoading]
   );
 };
 

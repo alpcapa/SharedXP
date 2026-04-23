@@ -3585,3 +3585,12 @@ body {
 .host-payment-complete strong {
   color: #15803d;
 }
+
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 1rem;
+  color: #888;
+}
