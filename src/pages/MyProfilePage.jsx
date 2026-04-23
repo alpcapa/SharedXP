@@ -2,19 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
-
-const COUNTRY_OPTIONS = [
-  { name: "Brazil", code: "BR", dialCode: "+55" },
-  { name: "Canada", code: "CA", dialCode: "+1" },
-  { name: "France", code: "FR", dialCode: "+33" },
-  { name: "Germany", code: "DE", dialCode: "+49" },
-  { name: "India", code: "IN", dialCode: "+91" },
-  { name: "Japan", code: "JP", dialCode: "+81" },
-  { name: "Portugal", code: "PT", dialCode: "+351" },
-  { name: "Spain", code: "ES", dialCode: "+34" },
-  { name: "United Kingdom", code: "GB", dialCode: "+44" },
-  { name: "United States", code: "US", dialCode: "+1" }
-];
+import { COUNTRY_OPTIONS } from "../data/countries";
 const COUNTRY_CITY_OPTIONS = {
   BR: ["Rio de Janeiro", "São Paulo", "Florianópolis", "Salvador"],
   CA: ["Toronto", "Vancouver", "Montreal", "Calgary"],

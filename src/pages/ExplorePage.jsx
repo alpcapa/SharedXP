@@ -68,6 +68,7 @@ const projectPoint = (point, bounds) => {
 const ExplorePage = ({ currentUser, onLogout }) => {
   const [searchParams] = useSearchParams();
   const [userLocation, setUserLocation] = useState(DEFAULT_CENTER);
+  const [geoStatus, setGeoStatus] = useState("loading");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSport, setSelectedSport] = useState("All");
   const [selectedLocation, setSelectedLocation] = useState(USER_LOCATION_FILTER);
@@ -78,6 +79,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
 
   useEffect(() => {
     if (!navigator.geolocation) {
+      setGeoStatus("unavailable");
       return;
     }
 
@@ -87,9 +89,11 @@ const ExplorePage = ({ currentUser, onLogout }) => {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         });
+        setGeoStatus("granted");
       },
       () => {
         setUserLocation(DEFAULT_CENTER);
+        setGeoStatus("denied");
       },
       {
         enableHighAccuracy: true,
@@ -319,14 +323,20 @@ const ExplorePage = ({ currentUser, onLogout }) => {
         </section>
 
         <main className="middle-section explore-page-content">
+          {(geoStatus === "denied" || geoStatus === "unavailable") && (
+            <p className="explore-geo-notice">
+              📍 Location {geoStatus === "denied" ? "access was denied" : "is not available"} —
+              distances are estimated from Lisbon, Portugal.
+            </p>
+          )}
           <section className="explore-map-section" aria-label="Map of nearby buddies">
             <div className="explore-map">
               <div
                 className="explore-map-user-pin"
                 style={{ left: `${userMapPosition.x}%`, top: `${userMapPosition.y}%` }}
-                title="You"
+                title={geoStatus === "granted" ? "Your location" : "Approximate location"}
               >
-                You
+                {geoStatus === "loading" ? "Locating…" : "You"}
               </div>
 
               {mapPoints.map((buddy) => (
