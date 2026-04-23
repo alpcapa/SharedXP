@@ -30,4 +30,4 @@ try {
   supabase = createClient("https://placeholder.supabase.co", "placeholder");
 }
 
-export { supabase, supabaseUrl };
+export { supabase, supabaseUrl, supabaseAnonKey };
