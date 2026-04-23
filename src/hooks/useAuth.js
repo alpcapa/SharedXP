@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 
+const PENDING_PROFILE_KEY = "sharedxp-pending-profile";
+
 // History stays in localStorage for Phase 1 (moves to DB in Phase 3).
 // Keys are scoped to the Supabase user ID to avoid collisions.
 const historyKey = (userId) => `sharedxp-history-${userId}`;
@@ -193,6 +195,42 @@ const useAuth = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
+        if (event === "SIGNED_IN") {
+          const pendingRaw = localStorage.getItem(PENDING_PROFILE_KEY);
+          if (pendingRaw) {
+            try {
+              const pending = JSON.parse(pendingRaw);
+              if (pending.email === session.user.email) {
+                localStorage.removeItem(PENDING_PROFILE_KEY);
+                await supabase.from("profiles").upsert({
+                  id: session.user.id,
+                  email: pending.email,
+                  first_name: pending.firstName || "",
+                  last_name: pending.lastName || "",
+                  full_name:
+                    pending.fullName ||
+                    `${pending.firstName || ""} ${pending.lastName || ""}`.trim(),
+                  phone: pending.phone || "",
+                  phone_country_code: pending.phoneCountryCode || "",
+                  country_dial_code: pending.countryDialCode || "",
+                  address: pending.address || "",
+                  country: pending.country || "",
+                  city: pending.city || "",
+                  photo_url: pending.photo || "",
+                  birthday: pending.birthday || "",
+                  gender: pending.gender || "",
+                  is_host: false,
+                  agreed_to_terms: pending.agreedToTermsAndConditions || false,
+                  agreed_to_promotions: pending.agreedToPromotionsAndMarketingEmails || false,
+                  signed_up_at: new Date().toISOString(),
+                });
+                await upsertLanguagesAndSports(session.user.id, pending.languages, pending.sports);
+              }
+            } catch (e) {
+              console.error("Failed to save pending profile:", e);
+            }
+          }
+        }
         const user = await fetchUserProfile(session.user);
         setCurrentUser(user);
       } else {
@@ -225,32 +263,13 @@ const useAuth = () => {
         if (error) return { success: false, message: error.message };
         if (!data.user) return { success: false, message: "Sign up failed." };
 
-        const userId = data.user.id;
+        // No session yet (email unconfirmed) — save profile data so
+        // onAuthStateChange can upsert it once the user confirms their email.
+        localStorage.setItem(
+          PENDING_PROFILE_KEY,
+          JSON.stringify({ ...newUser, email: normalizedEmail })
+        );
 
-        await supabase.from("profiles").upsert({
-          id: userId,
-          email: normalizedEmail,
-          first_name: newUser.firstName || "",
-          last_name: newUser.lastName || "",
-          full_name:
-            newUser.fullName ||
-            `${newUser.firstName || ""} ${newUser.lastName || ""}`.trim(),
-          phone: newUser.phone || "",
-          phone_country_code: newUser.phoneCountryCode || "",
-          country_dial_code: newUser.countryDialCode || "",
-          address: newUser.address || "",
-          country: newUser.country || "",
-          city: newUser.city || inferCityFromAddress(newUser.address),
-          photo_url: newUser.photo || "",
-          birthday: newUser.birthday || "",
-          gender: newUser.gender || "",
-          is_host: false,
-          agreed_to_terms: newUser.agreedToTermsAndConditions || false,
-          agreed_to_promotions: newUser.agreedToPromotionsAndMarketingEmails || false,
-          signed_up_at: new Date().toISOString(),
-        });
-
-        await upsertLanguagesAndSports(userId, newUser.languages, newUser.sports);
         return { success: true };
       },
 
