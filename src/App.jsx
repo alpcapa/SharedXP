@@ -26,7 +26,7 @@ function App() {
   const authActions = useAuth();
 
   if (authActions.authLoading) {
-    return <div className="app-loading">Loading…</div>;
+    return <div className="app-loading" style={{color:"#555",fontSize:"1.2rem"}}>Loading…</div>;
   }
 
   return (
