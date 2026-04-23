@@ -3,18 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import { COUNTRY_OPTIONS } from "../data/countries";
-const COUNTRY_CITY_OPTIONS = {
-  BR: ["Rio de Janeiro", "São Paulo", "Florianópolis", "Salvador"],
-  CA: ["Toronto", "Vancouver", "Montreal", "Calgary"],
-  FR: ["Paris", "Lyon", "Nice", "Bordeaux"],
-  DE: ["Berlin", "Munich", "Hamburg", "Cologne"],
-  IN: ["Mumbai", "Delhi", "Bengaluru", "Goa"],
-  JP: ["Tokyo", "Osaka", "Kyoto", "Sapporo"],
-  PT: ["Lisbon", "Porto", "Faro", "Coimbra"],
-  ES: ["Madrid", "Barcelona", "Valencia", "Seville"],
-  GB: ["London", "Manchester", "Bristol", "Edinburgh"],
-  US: ["New York", "Los Angeles", "Austin", "Miami"]
-};
+import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
 const LANGUAGE_OPTIONS = [
   "Arabic",
   "Bengali",
