@@ -253,41 +253,51 @@ const useAuth = () => {
 
       onEmailSignUp: async (newUser) => {
         const normalizedEmail = newUser.email.trim().toLowerCase();
+        const redirectTo = encodeURIComponent(window.location.origin);
 
-        // Diagnose connectivity and key format before signup
-        const keyPrefix = supabaseAnonKey ? supabaseAnonKey.slice(0, 15) + "…" : "none";
+        let res, json;
         try {
-          const res = await fetch(`${supabaseUrl}/auth/v1/signup`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: supabaseAnonKey,
-              Authorization: `Bearer ${supabaseAnonKey}`,
-            },
-            body: JSON.stringify({ email: "probe@example.com", password: "probe-12345678" }),
-          });
-          if (!res.ok && res.status === 0) {
-            return { success: false, message: `Auth endpoint unreachable. URL: ${supabaseUrl}, key: ${keyPrefix}` };
-          }
+          res = await fetch(
+            `${supabaseUrl}/auth/v1/signup?redirect_to=${redirectTo}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: supabaseAnonKey,
+                Authorization: `Bearer ${supabaseAnonKey}`,
+              },
+              body: JSON.stringify({
+                email: normalizedEmail,
+                password: newUser.password,
+              }),
+            }
+          );
+          json = await res.json();
         } catch (e) {
-          return { success: false, message: `Fetch failed: ${e.message}. URL: ${supabaseUrl}, key: ${keyPrefix}` };
+          return { success: false, message: `Network error: ${e.message}` };
         }
 
-        const { data, error } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password: newUser.password,
-          options: { emailRedirectTo: window.location.origin },
-        });
+        if (!res.ok) {
+          const msg = json?.msg || json?.message || json?.error_description || "Sign up failed.";
+          return { success: false, message: msg };
+        }
 
-        if (error) return { success: false, message: error.message };
-        if (!data.user) return { success: false, message: "Sign up failed." };
+        const userId = json?.id;
+        if (!userId) return { success: false, message: "Sign up failed — no user returned." };
 
-        // No session yet (email unconfirmed) — save profile data so
-        // onAuthStateChange can upsert it once the user confirms their email.
-        localStorage.setItem(
-          PENDING_PROFILE_KEY,
-          JSON.stringify({ ...newUser, email: normalizedEmail })
-        );
+        // Save profile data; onAuthStateChange will upsert it after email confirmation.
+        try {
+          localStorage.setItem(
+            PENDING_PROFILE_KEY,
+            JSON.stringify({ ...newUser, email: normalizedEmail })
+          );
+        } catch {
+          // Quota exceeded — strip photo and retry
+          localStorage.setItem(
+            PENDING_PROFILE_KEY,
+            JSON.stringify({ ...newUser, email: normalizedEmail, photo: "" })
+          );
+        }
 
         return { success: true };
       },
