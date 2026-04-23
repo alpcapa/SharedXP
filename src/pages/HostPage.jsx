@@ -747,7 +747,18 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
 
               <div className="host-images-block">
                 <h3>Photo Gallery</h3>
-                <input type="file" accept="image/*" multiple onChange={onSportImageSelect} />
+                <input
+                  id="hostPhotoUpload"
+                  className="history-photo-upload-input"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={onSportImageSelect}
+                />
+                <label className="history-photo-upload-label" htmlFor="hostPhotoUpload">
+                  Upload photos
+                </label>
+                <span className="host-photo-upload-hint">You can select multiple photos at once.</span>
                 {activeSport.images.length > 0 && (
                   <div className="host-image-grid">
                     {activeSport.images.map((imageSrc, imageIndex) => (
