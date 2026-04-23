@@ -3461,3 +3461,11 @@ body {
 .field-view-host-link:hover {
   text-decoration: underline;
 }
+
+.host-photo-upload-hint {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #596164;
+  margin-top: 2px;
+}
