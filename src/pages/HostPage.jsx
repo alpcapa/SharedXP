@@ -100,6 +100,7 @@ const getInitialHostProfile = (user) => {
 
   return {
     pauseHosting: existingProfile.pauseHosting ?? false,
+    bankDetailsComplete: existingProfile.bankDetailsComplete ?? false,
     country: existingProfile.country ?? user?.country ?? "",
     city: existingProfile.city ?? user?.city ?? inferCityFromAddress(user?.address) ?? "",
     stripe: {
@@ -135,6 +136,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
   const [countrySearchValue, setCountrySearchValue] = useState("");
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [citySearchValue, setCitySearchValue] = useState("");
+  const [activeTab, setActiveTab] = useState("sports");
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
 
@@ -246,6 +248,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
   const updateStripeField = (fieldName, value) => {
     setHostProfileDraft((previousDraft) => ({
       ...previousDraft,
+      bankDetailsComplete: false,
       stripe: {
         ...previousDraft.stripe,
         [fieldName]: value
@@ -423,27 +426,13 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
     setSuccessMessage("");
   };
 
-  const validateOnboarding = () => {
+  const validateSportsTab = () => {
     if (!hostProfileDraft.country.trim()) {
       return "Please choose your host country.";
     }
 
     if (!hostProfileDraft.city.trim()) {
       return "Please choose your host city.";
-    }
-
-    const stripeFields = [
-      hostProfileDraft.stripe.stripeEmail,
-      hostProfileDraft.stripe.accountHolderName,
-      hostProfileDraft.stripe.citizenIdNumber,
-      hostProfileDraft.stripe.taxNumber,
-      hostProfileDraft.stripe.bankName,
-      hostProfileDraft.stripe.accountNumber,
-      hostProfileDraft.stripe.routingNumber,
-      hostProfileDraft.stripe.payoutCurrency
-    ];
-    if (stripeFields.some((value) => !value.trim())) {
-      return "Complete all bank details before saving.";
     }
     const missingConsent = REQUIRED_HOST_CONSENTS.find(
       (consentConfig) => !hostProfileDraft.consents?.[consentConfig.field]
@@ -477,9 +466,29 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
     return "";
   };
 
-  const onSubmit = (event) => {
+  const validatePaymentTab = () => {
+    const stripeFields = [
+      hostProfileDraft.stripe.stripeEmail,
+      hostProfileDraft.stripe.accountHolderName,
+      hostProfileDraft.stripe.citizenIdNumber,
+      hostProfileDraft.stripe.taxNumber,
+      hostProfileDraft.stripe.bankName,
+      hostProfileDraft.stripe.accountNumber,
+      hostProfileDraft.stripe.routingNumber,
+      hostProfileDraft.stripe.payoutCurrency
+    ];
+    if (stripeFields.some((value) => !String(value ?? "").trim())) {
+      return "Please complete all bank detail fields.";
+    }
+    return "";
+  };
+
+  const isSportsTabComplete = validateSportsTab() === "";
+  const isPaymentTabComplete = hostProfileDraft.bankDetailsComplete === true;
+
+  const onSaveSports = (event) => {
     event.preventDefault();
-    const validationError = validateOnboarding();
+    const validationError = validateSportsTab();
 
     if (validationError) {
       setErrorMessage(validationError);
@@ -497,7 +506,25 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
 
     onSaveHostProfile?.(profileToSave);
     setErrorMessage("");
-    setSuccessMessage("Host onboarding saved successfully.");
+    setSuccessMessage("Sport settings saved successfully.");
+  };
+
+  const onSavePayment = (event) => {
+    event.preventDefault();
+    const validationError = validatePaymentTab();
+    if (validationError) {
+      setErrorMessage(validationError);
+      setSuccessMessage("");
+      return;
+    }
+    const profileToSave = {
+      ...hostProfileDraft,
+      bankDetailsComplete: true
+    };
+    onSaveHostProfile?.(profileToSave);
+    setHostProfileDraft((previousDraft) => ({ ...previousDraft, bankDetailsComplete: true }));
+    setErrorMessage("");
+    setSuccessMessage("Payment details saved successfully.");
   };
 
   return (
@@ -516,6 +543,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
               ← Back to My Profile
             </Link>
           </div>
+
           <div className="host-settings-top-bar">
             <div>
               <h1 className={isHostingPaused ? "host-settings-title-paused" : ""}>
@@ -524,7 +552,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
               <p>
                 {isHostingPaused
                   ? "Hosting is currently paused. Resume hosting when you're ready."
-                  : "Complete sport setup and bank details to start hosting."}
+                  : "Manage your sport offerings and payment details."}
               </p>
             </div>
             <label className="hosting-pause-toggle" htmlFor="pauseHosting">
@@ -546,95 +574,568 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
             </label>
           </div>
 
-          <form className="host-onboarding-form" onSubmit={onSubmit}>
-            <section className="host-onboarding-card">
-              <div className="host-sport-header">
-                <h2>Sports onboarding</h2>
-                <button type="button" className="btn host-add-sport-button" onClick={addSport}>
-                  Add Sport
-                </button>
-              </div>
-              <div className="host-sport-tabs" role="tablist" aria-label="Host sports tabs">
-                {hostProfileDraft.sports.map((sportConfig, index) => (
-                  <div key={`sport-tab-${index}`} className="host-sport-tab-wrap">
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={activeSportIndex === index}
-                      className={`host-sport-tab${activeSportIndex === index ? " active" : ""}`}
-                      onClick={() => setActiveSportIndex(index)}
-                    >
-                      {sportConfig.sport || `Sport ${index + 1}`}
-                    </button>
-                    <button
-                      type="button"
-                      className="host-sport-delete"
-                      aria-label={`Delete ${sportConfig.sport || `Sport ${index + 1}`}`}
-                      onClick={() => removeSport(index)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
+          <div className="host-tab-bar" role="tablist" aria-label="Host settings sections">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "sports"}
+              className={`host-tab-btn${activeTab === "sports" ? " active" : ""}`}
+              onClick={() => {
+                setActiveTab("sports");
+                setErrorMessage("");
+                setSuccessMessage("");
+              }}
+            >
+              Sport Setup
+              {isSportsTabComplete ? (
+                <span className="host-tab-status host-tab-status-ok" aria-label="complete">✓</span>
+              ) : (
+                <span className="host-tab-status host-tab-status-warn" aria-label="incomplete">!</span>
+              )}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "payment"}
+              className={`host-tab-btn${activeTab === "payment" ? " active" : ""}`}
+              onClick={() => {
+                setActiveTab("payment");
+                setErrorMessage("");
+                setSuccessMessage("");
+              }}
+            >
+              Payment Details
+              {isPaymentTabComplete ? (
+                <span className="host-tab-status host-tab-status-ok" aria-label="complete">✓</span>
+              ) : (
+                <span className="host-tab-status host-tab-status-warn" aria-label="incomplete">!</span>
+              )}
+            </button>
+          </div>
 
-              <div className="host-form-grid">
-                <label htmlFor="sportType">Sport</label>
-                <select
-                  id="sportType"
-                  required
-                  value={activeSport.sport}
-                  onChange={(event) => updateSportField("sport", event.target.value)}
-                >
-                  <option value="">Select sport</option>
-                  {SPORT_OPTIONS.map((sportOption) => (
-                    <option key={sportOption} value={sportOption}>
-                      {sportOption}
-                    </option>
+          {activeTab === "sports" && (
+            <form onSubmit={onSaveSports}>
+              <section className="host-onboarding-card">
+                <div className="host-sport-header">
+                  <h2>Sport Setup</h2>
+                  <button type="button" className="btn host-add-sport-button" onClick={addSport}>
+                    Add Sport
+                  </button>
+                </div>
+                <div className="host-sport-tabs" role="tablist" aria-label="Host sports tabs">
+                  {hostProfileDraft.sports.map((sportConfig, index) => (
+                    <div key={`sport-tab-${index}`} className="host-sport-tab-wrap">
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={activeSportIndex === index}
+                        className={`host-sport-tab${activeSportIndex === index ? " active" : ""}`}
+                        onClick={() => setActiveSportIndex(index)}
+                      >
+                        {sportConfig.sport || `Sport ${index + 1}`}
+                      </button>
+                      <button
+                        type="button"
+                        className="host-sport-delete"
+                        aria-label={`Delete ${sportConfig.sport || `Sport ${index + 1}`}`}
+                        onClick={() => removeSport(index)}
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
-                </select>
+                </div>
 
-                <label htmlFor="sportDescription">Description</label>
-                <textarea
-                  id="sportDescription"
-                  required
-                  maxLength={50}
-                  rows={2}
-                  placeholder="Love coastal rides & coffee stops"
-                  value={activeSport.description}
-                  onChange={(event) => updateSportField("description", event.target.value)}
-                />
-                <p className="host-field-hint">{activeSport.description.length}/50</p>
-
-                <label htmlFor="sportAbout">About</label>
-                <textarea
-                  id="sportAbout"
-                  required
-                  rows={4}
-                  placeholder="Share your bio and hosting style"
-                  value={activeSport.about}
-                  onChange={(event) => updateSportField("about", event.target.value)}
-                />
-
-                <label htmlFor="sportPricing">How much do you charge per session?</label>
-                <div className="host-price-row">
-                  <input
-                    id="sportPricing"
-                    type="number"
-                    min="1"
-                    step="1"
-                    required
-                    placeholder="How much do you charge per session?"
-                    value={activeSport.pricing}
-                    onChange={(event) => updateSportField("pricing", event.target.value)}
-                  />
+                <div className="host-form-grid">
+                  <label htmlFor="sportType">Sport</label>
                   <select
-                    aria-label="Pricing currency"
+                    id="sportType"
                     required
-                    value={activeSport.pricingCurrency}
-                    onChange={(event) => updateSportField("pricingCurrency", event.target.value)}
+                    value={activeSport.sport}
+                    onChange={(event) => updateSportField("sport", event.target.value)}
                   >
-                    <option value="">Currency</option>
+                    <option value="">Select sport</option>
+                    {SPORT_OPTIONS.map((sportOption) => (
+                      <option key={sportOption} value={sportOption}>
+                        {sportOption}
+                      </option>
+                    ))}
+                  </select>
+
+                  <label htmlFor="sportDescription">Description</label>
+                  <textarea
+                    id="sportDescription"
+                    required
+                    maxLength={50}
+                    rows={2}
+                    placeholder="Love coastal rides & coffee stops"
+                    value={activeSport.description}
+                    onChange={(event) => updateSportField("description", event.target.value)}
+                  />
+                  <p className="host-field-hint">{activeSport.description.length}/50</p>
+
+                  <label htmlFor="sportAbout">About</label>
+                  <textarea
+                    id="sportAbout"
+                    required
+                    rows={4}
+                    placeholder="Share your bio and hosting style"
+                    value={activeSport.about}
+                    onChange={(event) => updateSportField("about", event.target.value)}
+                  />
+
+                  <label htmlFor="sportPricing">How much do you charge per session?</label>
+                  <div className="host-price-row">
+                    <input
+                      id="sportPricing"
+                      type="number"
+                      min="1"
+                      step="1"
+                      required
+                      placeholder="How much do you charge per session?"
+                      value={activeSport.pricing}
+                      onChange={(event) => updateSportField("pricing", event.target.value)}
+                    />
+                    <select
+                      aria-label="Pricing currency"
+                      required
+                      value={activeSport.pricingCurrency}
+                      onChange={(event) => updateSportField("pricingCurrency", event.target.value)}
+                    >
+                      <option value="">Currency</option>
+                      {CURRENCY_OPTIONS.map((currencyOption) => (
+                        <option key={currencyOption} value={currencyOption}>
+                          {currencyOption}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <label htmlFor="sportLevel">Level</label>
+                  <select
+                    id="sportLevel"
+                    required
+                    value={activeSport.level}
+                    onChange={(event) => updateSportField("level", event.target.value)}
+                  >
+                    <option value="">Select level</option>
+                    {LEVEL_OPTIONS.map((levelOption) => (
+                      <option key={levelOption} value={levelOption}>
+                        {levelOption}
+                      </option>
+                    ))}
+                  </select>
+
+                  <label>Equipment Availability</label>
+                  <div className="host-toggle-group" role="radiogroup" aria-label="Equipment availability">
+                    <label htmlFor={`equipment-yes-${activeSportIndex}`}>
+                      <input
+                        id={`equipment-yes-${activeSportIndex}`}
+                        type="radio"
+                        name="equipmentAvailability"
+                        checked={Boolean(activeSport.equipmentAvailable)}
+                        onChange={() => updateEquipmentAvailability(true)}
+                      />
+                      Yes
+                    </label>
+                    <label htmlFor={`equipment-no-${activeSportIndex}`}>
+                      <input
+                        id={`equipment-no-${activeSportIndex}`}
+                        type="radio"
+                        name="equipmentAvailability"
+                        checked={!activeSport.equipmentAvailable}
+                        onChange={() => updateEquipmentAvailability(false)}
+                      />
+                      No
+                    </label>
+                  </div>
+
+                  <label htmlFor="equipmentDetails">Equipment Details</label>
+                  <textarea
+                    id="equipmentDetails"
+                    rows={3}
+                    placeholder="List the equipment you will provide"
+                    value={activeSport.equipmentDetails}
+                    onChange={(event) => updateSportField("equipmentDetails", event.target.value)}
+                    disabled={!activeSport.equipmentAvailable}
+                    className="host-equipment-details"
+                  />
+                </div>
+
+                <div className="host-availability-block">
+                  <h3>Availability</h3>
+                  <p>Select weekly availability and a preferred time range.</p>
+                  <div className="host-availability-days">
+                    {AVAILABILITY_DAYS.map((day) => (
+                      <label key={day}>
+                        <input
+                          type="checkbox"
+                          checked={activeSport.availability.days.includes(day)}
+                          onChange={() => toggleAvailabilityDay(day)}
+                        />
+                        {day}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="host-availability-time">
+                    <div>
+                      <label htmlFor="availabilityStart">From</label>
+                      <select
+                        id="availabilityStart"
+                        required
+                        value={activeSport.availability.startTime}
+                        onChange={(event) => updateAvailabilityTime("startTime", event.target.value)}
+                      >
+                        <option value="">Select start time</option>
+                        {TIME_OPTIONS.map((timeOption) => (
+                          <option key={`start-${timeOption}`} value={timeOption}>
+                            {timeOption}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="availabilityEnd">To</label>
+                      <select
+                        id="availabilityEnd"
+                        required
+                        value={activeSport.availability.endTime}
+                        onChange={(event) => updateAvailabilityTime("endTime", event.target.value)}
+                      >
+                        <option value="">Select end time</option>
+                        {TIME_OPTIONS.map((timeOption) => (
+                          <option key={`end-${timeOption}`} value={timeOption}>
+                            {timeOption}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="host-images-block">
+                  <h3>Photo Gallery</h3>
+                  <input
+                    id="hostPhotoUpload"
+                    className="history-photo-upload-input"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={onSportImageSelect}
+                  />
+                  <label className="history-photo-upload-label" htmlFor="hostPhotoUpload">
+                    Upload photos
+                  </label>
+                  <span className="host-photo-upload-hint">You can select multiple photos at once.</span>
+                  {activeSport.images.length > 0 && (
+                    <div className="host-image-grid">
+                      {activeSport.images.map((imageSrc, imageIndex) => (
+                        <div key={imageIndex} className="host-image-item">
+                          <img
+                            src={imageSrc}
+                            alt={
+                              activeSport.sport
+                                ? `${activeSport.sport} image ${imageIndex + 1}`
+                                : `Sport ${activeSportIndex + 1} image ${imageIndex + 1}`
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="host-image-remove"
+                            onClick={() => removeSportImage(imageIndex)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section className="host-onboarding-card">
+                <h2>Your Location</h2>
+                <div className="host-form-grid">
+                  <label id="host-country-label" htmlFor="host-country-selector">Country</label>
+                  <div className="auth-search-dropdown" ref={countryDropdownRef}>
+                    <button
+                      id="host-country-selector"
+                      type="button"
+                      className="auth-dropdown-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded={isCountryDropdownOpen}
+                      aria-controls="host-country-listbox"
+                      onClick={() => {
+                        setIsCountryDropdownOpen((previousState) => !previousState);
+                        setCountrySearchValue("");
+                      }}
+                    >
+                      {selectedCountry ? (
+                        <>
+                          <span>{getCountryFlag(selectedCountry.code)}</span>
+                          <span>{selectedCountry.name}</span>
+                        </>
+                      ) : (
+                        <span>Select country</span>
+                      )}
+                    </button>
+                    {isCountryDropdownOpen && (
+                      <div className="auth-dropdown-panel">
+                        <input
+                          type="search"
+                          className="auth-dropdown-search"
+                          placeholder="Search country"
+                          value={countrySearchValue}
+                          onChange={(event) => setCountrySearchValue(event.target.value)}
+                        />
+                        <ul
+                          id="host-country-listbox"
+                          className="auth-dropdown-options"
+                          role="listbox"
+                          aria-labelledby="host-country-label"
+                        >
+                          {filteredCountryOptions.map((countryOption) => (
+                            <li key={countryOption.code}>
+                              <button
+                                type="button"
+                                className="auth-dropdown-option"
+                                role="option"
+                                aria-selected={selectedCountry?.code === countryOption.code}
+                                onClick={() => {
+                                  const nextCities = COUNTRY_CITY_OPTIONS[countryOption.code] ?? [];
+                                  setHostProfileDraft((previousDraft) => ({
+                                    ...previousDraft,
+                                    country: countryOption.name,
+                                    city: nextCities[0] ?? ""
+                                  }));
+                                  setIsCountryDropdownOpen(false);
+                                }}
+                              >
+                                <span>{getCountryFlag(countryOption.code)}</span>
+                                <span>{countryOption.name}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  <label id="host-city-label" htmlFor="host-city-selector">City</label>
+                  <div className="auth-search-dropdown" ref={cityDropdownRef}>
+                    <button
+                      id="host-city-selector"
+                      type="button"
+                      className="auth-dropdown-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded={isCityDropdownOpen}
+                      aria-controls="host-city-listbox"
+                      disabled={!selectedCountry}
+                      onClick={() => {
+                        setIsCityDropdownOpen((previousState) => !previousState);
+                        setCitySearchValue("");
+                      }}
+                    >
+                      {hostProfileDraft.city || "Select city"}
+                    </button>
+                    {isCityDropdownOpen && (
+                      <div className="auth-dropdown-panel">
+                        <input
+                          type="search"
+                          className="auth-dropdown-search"
+                          placeholder="Search city"
+                          value={citySearchValue}
+                          onChange={(event) => setCitySearchValue(event.target.value)}
+                        />
+                        <ul
+                          id="host-city-listbox"
+                          className="auth-dropdown-options"
+                          role="listbox"
+                          aria-labelledby="host-city-label"
+                        >
+                          {filteredCityOptions.map((cityOption) => (
+                            <li key={cityOption}>
+                              <button
+                                type="button"
+                                className="auth-dropdown-option"
+                                role="option"
+                                aria-selected={hostProfileDraft.city === cityOption}
+                                onClick={() => {
+                                  setHostProfileDraft((previousDraft) => ({
+                                    ...previousDraft,
+                                    city: cityOption
+                                  }));
+                                  setIsCityDropdownOpen(false);
+                                }}
+                              >
+                                <span>{cityOption}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              <section className="host-onboarding-card">
+                <h2>Consents</h2>
+                <div className="form-consent-group">
+                  <label className="form-consent-option" htmlFor="hostAgreeTermsAndConditions">
+                    <input
+                      id="hostAgreeTermsAndConditions"
+                      type="checkbox"
+                      checked={hostProfileDraft.consents?.agreeTermsAndConditions ?? false}
+                      onChange={(event) =>
+                        updateConsentField("agreeTermsAndConditions", event.target.checked)
+                      }
+                    />
+                    <span>
+                      I agree to{" "}
+                      <Link to="/terms-and-conditions">
+                        Terms &amp; Conditions
+                      </Link>
+                    </span>
+                  </label>
+                  <label
+                    className="form-consent-option"
+                    htmlFor="hostAgreeHostingRelatedEmailsAndCalls"
+                  >
+                    <input
+                      id="hostAgreeHostingRelatedEmailsAndCalls"
+                      type="checkbox"
+                      checked={hostProfileDraft.consents?.agreeHostingRelatedEmailsAndCalls ?? false}
+                      onChange={(event) =>
+                        updateConsentField("agreeHostingRelatedEmailsAndCalls", event.target.checked)
+                      }
+                    />
+                    <span>I agree to receive hosting related emails and calls</span>
+                  </label>
+                  <label
+                    className="form-consent-option"
+                    htmlFor="hostAgreePromotionsAndMarketingEmails"
+                  >
+                    <input
+                      id="hostAgreePromotionsAndMarketingEmails"
+                      type="checkbox"
+                      checked={hostProfileDraft.consents?.agreePromotionsAndMarketingEmails ?? false}
+                      onChange={(event) =>
+                        updateConsentField("agreePromotionsAndMarketingEmails", event.target.checked)
+                      }
+                    />
+                    <span>I agree to receive Promotions &amp; Marketing emails</span>
+                  </label>
+                </div>
+              </section>
+
+              {errorMessage && <p className="auth-error">{errorMessage}</p>}
+              {successMessage && <p className="host-success-message">{successMessage}</p>}
+
+              <button type="submit" className="btn btn-primary">
+                Save Sport Settings
+              </button>
+            </form>
+          )}
+
+          {activeTab === "payment" && (
+            <form onSubmit={onSavePayment}>
+              {!isPaymentTabComplete && (
+                <div className="host-payment-warning" role="alert">
+                  <span className="host-payment-warning-icon" aria-hidden="true">⚠️</span>
+                  <div>
+                    <strong>Payment details incomplete</strong>
+                    <p>
+                      You can host sessions and receive bookings, but payouts are on hold until you complete
+                      this section. SharedXP holds all collected payments until your bank details are saved
+                      and verified.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {isPaymentTabComplete && (
+                <div className="host-payment-complete" role="status">
+                  <span aria-hidden="true">✅</span>
+                  <strong>Payment details complete.</strong> Payouts will be released after each confirmed
+                  session.
+                </div>
+              )}
+
+              <section className="host-onboarding-card">
+                <h2>Bank Details (Required for us to pay you)</h2>
+                <div className="host-form-grid">
+                  <label htmlFor="stripeEmail">Stripe email</label>
+                  <input
+                    id="stripeEmail"
+                    type="email"
+                    required
+                    value={hostProfileDraft.stripe.stripeEmail}
+                    onChange={(event) => updateStripeField("stripeEmail", event.target.value)}
+                  />
+
+                  <label htmlFor="accountHolderName">Account holder name</label>
+                  <input
+                    id="accountHolderName"
+                    type="text"
+                    required
+                    value={hostProfileDraft.stripe.accountHolderName}
+                    onChange={(event) => updateStripeField("accountHolderName", event.target.value)}
+                  />
+
+                  <label htmlFor="citizenIdNumber">Citizen ID number</label>
+                  <input
+                    id="citizenIdNumber"
+                    type="text"
+                    required
+                    value={hostProfileDraft.stripe.citizenIdNumber}
+                    onChange={(event) => updateStripeField("citizenIdNumber", event.target.value)}
+                  />
+
+                  <label htmlFor="taxNumber">Tax Number</label>
+                  <input
+                    id="taxNumber"
+                    type="text"
+                    required
+                    value={hostProfileDraft.stripe.taxNumber}
+                    onChange={(event) => updateStripeField("taxNumber", event.target.value)}
+                  />
+
+                  <label htmlFor="bankName">Bank name</label>
+                  <input
+                    id="bankName"
+                    type="text"
+                    required
+                    value={hostProfileDraft.stripe.bankName}
+                    onChange={(event) => updateStripeField("bankName", event.target.value)}
+                  />
+
+                  <label htmlFor="accountNumber">Account number / IBAN</label>
+                  <input
+                    id="accountNumber"
+                    type="text"
+                    required
+                    value={hostProfileDraft.stripe.accountNumber}
+                    onChange={(event) => updateStripeField("accountNumber", event.target.value)}
+                  />
+
+                  <label htmlFor="routingNumber">Routing number / SWIFT</label>
+                  <input
+                    id="routingNumber"
+                    type="text"
+                    required
+                    value={hostProfileDraft.stripe.routingNumber}
+                    onChange={(event) => updateStripeField("routingNumber", event.target.value)}
+                  />
+
+                  <label htmlFor="payoutCurrency">Payout currency</label>
+                  <select
+                    id="payoutCurrency"
+                    required
+                    value={hostProfileDraft.stripe.payoutCurrency}
+                    onChange={(event) => updateStripeField("payoutCurrency", event.target.value)}
+                  >
+                    <option value="">Select currency</option>
                     {CURRENCY_OPTIONS.map((currencyOption) => (
                       <option key={currencyOption} value={currencyOption}>
                         {currencyOption}
@@ -642,410 +1143,16 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
                     ))}
                   </select>
                 </div>
+              </section>
 
-                <label htmlFor="sportLevel">Level</label>
-                <select
-                  id="sportLevel"
-                  required
-                  value={activeSport.level}
-                  onChange={(event) => updateSportField("level", event.target.value)}
-                >
-                  <option value="">Select level</option>
-                  {LEVEL_OPTIONS.map((levelOption) => (
-                    <option key={levelOption} value={levelOption}>
-                      {levelOption}
-                    </option>
-                  ))}
-                </select>
+              {errorMessage && <p className="auth-error">{errorMessage}</p>}
+              {successMessage && <p className="host-success-message">{successMessage}</p>}
 
-                <label>Equipment Availability</label>
-                <div className="host-toggle-group" role="radiogroup" aria-label="Equipment availability">
-                  <label htmlFor={`equipment-yes-${activeSportIndex}`}>
-                    <input
-                      id={`equipment-yes-${activeSportIndex}`}
-                      type="radio"
-                      name="equipmentAvailability"
-                      checked={Boolean(activeSport.equipmentAvailable)}
-                      onChange={() => updateEquipmentAvailability(true)}
-                    />
-                    Yes
-                  </label>
-                  <label htmlFor={`equipment-no-${activeSportIndex}`}>
-                    <input
-                      id={`equipment-no-${activeSportIndex}`}
-                      type="radio"
-                      name="equipmentAvailability"
-                      checked={!activeSport.equipmentAvailable}
-                      onChange={() => updateEquipmentAvailability(false)}
-                    />
-                    No
-                  </label>
-                </div>
-
-                <label htmlFor="equipmentDetails">Equipment Details</label>
-                <textarea
-                  id="equipmentDetails"
-                  rows={3}
-                  placeholder="List the equipment you will provide"
-                  value={activeSport.equipmentDetails}
-                  onChange={(event) => updateSportField("equipmentDetails", event.target.value)}
-                  disabled={!activeSport.equipmentAvailable}
-                  className="host-equipment-details"
-                />
-              </div>
-
-              <div className="host-availability-block">
-                <h3>Availability</h3>
-                <p>Select weekly availability and a preferred time range.</p>
-                <div className="host-availability-days">
-                  {AVAILABILITY_DAYS.map((day) => (
-                    <label key={day}>
-                      <input
-                        type="checkbox"
-                        checked={activeSport.availability.days.includes(day)}
-                        onChange={() => toggleAvailabilityDay(day)}
-                      />
-                      {day}
-                    </label>
-                  ))}
-                </div>
-                <div className="host-availability-time">
-                  <div>
-                    <label htmlFor="availabilityStart">From</label>
-                    <select
-                      id="availabilityStart"
-                      required
-                      value={activeSport.availability.startTime}
-                      onChange={(event) => updateAvailabilityTime("startTime", event.target.value)}
-                    >
-                      <option value="">Select start time</option>
-                      {TIME_OPTIONS.map((timeOption) => (
-                        <option key={`start-${timeOption}`} value={timeOption}>
-                          {timeOption}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="availabilityEnd">To</label>
-                    <select
-                      id="availabilityEnd"
-                      required
-                      value={activeSport.availability.endTime}
-                      onChange={(event) => updateAvailabilityTime("endTime", event.target.value)}
-                    >
-                      <option value="">Select end time</option>
-                      {TIME_OPTIONS.map((timeOption) => (
-                        <option key={`end-${timeOption}`} value={timeOption}>
-                          {timeOption}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="host-images-block">
-                <h3>Photo Gallery</h3>
-                <input
-                  id="hostPhotoUpload"
-                  className="history-photo-upload-input"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={onSportImageSelect}
-                />
-                <label className="history-photo-upload-label" htmlFor="hostPhotoUpload">
-                  Upload photos
-                </label>
-                <span className="host-photo-upload-hint">You can select multiple photos at once.</span>
-                {activeSport.images.length > 0 && (
-                  <div className="host-image-grid">
-                    {activeSport.images.map((imageSrc, imageIndex) => (
-                      <div key={imageIndex} className="host-image-item">
-                        <img
-                          src={imageSrc}
-                          alt={
-                            activeSport.sport
-                              ? `${activeSport.sport} image ${imageIndex + 1}`
-                              : `Sport ${activeSportIndex + 1} image ${imageIndex + 1}`
-                          }
-                        />
-                        <button
-                          type="button"
-                          className="host-image-remove"
-                          onClick={() => removeSportImage(imageIndex)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section className="host-onboarding-card">
-              <h2>Bank Details (Required for us to pay you)</h2>
-              <div className="host-form-grid">
-                <label htmlFor="stripeEmail">Stripe email</label>
-                <input
-                  id="stripeEmail"
-                  type="email"
-                  required
-                  value={hostProfileDraft.stripe.stripeEmail}
-                  onChange={(event) => updateStripeField("stripeEmail", event.target.value)}
-                />
-
-                <label htmlFor="accountHolderName">Account holder name</label>
-                <input
-                  id="accountHolderName"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.accountHolderName}
-                  onChange={(event) => updateStripeField("accountHolderName", event.target.value)}
-                />
-
-                <label htmlFor="citizenIdNumber">Citizen ID number</label>
-                <input
-                  id="citizenIdNumber"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.citizenIdNumber}
-                  onChange={(event) => updateStripeField("citizenIdNumber", event.target.value)}
-                />
-
-                <label htmlFor="taxNumber">Tax Number</label>
-                <input
-                  id="taxNumber"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.taxNumber}
-                  onChange={(event) => updateStripeField("taxNumber", event.target.value)}
-                />
-
-                <label htmlFor="bankName">Bank name</label>
-                <input
-                  id="bankName"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.bankName}
-                  onChange={(event) => updateStripeField("bankName", event.target.value)}
-                />
-
-                <label htmlFor="accountNumber">Account number / IBAN</label>
-                <input
-                  id="accountNumber"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.accountNumber}
-                  onChange={(event) => updateStripeField("accountNumber", event.target.value)}
-                />
-
-                <label htmlFor="routingNumber">Routing number / SWIFT</label>
-                <input
-                  id="routingNumber"
-                  type="text"
-                  required
-                  value={hostProfileDraft.stripe.routingNumber}
-                  onChange={(event) => updateStripeField("routingNumber", event.target.value)}
-                />
-
-                <label htmlFor="payoutCurrency">Payout currency</label>
-                <select
-                  id="payoutCurrency"
-                  required
-                  value={hostProfileDraft.stripe.payoutCurrency}
-                  onChange={(event) => updateStripeField("payoutCurrency", event.target.value)}
-                >
-                  <option value="">Select currency</option>
-                  {CURRENCY_OPTIONS.map((currencyOption) => (
-                    <option key={currencyOption} value={currencyOption}>
-                      {currencyOption}
-                    </option>
-                  ))}
-                </select>
-
-                <label id="host-country-label" htmlFor="host-country-selector">Country</label>
-                <div className="auth-search-dropdown" ref={countryDropdownRef}>
-                  <button
-                    id="host-country-selector"
-                    type="button"
-                    className="auth-dropdown-trigger"
-                    aria-haspopup="listbox"
-                    aria-expanded={isCountryDropdownOpen}
-                    aria-controls="host-country-listbox"
-                    onClick={() => {
-                      setIsCountryDropdownOpen((previousState) => !previousState);
-                      setCountrySearchValue("");
-                    }}
-                  >
-                    {selectedCountry ? (
-                      <>
-                        <span>{getCountryFlag(selectedCountry.code)}</span>
-                        <span>{selectedCountry.name}</span>
-                      </>
-                    ) : (
-                      <span>Select country</span>
-                    )}
-                  </button>
-                  {isCountryDropdownOpen && (
-                    <div className="auth-dropdown-panel">
-                      <input
-                        type="search"
-                        className="auth-dropdown-search"
-                        placeholder="Search country"
-                        value={countrySearchValue}
-                        onChange={(event) => setCountrySearchValue(event.target.value)}
-                      />
-                      <ul
-                        id="host-country-listbox"
-                        className="auth-dropdown-options"
-                        role="listbox"
-                        aria-labelledby="host-country-label"
-                      >
-                        {filteredCountryOptions.map((countryOption) => (
-                          <li key={countryOption.code}>
-                            <button
-                              type="button"
-                              className="auth-dropdown-option"
-                              role="option"
-                              aria-selected={selectedCountry?.code === countryOption.code}
-                              onClick={() => {
-                                const nextCities = COUNTRY_CITY_OPTIONS[countryOption.code] ?? [];
-                                setHostProfileDraft((previousDraft) => ({
-                                  ...previousDraft,
-                                  country: countryOption.name,
-                                  city: nextCities[0] ?? ""
-                                }));
-                                setIsCountryDropdownOpen(false);
-                              }}
-                            >
-                              <span>{getCountryFlag(countryOption.code)}</span>
-                              <span>{countryOption.name}</span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                <label id="host-city-label" htmlFor="host-city-selector">City</label>
-                <div className="auth-search-dropdown" ref={cityDropdownRef}>
-                  <button
-                    id="host-city-selector"
-                    type="button"
-                    className="auth-dropdown-trigger"
-                    aria-haspopup="listbox"
-                    aria-expanded={isCityDropdownOpen}
-                    aria-controls="host-city-listbox"
-                    disabled={!selectedCountry}
-                    onClick={() => {
-                      setIsCityDropdownOpen((previousState) => !previousState);
-                      setCitySearchValue("");
-                    }}
-                  >
-                    {hostProfileDraft.city || "Select city"}
-                  </button>
-                  {isCityDropdownOpen && (
-                    <div className="auth-dropdown-panel">
-                      <input
-                        type="search"
-                        className="auth-dropdown-search"
-                        placeholder="Search city"
-                        value={citySearchValue}
-                        onChange={(event) => setCitySearchValue(event.target.value)}
-                      />
-                      <ul
-                        id="host-city-listbox"
-                        className="auth-dropdown-options"
-                        role="listbox"
-                        aria-labelledby="host-city-label"
-                      >
-                        {filteredCityOptions.map((cityOption) => (
-                          <li key={cityOption}>
-                            <button
-                              type="button"
-                              className="auth-dropdown-option"
-                              role="option"
-                              aria-selected={hostProfileDraft.city === cityOption}
-                              onClick={() => {
-                                setHostProfileDraft((previousDraft) => ({
-                                  ...previousDraft,
-                                  city: cityOption
-                                }));
-                                setIsCityDropdownOpen(false);
-                              }}
-                            >
-                              <span>{cityOption}</span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            <section className="host-onboarding-card">
-              <h2>Consents</h2>
-              <div className="form-consent-group">
-                <label className="form-consent-option" htmlFor="hostAgreeTermsAndConditions">
-                  <input
-                    id="hostAgreeTermsAndConditions"
-                    type="checkbox"
-                    checked={hostProfileDraft.consents?.agreeTermsAndConditions ?? false}
-                    onChange={(event) =>
-                      updateConsentField("agreeTermsAndConditions", event.target.checked)
-                    }
-                  />
-                  <span>
-                    I agree to{" "}
-                    <Link to="/terms-and-conditions">
-                      Terms &amp; Conditions
-                    </Link>
-                  </span>
-                </label>
-                <label
-                  className="form-consent-option"
-                  htmlFor="hostAgreeHostingRelatedEmailsAndCalls"
-                >
-                  <input
-                    id="hostAgreeHostingRelatedEmailsAndCalls"
-                    type="checkbox"
-                    checked={hostProfileDraft.consents?.agreeHostingRelatedEmailsAndCalls ?? false}
-                    onChange={(event) =>
-                      updateConsentField("agreeHostingRelatedEmailsAndCalls", event.target.checked)
-                    }
-                  />
-                  <span>I agree to receive hosting related emails and calls</span>
-                </label>
-                <label
-                  className="form-consent-option"
-                  htmlFor="hostAgreePromotionsAndMarketingEmails"
-                >
-                  <input
-                    id="hostAgreePromotionsAndMarketingEmails"
-                    type="checkbox"
-                    checked={hostProfileDraft.consents?.agreePromotionsAndMarketingEmails ?? false}
-                    onChange={(event) =>
-                      updateConsentField("agreePromotionsAndMarketingEmails", event.target.checked)
-                    }
-                  />
-                  <span>I agree to receive Promotions &amp; Marketing emails</span>
-                </label>
-              </div>
-            </section>
-
-            {errorMessage && <p className="auth-error">{errorMessage}</p>}
-            {successMessage && <p className="host-success-message">{successMessage}</p>}
-
-            <button type="submit" className="btn btn-primary">
-              Save Host Settings
-            </button>
-          </form>
+              <button type="submit" className="btn btn-primary">
+                Save Payment Details
+              </button>
+            </form>
+          )}
         </main>
 
         <SiteFooter />
