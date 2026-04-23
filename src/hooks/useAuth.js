@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseUrl } from "../lib/supabase";
 
 const PENDING_PROFILE_KEY = "sharedxp-pending-profile";
 
@@ -253,6 +253,17 @@ const useAuth = () => {
 
       onEmailSignUp: async (newUser) => {
         const normalizedEmail = newUser.email.trim().toLowerCase();
+
+        // Quick connectivity check before signup
+        const healthUrl = `${supabaseUrl}/auth/v1/health`;
+        try {
+          await fetch(healthUrl);
+        } catch {
+          return {
+            success: false,
+            message: `Cannot reach Supabase (${supabaseUrl || "no URL set"}). Check Vercel env vars.`,
+          };
+        }
 
         const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
