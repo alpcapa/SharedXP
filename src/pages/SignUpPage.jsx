@@ -99,6 +99,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearchValue, setCountrySearchValue] = useState("");
   const [isPhoneCodeDropdownOpen, setIsPhoneCodeDropdownOpen] = useState(false);
@@ -255,7 +256,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     fileReader.readAsDataURL(selectedFile);
   };
 
-  const onEmailSubmit = (event) => {
+  const onEmailSubmit = async (event) => {
     event.preventDefault();
 
     if (formValues.password !== formValues.confirmPassword) {
@@ -299,7 +300,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     }
 
     setErrorMessage("");
-    setPendingVerification({
+    setIsSubmitting(true);
+
+    const result = await onEmailSignUp?.({
       firstName,
       lastName,
       fullName,
@@ -319,8 +322,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       birthday: normalizedBirthday,
       gender: formValues.gender,
       agreedToTermsAndConditions: formValues.agreeTermsAndConditions,
-      agreedToPromotionsAndMarketingEmails: formValues.agreePromotionsAndMarketingEmails
+      agreedToPromotionsAndMarketingEmails: formValues.agreePromotionsAndMarketingEmails,
     });
+
+    setIsSubmitting(false);
+
+    if (!result?.success) {
+      setErrorMessage(result?.message || "Sign up failed. Please try again.");
+      return;
+    }
+
+    setPendingVerification({ email: formValues.email.trim().toLowerCase() });
   };
 
   const getCountryFlag = (countryCode) =>
@@ -329,19 +341,6 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       .replace(/./g, (char) =>
         String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + char.charCodeAt(0))
       );
-
-  const completeEmailVerification = async () => {
-    if (!pendingVerification) {
-      return;
-    }
-
-    try {
-      await onEmailSignUp?.(pendingVerification);
-      navigate("/");
-    } catch (error) {
-      setErrorMessage("We could not complete signup. Please try again.");
-    }
-  };
 
   return (
     <div className="home-page">
@@ -761,21 +760,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 </div>
 
                 {errorMessage && <p className="auth-error">{errorMessage}</p>}
-                <button type="submit" className="btn btn-primary auth-submit">
-                  Continue
+                <button type="submit" className="btn btn-primary auth-submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Creating account…" : "Continue"}
                 </button>
               </form>
             ) : (
               <div className="verify-card">
                 <h2>Check your email</h2>
                 <p>
-                  We sent a confirmation email to <strong>{pendingVerification.email}</strong>.
+                  We sent a confirmation link to <strong>{pendingVerification.email}</strong>.
                 </p>
-                <p>After confirming your email, continue below to activate your account.</p>
-                {errorMessage && <p className="auth-error">{errorMessage}</p>}
-                <button type="button" className="btn btn-primary auth-submit" onClick={completeEmailVerification}>
-                  I have confirmed my email
-                </button>
+                <p>Click the link in the email to activate your account. You will be logged in automatically.</p>
               </div>
             )}
 
