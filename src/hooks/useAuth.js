@@ -120,8 +120,8 @@ const fetchUserProfile = async (authUser) => {
 
   const [profileResult, languagesResult, sportsResult] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", authUser.id).single(),
-    supabase.from("user_languages").select("*").eq("user_id", authUser.id).order("position"),
-    supabase.from("user_sports").select("*").eq("user_id", authUser.id).order("position"),
+    supabase.from("user_languages").select("*").eq("user_id", authUser.id).order("position").catch(() => ({ data: [] })),
+    supabase.from("user_sports").select("*").eq("user_id", authUser.id).order("position").catch(() => ({ data: [] })),
   ]);
 
   const profile = profileResult.data;
@@ -248,8 +248,13 @@ const useAuth = () => {
             }
           }
         }
-        const user = await fetchUserProfile(session.user);
-        setCurrentUser(user);
+        try {
+          const user = await fetchUserProfile(session.user);
+          setCurrentUser(user);
+        } catch (e) {
+          console.error("onAuthStateChange fetchUserProfile failed:", e);
+          setCurrentUser(null);
+        }
       } else {
         setCurrentUser(null);
       }
