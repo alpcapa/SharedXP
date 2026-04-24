@@ -464,7 +464,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
   const isSportsTabComplete = validateSportsTab() === "";
   const isPaymentTabComplete = hostProfileDraft.bankDetailsComplete === true;
 
-  const onSaveSports = (event) => {
+  const onSaveSports = async (event) => {
     event.preventDefault();
     const validationError = validateSportsTab();
 
@@ -482,12 +482,17 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
       }))
     };
 
-    onSaveHostProfile?.(profileToSave);
-    setErrorMessage("");
-    setSuccessMessage("Sport settings saved successfully.");
+    const result = await onSaveHostProfile?.(profileToSave);
+    if (result?.success === false) {
+      setErrorMessage(result.message || "Failed to save. Please try again.");
+      setSuccessMessage("");
+    } else {
+      setErrorMessage("");
+      setSuccessMessage("Sport settings saved successfully.");
+    }
   };
 
-  const onSavePayment = (event) => {
+  const onSavePayment = async (event) => {
     event.preventDefault();
     const validationError = validatePaymentTab();
     if (validationError) {
@@ -499,7 +504,12 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
       ...hostProfileDraft,
       bankDetailsComplete: true
     };
-    onSaveHostProfile?.(profileToSave);
+    const result = await onSaveHostProfile?.(profileToSave);
+    if (result?.success === false) {
+      setErrorMessage(result.message || "Failed to save. Please try again.");
+      setSuccessMessage("");
+      return;
+    }
     setHostProfileDraft((previousDraft) => ({ ...previousDraft, bankDetailsComplete: true }));
     setErrorMessage("");
     setSuccessMessage("Payment details saved successfully.");

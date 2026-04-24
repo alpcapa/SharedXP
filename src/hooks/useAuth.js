@@ -131,20 +131,24 @@ const fetchUserProfile = async (authUser) => {
   let hostSports = [];
 
   if (profile.is_host) {
-    const { data: hp } = await supabase
-      .from("host_profiles")
-      .select("*")
-      .eq("user_id", authUser.id)
-      .single();
+    try {
+      const { data: hp } = await supabase
+        .from("host_profiles")
+        .select("*")
+        .eq("user_id", authUser.id)
+        .single();
 
-    hostProfile = hp;
+      hostProfile = hp;
 
-    if (hostProfile) {
-      const { data: hs } = await supabase
-        .from("host_sports")
-        .select("*, host_sport_images(*)")
-        .eq("host_profile_id", hostProfile.id);
-      hostSports = hs || [];
+      if (hostProfile) {
+        const { data: hs } = await supabase
+          .from("host_sports")
+          .select("*, host_sport_images(*)")
+          .eq("host_profile_id", hostProfile.id);
+        hostSports = hs || [];
+      }
+    } catch (e) {
+      console.error("Failed to fetch host profile:", e);
     }
   }
 
@@ -183,13 +187,26 @@ const useAuth = () => {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    let settled = false;
+    const finish = () => {
+      if (!settled) { settled = true; setAuthLoading(false); }
+    };
+
+    // 8-second failsafe so a hanging DB query never freezes the app
+    const timeout = setTimeout(finish, 8000);
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        const user = await fetchUserProfile(session.user);
-        setCurrentUser(user);
+        try {
+          const user = await fetchUserProfile(session.user);
+          setCurrentUser(user);
+        } catch (e) {
+          console.error("fetchUserProfile failed:", e);
+        }
       }
-      setAuthLoading(false);
-    });
+      clearTimeout(timeout);
+      finish();
+    }).catch(() => { clearTimeout(timeout); finish(); });
 
     const {
       data: { subscription },
@@ -346,9 +363,9 @@ const useAuth = () => {
       },
 
       onSaveHostProfile: async (hostProfile) => {
-        if (!currentUser) return;
+        if (!currentUser) return { success: false, message: "Not logged in." };
 
-        const { data: savedHostProfile } = await supabase
+        const { data: savedHostProfile, error: hpError } = await supabase
           .from("host_profiles")
           .upsert(
             {
@@ -375,7 +392,12 @@ const useAuth = () => {
           .select()
           .single();
 
-        if (savedHostProfile && hostProfile.sports?.length > 0) {
+        if (hpError || !savedHostProfile) {
+          console.error("host_profiles upsert failed:", hpError);
+          return { success: false, message: hpError?.message || "Failed to save host profile. Check Supabase RLS policies." };
+        }
+
+        if (hostProfile.sports?.length > 0) {
           await supabase.from("host_sports").delete().eq("host_profile_id", savedHostProfile.id);
 
           for (const sportConfig of hostProfile.sports) {
@@ -416,6 +438,7 @@ const useAuth = () => {
           data: { user: authUser },
         } = await supabase.auth.getUser();
         setCurrentUser(await fetchUserProfile(authUser));
+        return { success: true };
       },
 
       onUpdateProfile: async (profileUpdates) => {
