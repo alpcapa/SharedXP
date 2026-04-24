@@ -1,33 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 
+const FALLBACK_URL = "https://bwdkelprrvhztpviiujo.supabase.co";
+const FALLBACK_KEY = "sb_publishable_eR4cMdFvm8y4RGBRJfUe2g_BrqlDLFP";
+
 const rawUrl = import.meta.env.VITE_SUPABASE_URL;
 const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Normalize URL to just the origin (strips /rest/v1/ or any other path suffix)
-let supabaseUrl = "";
+let supabaseUrl = FALLBACK_URL;
 try {
-  supabaseUrl = new URL(rawUrl?.trim() ?? "").origin;
+  if (rawUrl?.trim()) supabaseUrl = new URL(rawUrl.trim()).origin;
 } catch {
-  supabaseUrl = "";
+  supabaseUrl = FALLBACK_URL;
 }
 
-const supabaseAnonKey = typeof rawKey === "string" ? rawKey.trim() : "";
+const supabaseAnonKey =
+  typeof rawKey === "string" && rawKey.trim() ? rawKey.trim() : FALLBACK_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error(
-    "Missing or invalid Supabase environment variables. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel."
-  );
-}
-
-let supabase;
-try {
-  supabase = createClient(
-    supabaseUrl || "https://placeholder.supabase.co",
-    supabaseAnonKey || "placeholder"
-  );
-} catch (e) {
-  console.error("Failed to initialise Supabase client:", e);
-  supabase = createClient("https://placeholder.supabase.co", "placeholder");
-}
-
-export { supabase, supabaseUrl, supabaseAnonKey };
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export { supabaseUrl, supabaseAnonKey };
