@@ -326,12 +326,22 @@ const useAuth = () => {
       },
 
       onEmailLogin: async (email, password) => {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
           password,
         });
 
         if (error) return { success: false, message: "Incorrect email or password." };
+
+        if (data?.user) {
+          try {
+            const user = await fetchUserProfile(data.user);
+            setCurrentUser(user);
+          } catch (e) {
+            console.error("Login fetchUserProfile failed:", e);
+          }
+        }
+
         return { success: true };
       },
 
