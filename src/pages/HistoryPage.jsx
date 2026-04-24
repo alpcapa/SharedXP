@@ -530,13 +530,16 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
       .single();
 
     if (!error && newPost && realPhotos.length > 0) {
-      await supabase.from("field_post_images").insert(
+      const { error: imgError } = await supabase.from("field_post_images").insert(
         realPhotos.map((url, i) => ({
           field_post_id: newPost.id,
           image_url: url,
           position: i,
         }))
       );
+      if (imgError) {
+        console.error("Failed to save field post images:", imgError.message);
+      }
     }
 
     updateItem(item.id, "sharedToField", true);

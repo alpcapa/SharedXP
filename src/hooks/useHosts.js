@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
-// Generate upcoming dates for the given availability day names (e.g. ["Mon","Wed"])
+// Extract a display name from a profile, preferring first_name over the first
+// word of full_name, with a safe "Host" fallback.
+const getDisplayName = (profile) => {
+  const first = String(profile.first_name ?? "").trim();
+  if (first) return first;
+  const full = String(profile.full_name ?? "").trim();
+  const word = full.split(/\s+/)[0] ?? "";
+  return word || "Host";
+};
 // within the next 90 days, returning at most 12 date strings (YYYY-MM-DD).
 const generateAvailableDates = (availabilityDays) => {
   if (!Array.isArray(availabilityDays) || availabilityDays.length === 0) return [];
@@ -52,7 +60,7 @@ export const mapHostToBuddy = (hp) => {
   return {
     id: hp.id,
     userId: profile.id,
-    name: profile.first_name || (profile.full_name || "").split(" ")[0] || "Host",
+    name: getDisplayName(profile),
     fullName: profile.full_name || "",
     email: profile.email || "",
     sport: primary?.sport || "",
