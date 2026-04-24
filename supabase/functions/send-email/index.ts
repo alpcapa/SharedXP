@@ -9,6 +9,11 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM_EMAIL =
   Deno.env.get("RESEND_FROM_EMAIL") ?? "noreply@sharedxp.com";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+// APP_URL must match the production origin listed in Supabase Dashboard →
+// Authentication → URL Configuration → Redirect URLs (and Site URL).
+// Set it as an Edge Function secret:
+//   supabase secrets set APP_URL=https://project-gq4ge.vercel.app
+const APP_URL = Deno.env.get("APP_URL") ?? "https://project-gq4ge.vercel.app";
 
 interface EmailData {
   token: string;
@@ -177,7 +182,7 @@ serve(async (req: Request): Promise<Response> => {
     site_url,
   } = email_data;
 
-  const redirectTo = redirect_to || site_url || "";
+  const redirectTo = redirect_to || site_url || APP_URL;
   const ctaUrl = confirmationUrl(token_hash, email_action_type, redirectTo);
   const { subject, html } = buildEmail(email_action_type, user.email, ctaUrl);
 
