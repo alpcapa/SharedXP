@@ -363,9 +363,9 @@ const useAuth = () => {
       },
 
       onSaveHostProfile: async (hostProfile) => {
-        if (!currentUser) return;
+        if (!currentUser) return { success: false, message: "Not logged in." };
 
-        const { data: savedHostProfile } = await supabase
+        const { data: savedHostProfile, error: hpError } = await supabase
           .from("host_profiles")
           .upsert(
             {
@@ -392,7 +392,12 @@ const useAuth = () => {
           .select()
           .single();
 
-        if (savedHostProfile && hostProfile.sports?.length > 0) {
+        if (hpError || !savedHostProfile) {
+          console.error("host_profiles upsert failed:", hpError);
+          return { success: false, message: hpError?.message || "Failed to save host profile. Check Supabase RLS policies." };
+        }
+
+        if (hostProfile.sports?.length > 0) {
           await supabase.from("host_sports").delete().eq("host_profile_id", savedHostProfile.id);
 
           for (const sportConfig of hostProfile.sports) {
@@ -433,6 +438,7 @@ const useAuth = () => {
           data: { user: authUser },
         } = await supabase.auth.getUser();
         setCurrentUser(await fetchUserProfile(authUser));
+        return { success: true };
       },
 
       onUpdateProfile: async (profileUpdates) => {
