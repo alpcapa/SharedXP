@@ -250,10 +250,9 @@ const useAuth = () => {
         }
         try {
           const user = await fetchUserProfile(session.user);
-          setCurrentUser(user);
+          if (user) setCurrentUser(user);
         } catch (e) {
           console.error("onAuthStateChange fetchUserProfile failed:", e);
-          setCurrentUser(null);
         }
       } else {
         setCurrentUser(null);
