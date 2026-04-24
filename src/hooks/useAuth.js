@@ -308,16 +308,18 @@ const useAuth = () => {
         if (!userId) return { success: false, message: "Sign up failed — no user returned." };
 
         // Save profile data; onAuthStateChange will upsert it after email confirmation.
+        // Passwords are never written to localStorage.
+        const { password, confirmPassword, ...profileData } = newUser;
         try {
           localStorage.setItem(
             PENDING_PROFILE_KEY,
-            JSON.stringify({ ...newUser, email: normalizedEmail })
+            JSON.stringify({ ...profileData, email: normalizedEmail })
           );
         } catch {
           // Quota exceeded — strip photo and retry
           localStorage.setItem(
             PENDING_PROFILE_KEY,
-            JSON.stringify({ ...newUser, email: normalizedEmail, photo: "" })
+            JSON.stringify({ ...profileData, email: normalizedEmail, photo: "" })
           );
         }
 
