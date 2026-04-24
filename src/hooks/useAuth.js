@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase, supabaseUrl, supabaseAnonKey } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const PENDING_PROFILE_KEY = "sharedxp-pending-profile";
 
@@ -115,6 +115,9 @@ const buildUserObject = (authUser, profile, languages, sports, hostProfile, host
   };
 };
 
+// Returns a fully-assembled user object, or null when the profiles row is
+// missing (e.g. the pending profile hasn't been upserted yet after email
+// confirmation, or the user has no profile row in the database).
 const fetchUserProfile = async (authUser) => {
   if (!authUser) return null;
 
@@ -182,6 +185,62 @@ const upsertLanguagesAndSports = async (userId, languages, sports) => {
   ]);
 };
 
+// Upserts the pending profile (saved during sign-up) for the confirmed auth user.
+// Claims the localStorage entry first to prevent concurrent double-upserts, and
+// restores it on failure so the next sign-in can retry.
+const applyPendingProfile = async (authUser) => {
+  const pendingRaw = localStorage.getItem(PENDING_PROFILE_KEY);
+  if (!pendingRaw) return;
+
+  let pending;
+  try {
+    pending = JSON.parse(pendingRaw);
+  } catch {
+    localStorage.removeItem(PENDING_PROFILE_KEY);
+    return;
+  }
+
+  if (pending.email !== authUser.email) return;
+
+  // Claim immediately (synchronous) to prevent a second concurrent caller from
+  // also attempting the upsert before we finish.
+  localStorage.removeItem(PENDING_PROFILE_KEY);
+
+  try {
+    await supabase.from("profiles").upsert({
+      id: authUser.id,
+      email: pending.email,
+      first_name: pending.firstName || "",
+      last_name: pending.lastName || "",
+      full_name:
+        pending.fullName ||
+        `${pending.firstName || ""} ${pending.lastName || ""}`.trim(),
+      phone: pending.phone || "",
+      phone_country_code: pending.phoneCountryCode || "",
+      country_dial_code: pending.countryDialCode || "",
+      address: pending.address || "",
+      country: pending.country || "",
+      city: pending.city || "",
+      photo_url: pending.photo || "",
+      birthday: pending.birthday || "",
+      gender: pending.gender || "",
+      is_host: false,
+      agreed_to_terms: pending.agreedToTermsAndConditions || false,
+      agreed_to_promotions: pending.agreedToPromotionsAndMarketingEmails || false,
+      signed_up_at: new Date().toISOString(),
+    });
+    await upsertLanguagesAndSports(authUser.id, pending.languages, pending.sports);
+  } catch (e) {
+    console.error("Failed to save pending profile:", e);
+    // Restore so the next sign-in can retry.
+    try {
+      localStorage.setItem(PENDING_PROFILE_KEY, pendingRaw);
+    } catch {
+      // localStorage quota exceeded – profile data is unfortunately lost
+    }
+  }
+};
+
 const useAuth = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -198,8 +257,9 @@ const useAuth = () => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         try {
+          await applyPendingProfile(session.user);
           const user = await fetchUserProfile(session.user);
-          setCurrentUser(user);
+          if (user) setCurrentUser(user);
         } catch (e) {
           console.error("fetchUserProfile failed:", e);
         }
@@ -212,41 +272,12 @@ const useAuth = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        if (event === "SIGNED_IN") {
-          const pendingRaw = localStorage.getItem(PENDING_PROFILE_KEY);
-          if (pendingRaw) {
-            try {
-              const pending = JSON.parse(pendingRaw);
-              if (pending.email === session.user.email) {
-                localStorage.removeItem(PENDING_PROFILE_KEY);
-                await supabase.from("profiles").upsert({
-                  id: session.user.id,
-                  email: pending.email,
-                  first_name: pending.firstName || "",
-                  last_name: pending.lastName || "",
-                  full_name:
-                    pending.fullName ||
-                    `${pending.firstName || ""} ${pending.lastName || ""}`.trim(),
-                  phone: pending.phone || "",
-                  phone_country_code: pending.phoneCountryCode || "",
-                  country_dial_code: pending.countryDialCode || "",
-                  address: pending.address || "",
-                  country: pending.country || "",
-                  city: pending.city || "",
-                  photo_url: pending.photo || "",
-                  birthday: pending.birthday || "",
-                  gender: pending.gender || "",
-                  is_host: false,
-                  agreed_to_terms: pending.agreedToTermsAndConditions || false,
-                  agreed_to_promotions: pending.agreedToPromotionsAndMarketingEmails || false,
-                  signed_up_at: new Date().toISOString(),
-                });
-                await upsertLanguagesAndSports(session.user.id, pending.languages, pending.sports);
-              }
-            } catch (e) {
-              console.error("Failed to save pending profile:", e);
-            }
-          }
+        // Apply pending profile on SIGNED_IN (normal login / email confirm when
+        // the event fires after the listener is registered) AND on INITIAL_SESSION
+        // (when the SIGNED_IN from _initialize fires before the listener exists and
+        // the library falls back to emitting INITIAL_SESSION for late subscribers).
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+          await applyPendingProfile(session.user);
         }
         try {
           const user = await fetchUserProfile(session.user);
@@ -274,40 +305,19 @@ const useAuth = () => {
 
       onEmailSignUp: async (newUser) => {
         const normalizedEmail = newUser.email.trim().toLowerCase();
-        const redirectTo = encodeURIComponent(window.location.origin);
 
+        const { data, error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password: newUser.password,
+          options: {
+            emailRedirectTo: window.location.origin,
+          },
+        });
 
-        let res, json;
-        try {
-          res = await fetch(
-            `${supabaseUrl}/auth/v1/signup?redirect_to=${redirectTo}`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                apikey: supabaseAnonKey,
-                Authorization: `Bearer ${supabaseAnonKey}`,
-              },
-              body: JSON.stringify({
-                email: normalizedEmail,
-                password: newUser.password,
-              }),
-            }
-          );
-          json = await res.json();
-        } catch (e) {
-          return { success: false, message: `Network error: ${e.message}` };
-        }
+        if (error) return { success: false, message: error.message || "Sign up failed." };
+        if (!data?.user) return { success: false, message: "Sign up failed — no user returned." };
 
-        if (!res.ok) {
-          const msg = json?.msg || json?.message || json?.error_description || "Sign up failed.";
-          return { success: false, message: msg };
-        }
-
-        const userId = json?.id;
-        if (!userId) return { success: false, message: "Sign up failed — no user returned." };
-
-        // Save profile data; onAuthStateChange will upsert it after email confirmation.
+        // Save profile data; applyPendingProfile upserts it after email confirmation.
         // Passwords are never written to localStorage.
         const { password, confirmPassword, ...profileData } = newUser;
         try {
@@ -337,7 +347,7 @@ const useAuth = () => {
         if (data?.user) {
           try {
             const user = await fetchUserProfile(data.user);
-            setCurrentUser(user);
+            if (user) setCurrentUser(user);
           } catch (e) {
             console.error("Login fetchUserProfile failed:", e);
           }
