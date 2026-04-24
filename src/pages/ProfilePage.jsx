@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { buddies } from "../data/buddies";
+import useHosts from "../hooks/useHosts";
 import { getDateKey } from "../utils/date";
 import { getProfileAge } from "../utils/profileAge";
 
@@ -200,7 +200,8 @@ const formatPrice = (amount, currency) => {
 
 const ProfilePage = ({ currentUser, onLogout }) => {
   const { buddyId } = useParams();
-  const buddy = buddies.find((item) => String(item.id) === buddyId);
+  const { hosts, hostsLoading } = useHosts();
+  const buddy = hosts.find((h) => h.id === buddyId);
   const [selectedSportIndex, setSelectedSportIndex] = useState(0);
   const [recommendationsPage, setRecommendationsPage] = useState(0);
   const [selectedDate, setSelectedDate] = useState("");
@@ -212,6 +213,18 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
+  if (hostsLoading) {
+    return (
+      <div className="profile-page">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <div className="profile-back-wrap">
+          <Link to="/" className="back-link">← Back to home</Link>
+        </div>
+        <p style={{ padding: "2rem" }}>Loading…</p>
+      </div>
+    );
+  }
+
   if (!buddy) {
     return (
       <div className="profile-page">
@@ -221,7 +234,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     );
   }
 
-  const recommendations = buddies.filter((item) => item.id !== buddy.id);
+  const recommendations = hosts.filter((h) => h.id !== buddy.id);
   const { firstName, lastName, fullName: hostDisplayName } = getNameParts(buddy);
   const { rating: hostRating, reviewCount } = getHostRatingSummary(buddy);
   const { city, country } = getLocationParts(buddy);

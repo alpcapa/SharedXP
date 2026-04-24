@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { buddies } from "../data/buddies";
+import useHosts from "../hooks/useHosts";
 
 const featuredStatuses = ["Online", "New", "Online", "Online"];
 const LOCALS_PER_PAGE = 4;
@@ -74,6 +74,7 @@ const LockIcon = () => (
 
 const HomePage = ({ currentUser, onLogout }) => {
   const navigate = useNavigate();
+  const { hosts, hostsLoading } = useHosts();
   const [selectedSport, setSelectedSport] = useState("Cycling");
   const [selectedLocation, setSelectedLocation] = useState("Lisbon, Portugal");
   const [sportQuery, setSportQuery] = useState("");
@@ -118,11 +119,11 @@ const HomePage = ({ currentUser, onLogout }) => {
       .slice(0, 5);
   }, [locationQuery]);
 
-  const totalLocalsPages = Math.max(1, Math.ceil(buddies.length / LOCALS_PER_PAGE));
+  const totalLocalsPages = Math.max(1, Math.ceil(hosts.length / LOCALS_PER_PAGE));
   const featuredLocals = useMemo(() => {
     const startIndex = localsPage * LOCALS_PER_PAGE;
-    return buddies.slice(startIndex, startIndex + LOCALS_PER_PAGE);
-  }, [localsPage, buddies]);
+    return hosts.slice(startIndex, startIndex + LOCALS_PER_PAGE);
+  }, [localsPage, hosts]);
 
   const handleFindBuddies = () => {
     const params = new URLSearchParams();
@@ -325,7 +326,12 @@ const HomePage = ({ currentUser, onLogout }) => {
 
             <div className="locals-grid-wrap">
               <div className="locals-grid">
-                {featuredLocals.map((buddy, index) => {
+                {hostsLoading ? (
+                  <p className="section-sub">Loading hosts…</p>
+                ) : featuredLocals.length === 0 ? (
+                  <p className="section-sub">No hosts available yet. Check back soon!</p>
+                ) : (
+                  featuredLocals.map((buddy, index) => {
                   const statusIndex =
                     (localsPage * LOCALS_PER_PAGE + index) % featuredStatuses.length;
                   return (
@@ -366,7 +372,8 @@ const HomePage = ({ currentUser, onLogout }) => {
                     </article>
                   </Link>
                   );
-                })}
+                  })
+                )}
               </div>
               <div className="locals-nav-row">
                 <button

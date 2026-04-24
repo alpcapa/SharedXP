@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { buddies } from "../data/buddies";
+import useHosts from "../hooks/useHosts";
 
 const DEFAULT_CENTER = { lat: 38.7223, lng: -9.1393 };
 const USER_LOCATION_FILTER = "Your location";
@@ -67,6 +67,7 @@ const projectPoint = (point, bounds) => {
 
 const ExplorePage = ({ currentUser, onLogout }) => {
   const [searchParams] = useSearchParams();
+  const { hosts: buddies, hostsLoading } = useHosts();
   const [userLocation, setUserLocation] = useState(DEFAULT_CENTER);
   const [geoStatus, setGeoStatus] = useState("loading");
   const [searchQuery, setSearchQuery] = useState("");
@@ -362,32 +363,38 @@ const ExplorePage = ({ currentUser, onLogout }) => {
             </div>
 
             <div className="locals-grid">
-              {pagedBuddies.map((buddy) => (
-                <Link to={`/buddy/${buddy.id}`} key={buddy.id} className="local-card-link">
-                  <article className="local-card">
-                    <div className="local-image-wrap">
-                      <img src={buddy.image} alt={buddy.name} />
-                    </div>
-                    <div className="local-body">
-                      <div className="local-title-row">
-                        <h3>{buddy.name}</h3>
-                        <p className="local-rating">
-                          <span className="star">★</span> {buddy.rating}{" "}
-                          <span className="review-count">({buddy.reviewCount})</span>
-                        </p>
+              {hostsLoading ? (
+                <p className="section-sub">Loading hosts…</p>
+              ) : pagedBuddies.length === 0 ? (
+                <p className="section-sub">No hosts match your current filters.</p>
+              ) : (
+                pagedBuddies.map((buddy) => (
+                  <Link to={`/buddy/${buddy.id}`} key={buddy.id} className="local-card-link">
+                    <article className="local-card">
+                      <div className="local-image-wrap">
+                        <img src={buddy.image} alt={buddy.name} />
                       </div>
-                      <p className="local-location">📍 {buddy.location}</p>
-                      <span className="sport-pill">{buddy.sport}</span>
-                      <p className="local-bio">{buddy.bio}</p>
-                      <ul className="local-meta">
-                        <li>👤 {buddy.gender ?? "Not specified"}</li>
-                        <li>🏅 {buddy.level}</li>
-                        <li>📏 {buddy.distanceKm.toFixed(1)} km away</li>
-                      </ul>
-                    </div>
-                  </article>
-                </Link>
-              ))}
+                      <div className="local-body">
+                        <div className="local-title-row">
+                          <h3>{buddy.name}</h3>
+                          <p className="local-rating">
+                            <span className="star">★</span> {buddy.rating}{" "}
+                            <span className="review-count">({buddy.reviewCount})</span>
+                          </p>
+                        </div>
+                        <p className="local-location">📍 {buddy.location}</p>
+                        <span className="sport-pill">{buddy.sport}</span>
+                        <p className="local-bio">{buddy.bio}</p>
+                        <ul className="local-meta">
+                          <li>👤 {buddy.gender ?? "Not specified"}</li>
+                          <li>🏅 {buddy.level}</li>
+                          <li>📏 {buddy.distanceKm.toFixed(1)} km away</li>
+                        </ul>
+                      </div>
+                    </article>
+                  </Link>
+                ))
+              )}
             </div>
             <div className="locals-pagination" aria-label="Explore results pagination">
               <button

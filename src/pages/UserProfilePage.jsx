@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { buddies } from "../data/buddies";
+import useHosts from "../hooks/useHosts";
 import { getProfileAge } from "../utils/profileAge";
 
 const LOCALS_PER_PAGE = 4;
@@ -69,6 +69,9 @@ const getHistoryGalleryPhotos = (historyItems) => {
 };
 
 const UserProfilePage = ({ currentUser, onLogout }) => {
+  const { hosts } = useHosts();
+  const [recommendationsPage, setRecommendationsPage] = useState(0);
+
   if (!currentUser) {
     return (
       <div className="home-page">
@@ -88,15 +91,14 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
     );
   }
 
-  const [recommendationsPage, setRecommendationsPage] = useState(0);
   const sportsSelection = (Array.isArray(currentUser.sports) ? currentUser.sports : [])
     .map((sport) => String(sport ?? "").trim())
     .filter(Boolean);
   const selectedSports = new Set(sportsSelection.map((sport) => sport.toLowerCase()));
   const hostRecommendations =
     selectedSports.size > 0
-      ? buddies.filter((buddy) => selectedSports.has(String(buddy.sport ?? "").toLowerCase()))
-      : buddies;
+      ? hosts.filter((h) => selectedSports.has(String(h.sport ?? "").toLowerCase()))
+      : hosts;
   const totalRecommendationPages = Math.max(1, Math.ceil(hostRecommendations.length / LOCALS_PER_PAGE));
   const visibleRecommendations = useMemo(() => {
     const startIndex = recommendationsPage * LOCALS_PER_PAGE;

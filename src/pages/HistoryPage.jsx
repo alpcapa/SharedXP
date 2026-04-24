@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
+import { supabase } from "../lib/supabase";
 
 const formatStarRating = (rating) => `${Math.max(0, Math.min(5, Math.round(rating)))}⭐`;
 
@@ -16,7 +17,6 @@ const DEFAULT_HOST_FALLBACK_FIRST_NAME = "Host";
 const DEFAULT_PARTICIPANT_FALLBACK_FIRST_NAME = "Participant";
 const DEFAULT_FIELD_POST_USER_NAME = "SharedXP User";
 const CONFIRMATION_WINDOW_MS = 48 * 60 * 60 * 1000;
-const FIELD_POSTS_STORAGE_KEY = "sharedxp-field-posts";
 const MAX_PHOTOS_PER_SESSION = 5;
 const HOST_RATING_FIELDS = [
   { key: "overall", label: "Overall" },
@@ -26,26 +26,6 @@ const HOST_RATING_FIELDS = [
   { key: "friendliness", label: "Friendliness" },
   { key: "value", label: "Value" }
 ];
-
-const getStoredFieldPosts = () => {
-  try {
-    const raw = localStorage.getItem(FIELD_POSTS_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveFieldPost = (post) => {
-  try {
-    const existing = getStoredFieldPosts();
-    const updated = [post, ...existing];
-    localStorage.setItem(FIELD_POSTS_STORAGE_KEY, JSON.stringify(updated));
-  } catch {
-    // silently fail — localStorage may be unavailable
-  }
-};
 
 const clampRating = (value) => {
   const numericRating = Number(value);
@@ -523,34 +503,42 @@ const HistoryPage = ({ currentUser, onLogout, onSaveHistory, onSaveHostHistory }
     setDirtyIds((prev) => new Set([...prev, itemId]));
   }, []);
 
-  const handleShareToField = useCallback((item) => {
+  const handleShareToField = useCallback(async (item) => {
     if (!shareCaption.trim()) {
       setShareCaptionError(true);
       return;
     }
 
+    if (!currentUser?.id) return;
+
     const realPhotos = (item.photoGallery ?? []).filter(
       (p) => p && p !== FALLBACK_EVENT_PHOTO
     );
 
-    const post = {
-      id: typeof globalThis.crypto?.randomUUID === "function"
-        ? `user-${globalThis.crypto.randomUUID()}`
-        : `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      hostId: null,
-      hostName: currentUser?.fullName ?? DEFAULT_FIELD_POST_USER_NAME,
-      hostPhoto: currentUser?.photo ?? "",
-      sport: item.sport,
-      city: currentUser?.city ?? currentUser?.hostProfile?.city ?? "",
-      country: currentUser?.country ?? currentUser?.hostProfile?.country ?? "",
-      caption: shareCaption.trim(),
-      photos: realPhotos,
-      photo: realPhotos[0] ?? "",
-      postedAt: new Date().toISOString(),
-      likes: 0
-    };
+    const { data: newPost, error } = await supabase
+      .from("field_posts")
+      .insert({
+        user_id: currentUser.id,
+        host_name: currentUser.fullName || DEFAULT_FIELD_POST_USER_NAME,
+        host_photo: currentUser.photo || "",
+        sport: item.sport || "Other",
+        city: currentUser.city || currentUser.hostProfile?.city || "",
+        country: currentUser.country || currentUser.hostProfile?.country || "",
+        caption: shareCaption.trim(),
+      })
+      .select()
+      .single();
 
-    saveFieldPost(post);
+    if (!error && newPost && realPhotos.length > 0) {
+      await supabase.from("field_post_images").insert(
+        realPhotos.map((url, i) => ({
+          field_post_id: newPost.id,
+          image_url: url,
+          position: i,
+        }))
+      );
+    }
+
     updateItem(item.id, "sharedToField", true);
     setAllItems((prev) => {
       const next = prev.map((historyItem) =>
