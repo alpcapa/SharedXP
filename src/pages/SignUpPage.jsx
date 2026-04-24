@@ -4,6 +4,7 @@ import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import { COUNTRY_OPTIONS } from "../data/countries";
 import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
+import { SPORT_OPTIONS } from "../data/sports";
 const LANGUAGE_OPTIONS = [
   "Arabic",
   "Bengali",
@@ -27,7 +28,6 @@ const LANGUAGE_OPTIONS = [
   "Urdu"
 ];
 const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
-const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
 const SPORT_SLOT_LABELS = ["Favorite", "Add new", "Add new", "Add new"];
 const REGIONAL_INDICATOR_OFFSET = 127397;
 const BIRTHDAY_PATTERN_SOURCE = "(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}";

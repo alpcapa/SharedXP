@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
+import { SPORT_OPTIONS } from "../data/sports";
+import { COUNTRY_OPTIONS } from "../data/countries";
+import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
 
-const SPORT_OPTIONS = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
 const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced", "I’m Flexible"];
 const AVAILABILITY_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR", "BRL"];
@@ -13,30 +15,6 @@ const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, index) => {
   const minutes = String(totalMinutes % 60).padStart(2, "0");
   return `${hours}:${minutes}`;
 });
-const COUNTRY_OPTIONS = [
-  { name: "Brazil", code: "BR" },
-  { name: "Canada", code: "CA" },
-  { name: "France", code: "FR" },
-  { name: "Germany", code: "DE" },
-  { name: "India", code: "IN" },
-  { name: "Japan", code: "JP" },
-  { name: "Portugal", code: "PT" },
-  { name: "Spain", code: "ES" },
-  { name: "United Kingdom", code: "GB" },
-  { name: "United States", code: "US" }
-];
-const COUNTRY_CITY_OPTIONS = {
-  BR: ["Rio de Janeiro", "São Paulo", "Florianópolis", "Salvador"],
-  CA: ["Toronto", "Vancouver", "Montreal", "Calgary"],
-  FR: ["Paris", "Lyon", "Nice", "Bordeaux"],
-  DE: ["Berlin", "Munich", "Hamburg", "Cologne"],
-  IN: ["Mumbai", "Delhi", "Bengaluru", "Goa"],
-  JP: ["Tokyo", "Osaka", "Kyoto", "Sapporo"],
-  PT: ["Lisbon", "Porto", "Faro", "Coimbra"],
-  ES: ["Madrid", "Barcelona", "Valencia", "Seville"],
-  GB: ["London", "Manchester", "Bristol", "Edinburgh"],
-  US: ["New York", "Los Angeles", "Austin", "Miami"]
-};
 const REGIONAL_INDICATOR_OFFSET = 127397;
 const REQUIRED_HOST_CONSENTS = [
   {
