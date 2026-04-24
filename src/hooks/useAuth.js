@@ -255,6 +255,10 @@ const useAuth = () => {
         const normalizedEmail = newUser.email.trim().toLowerCase();
         const redirectTo = encodeURIComponent(window.location.origin);
 
+        if (!supabaseUrl) {
+          return { success: false, message: "Supabase URL is not set. Add VITE_SUPABASE_URL in Vercel and redeploy." };
+        }
+
         let res, json;
         try {
           res = await fetch(
