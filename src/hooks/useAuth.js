@@ -255,10 +255,6 @@ const useAuth = () => {
         const normalizedEmail = newUser.email.trim().toLowerCase();
         const redirectTo = encodeURIComponent(window.location.origin);
 
-        if (!supabaseUrl) {
-          const raw = import.meta.env.VITE_SUPABASE_URL;
-          return { success: false, message: `URL env var = ${JSON.stringify(raw)}. Re-add VITE_SUPABASE_URL in Vercel (must be https://bwdkelprrvhztpviiujo.supabase.co) and redeploy.` };
-        }
 
         let res, json;
         try {
