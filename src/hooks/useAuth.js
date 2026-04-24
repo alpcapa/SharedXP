@@ -342,10 +342,25 @@ const useAuth = () => {
           password,
         });
 
-        if (error) return { success: false, message: "Incorrect email or password." };
+        if (error) {
+          const msg = error.message || "";
+          // Check both the error code (newer Supabase versions) and the message
+          // text (older versions / fallback) to reliably detect unconfirmed emails.
+          if (
+            error.code === "email_not_confirmed" ||
+            msg.toLowerCase().includes("email not confirmed")
+          ) {
+            return {
+              success: false,
+              message: "Please confirm your email address before logging in. Check your inbox for the confirmation email.",
+            };
+          }
+          return { success: false, message: "Incorrect email or password." };
+        }
 
         if (data?.user) {
           try {
+            await applyPendingProfile(data.user);
             const user = await fetchUserProfile(data.user);
             if (user) setCurrentUser(user);
           } catch (e) {

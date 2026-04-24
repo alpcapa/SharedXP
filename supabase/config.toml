@@ -32,7 +32,14 @@ file_size_limit = "50MiB"
 enabled = true
 # The URL of the site that this Supabase project is serving. Used in
 # confirmation emails and OAuth redirects.
+# LOCAL DEV: http://127.0.0.1:5173
+# PRODUCTION DASHBOARD: set Site URL to https://project-gq4ge.vercel.app
+#   Supabase Dashboard → Authentication → URL Configuration → Site URL
 site_url = "http://127.0.0.1:5173"
+# IMPORTANT: The production origin MUST also be added in the Supabase Dashboard:
+#   Authentication → URL Configuration → Redirect URLs
+#   Add: https://project-gq4ge.vercel.app
+# Without this, Supabase will strip redirect_to from email confirmation links.
 additional_redirect_urls = ["https://project-gq4ge.vercel.app"]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
@@ -52,8 +59,8 @@ enable_confirmations = true
 #   2. In the Supabase dashboard → Authentication → Hooks, enable
 #      "Send Email" and set the URI to:
 #      https://<project-ref>.supabase.co/functions/v1/send-email
-#   3. Set RESEND_API_KEY and RESEND_FROM_EMAIL as Edge Function secrets:
-#      supabase secrets set RESEND_API_KEY=re_... RESEND_FROM_EMAIL=noreply@sharedxp.com
+#   3. Set Edge Function secrets:
+#      supabase secrets set RESEND_API_KEY=re_... RESEND_FROM_EMAIL=noreply@sharedxp.com APP_URL=https://project-gq4ge.vercel.app
 [auth.hook.send_email]
 enabled = true
 uri = "http://host.docker.internal:54321/functions/v1/send-email"
