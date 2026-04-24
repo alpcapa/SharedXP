@@ -32,7 +32,7 @@ function confirmationUrl(
 ): string {
   const base = `${SUPABASE_URL}/auth/v1/verify`;
   const params = new URLSearchParams({
-    token: tokenHash,
+    token_hash: tokenHash,
     type: actionType,
     redirect_to: redirectTo,
   });
