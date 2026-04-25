@@ -378,51 +378,63 @@ const useAuth = () => {
       },
 
       onEmailSignUp: async (newUser) => {
-        const normalizedEmail = newUser.email.trim().toLowerCase();
-
-        const { data, error } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password: newUser.password,
-          options: {
-            emailRedirectTo: window.location.origin,
-          },
-        });
-
-        if (error) return { success: false, message: error.message || "Sign up failed." };
-        if (!data?.user) return { success: false, message: "Sign up failed — no user returned." };
-        if (data.user.identities?.length === 0) {
-          return { success: false, message: "An account with this email already exists. Please sign in instead." };
-        }
-
-        // Save profile data; applyPendingProfile upserts it after email confirmation.
-        // Passwords are never written to localStorage or the pending_profiles table.
-        const { password, confirmPassword, ...profileData } = newUser;
-        const pendingPayload = { ...profileData, email: normalizedEmail };
         try {
-          localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(pendingPayload));
-        } catch {
-          try {
-            // Quota exceeded — strip photo and retry
-            localStorage.setItem(
-              PENDING_PROFILE_KEY,
-              JSON.stringify({ ...profileData, email: normalizedEmail, photo: "" })
-            );
-          } catch {
-            // localStorage unavailable — cross-browser Supabase fallback will be used
-          }
-        }
+          const normalizedEmail = newUser.email.trim().toLowerCase();
 
-        // Also persist to Supabase so the profile survives cross-browser
-        // email confirmation (e.g. iOS in-app browser has isolated localStorage).
-        // Non-fatal: same-browser flows use localStorage as the primary source.
-        supabase
-          .from("pending_profiles")
-          .upsert({ email: normalizedEmail, data: pendingPayload }, { onConflict: "email" })
-          .catch((e) => {
-            console.error("Failed to persist pending profile to Supabase:", e);
+          const { data, error } = await supabase.auth.signUp({
+            email: normalizedEmail,
+            password: newUser.password,
+            options: {
+              emailRedirectTo: window.location.origin,
+            },
           });
 
-        return { success: true };
+          if (error) return { success: false, message: error.message || "Sign up failed." };
+          if (!data?.user) return { success: false, message: "Sign up failed — no user returned." };
+          if (data.user.identities?.length === 0) {
+            return { success: false, message: "An account with this email already exists. Please sign in instead." };
+          }
+
+          // Save profile data; applyPendingProfile upserts it after email confirmation.
+          // Passwords are never written to localStorage or the pending_profiles table.
+          const { password, confirmPassword, ...profileData } = newUser;
+          const pendingPayload = { ...profileData, email: normalizedEmail };
+          try {
+            localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(pendingPayload));
+          } catch {
+            try {
+              // Quota exceeded (e.g. large photo) — strip photo and retry
+              localStorage.setItem(
+                PENDING_PROFILE_KEY,
+                JSON.stringify({ ...profileData, email: normalizedEmail, photo: "" })
+              );
+            } catch {
+              // localStorage unavailable — cross-browser Supabase fallback will be used
+            }
+          }
+
+          // Also persist to Supabase so the profile survives cross-browser email
+          // confirmation (e.g. iOS in-app browser has isolated localStorage).
+          // Photos are stripped here: base64 data URLs can be several MB which
+          // exceeds Supabase's request body limit, and the photo cannot be used
+          // cross-browser anyway (only the original browser has the File object).
+          // Non-fatal: same-browser flows use localStorage as the primary source.
+          const { photo: _photo, ...pendingPayloadWithoutPhoto } = pendingPayload;
+          supabase
+            .from("pending_profiles")
+            .upsert({ email: normalizedEmail, data: pendingPayloadWithoutPhoto }, { onConflict: "email" })
+            .then(({ error: upsertError }) => {
+              if (upsertError) console.error("Failed to persist pending profile to Supabase:", upsertError);
+            })
+            .catch((e) => {
+              console.error("Failed to persist pending profile to Supabase:", e);
+            });
+
+          return { success: true };
+        } catch (e) {
+          console.error("onEmailSignUp unexpected error:", e);
+          return { success: false, message: "Sign up failed. Please try again." };
+        }
       },
 
       onEmailLogin: async (email, password) => {
