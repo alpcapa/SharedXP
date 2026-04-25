@@ -128,7 +128,10 @@ const fetchUserProfile = async (authUser) => {
   ]);
 
   const profile = profileResult.data;
-  if (!profile) return null;
+  if (!profile) {
+    console.error("[useAuth] fetchUserProfile: no profile row found for", authUser.id, profileResult.error);
+    return null;
+  }
 
   let hostProfile = null;
   let hostSports = [];
@@ -285,6 +288,7 @@ const useAuth = () => {
         try {
           const user = await fetchUserProfile(session.user);
           if (user) setCurrentUser(user);
+          else console.error("[useAuth] onAuthStateChange: fetchUserProfile returned null for event", event, session.user?.id);
         } catch (e) {
           console.error("onAuthStateChange fetchUserProfile failed:", e);
         }
