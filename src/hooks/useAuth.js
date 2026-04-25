@@ -179,10 +179,12 @@ const upsertLanguagesAndSports = async (userId, languages, sports) => {
     supabase.from("user_sports").delete().eq("user_id", userId),
   ]);
 
-  await Promise.all([
-    langRows.length > 0 ? supabase.from("user_languages").insert(langRows) : Promise.resolve(),
-    sportRows.length > 0 ? supabase.from("user_sports").insert(sportRows) : Promise.resolve(),
+  const [langResult, sportResult] = await Promise.all([
+    langRows.length > 0 ? supabase.from("user_languages").insert(langRows) : Promise.resolve({ error: null }),
+    sportRows.length > 0 ? supabase.from("user_sports").insert(sportRows) : Promise.resolve({ error: null }),
   ]);
+  if (langResult?.error) console.error("Failed to insert languages:", langResult.error);
+  if (sportResult?.error) console.error("Failed to insert sports:", sportResult.error);
 };
 
 // Upserts the pending profile (saved during sign-up) for the confirmed auth user.
@@ -207,7 +209,7 @@ const applyPendingProfile = async (authUser) => {
   localStorage.removeItem(PENDING_PROFILE_KEY);
 
   try {
-    await supabase.from("profiles").upsert({
+    const { error: upsertError } = await supabase.from("profiles").upsert({
       id: authUser.id,
       email: pending.email,
       first_name: pending.firstName || "",
@@ -229,6 +231,7 @@ const applyPendingProfile = async (authUser) => {
       agreed_to_promotions: pending.agreedToPromotionsAndMarketingEmails || false,
       signed_up_at: new Date().toISOString(),
     });
+    if (upsertError) throw upsertError;
     await upsertLanguagesAndSports(authUser.id, pending.languages, pending.sports);
   } catch (e) {
     console.error("Failed to save pending profile:", e);
@@ -316,6 +319,9 @@ const useAuth = () => {
 
         if (error) return { success: false, message: error.message || "Sign up failed." };
         if (!data?.user) return { success: false, message: "Sign up failed — no user returned." };
+        if (data.user.identities?.length === 0) {
+          return { success: false, message: "An account with this email already exists. Please sign in instead." };
+        }
 
         // Save profile data; applyPendingProfile upserts it after email confirmation.
         // Passwords are never written to localStorage.
