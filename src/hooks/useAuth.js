@@ -401,11 +401,15 @@ const useAuth = () => {
         try {
           localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(pendingPayload));
         } catch {
-          // Quota exceeded — strip photo and retry
-          localStorage.setItem(
-            PENDING_PROFILE_KEY,
-            JSON.stringify({ ...profileData, email: normalizedEmail, photo: "" })
-          );
+          try {
+            // Quota exceeded — strip photo and retry
+            localStorage.setItem(
+              PENDING_PROFILE_KEY,
+              JSON.stringify({ ...profileData, email: normalizedEmail, photo: "" })
+            );
+          } catch {
+            // localStorage unavailable — cross-browser Supabase fallback will be used
+          }
         }
 
         // Also persist to Supabase so the profile survives cross-browser
