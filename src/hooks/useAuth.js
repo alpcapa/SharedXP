@@ -271,6 +271,9 @@ const useAuth = () => {
           if (user) setCurrentUser(user);
         } catch (e) {
           console.error("fetchUserProfile failed:", e);
+          // Still mark the user as logged in using minimal auth data so a
+          // transient DB error doesn't leave the UI stuck on Login/Sign Up.
+          setCurrentUser(buildUserObject(session.user, { email: session.user?.email }, [], [], null, null));
         }
       }
       clearTimeout(timeout);
@@ -294,6 +297,9 @@ const useAuth = () => {
           else console.error("[useAuth] onAuthStateChange: fetchUserProfile returned null for event", event, session.user?.id);
         } catch (e) {
           console.error("onAuthStateChange fetchUserProfile failed:", e);
+          // Still mark the user as logged in using minimal auth data so a
+          // transient DB error doesn't leave the UI stuck on Login/Sign Up.
+          setCurrentUser(buildUserObject(session.user, { email: session.user?.email }, [], [], null, null));
         }
       } else {
         setCurrentUser(null);
@@ -378,6 +384,9 @@ const useAuth = () => {
             if (user) setCurrentUser(user);
           } catch (e) {
             console.error("Login fetchUserProfile failed:", e);
+            // Still mark the user as logged in using minimal auth data so a
+            // transient DB error doesn't leave the UI stuck on Login/Sign Up.
+            setCurrentUser(buildUserObject(data.user, { email: data.user?.email }, [], [], null, null));
           }
         }
 
