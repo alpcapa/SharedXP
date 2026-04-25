@@ -83,35 +83,36 @@ const buildHostProfileObject = (hostProfile, hostSports) => {
 };
 
 const buildUserObject = (authUser, profile, languages, sports, hostProfile, hostSports) => {
-  if (!authUser || !profile) return null;
+  if (!authUser) return null;
+  const p = profile || {};
   return {
     id: authUser.id,
-    email: profile.email || authUser.email || "",
-    fullName: profile.full_name || "",
-    firstName: profile.first_name || "",
-    lastName: profile.last_name || "",
-    phone: profile.phone || "",
-    phoneCountryCode: profile.phone_country_code || "",
-    countryDialCode: profile.country_dial_code || "",
-    address: profile.address || "",
-    country: profile.country || "",
-    city: profile.city || "",
-    photo: profile.photo_url || "",
-    birthday: profile.birthday || "",
-    gender: profile.gender || "",
+    email: p.email || authUser.email || "",
+    fullName: p.full_name || "",
+    firstName: p.first_name || "",
+    lastName: p.last_name || "",
+    phone: p.phone || "",
+    phoneCountryCode: p.phone_country_code || "",
+    countryDialCode: p.country_dial_code || "",
+    address: p.address || "",
+    country: p.country || "",
+    city: p.city || "",
+    photo: p.photo_url || "",
+    birthday: p.birthday || "",
+    gender: p.gender || "",
     languages: normalizeLanguages(
       (languages || []).sort((a, b) => a.position - b.position).map((l) => l.language)
     ),
     sports: normalizeSports(
       (sports || []).sort((a, b) => a.position - b.position).map((s) => s.sport)
     ),
-    signedUpAt: profile.signed_up_at || authUser.created_at || new Date().toISOString(),
-    isHost: profile.is_host || false,
+    signedUpAt: p.signed_up_at || authUser.created_at || new Date().toISOString(),
+    isHost: p.is_host || false,
     hostProfile: buildHostProfileObject(hostProfile, hostSports),
     history: getLocalHistory(authUser.id),
     hostHistory: getLocalHostHistory(authUser.id),
-    agreedToTermsAndConditions: profile.agreed_to_terms || false,
-    agreedToPromotionsAndMarketingEmails: profile.agreed_to_promotions || false,
+    agreedToTermsAndConditions: p.agreed_to_terms || false,
+    agreedToPromotionsAndMarketingEmails: p.agreed_to_promotions || false,
   };
 };
 
@@ -128,7 +129,12 @@ const fetchUserProfile = async (authUser) => {
   ]);
 
   const profile = profileResult.data;
-  if (!profile) return null;
+  if (!profile) {
+    console.error("[useAuth] fetchUserProfile: no profile row found for", authUser.id, profileResult.error);
+    // Return minimal user from auth data so login still shows the user as logged in
+    // even when the DB query is blocked (e.g. RLS misconfiguration).
+    return buildUserObject(authUser, { email: authUser.email }, [], [], null, null);
+  }
 
   let hostProfile = null;
   let hostSports = [];
@@ -285,6 +291,7 @@ const useAuth = () => {
         try {
           const user = await fetchUserProfile(session.user);
           if (user) setCurrentUser(user);
+          else console.error("[useAuth] onAuthStateChange: fetchUserProfile returned null for event", event, session.user?.id);
         } catch (e) {
           console.error("onAuthStateChange fetchUserProfile failed:", e);
         }
