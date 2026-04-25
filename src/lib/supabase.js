@@ -16,11 +16,5 @@ try {
 const supabaseAnonKey =
   typeof rawKey === "string" && rawKey.trim() ? rawKey.trim() : FALLBACK_KEY;
 
-// Use implicit flow so email-confirmation links carry tokens in the URL hash
-// rather than a PKCE code.  Hash-based tokens work in every browser context
-// (Safari, SFSafariViewController, WKWebView used by Gmail/other mail apps)
-// because no code_verifier stored in localStorage is required.
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { flowType: "implicit" },
-});
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export { supabaseUrl, supabaseAnonKey };
