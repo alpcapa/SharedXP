@@ -198,80 +198,109 @@ const upsertLanguagesAndSports = async (userId, languages, sports) => {
 // after email confirmation), only the first caller performs the DB upsert.  The
 // second caller awaits this promise so it too blocks until the upsert is
 // committed, ensuring fetchUserProfile always reads the fully-populated row.
+//
+// The promise is assigned BEFORE any `await` in _doApplyPendingProfile (the
+// synchronous JS execution up to the first await runs inline when the async
+// function is called), so concurrent callers always see it set.
 let _applyPendingProfilePromise = null;
 
-// Upserts the pending profile (saved during sign-up) for the confirmed auth user.
-// Claims the localStorage entry first to prevent concurrent double-upserts, and
-// restores it on failure so the next sign-in can retry.
-const applyPendingProfile = async (authUser) => {
-  // If another concurrent call is already performing the upsert, wait for it
-  // to finish before returning.  This prevents fetchUserProfile from reading
-  // the empty trigger-created row while the upsert is still in flight.
-  //
-  // Safety note: JavaScript is single-threaded, so there is no TOCTOU window
-  // between this check and the `_applyPendingProfilePromise = ...` assignment
-  // below — all code between those two points is synchronous (no `await`), so
-  // no other caller can interleave.  The inner IIFE also catches all errors so
-  // the promise always resolves, guaranteeing the `finally` cleanup runs.
-  if (_applyPendingProfilePromise) {
-    await _applyPendingProfilePromise;
-    return;
-  }
-
+// Inner implementation — separated so _applyPendingProfilePromise can be
+// assigned synchronously before any await inside this function runs.
+const _doApplyPendingProfile = async (authUser) => {
+  // Step 1: try localStorage (synchronous — works when confirmation happens in
+  // the same browser where sign-up occurred).
   const pendingRaw = localStorage.getItem(PENDING_PROFILE_KEY);
-  if (!pendingRaw) return;
+  let pending = null;
 
-  let pending;
-  try {
-    pending = JSON.parse(pendingRaw);
-  } catch {
-    localStorage.removeItem(PENDING_PROFILE_KEY);
-    return;
+  if (pendingRaw) {
+    try {
+      const parsed = JSON.parse(pendingRaw);
+      if (parsed?.email === authUser.email) {
+        pending = parsed;
+        // Claim synchronously before any await so no concurrent caller can
+        // also pick this up.
+        localStorage.removeItem(PENDING_PROFILE_KEY);
+      }
+    } catch {
+      localStorage.removeItem(PENDING_PROFILE_KEY);
+    }
   }
 
-  if (pending.email !== authUser.email) return;
-
-  // Claim immediately (synchronous) to prevent a second concurrent caller from
-  // also attempting the upsert before we finish.
-  localStorage.removeItem(PENDING_PROFILE_KEY);
-
-  _applyPendingProfilePromise = (async () => {
+  // Step 2: fall back to the Supabase pending_profiles table (cross-browser
+  // email confirmation — e.g. sign up in Safari, confirm via an iOS in-app
+  // browser which has its own isolated localStorage).
+  if (!pending) {
     try {
-      const { error: upsertError } = await supabase.from("profiles").upsert({
-        id: authUser.id,
-        email: pending.email,
-        first_name: pending.firstName || "",
-        last_name: pending.lastName || "",
-        full_name:
-          pending.fullName ||
-          `${pending.firstName || ""} ${pending.lastName || ""}`.trim(),
-        phone: pending.phone || "",
-        phone_country_code: pending.phoneCountryCode || "",
-        country_dial_code: pending.countryDialCode || "",
-        address: pending.address || "",
-        country: pending.country || "",
-        city: pending.city || "",
-        photo_url: pending.photo || "",
-        birthday: pending.birthday || "",
-        gender: pending.gender || "",
-        is_host: false,
-        agreed_to_terms: pending.agreedToTermsAndConditions || false,
-        agreed_to_promotions: pending.agreedToPromotionsAndMarketingEmails || false,
-        signed_up_at: new Date().toISOString(),
-      });
-      if (upsertError) throw upsertError;
-      await upsertLanguagesAndSports(authUser.id, pending.languages, pending.sports);
-    } catch (e) {
-      console.error("Failed to save pending profile:", e);
-      // Restore so the next sign-in can retry.
+      const { data: row } = await supabase
+        .from("pending_profiles")
+        .select("data")
+        .eq("email", authUser.email)
+        .maybeSingle();
+      if (row?.data) pending = { ...row.data, email: authUser.email };
+    } catch {
+      // Table may not exist in older deployments — non-fatal.
+    }
+  }
+
+  if (!pending) return;
+
+  // Step 3: upsert the full profile into the profiles table.
+  try {
+    const { error: upsertError } = await supabase.from("profiles").upsert({
+      id: authUser.id,
+      email: pending.email,
+      first_name: pending.firstName || "",
+      last_name: pending.lastName || "",
+      full_name:
+        pending.fullName ||
+        `${pending.firstName || ""} ${pending.lastName || ""}`.trim(),
+      phone: pending.phone || "",
+      phone_country_code: pending.phoneCountryCode || "",
+      country_dial_code: pending.countryDialCode || "",
+      address: pending.address || "",
+      country: pending.country || "",
+      city: pending.city || "",
+      photo_url: pending.photo || "",
+      birthday: pending.birthday || "",
+      gender: pending.gender || "",
+      is_host: false,
+      agreed_to_terms: pending.agreedToTermsAndConditions || false,
+      agreed_to_promotions: pending.agreedToPromotionsAndMarketingEmails || false,
+      signed_up_at: new Date().toISOString(),
+    });
+    if (upsertError) throw upsertError;
+    await upsertLanguagesAndSports(authUser.id, pending.languages, pending.sports);
+    // Clean up the Supabase pending row after a successful upsert.
+    supabase.from("pending_profiles").delete().eq("email", authUser.email).catch((e) => {
+      console.error("Failed to delete pending_profiles row:", e);
+    });
+  } catch (e) {
+    console.error("Failed to save pending profile:", e);
+    // Restore localStorage so the next sign-in can retry.
+    if (pendingRaw) {
       try {
         localStorage.setItem(PENDING_PROFILE_KEY, pendingRaw);
       } catch {
         // localStorage quota exceeded – profile data is unfortunately lost
       }
     }
-  })();
+  }
+};
 
+// Upserts the pending profile (saved during sign-up) for the confirmed auth user.
+// Coordinates concurrent callers (getSession + onAuthStateChange fire together)
+// and handles cross-browser email confirmation via a Supabase fallback.
+const applyPendingProfile = async (authUser) => {
+  // If another concurrent call is already in flight, wait for it and return.
+  // _applyPendingProfilePromise is assigned below before any await, so this
+  // check is always accurate (no TOCTOU — JS is single-threaded).
+  if (_applyPendingProfilePromise) {
+    await _applyPendingProfilePromise;
+    return;
+  }
+
+  // Assign BEFORE awaiting so concurrent callers see the promise immediately.
+  _applyPendingProfilePromise = _doApplyPendingProfile(authUser);
   try {
     await _applyPendingProfilePromise;
   } finally {
@@ -366,13 +395,11 @@ const useAuth = () => {
         }
 
         // Save profile data; applyPendingProfile upserts it after email confirmation.
-        // Passwords are never written to localStorage.
+        // Passwords are never written to localStorage or the pending_profiles table.
         const { password, confirmPassword, ...profileData } = newUser;
+        const pendingPayload = { ...profileData, email: normalizedEmail };
         try {
-          localStorage.setItem(
-            PENDING_PROFILE_KEY,
-            JSON.stringify({ ...profileData, email: normalizedEmail })
-          );
+          localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(pendingPayload));
         } catch {
           // Quota exceeded — strip photo and retry
           localStorage.setItem(
@@ -380,6 +407,16 @@ const useAuth = () => {
             JSON.stringify({ ...profileData, email: normalizedEmail, photo: "" })
           );
         }
+
+        // Also persist to Supabase so the profile survives cross-browser
+        // email confirmation (e.g. iOS in-app browser has isolated localStorage).
+        // Non-fatal: same-browser flows use localStorage as the primary source.
+        supabase
+          .from("pending_profiles")
+          .upsert({ email: normalizedEmail, data: pendingPayload }, { onConflict: "email" })
+          .catch((e) => {
+            console.error("Failed to persist pending profile to Supabase:", e);
+          });
 
         return { success: true };
       },
