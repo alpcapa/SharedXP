@@ -226,9 +226,20 @@ const _doApplyPendingProfile = async (authUser) => {
     }
   }
 
-  // Step 2: fall back to the Supabase pending_profiles table (cross-browser
-  // email confirmation — e.g. sign up in Safari, confirm via an iOS in-app
-  // browser which has its own isolated localStorage).
+  // Step 2: fall back to user_metadata stored at sign-up time.  This is the
+  // most reliable cross-browser source: it lives in the Supabase auth user
+  // record, is included in the session object, and requires no localStorage
+  // or extra network request — works in WKWebView, SFSafariViewController,
+  // and any other isolated browser context.
+  if (!pending) {
+    const meta = authUser.user_metadata?.sharedxp_pending_profile;
+    if (meta) {
+      pending = { ...meta, email: authUser.email };
+    }
+  }
+
+  // Step 3: fall back to the Supabase pending_profiles table (legacy fallback
+  // for accounts created before user_metadata was used, or when it was not set).
   if (!pending) {
     try {
       const { data: row } = await supabase
@@ -244,7 +255,7 @@ const _doApplyPendingProfile = async (authUser) => {
 
   if (!pending) return;
 
-  // Step 3: upsert the full profile into the profiles table.
+  // Step 4: upsert the full profile into the profiles table.
   try {
     const { error: upsertError } = await supabase.from("profiles").upsert({
       id: authUser.id,
@@ -381,11 +392,23 @@ const useAuth = () => {
         try {
           const normalizedEmail = newUser.email.trim().toLowerCase();
 
+          // Destructure to exclude sensitive / over-sized fields from Supabase storage.
+          // password, confirmPassword: never stored anywhere outside Supabase auth.
+          // photo: base64 data URLs can be several MB, bloating the JWT and the
+          //        pending_profiles table row; the photo is added back for localStorage
+          //        below so the same-browser fast-path can still show it on confirmation.
+          const { password, confirmPassword: _confirmPassword, photo, ...profileDataForMeta } = newUser;
+          const pendingMeta = { ...profileDataForMeta, email: normalizedEmail };
+
           const { data, error } = await supabase.auth.signUp({
             email: normalizedEmail,
-            password: newUser.password,
+            password,
             options: {
               emailRedirectTo: window.location.origin,
+              // Stored in auth.users.raw_user_meta_data — available from the
+              // session in any browser after email confirmation, no localStorage
+              // or extra table query needed.
+              data: { sharedxp_pending_profile: pendingMeta },
             },
           });
 
@@ -395,10 +418,8 @@ const useAuth = () => {
             return { success: false, message: "An account with this email already exists. Please sign in instead." };
           }
 
-          // Save profile data; applyPendingProfile upserts it after email confirmation.
-          // Passwords are never written to localStorage or the pending_profiles table.
-          const { password, confirmPassword, ...profileData } = newUser;
-          const pendingPayload = { ...profileData, email: normalizedEmail };
+          // Also save to localStorage (same-browser fast path — includes photo).
+          const pendingPayload = { ...profileDataForMeta, photo, email: normalizedEmail };
           try {
             localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(pendingPayload));
           } catch {
@@ -406,23 +427,19 @@ const useAuth = () => {
               // Quota exceeded (e.g. large photo) — strip photo and retry
               localStorage.setItem(
                 PENDING_PROFILE_KEY,
-                JSON.stringify({ ...profileData, email: normalizedEmail, photo: "" })
+                JSON.stringify({ ...profileDataForMeta, photo: "", email: normalizedEmail })
               );
             } catch {
-              // localStorage unavailable — cross-browser Supabase fallback will be used
+              // localStorage unavailable — user_metadata / Supabase fallback will be used
             }
           }
 
-          // Also persist to Supabase so the profile survives cross-browser email
-          // confirmation (e.g. iOS in-app browser has isolated localStorage).
-          // Photos are stripped here: base64 data URLs can be several MB which
-          // exceeds Supabase's request body limit, and the photo cannot be used
-          // cross-browser anyway (only the original browser has the File object).
-          // Non-fatal: same-browser flows use localStorage as the primary source.
-          const { photo: _photo, ...pendingPayloadWithoutPhoto } = pendingPayload;
+          // Also persist to pending_profiles table as a tertiary fallback.
+          // Non-fatal: same-browser flows use localStorage; cross-browser flows
+          // now use user_metadata as the primary source.
           supabase
             .from("pending_profiles")
-            .upsert({ email: normalizedEmail, data: pendingPayloadWithoutPhoto }, { onConflict: "email" })
+            .upsert({ email: normalizedEmail, data: pendingMeta }, { onConflict: "email" })
             .then(({ error: upsertError }) => {
               if (upsertError) console.error("Failed to persist pending profile to Supabase:", upsertError);
             })
