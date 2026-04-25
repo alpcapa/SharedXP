@@ -193,10 +193,31 @@ const upsertLanguagesAndSports = async (userId, languages, sports) => {
   if (sportResult?.error) console.error("Failed to insert sports:", sportResult.error);
 };
 
+// Shared promise used to coordinate concurrent callers of applyPendingProfile.
+// When getSession and onAuthStateChange both fire at the same time (e.g. right
+// after email confirmation), only the first caller performs the DB upsert.  The
+// second caller awaits this promise so it too blocks until the upsert is
+// committed, ensuring fetchUserProfile always reads the fully-populated row.
+let _applyPendingProfilePromise = null;
+
 // Upserts the pending profile (saved during sign-up) for the confirmed auth user.
 // Claims the localStorage entry first to prevent concurrent double-upserts, and
 // restores it on failure so the next sign-in can retry.
 const applyPendingProfile = async (authUser) => {
+  // If another concurrent call is already performing the upsert, wait for it
+  // to finish before returning.  This prevents fetchUserProfile from reading
+  // the empty trigger-created row while the upsert is still in flight.
+  //
+  // Safety note: JavaScript is single-threaded, so there is no TOCTOU window
+  // between this check and the `_applyPendingProfilePromise = ...` assignment
+  // below — all code between those two points is synchronous (no `await`), so
+  // no other caller can interleave.  The inner IIFE also catches all errors so
+  // the promise always resolves, guaranteeing the `finally` cleanup runs.
+  if (_applyPendingProfilePromise) {
+    await _applyPendingProfilePromise;
+    return;
+  }
+
   const pendingRaw = localStorage.getItem(PENDING_PROFILE_KEY);
   if (!pendingRaw) return;
 
@@ -214,39 +235,47 @@ const applyPendingProfile = async (authUser) => {
   // also attempting the upsert before we finish.
   localStorage.removeItem(PENDING_PROFILE_KEY);
 
-  try {
-    const { error: upsertError } = await supabase.from("profiles").upsert({
-      id: authUser.id,
-      email: pending.email,
-      first_name: pending.firstName || "",
-      last_name: pending.lastName || "",
-      full_name:
-        pending.fullName ||
-        `${pending.firstName || ""} ${pending.lastName || ""}`.trim(),
-      phone: pending.phone || "",
-      phone_country_code: pending.phoneCountryCode || "",
-      country_dial_code: pending.countryDialCode || "",
-      address: pending.address || "",
-      country: pending.country || "",
-      city: pending.city || "",
-      photo_url: pending.photo || "",
-      birthday: pending.birthday || "",
-      gender: pending.gender || "",
-      is_host: false,
-      agreed_to_terms: pending.agreedToTermsAndConditions || false,
-      agreed_to_promotions: pending.agreedToPromotionsAndMarketingEmails || false,
-      signed_up_at: new Date().toISOString(),
-    });
-    if (upsertError) throw upsertError;
-    await upsertLanguagesAndSports(authUser.id, pending.languages, pending.sports);
-  } catch (e) {
-    console.error("Failed to save pending profile:", e);
-    // Restore so the next sign-in can retry.
+  _applyPendingProfilePromise = (async () => {
     try {
-      localStorage.setItem(PENDING_PROFILE_KEY, pendingRaw);
-    } catch {
-      // localStorage quota exceeded – profile data is unfortunately lost
+      const { error: upsertError } = await supabase.from("profiles").upsert({
+        id: authUser.id,
+        email: pending.email,
+        first_name: pending.firstName || "",
+        last_name: pending.lastName || "",
+        full_name:
+          pending.fullName ||
+          `${pending.firstName || ""} ${pending.lastName || ""}`.trim(),
+        phone: pending.phone || "",
+        phone_country_code: pending.phoneCountryCode || "",
+        country_dial_code: pending.countryDialCode || "",
+        address: pending.address || "",
+        country: pending.country || "",
+        city: pending.city || "",
+        photo_url: pending.photo || "",
+        birthday: pending.birthday || "",
+        gender: pending.gender || "",
+        is_host: false,
+        agreed_to_terms: pending.agreedToTermsAndConditions || false,
+        agreed_to_promotions: pending.agreedToPromotionsAndMarketingEmails || false,
+        signed_up_at: new Date().toISOString(),
+      });
+      if (upsertError) throw upsertError;
+      await upsertLanguagesAndSports(authUser.id, pending.languages, pending.sports);
+    } catch (e) {
+      console.error("Failed to save pending profile:", e);
+      // Restore so the next sign-in can retry.
+      try {
+        localStorage.setItem(PENDING_PROFILE_KEY, pendingRaw);
+      } catch {
+        // localStorage quota exceeded – profile data is unfortunately lost
+      }
     }
+  })();
+
+  try {
+    await _applyPendingProfilePromise;
+  } finally {
+    _applyPendingProfilePromise = null;
   }
 };
 
