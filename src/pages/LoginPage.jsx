@@ -14,7 +14,14 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
 
   const onSubmit = async (event) => {
     event.preventDefault();
-    const loginResult = await onEmailLogin?.(email, password);
+    let loginResult;
+    try {
+      loginResult = await onEmailLogin?.(email, password);
+    } catch (e) {
+      console.error("onEmailLogin error:", e);
+      setErrorMessage("Login failed. Please try again.");
+      return;
+    }
 
     if (!loginResult?.success) {
       setErrorMessage(loginResult?.message ?? "Unable to login.");

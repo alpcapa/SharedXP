@@ -131,8 +131,32 @@ const fetchUserProfile = async (authUser) => {
   const profile = profileResult.data;
   if (!profile) {
     console.error("[useAuth] fetchUserProfile: no profile row found for", authUser.id, profileResult.error);
-    // Return minimal user from auth data so login still shows the user as logged in
-    // even when the DB query is blocked (e.g. RLS misconfiguration).
+    // Fall back to user_metadata written at sign-up time.  Always available in
+    // the session JWT — no extra network request, works even when RLS blocks the
+    // profiles SELECT (e.g. API-key/PostgREST misconfiguration).
+    const meta = authUser.user_metadata?.sharedxp_pending_profile;
+    if (meta) {
+      return buildUserObject(authUser, {
+        email: authUser.email,
+        full_name: meta.fullName || `${meta.firstName || ""} ${meta.lastName || ""}`.trim(),
+        first_name: meta.firstName || "",
+        last_name: meta.lastName || "",
+        phone: meta.phone || "",
+        phone_country_code: meta.phoneCountryCode || "",
+        country_dial_code: meta.countryDialCode || "",
+        address: meta.address || "",
+        country: meta.country || "",
+        city: meta.city || "",
+        photo_url: meta.photo || "",
+        birthday: meta.birthday || "",
+        gender: meta.gender || "",
+        is_host: false,
+        agreed_to_terms: meta.agreedToTermsAndConditions || false,
+        agreed_to_promotions: meta.agreedToPromotionsAndMarketingEmails || false,
+        signed_up_at: authUser.created_at || new Date().toISOString(),
+      }, [], [], null, null);
+    }
+    // Absolute last resort: email only.
     return buildUserObject(authUser, { email: authUser.email }, [], [], null, null);
   }
 
@@ -193,27 +217,69 @@ const upsertLanguagesAndSports = async (userId, languages, sports) => {
   if (sportResult?.error) console.error("Failed to insert sports:", sportResult.error);
 };
 
-// Upserts the pending profile (saved during sign-up) for the confirmed auth user.
-// Claims the localStorage entry first to prevent concurrent double-upserts, and
-// restores it on failure so the next sign-in can retry.
-const applyPendingProfile = async (authUser) => {
-  const pendingRaw = localStorage.getItem(PENDING_PROFILE_KEY);
-  if (!pendingRaw) return;
+// Shared promise used to coordinate concurrent callers of applyPendingProfile.
+// When getSession and onAuthStateChange both fire at the same time (e.g. right
+// after email confirmation), only the first caller performs the DB upsert.  The
+// second caller awaits this promise so it too blocks until the upsert is
+// committed, ensuring fetchUserProfile always reads the fully-populated row.
+//
+// The promise is assigned BEFORE any `await` in _doApplyPendingProfile (the
+// synchronous JS execution up to the first await runs inline when the async
+// function is called), so concurrent callers always see it set.
+let _applyPendingProfilePromise = null;
 
-  let pending;
-  try {
-    pending = JSON.parse(pendingRaw);
-  } catch {
-    localStorage.removeItem(PENDING_PROFILE_KEY);
-    return;
+// Inner implementation — separated so _applyPendingProfilePromise can be
+// assigned synchronously before any await inside this function runs.
+const _doApplyPendingProfile = async (authUser) => {
+  // Step 1: try localStorage (synchronous — works when confirmation happens in
+  // the same browser where sign-up occurred).
+  const pendingRaw = localStorage.getItem(PENDING_PROFILE_KEY);
+  let pending = null;
+
+  if (pendingRaw) {
+    try {
+      const parsed = JSON.parse(pendingRaw);
+      if (parsed?.email === authUser.email) {
+        pending = parsed;
+        // Claim synchronously before any await so no concurrent caller can
+        // also pick this up.
+        localStorage.removeItem(PENDING_PROFILE_KEY);
+      }
+    } catch {
+      localStorage.removeItem(PENDING_PROFILE_KEY);
+    }
   }
 
-  if (pending.email !== authUser.email) return;
+  // Step 2: fall back to user_metadata stored at sign-up time.  This is the
+  // most reliable cross-browser source: it lives in the Supabase auth user
+  // record, is included in the session object, and requires no localStorage
+  // or extra network request — works in WKWebView, SFSafariViewController,
+  // and any other isolated browser context.
+  if (!pending) {
+    const meta = authUser.user_metadata?.sharedxp_pending_profile;
+    if (meta) {
+      pending = { ...meta, email: authUser.email };
+    }
+  }
 
-  // Claim immediately (synchronous) to prevent a second concurrent caller from
-  // also attempting the upsert before we finish.
-  localStorage.removeItem(PENDING_PROFILE_KEY);
+  // Step 3: fall back to the Supabase pending_profiles table (legacy fallback
+  // for accounts created before user_metadata was used, or when it was not set).
+  if (!pending) {
+    try {
+      const { data: row } = await supabase
+        .from("pending_profiles")
+        .select("data")
+        .eq("email", authUser.email)
+        .maybeSingle();
+      if (row?.data) pending = { ...row.data, email: authUser.email };
+    } catch {
+      // Table may not exist in older deployments — non-fatal.
+    }
+  }
 
+  if (!pending) return;
+
+  // Step 4: upsert the full profile into the profiles table.
   try {
     const { error: upsertError } = await supabase.from("profiles").upsert({
       id: authUser.id,
@@ -239,14 +305,41 @@ const applyPendingProfile = async (authUser) => {
     });
     if (upsertError) throw upsertError;
     await upsertLanguagesAndSports(authUser.id, pending.languages, pending.sports);
+    // Clean up the Supabase pending row after a successful upsert.
+    supabase.from("pending_profiles").delete().eq("email", authUser.email).catch((e) => {
+      console.error("Failed to delete pending_profiles row:", e);
+    });
   } catch (e) {
     console.error("Failed to save pending profile:", e);
-    // Restore so the next sign-in can retry.
-    try {
-      localStorage.setItem(PENDING_PROFILE_KEY, pendingRaw);
-    } catch {
-      // localStorage quota exceeded – profile data is unfortunately lost
+    // Restore localStorage so the next sign-in can retry.
+    if (pendingRaw) {
+      try {
+        localStorage.setItem(PENDING_PROFILE_KEY, pendingRaw);
+      } catch {
+        // localStorage quota exceeded – profile data is unfortunately lost
+      }
     }
+  }
+};
+
+// Upserts the pending profile (saved during sign-up) for the confirmed auth user.
+// Coordinates concurrent callers (getSession + onAuthStateChange fire together)
+// and handles cross-browser email confirmation via a Supabase fallback.
+const applyPendingProfile = async (authUser) => {
+  // If another concurrent call is already in flight, wait for it and return.
+  // _applyPendingProfilePromise is assigned below before any await, so this
+  // check is always accurate (no TOCTOU — JS is single-threaded).
+  if (_applyPendingProfilePromise) {
+    await _applyPendingProfilePromise;
+    return;
+  }
+
+  // Assign BEFORE awaiting so concurrent callers see the promise immediately.
+  _applyPendingProfilePromise = _doApplyPendingProfile(authUser);
+  try {
+    await _applyPendingProfilePromise;
+  } finally {
+    _applyPendingProfilePromise = null;
   }
 };
 
@@ -271,6 +364,9 @@ const useAuth = () => {
           if (user) setCurrentUser(user);
         } catch (e) {
           console.error("fetchUserProfile failed:", e);
+          // Still mark the user as logged in using minimal auth data so a
+          // transient DB error doesn't leave the UI stuck on Login/Sign Up.
+          setCurrentUser(buildUserObject(session.user, { email: session.user?.email }, [], [], null, null));
         }
       }
       clearTimeout(timeout);
@@ -294,6 +390,9 @@ const useAuth = () => {
           else console.error("[useAuth] onAuthStateChange: fetchUserProfile returned null for event", event, session.user?.id);
         } catch (e) {
           console.error("onAuthStateChange fetchUserProfile failed:", e);
+          // Still mark the user as logged in using minimal auth data so a
+          // transient DB error doesn't leave the UI stuck on Login/Sign Up.
+          setCurrentUser(buildUserObject(session.user, { email: session.user?.email }, [], [], null, null));
         }
       } else {
         setCurrentUser(null);
@@ -314,74 +413,112 @@ const useAuth = () => {
       },
 
       onEmailSignUp: async (newUser) => {
-        const normalizedEmail = newUser.email.trim().toLowerCase();
-
-        const { data, error } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password: newUser.password,
-          options: {
-            emailRedirectTo: window.location.origin,
-          },
-        });
-
-        if (error) return { success: false, message: error.message || "Sign up failed." };
-        if (!data?.user) return { success: false, message: "Sign up failed — no user returned." };
-        if (data.user.identities?.length === 0) {
-          return { success: false, message: "An account with this email already exists. Please sign in instead." };
-        }
-
-        // Save profile data; applyPendingProfile upserts it after email confirmation.
-        // Passwords are never written to localStorage.
-        const { password, confirmPassword, ...profileData } = newUser;
         try {
-          localStorage.setItem(
-            PENDING_PROFILE_KEY,
-            JSON.stringify({ ...profileData, email: normalizedEmail })
-          );
-        } catch {
-          // Quota exceeded — strip photo and retry
-          localStorage.setItem(
-            PENDING_PROFILE_KEY,
-            JSON.stringify({ ...profileData, email: normalizedEmail, photo: "" })
-          );
-        }
+          const normalizedEmail = newUser.email.trim().toLowerCase();
 
-        return { success: true };
+          // Destructure to exclude sensitive / over-sized fields from Supabase storage.
+          // password, confirmPassword: never stored anywhere outside Supabase auth.
+          // photo: base64 data URLs can be several MB, bloating the JWT and the
+          //        pending_profiles table row; the photo is added back for localStorage
+          //        below so the same-browser fast-path can still show it on confirmation.
+          const { password, confirmPassword: _confirmPassword, photo, ...profileDataForMeta } = newUser;
+          const pendingMeta = { ...profileDataForMeta, email: normalizedEmail };
+
+          const { data, error } = await supabase.auth.signUp({
+            email: normalizedEmail,
+            password,
+            options: {
+              emailRedirectTo: window.location.origin,
+              // Stored in auth.users.raw_user_meta_data — available from the
+              // session in any browser after email confirmation, no localStorage
+              // or extra table query needed.
+              data: { sharedxp_pending_profile: pendingMeta },
+            },
+          });
+
+          if (error) return { success: false, message: error.message || "Sign up failed." };
+          if (!data?.user) return { success: false, message: "Sign up failed — no user returned." };
+          if (data.user.identities?.length === 0) {
+            return { success: false, message: "An account with this email already exists. Please sign in instead." };
+          }
+
+          // Also save to localStorage (same-browser fast path — includes photo).
+          const pendingPayload = { ...profileDataForMeta, photo, email: normalizedEmail };
+          try {
+            localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(pendingPayload));
+          } catch {
+            try {
+              // Quota exceeded (e.g. large photo) — strip photo and retry
+              localStorage.setItem(
+                PENDING_PROFILE_KEY,
+                JSON.stringify({ ...profileDataForMeta, photo: "", email: normalizedEmail })
+              );
+            } catch {
+              // localStorage unavailable — user_metadata / Supabase fallback will be used
+            }
+          }
+
+          // Also persist to pending_profiles table as a tertiary fallback.
+          // Non-fatal: same-browser flows use localStorage; cross-browser flows
+          // now use user_metadata as the primary source.
+          supabase
+            .from("pending_profiles")
+            .upsert({ email: normalizedEmail, data: pendingMeta }, { onConflict: "email" })
+            .then(({ error: upsertError }) => {
+              if (upsertError) console.error("Failed to persist pending profile to Supabase:", upsertError);
+            })
+            .catch((e) => {
+              console.error("Failed to persist pending profile to Supabase:", e);
+            });
+
+          return { success: true };
+        } catch (e) {
+          console.error("onEmailSignUp unexpected error:", e);
+          return { success: false, message: "Sign up failed. Please try again." };
+        }
       },
 
       onEmailLogin: async (email, password) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim().toLowerCase(),
-          password,
-        });
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password,
+          });
 
-        if (error) {
-          const msg = error.message || "";
-          // Check both the error code (newer Supabase versions) and the message
-          // text (older versions / fallback) to reliably detect unconfirmed emails.
-          if (
-            error.code === "email_not_confirmed" ||
-            msg.toLowerCase().includes("email not confirmed")
-          ) {
-            return {
-              success: false,
-              message: "Please confirm your email address before logging in. Check your inbox for the confirmation email.",
-            };
+          if (error) {
+            const msg = error.message || "";
+            // Check both the error code (newer Supabase versions) and the message
+            // text (older versions / fallback) to reliably detect unconfirmed emails.
+            if (
+              error.code === "email_not_confirmed" ||
+              msg.toLowerCase().includes("email not confirmed")
+            ) {
+              return {
+                success: false,
+                message: "Please confirm your email address before logging in. Check your inbox for the confirmation email.",
+              };
+            }
+            return { success: false, message: error.message || "Incorrect email or password." };
           }
-          return { success: false, message: "Incorrect email or password." };
-        }
 
-        if (data?.user) {
-          try {
-            await applyPendingProfile(data.user);
-            const user = await fetchUserProfile(data.user);
-            if (user) setCurrentUser(user);
-          } catch (e) {
-            console.error("Login fetchUserProfile failed:", e);
+          if (data?.user) {
+            try {
+              await applyPendingProfile(data.user);
+              const user = await fetchUserProfile(data.user);
+              if (user) setCurrentUser(user);
+            } catch (e) {
+              console.error("Login fetchUserProfile failed:", e);
+              // Still mark the user as logged in using minimal auth data so a
+              // transient DB error doesn't leave the UI stuck on Login/Sign Up.
+              setCurrentUser(buildUserObject(data.user, { email: data.user?.email }, [], [], null, null));
+            }
           }
-        }
 
-        return { success: true };
+          return { success: true };
+        } catch (e) {
+          console.error("onEmailLogin unexpected error:", e);
+          return { success: false, message: "Login failed. Please try again." };
+        }
       },
 
       onSocialLogin: async (provider) => {

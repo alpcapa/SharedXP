@@ -302,30 +302,36 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     setErrorMessage("");
     setIsSubmitting(true);
 
-    const result = await onEmailSignUp?.({
-      firstName,
-      lastName,
-      fullName,
-      email: formValues.email.trim().toLowerCase(),
-      password: formValues.password,
-      country: selectedCountry.name,
-      countryCode: selectedCountry.code,
-      city: formValues.city.trim(),
-      countryDialCode: selectedDialCodeCountry.dialCode,
-      phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
-      languages: formValues.languages.map((languageOption) => languageOption.trim()),
-      sports: formValues.sports.map((sportOption) => sportOption.trim()),
-      address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
-        .filter(Boolean)
-        .join(", "),
-      photo: formValues.photo,
-      birthday: normalizedBirthday,
-      gender: formValues.gender,
-      agreedToTermsAndConditions: formValues.agreeTermsAndConditions,
-      agreedToPromotionsAndMarketingEmails: formValues.agreePromotionsAndMarketingEmails,
-    });
-
-    setIsSubmitting(false);
+    let result;
+    try {
+      result = await onEmailSignUp?.({
+        firstName,
+        lastName,
+        fullName,
+        email: formValues.email.trim().toLowerCase(),
+        password: formValues.password,
+        country: selectedCountry.name,
+        countryCode: selectedCountry.code,
+        city: formValues.city.trim(),
+        countryDialCode: selectedDialCodeCountry.dialCode,
+        phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
+        languages: formValues.languages.map((languageOption) => languageOption.trim()),
+        sports: formValues.sports.map((sportOption) => sportOption.trim()),
+        address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
+          .filter(Boolean)
+          .join(", "),
+        photo: formValues.photo,
+        birthday: normalizedBirthday,
+        gender: formValues.gender,
+        agreedToTermsAndConditions: formValues.agreeTermsAndConditions,
+        agreedToPromotionsAndMarketingEmails: formValues.agreePromotionsAndMarketingEmails,
+      });
+    } catch (e) {
+      console.error("onEmailSignUp error:", e);
+      result = { success: false, message: "Sign up failed. Please try again." };
+    } finally {
+      setIsSubmitting(false);
+    }
 
     if (!result?.success) {
       setErrorMessage(result?.message || "Sign up failed. Please try again.");
