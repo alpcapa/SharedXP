@@ -122,15 +122,18 @@ const buildUserObject = (authUser, profile, languages, sports, hostProfile, host
 const fetchUserProfile = async (authUser) => {
   if (!authUser) return null;
 
-  const [profileResult, languagesResult, sportsResult] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", authUser.id).single(),
+  // Use a plain array SELECT (no .single()) to avoid the PostgREST
+  // application/vnd.pgrst.object+json Accept header which can fail when the
+  // anon key format is not recognised at the content-negotiation layer.
+  const [profileArrResult, languagesResult, sportsResult] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", authUser.id),
     supabase.from("user_languages").select("*").eq("user_id", authUser.id).order("position").catch(() => ({ data: [] })),
     supabase.from("user_sports").select("*").eq("user_id", authUser.id).order("position").catch(() => ({ data: [] })),
   ]);
 
-  const profile = profileResult.data;
+  const profile = profileArrResult.data?.[0] ?? null;
   if (!profile) {
-    console.error("[useAuth] fetchUserProfile: no profile row found for", authUser.id, profileResult.error);
+    console.error("[useAuth] fetchUserProfile: no profile row found for", authUser.id, profileArrResult.error);
     // Fall back to user_metadata written at sign-up time.  Always available in
     // the session JWT — no extra network request, works even when RLS blocks the
     // profiles SELECT (e.g. API-key/PostgREST misconfiguration).
@@ -689,6 +692,28 @@ const useAuth = () => {
             profileUpdates.sports ?? currentUser.sports
           );
         }
+
+        // Keep user_metadata in sync so fetchUserProfile's fallback stays
+        // current even when the profiles DB SELECT is blocked.
+        supabase.auth.updateUser({
+          data: {
+            sharedxp_pending_profile: {
+              firstName: currentUser.firstName || "",
+              lastName: currentUser.lastName || "",
+              fullName: currentUser.fullName || "",
+              phone: nextPhone,
+              phoneCountryCode: profileUpdates.phoneCountryCode ?? currentUser.phoneCountryCode ?? "",
+              countryDialCode: profileUpdates.countryDialCode ?? currentUser.countryDialCode ?? "",
+              address: profileUpdates.address ?? currentUser.address ?? "",
+              country: profileUpdates.country ?? currentUser.country ?? "",
+              city: normalizedCity || currentUser.city || "",
+              birthday: profileUpdates.birthday ?? currentUser.birthday ?? "",
+              gender: profileUpdates.gender ?? currentUser.gender ?? "",
+              agreedToTermsAndConditions: currentUser.agreedToTermsAndConditions ?? false,
+              agreedToPromotionsAndMarketingEmails: profileUpdates.agreedToPromotionsAndMarketingEmails ?? currentUser.agreedToPromotionsAndMarketingEmails ?? false,
+            },
+          },
+        }).catch((e) => console.error("Failed to sync user_metadata:", e));
 
         if (hasCriticalChanges && nextEmail !== previousEmail) {
           await supabase.auth.updateUser({ email: nextEmail });
