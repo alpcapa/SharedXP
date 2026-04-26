@@ -356,8 +356,8 @@ const useAuth = () => {
       if (!settled) { settled = true; setAuthLoading(false); }
     };
 
-    // 8-second failsafe so a hanging DB query never freezes the app
-    const timeout = setTimeout(finish, 8000);
+    // 3-second failsafe so a hanging DB query never freezes the app
+    const timeout = setTimeout(finish, 3000);
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
