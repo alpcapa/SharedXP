@@ -308,7 +308,17 @@ const _doApplyPendingProfile = async (authUser) => {
   if (!pending) return;
 
   // Step 4: upsert the full profile into the profiles table.
+  // Skip if the profile row already has first_name populated — the trigger
+  // (migration 005) already wrote it at signup time; re-running every login
+  // is unnecessary and would overwrite signed_up_at incorrectly.
   try {
+    const { data: existingRows } = await supabase
+      .from("profiles")
+      .select("first_name, signed_up_at")
+      .eq("id", authUser.id);
+    const existing = existingRows?.[0];
+    if (existing?.first_name) return;
+
     const { error: upsertError } = await supabase.from("profiles").upsert({
       id: authUser.id,
       email: pending.email,
@@ -329,7 +339,7 @@ const _doApplyPendingProfile = async (authUser) => {
       is_host: false,
       agreed_to_terms: pending.agreedToTermsAndConditions || false,
       agreed_to_promotions: pending.agreedToPromotionsAndMarketingEmails || false,
-      signed_up_at: new Date().toISOString(),
+      signed_up_at: existing?.signed_up_at || new Date().toISOString(),
     });
     if (upsertError) throw upsertError;
     await upsertLanguagesAndSports(authUser.id, pending.languages, pending.sports);
