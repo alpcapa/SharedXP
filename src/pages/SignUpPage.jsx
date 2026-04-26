@@ -313,6 +313,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
         country: selectedCountry.name,
         countryCode: selectedCountry.code,
         city: formValues.city.trim(),
+        phoneCountryCode: selectedDialCodeCountry.code,
         countryDialCode: selectedDialCodeCountry.dialCode,
         phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
         languages: formValues.languages.map((languageOption) => languageOption.trim()),
