@@ -163,6 +163,31 @@ const fetchUserProfile = async (authUser) => {
     return buildUserObject(authUser, { email: authUser.email }, [], [], null, null);
   }
 
+  // Seed user_metadata the first time the DB row is successfully read.
+  // This means subsequent logins have the user_metadata fallback even if
+  // the PostgREST SELECT is temporarily blocked (e.g. RLS misconfiguration).
+  if (!authUser.user_metadata?.sharedxp_pending_profile) {
+    supabase.auth.updateUser({
+      data: {
+        sharedxp_pending_profile: {
+          firstName: profile.first_name || "",
+          lastName:  profile.last_name  || "",
+          fullName:  profile.full_name  || "",
+          phone:     profile.phone      || "",
+          phoneCountryCode:  profile.phone_country_code  || "",
+          countryDialCode:   profile.country_dial_code   || "",
+          address:   profile.address  || "",
+          country:   profile.country  || "",
+          city:      profile.city     || "",
+          gender:    profile.gender   || "",
+          birthday:  profile.birthday || "",
+          agreedToTermsAndConditions:          profile.agreed_to_terms      || false,
+          agreedToPromotionsAndMarketingEmails: profile.agreed_to_promotions || false,
+        },
+      },
+    }).catch(() => {});
+  }
+
   let hostProfile = null;
   let hostSports = [];
 
