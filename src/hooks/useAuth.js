@@ -88,7 +88,7 @@ const buildUserObject = (authUser, profile, languages, sports, hostProfile, host
   return {
     id: authUser.id,
     email: p.email || authUser.email || "",
-    fullName: p.full_name || "",
+    fullName: p.full_name || `${p.first_name || ""} ${p.last_name || ""}`.trim() || "",
     firstName: p.first_name || "",
     lastName: p.last_name || "",
     phone: p.phone || "",
