@@ -2,36 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
+import MyProfileForm from "../components/profile/MyProfileForm";
 import { COUNTRY_OPTIONS } from "../data/countries";
 import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
-import { SPORT_OPTIONS } from "../data/sports";
-const LANGUAGE_OPTIONS = [
-  "Arabic",
-  "Bengali",
-  "Dutch",
-  "English",
-  "French",
-  "German",
-  "Greek",
-  "Hindi",
-  "Italian",
-  "Japanese",
-  "Korean",
-  "Mandarin",
-  "Polish",
-  "Portuguese",
-  "Punjabi",
-  "Russian",
-  "Spanish",
-  "Swedish",
-  "Turkish",
-  "Urdu"
-];
-const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
-const SPORT_SLOT_LABELS = ["Favorite", "Add new", "Add new", "Add new"];
-const REGIONAL_INDICATOR_OFFSET = 127397;
-const BIRTHDAY_PATTERN_SOURCE = "(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}";
-const BIRTHDAY_PATTERN = new RegExp(`^${BIRTHDAY_PATTERN_SOURCE}$`);
+
+const BIRTHDAY_PATTERN = new RegExp(
+  "^(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
+);
 
 const normalizeBirthdayInput = (value) =>
   String(value ?? "")
@@ -40,71 +17,50 @@ const normalizeBirthdayInput = (value) =>
     .trim();
 
 const isValidBirthday = (value) => {
-  if (!BIRTHDAY_PATTERN.test(value)) {
-    return false;
-  }
-
-  const [dayPart, monthPart, yearPart] = value.split("/");
-  const day = Number(dayPart);
-  const month = Number(monthPart);
-  const year = Number(yearPart);
-  const normalizedDate = new Date(Date.UTC(year, month - 1, day));
+  if (!BIRTHDAY_PATTERN.test(value)) return false;
+  const [day, month, year] = value.split("/").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
   const now = new Date();
-  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const today = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
   return (
-    normalizedDate.getUTCFullYear() === year &&
-    normalizedDate.getUTCMonth() === month - 1 &&
-    normalizedDate.getUTCDate() === day &&
-    normalizedDate <= todayUtc
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day &&
+    date <= today
   );
 };
-const getLanguageSlots = (userLanguages) =>
-  Array.from({ length: 4 }, (_, index) =>
-    typeof userLanguages?.[index] === "string" ? userLanguages[index] : ""
+
+const padToFour = (arr) =>
+  Array.from({ length: 4 }, (_, i) =>
+    typeof arr?.[i] === "string" ? arr[i] : ""
   );
-const getSportSlots = (userSports) =>
-  Array.from({ length: 4 }, (_, index) =>
-    typeof userSports?.[index] === "string" ? userSports[index] : ""
-  );
+
 const getAddressLines = (address) => {
-  if (!address) {
-    return {
-      addressLine1: "",
-      addressLine2: ""
-    };
-  }
-
-  const [addressLine1 = "", ...remainingAddressParts] = address
+  if (!address) return { addressLine1: "", addressLine2: "" };
+  const [first = "", ...rest] = address
     .split(",")
-    .map((addressPart) => addressPart.trim())
+    .map((p) => p.trim())
     .filter(Boolean);
-
-  return {
-    addressLine1,
-    addressLine2: remainingAddressParts.join(", ")
-  };
+  return { addressLine1: first, addressLine2: rest.join(", ") };
 };
 
 const DEFAULT_PROFILE_PHOTO =
   "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&h=300&q=80";
 
-const getSafeImageSource = (imageSource, fallbackImageSource) => {
-  if (typeof imageSource !== "string") {
-    return fallbackImageSource;
-  }
-
-  const normalizedImageSource = imageSource.trim();
-  if (/^data:image\/(?:png|jpe?g|gif|webp|bmp);base64,/i.test(normalizedImageSource)) {
-    return normalizedImageSource;
-  }
-
+const getSafeImageSource = (src, fallback) => {
+  if (typeof src !== "string") return fallback;
+  const value = src.trim();
+  if (/^data:image\/(?:png|jpe?g|gif|webp|bmp);base64,/i.test(value))
+    return value;
   try {
-    const parsedImageSource = new URL(normalizedImageSource);
-    return parsedImageSource.protocol === "https:" || parsedImageSource.protocol === "http:"
-      ? parsedImageSource.href
-      : fallbackImageSource;
-  } catch (error) {
-    return fallbackImageSource;
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:"
+      ? parsed.href
+      : fallback;
+  } catch {
+    return fallback;
   }
 };
 
@@ -117,56 +73,53 @@ const fileToDataUrl = (file) =>
   });
 
 const getPhoneDetails = (user) => {
-  const normalizedPhone = String(user?.phone ?? "").trim();
-  const explicitCountryCode = user?.phoneCountryCode || user?.countryCode || "";
-  const explicitCountry = COUNTRY_OPTIONS.find((countryOption) => countryOption.code === explicitCountryCode);
-  const normalizedDialCode = explicitCountry?.dialCode ?? user?.countryDialCode ?? "";
-  const withExplicitCode =
-    explicitCountry && explicitCountry.dialCode === normalizedDialCode
+  const rawPhone = String(user?.phone ?? "").trim();
+  const explicitCode = user?.phoneCountryCode || user?.countryCode || "";
+  const explicitCountry = COUNTRY_OPTIONS.find((c) => c.code === explicitCode);
+  const dialCode = explicitCountry?.dialCode ?? user?.countryDialCode ?? "";
+  const matched =
+    explicitCountry && explicitCountry.dialCode === dialCode
       ? explicitCountry
-      : COUNTRY_OPTIONS.find((countryOption) => countryOption.dialCode === normalizedDialCode);
-  if (withExplicitCode) {
-    const phoneDigitsOnly = normalizedPhone.replace(/\D/g, "");
-    const dialCodeDigits = withExplicitCode.dialCode.replace(/\D/g, "");
+      : COUNTRY_OPTIONS.find((c) => c.dialCode === dialCode);
+
+  if (matched) {
+    const phoneDigits = rawPhone.replace(/\D/g, "");
+    const dialDigits = matched.dialCode.replace(/\D/g, "");
     return {
-      phoneCountryCode: withExplicitCode.code,
-      phone: phoneDigitsOnly.startsWith(dialCodeDigits)
-        ? phoneDigitsOnly.slice(dialCodeDigits.length)
-        : phoneDigitsOnly
+      phoneCountryCode: matched.code,
+      phone: phoneDigits.startsWith(dialDigits)
+        ? phoneDigits.slice(dialDigits.length)
+        : phoneDigits,
     };
   }
 
-  const phoneDigitsOnly = normalizedPhone.replace(/\D/g, "");
-  const matchedDialCodeCountry = [...COUNTRY_OPTIONS]
-    .sort((firstCountry, secondCountry) => secondCountry.dialCode.length - firstCountry.dialCode.length)
-    .find((countryOption) => phoneDigitsOnly.startsWith(countryOption.dialCode.replace(/\D/g, "")));
-
-  if (!matchedDialCodeCountry) {
-    return {
-      phoneCountryCode: user?.countryCode ?? "",
-      phone: phoneDigitsOnly
-    };
+  // Fall back: try to detect dial code from longest-prefix match.
+  const phoneDigits = rawPhone.replace(/\D/g, "");
+  const longestMatch = [...COUNTRY_OPTIONS]
+    .sort((a, b) => b.dialCode.length - a.dialCode.length)
+    .find((c) => phoneDigits.startsWith(c.dialCode.replace(/\D/g, "")));
+  if (!longestMatch) {
+    return { phoneCountryCode: user?.countryCode ?? "", phone: phoneDigits };
   }
-
-  const dialCodeDigits = matchedDialCodeCountry.dialCode.replace(/\D/g, "");
+  const dialDigits = longestMatch.dialCode.replace(/\D/g, "");
   return {
-    phoneCountryCode: matchedDialCodeCountry.code,
-    phone: phoneDigitsOnly.slice(dialCodeDigits.length)
+    phoneCountryCode: longestMatch.code,
+    phone: phoneDigits.slice(dialDigits.length),
   };
 };
 
 const getInitialFormValues = (user) => {
   const { addressLine1, addressLine2 } = getAddressLines(user?.address);
-  const phoneDetails = getPhoneDetails(user);
+  const phone = getPhoneDetails(user);
   return {
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
     fullName: user?.fullName ?? "",
     email: user?.email ?? "",
-    phoneCountryCode: phoneDetails.phoneCountryCode,
-    phone: phoneDetails.phone,
-    languages: getLanguageSlots(user?.languages),
-    sports: getSportSlots(user?.sports),
+    phoneCountryCode: phone.phoneCountryCode,
+    phone: phone.phone,
+    languages: padToFour(user?.languages),
+    sports: padToFour(user?.sports),
     country: user?.country ?? "",
     city: user?.city ?? "",
     addressLine1,
@@ -175,7 +128,9 @@ const getInitialFormValues = (user) => {
     birthday: user?.birthday ?? "",
     gender: user?.gender ?? "Not Sharing",
     agreedToTermsAndConditions: Boolean(user?.agreedToTermsAndConditions),
-    agreedToPromotionsAndMarketingEmails: Boolean(user?.agreedToPromotionsAndMarketingEmails)
+    agreedToPromotionsAndMarketingEmails: Boolean(
+      user?.agreedToPromotionsAndMarketingEmails
+    ),
   };
 };
 
@@ -186,7 +141,10 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
   const cityDropdownRef = useRef(null);
   const phoneCodeDropdownRef = useRef(null);
   const phoneCodeListRef = useRef(null);
-  const [formValues, setFormValues] = useState(getInitialFormValues(currentUser));
+
+  const [formValues, setFormValues] = useState(
+    getInitialFormValues(currentUser)
+  );
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
   const [selectedPhotoPreviewUrl, setSelectedPhotoPreviewUrl] = useState("");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
@@ -199,57 +157,48 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
   const [successMessage, setSuccessMessage] = useState("");
 
   const selectedCountry = useMemo(() => {
-    const normalizedCountryInput = formValues.country.trim().toLowerCase();
+    const search = formValues.country.trim().toLowerCase();
     return (
-      COUNTRY_OPTIONS.find(
-        (countryOption) => countryOption.name.toLowerCase() === normalizedCountryInput
-      ) ?? null
+      COUNTRY_OPTIONS.find((c) => c.name.toLowerCase() === search) ?? null
     );
   }, [formValues.country]);
+
   const selectedPhoneCodeCountry = useMemo(
     () =>
-      COUNTRY_OPTIONS.find((countryOption) => countryOption.code === formValues.phoneCountryCode) ??
+      COUNTRY_OPTIONS.find((c) => c.code === formValues.phoneCountryCode) ??
       selectedCountry ??
       null,
     [formValues.phoneCountryCode, selectedCountry]
   );
+
   const availableCities = useMemo(() => {
-    if (!selectedCountry) {
-      return [];
+    if (!selectedCountry) return [];
+    const cities = COUNTRY_CITY_OPTIONS[selectedCountry.code] ?? [];
+    if (formValues.city && !cities.includes(formValues.city)) {
+      return [formValues.city, ...cities];
     }
-
-    const cityOptions = COUNTRY_CITY_OPTIONS[selectedCountry.code] ?? [];
-    if (formValues.city && !cityOptions.includes(formValues.city)) {
-      return [formValues.city, ...cityOptions];
-    }
-    return cityOptions;
+    return cities;
   }, [selectedCountry, formValues.city]);
-  const filteredCountryOptions = useMemo(() => {
-    const normalizedSearch = countrySearchValue.trim().toLowerCase();
-    if (!normalizedSearch) {
-      return COUNTRY_OPTIONS;
-    }
 
-    return COUNTRY_OPTIONS.filter((countryOption) =>
-      countryOption.name.toLowerCase().includes(normalizedSearch)
+  const filteredCountryOptions = useMemo(() => {
+    const search = countrySearchValue.trim().toLowerCase();
+    if (!search) return COUNTRY_OPTIONS;
+    return COUNTRY_OPTIONS.filter((c) =>
+      c.name.toLowerCase().includes(search)
     );
   }, [countrySearchValue]);
+
   const filteredCityOptions = useMemo(() => {
-    const normalizedSearch = citySearchValue.trim().toLowerCase();
-    if (!normalizedSearch) {
-      return availableCities;
-    }
-
-    return availableCities.filter((cityOption) => cityOption.toLowerCase().includes(normalizedSearch));
+    const search = citySearchValue.trim().toLowerCase();
+    if (!search) return availableCities;
+    return availableCities.filter((c) => c.toLowerCase().includes(search));
   }, [availableCities, citySearchValue]);
-  const filteredPhoneCodeOptions = useMemo(() => {
-    const normalizedSearch = phoneCodeSearchValue.trim().toLowerCase();
-    if (!normalizedSearch) {
-      return COUNTRY_OPTIONS;
-    }
 
-    return COUNTRY_OPTIONS.filter((countryOption) =>
-      `${countryOption.name} ${countryOption.dialCode}`.toLowerCase().includes(normalizedSearch)
+  const filteredPhoneCodeOptions = useMemo(() => {
+    const search = phoneCodeSearchValue.trim().toLowerCase();
+    if (!search) return COUNTRY_OPTIONS;
+    return COUNTRY_OPTIONS.filter((c) =>
+      `${c.name} ${c.dialCode}`.toLowerCase().includes(search)
     );
   }, [phoneCodeSearchValue]);
 
@@ -270,7 +219,6 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       ) {
         setIsCountryDropdownOpen(false);
       }
-
       if (
         isPhoneCodeDropdownOpen &&
         phoneCodeDropdownRef.current &&
@@ -278,39 +226,38 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       ) {
         setIsPhoneCodeDropdownOpen(false);
       }
-
-      if (isCityDropdownOpen && cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+      if (
+        isCityDropdownOpen &&
+        cityDropdownRef.current &&
+        !cityDropdownRef.current.contains(event.target)
+      ) {
         setIsCityDropdownOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleOutsideClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [isCountryDropdownOpen, isPhoneCodeDropdownOpen, isCityDropdownOpen]);
 
   useEffect(
     () => () => {
-      if (selectedPhotoPreviewUrl) {
-        URL.revokeObjectURL(selectedPhotoPreviewUrl);
-      }
+      if (selectedPhotoPreviewUrl) URL.revokeObjectURL(selectedPhotoPreviewUrl);
     },
     [selectedPhotoPreviewUrl]
   );
 
+  // Auto-scroll the phone-code dropdown to the currently selected country.
   useEffect(() => {
-    if (!isPhoneCodeDropdownOpen || !selectedPhoneCodeCountry || !phoneCodeListRef.current) {
+    if (
+      !isPhoneCodeDropdownOpen ||
+      !selectedPhoneCodeCountry ||
+      !phoneCodeListRef.current
+    ) {
       return;
     }
-
-    const selectedOption = phoneCodeListRef.current.querySelector(
+    const selected = phoneCodeListRef.current.querySelector(
       `[data-country-code="${selectedPhoneCodeCountry.code}"]`
     );
-    selectedOption?.scrollIntoView({
-      block: "center",
-      behavior: "smooth"
-    });
+    selected?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [isPhoneCodeDropdownOpen, selectedPhoneCodeCountry]);
 
   if (!currentUser) {
@@ -334,77 +281,53 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
 
   const profilePhoto =
     selectedPhotoPreviewUrl ||
-    getSafeImageSource(formValues.photo || currentUser.photo, DEFAULT_PROFILE_PHOTO);
+    getSafeImageSource(
+      formValues.photo || currentUser.photo,
+      DEFAULT_PROFILE_PHOTO
+    );
 
   const onInputChange = (event) => {
     const { name, value, checked, type } = event.target;
-    setFormValues((previousValues) => ({
-      ...previousValues,
-      [name]: type === "checkbox" ? checked : value
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  const onLanguageChange = (languageIndex, languageValue) => {
-    setFormValues((previousValues) => {
-      const nextLanguages = [...previousValues.languages];
-      nextLanguages[languageIndex] = languageValue;
-      return {
-        ...previousValues,
-        languages: nextLanguages
-      };
+  const onLanguageChange = (index, value) => {
+    setFormValues((prev) => {
+      const next = [...prev.languages];
+      next[index] = value;
+      return { ...prev, languages: next };
     });
   };
 
-  const onSportChange = (sportIndex, sportValue) => {
-    setFormValues((previousValues) => {
-      const nextSports = [...previousValues.sports];
-      nextSports[sportIndex] = sportValue;
-      return {
-        ...previousValues,
-        sports: nextSports
-      };
+  const onSportChange = (index, value) => {
+    setFormValues((prev) => {
+      const next = [...prev.sports];
+      next[index] = value;
+      return { ...prev, sports: next };
     });
   };
 
   const onPhotoSelect = (event) => {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile) {
-      return;
-    }
-
-    const isSupportedImageType = /^image\/(png|jpe?g|gif|webp|bmp)$/i.test(selectedFile.type);
-    if (!isSupportedImageType) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|gif|webp|bmp)$/i.test(file.type)) {
       setSuccessMessage("");
       setErrorMessage("Please upload a PNG, JPG, GIF, WEBP, or BMP image.");
       return;
     }
-
-    if (selectedPhotoPreviewUrl) {
-      URL.revokeObjectURL(selectedPhotoPreviewUrl);
-    }
-
-    setSelectedPhotoFile(selectedFile);
-    setSelectedPhotoPreviewUrl(URL.createObjectURL(selectedFile));
+    if (selectedPhotoPreviewUrl) URL.revokeObjectURL(selectedPhotoPreviewUrl);
+    setSelectedPhotoFile(file);
+    setSelectedPhotoPreviewUrl(URL.createObjectURL(file));
     setErrorMessage("");
   };
 
-  const getCountryFlag = (countryCode) =>
-    countryCode
-      .toUpperCase()
-      .replace(/./g, (char) =>
-        String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + char.charCodeAt(0))
-      );
-
   const onSubmit = async (event) => {
     event.preventDefault();
-
-    const userConfirmedChanges = window.confirm(
-      "Are you sure you want to save these profile changes?"
-    );
-    if (!userConfirmedChanges) {
+    if (!window.confirm("Are you sure you want to save these profile changes?"))
       return;
-    }
-
     if (!selectedCountry) {
       setSuccessMessage("");
       setErrorMessage("Please select a valid country from the list.");
@@ -415,10 +338,10 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       setErrorMessage("Please select a valid city from the list.");
       return;
     }
-    const selectedDialCodeCountry = formValues.phoneCountryCode
-      ? COUNTRY_OPTIONS.find((countryOption) => countryOption.code === formValues.phoneCountryCode)
+    const dialCountry = formValues.phoneCountryCode
+      ? COUNTRY_OPTIONS.find((c) => c.code === formValues.phoneCountryCode)
       : selectedCountry;
-    if (!selectedDialCodeCountry) {
+    if (!dialCountry) {
       setSuccessMessage("");
       setErrorMessage("Please select a valid phone area code.");
       return;
@@ -428,19 +351,18 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
     if (selectedPhotoFile) {
       try {
         nextPhoto = await fileToDataUrl(selectedPhotoFile);
-      } catch (error) {
+      } catch {
         setSuccessMessage("");
         setErrorMessage("Could not read the selected photo. Please try again.");
         return;
       }
     }
 
-    const rawPhone = formValues.phone.trim();
-    const phoneDigitsOnly = rawPhone.replace(/\D/g, "");
-    const dialCodeDigits = selectedDialCodeCountry.dialCode.replace(/\D/g, "");
-    const localPhoneDigits = phoneDigitsOnly.startsWith(dialCodeDigits)
-      ? phoneDigitsOnly.slice(dialCodeDigits.length)
-      : phoneDigitsOnly;
+    const phoneDigits = formValues.phone.trim().replace(/\D/g, "");
+    const dialDigits = dialCountry.dialCode.replace(/\D/g, "");
+    const localDigits = phoneDigits.startsWith(dialDigits)
+      ? phoneDigits.slice(dialDigits.length)
+      : phoneDigits;
     const normalizedBirthday = normalizeBirthdayInput(formValues.birthday);
     if (normalizedBirthday && !isValidBirthday(normalizedBirthday)) {
       setSuccessMessage("");
@@ -448,33 +370,38 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       return;
     }
 
-    const profilePayload = {
+    const payload = {
       email: formValues.email.trim().toLowerCase(),
-      phoneCountryCode: selectedDialCodeCountry.code,
-      countryDialCode: selectedDialCodeCountry.dialCode,
-      phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
-      languages: formValues.languages.map((languageOption) => languageOption.trim()),
-      sports: formValues.sports.map((sportOption) => sportOption.trim()),
+      phoneCountryCode: dialCountry.code,
+      countryDialCode: dialCountry.dialCode,
+      phone: `${dialCountry.dialCode} ${localDigits}`.trim(),
+      languages: formValues.languages.map((l) => l.trim()),
+      sports: formValues.sports.map((s) => s.trim()),
       country: selectedCountry.name,
       city: formValues.city.trim(),
-      address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
+      address: [
+        formValues.addressLine1.trim(),
+        formValues.addressLine2.trim(),
+      ]
         .filter(Boolean)
         .join(", "),
       photo: nextPhoto,
       birthday: normalizedBirthday,
       gender: formValues.gender,
-      agreedToPromotionsAndMarketingEmails: formValues.agreedToPromotionsAndMarketingEmails
+      agreedToPromotionsAndMarketingEmails:
+        formValues.agreedToPromotionsAndMarketingEmails,
     };
 
-    const saveResult = await onUpdateProfile?.(profilePayload);
-    if (!saveResult?.success) {
+    const result = await onUpdateProfile?.(payload);
+    if (!result?.success) {
       setSuccessMessage("");
-      setErrorMessage(saveResult?.message ?? "Could not save changes. Please try again.");
+      setErrorMessage(
+        result?.message ?? "Could not save changes. Please try again."
+      );
       return;
     }
-
     setErrorMessage("");
-    if (saveResult.requiresReauthentication) {
+    if (result.requiresReauthentication) {
       setSuccessMessage("");
       window.alert(
         "Critical information changed. Please log in again with your updated credentials."
@@ -482,13 +409,35 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
       navigate("/login");
       return;
     }
-
-    setFormValues((previousValues) => ({
-      ...previousValues,
-      email: profilePayload.email
-    }));
+    setFormValues((prev) => ({ ...prev, email: payload.email }));
     setSuccessMessage("Your profile has been updated.");
     setSelectedPhotoFile(null);
+  };
+
+  const countryDropdown = {
+    containerRef: countryDropdownRef,
+    isOpen: isCountryDropdownOpen,
+    setIsOpen: setIsCountryDropdownOpen,
+    searchValue: countrySearchValue,
+    setSearchValue: setCountrySearchValue,
+    filteredOptions: filteredCountryOptions,
+  };
+  const cityDropdown = {
+    containerRef: cityDropdownRef,
+    isOpen: isCityDropdownOpen,
+    setIsOpen: setIsCityDropdownOpen,
+    searchValue: citySearchValue,
+    setSearchValue: setCitySearchValue,
+    filteredOptions: filteredCityOptions,
+  };
+  const phoneCodeDropdown = {
+    containerRef: phoneCodeDropdownRef,
+    listRef: phoneCodeListRef,
+    isOpen: isPhoneCodeDropdownOpen,
+    setIsOpen: setIsPhoneCodeDropdownOpen,
+    searchValue: phoneCodeSearchValue,
+    setSearchValue: setPhoneCodeSearchValue,
+    filteredOptions: filteredPhoneCodeOptions,
   };
 
   return (
@@ -512,364 +461,24 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
               </Link>
             )}
           </div>
-          <form className="auth-form profile-form" onSubmit={onSubmit}>
-            <div className="profile-photo-editor">
-              <img
-                src={profilePhoto}
-                alt={currentUser.fullName}
-                className="profile-photo-large"
-              />
-              <button
-                type="button"
-                className="profile-photo-edit-button"
-                onClick={() => photoInputRef.current?.click()}
-                aria-label="Edit photo"
-              >
-                ✏️
-              </button>
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/*"
-                className="profile-photo-input"
-                onChange={onPhotoSelect}
-              />
-            </div>
-
-            <div className="profile-form-grid">
-              <label htmlFor="firstName">First name</label>
-              <input id="firstName" name="firstName" type="text" value={formValues.firstName} disabled />
-
-              <label htmlFor="lastName">Last name</label>
-              <input id="lastName" name="lastName" type="text" value={formValues.lastName} disabled />
-
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formValues.email}
-                onChange={onInputChange}
-              />
-
-              <label id="country-label" htmlFor="country-selector">
-                Country
-              </label>
-              <div className="auth-search-dropdown" ref={countryDropdownRef}>
-                <button
-                  id="country-selector"
-                  type="button"
-                  className="auth-dropdown-trigger"
-                  aria-haspopup="listbox"
-                  aria-expanded={isCountryDropdownOpen}
-                  aria-controls="country-listbox"
-                  onClick={() => {
-                    setIsCountryDropdownOpen((previousState) => !previousState);
-                    setCountrySearchValue("");
-                  }}
-                >
-                  {selectedCountry ? (
-                    <>
-                      <span>{getCountryFlag(selectedCountry.code)}</span>
-                      <span>{selectedCountry.name}</span>
-                    </>
-                  ) : (
-                    <span>Select country</span>
-                  )}
-                </button>
-                {isCountryDropdownOpen && (
-                  <div className="auth-dropdown-panel">
-                    <input
-                      type="search"
-                      className="auth-dropdown-search"
-                      placeholder="Search country"
-                      value={countrySearchValue}
-                      onChange={(event) => setCountrySearchValue(event.target.value)}
-                    />
-                    <ul
-                      id="country-listbox"
-                      className="auth-dropdown-options"
-                      role="listbox"
-                      aria-labelledby="country-label"
-                    >
-                      {filteredCountryOptions.map((countryOption) => (
-                        <li key={countryOption.code}>
-                          <button
-                            type="button"
-                            className="auth-dropdown-option"
-                            role="option"
-                            aria-selected={selectedCountry?.code === countryOption.code}
-                            onClick={() => {
-                              const nextCities = COUNTRY_CITY_OPTIONS[countryOption.code] ?? [];
-                              setFormValues((previousValues) => ({
-                                ...previousValues,
-                                country: countryOption.name,
-                                city: nextCities.includes(previousValues.city)
-                                  ? previousValues.city
-                                  : nextCities[0] || "",
-                                phoneCountryCode: countryOption.code
-                              }));
-                              setIsCountryDropdownOpen(false);
-                            }}
-                          >
-                            <span>{getCountryFlag(countryOption.code)}</span>
-                            <span>{countryOption.name}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              <label id="city-label" htmlFor="city-selector">
-                City
-              </label>
-              <div className="auth-search-dropdown" ref={cityDropdownRef}>
-                <button
-                  id="city-selector"
-                  type="button"
-                  className="auth-dropdown-trigger"
-                  aria-haspopup="listbox"
-                  aria-expanded={isCityDropdownOpen}
-                  aria-controls="city-listbox"
-                  disabled={!selectedCountry}
-                  onClick={() => {
-                    setIsCityDropdownOpen((previousState) => !previousState);
-                    setCitySearchValue("");
-                  }}
-                >
-                  {formValues.city || "Select city"}
-                </button>
-                {isCityDropdownOpen && (
-                  <div className="auth-dropdown-panel">
-                    <input
-                      type="search"
-                      className="auth-dropdown-search"
-                      placeholder="Search city"
-                      value={citySearchValue}
-                      onChange={(event) => setCitySearchValue(event.target.value)}
-                    />
-                    <ul
-                      id="city-listbox"
-                      className="auth-dropdown-options"
-                      role="listbox"
-                      aria-labelledby="city-label"
-                    >
-                      {filteredCityOptions.map((cityOption) => (
-                        <li key={cityOption}>
-                          <button
-                            type="button"
-                            className="auth-dropdown-option"
-                            role="option"
-                            aria-selected={formValues.city === cityOption}
-                            onClick={() => {
-                              setFormValues((previousValues) => ({
-                                ...previousValues,
-                                city: cityOption
-                              }));
-                              setIsCityDropdownOpen(false);
-                            }}
-                          >
-                            <span>{cityOption}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              <label id="phone-label" htmlFor="phone">
-                Phone
-              </label>
-              <div className="auth-phone-field">
-                <div className="auth-search-dropdown auth-phone-code-picker" ref={phoneCodeDropdownRef}>
-                  <button
-                    type="button"
-                    className="auth-dropdown-trigger auth-phone-code-trigger"
-                    aria-haspopup="listbox"
-                    aria-expanded={isPhoneCodeDropdownOpen}
-                    aria-controls="phone-code-listbox"
-                    onClick={() => {
-                      setIsPhoneCodeDropdownOpen((previousState) => !previousState);
-                      setPhoneCodeSearchValue("");
-                    }}
-                  >
-                    {selectedPhoneCodeCountry ? (
-                      <>
-                        <span>{getCountryFlag(selectedPhoneCodeCountry.code)}</span>
-                        <span>{selectedPhoneCodeCountry.dialCode}</span>
-                      </>
-                    ) : (
-                      <span>Code</span>
-                    )}
-                  </button>
-                  {isPhoneCodeDropdownOpen && (
-                    <div className="auth-dropdown-panel">
-                      <input
-                        type="search"
-                        className="auth-dropdown-search"
-                        placeholder="Search country or code"
-                        value={phoneCodeSearchValue}
-                        onChange={(event) => setPhoneCodeSearchValue(event.target.value)}
-                      />
-                      <ul
-                        id="phone-code-listbox"
-                        className="auth-dropdown-options"
-                        role="listbox"
-                        aria-labelledby="phone-label"
-                        ref={phoneCodeListRef}
-                      >
-                        {filteredPhoneCodeOptions.map((countryOption) => (
-                          <li key={`phone-code-${countryOption.code}`}>
-                            <button
-                              type="button"
-                              className="auth-dropdown-option"
-                              data-country-code={countryOption.code}
-                              role="option"
-                              aria-selected={selectedPhoneCodeCountry?.code === countryOption.code}
-                              onClick={() => {
-                                setFormValues((previousValues) => ({
-                                  ...previousValues,
-                                  phoneCountryCode: countryOption.code
-                                }));
-                                setIsPhoneCodeDropdownOpen(false);
-                              }}
-                            >
-                              <span>{getCountryFlag(countryOption.code)}</span>
-                              <span>
-                                {countryOption.name} ({countryOption.dialCode})
-                              </span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  required
-                  value={formValues.phone}
-                  onChange={onInputChange}
-                />
-              </div>
-
-              <label htmlFor="addressLine1">Address</label>
-              <input
-                id="addressLine1"
-                name="addressLine1"
-                type="text"
-                required
-                value={formValues.addressLine1}
-                onChange={onInputChange}
-              />
-
-              <label htmlFor="addressLine2">Address line 2</label>
-              <input
-                id="addressLine2"
-                name="addressLine2"
-                type="text"
-                value={formValues.addressLine2}
-                onChange={onInputChange}
-              />
-
-              <label htmlFor="birthday">Birthday</label>
-              <input
-                id="birthday"
-                name="birthday"
-                type="text"
-                inputMode="numeric"
-                placeholder="31/01/1980"
-                pattern={BIRTHDAY_PATTERN_SOURCE}
-                title="Please use DD/MM/YYYY format, for example 31/01/1980."
-                value={formValues.birthday}
-                onChange={onInputChange}
-              />
-
-              <label htmlFor="gender">Gender</label>
-              <select id="gender" name="gender" value={formValues.gender} onChange={onInputChange}>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Not Sharing">Not Sharing</option>
-              </select>
-
-              <label htmlFor="profile-language-0">Language</label>
-              <div className="auth-language-row">
-                {LANGUAGE_SLOT_LABELS.map((languageSlotLabel, languageIndex) => (
-                  <input
-                    key={`profile-language-${languageIndex}`}
-                    id={`profile-language-${languageIndex}`}
-                    list="profile-language-options"
-                    placeholder={languageSlotLabel}
-                    aria-label={`Language ${languageSlotLabel}`}
-                    value={formValues.languages[languageIndex] ?? ""}
-                    onChange={(event) => onLanguageChange(languageIndex, event.target.value)}
-                    required={languageIndex === 0}
-                  />
-                ))}
-              </div>
-              <datalist id="profile-language-options">
-                {LANGUAGE_OPTIONS.map((languageOption) => (
-                  <option key={languageOption} value={languageOption} />
-                ))}
-              </datalist>
-
-              <label htmlFor="profile-sport-0">Sports</label>
-              <div className="auth-language-row">
-                {SPORT_SLOT_LABELS.map((sportSlotLabel, sportIndex) => (
-                  <input
-                    key={`profile-sport-${sportIndex}`}
-                    id={`profile-sport-${sportIndex}`}
-                    list="profile-sport-options"
-                    placeholder={sportSlotLabel}
-                    aria-label={`Sport ${sportSlotLabel}`}
-                    value={formValues.sports[sportIndex] ?? ""}
-                    onChange={(event) => onSportChange(sportIndex, event.target.value)}
-                    required={sportIndex === 0}
-                  />
-                ))}
-              </div>
-              <datalist id="profile-sport-options">
-                {SPORT_OPTIONS.map((sportOption) => (
-                  <option key={sportOption} value={sportOption} />
-                ))}
-              </datalist>
-            </div>
-
-            <div className="form-consent-group">
-              <label className="form-consent-option" htmlFor="agreedToTermsAndConditions">
-                <input
-                  id="agreedToTermsAndConditions"
-                  name="agreedToTermsAndConditions"
-                  type="checkbox"
-                  checked={formValues.agreedToTermsAndConditions}
-                  disabled
-                />
-                <span>I agree to Terms &amp; Conditions</span>
-              </label>
-              <label className="form-consent-option" htmlFor="agreedToPromotionsAndMarketingEmails">
-                <input
-                  id="agreedToPromotionsAndMarketingEmails"
-                  name="agreedToPromotionsAndMarketingEmails"
-                  type="checkbox"
-                  checked={formValues.agreedToPromotionsAndMarketingEmails}
-                  onChange={onInputChange}
-                />
-                <span>I agree to receive Promotions &amp; Marketing emails</span>
-              </label>
-            </div>
-
-            {errorMessage && <p className="auth-error">{errorMessage}</p>}
-            {successMessage && <p className="host-success-message">{successMessage}</p>}
-            <button type="submit" className="btn btn-primary auth-submit">
-              Save Changes
-            </button>
-          </form>
+          <MyProfileForm
+            formValues={formValues}
+            setFormValues={setFormValues}
+            selectedCountry={selectedCountry}
+            selectedPhoneCodeCountry={selectedPhoneCodeCountry}
+            profilePhoto={profilePhoto}
+            photoInputRef={photoInputRef}
+            countryDropdown={countryDropdown}
+            cityDropdown={cityDropdown}
+            phoneCodeDropdown={phoneCodeDropdown}
+            errorMessage={errorMessage}
+            successMessage={successMessage}
+            onInputChange={onInputChange}
+            onLanguageChange={onLanguageChange}
+            onSportChange={onSportChange}
+            onPhotoSelect={onPhotoSelect}
+            onSubmit={onSubmit}
+          />
         </main>
 
         <SiteFooter />

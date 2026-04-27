@@ -2,36 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
+import SignUpForm from "../components/auth/SignUpForm";
 import { COUNTRY_OPTIONS } from "../data/countries";
 import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
-import { SPORT_OPTIONS } from "../data/sports";
-const LANGUAGE_OPTIONS = [
-  "Arabic",
-  "Bengali",
-  "Dutch",
-  "English",
-  "French",
-  "German",
-  "Greek",
-  "Hindi",
-  "Italian",
-  "Japanese",
-  "Korean",
-  "Mandarin",
-  "Polish",
-  "Portuguese",
-  "Punjabi",
-  "Russian",
-  "Spanish",
-  "Swedish",
-  "Turkish",
-  "Urdu"
-];
-const LANGUAGE_SLOT_LABELS = ["Native", "Add new", "Add new", "Add new"];
-const SPORT_SLOT_LABELS = ["Favorite", "Add new", "Add new", "Add new"];
-const REGIONAL_INDICATOR_OFFSET = 127397;
-const BIRTHDAY_PATTERN_SOURCE = "(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}";
-const BIRTHDAY_PATTERN = new RegExp(`^${BIRTHDAY_PATTERN_SOURCE}$`);
+
+const BIRTHDAY_PATTERN = new RegExp(
+  "^(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
+);
 
 const normalizeBirthdayInput = (value) =>
   String(value ?? "")
@@ -40,63 +17,52 @@ const normalizeBirthdayInput = (value) =>
     .trim();
 
 const formatBirthdayFromDigits = (value) => {
-  const birthdayDigits = String(value ?? "")
-    .replace(/\D/g, "")
-    .slice(0, 8);
-
-  if (birthdayDigits.length <= 2) {
-    return birthdayDigits;
-  }
-
-  if (birthdayDigits.length <= 4) {
-    return `${birthdayDigits.slice(0, 2)}/${birthdayDigits.slice(2)}`;
-  }
-
-  return `${birthdayDigits.slice(0, 2)}/${birthdayDigits.slice(2, 4)}/${birthdayDigits.slice(4)}`;
+  const digits = String(value ?? "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 };
 
 const isValidBirthday = (value) => {
-  if (!BIRTHDAY_PATTERN.test(value)) {
-    return false;
-  }
-
-  const [dayPart, monthPart, yearPart] = value.split("/");
-  const day = Number(dayPart);
-  const month = Number(monthPart);
-  const year = Number(yearPart);
-  const normalizedDate = new Date(Date.UTC(year, month - 1, day));
+  if (!BIRTHDAY_PATTERN.test(value)) return false;
+  const [day, month, year] = value.split("/").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
   const now = new Date();
-  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  return (
-    normalizedDate.getUTCFullYear() === year &&
-    normalizedDate.getUTCMonth() === month - 1 &&
-    normalizedDate.getUTCDate() === day &&
-    normalizedDate <= todayUtc
+  const today = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
   );
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day &&
+    date <= today
+  );
+};
+
+const initialForm = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  country: "",
+  city: "",
+  phoneCountryCode: "",
+  phone: "",
+  languages: ["", "", "", ""],
+  sports: ["", "", "", ""],
+  addressLine1: "",
+  addressLine2: "",
+  photo: "",
+  birthday: "",
+  gender: "Not Sharing",
+  agreeTermsAndConditions: false,
+  agreePromotionsAndMarketingEmails: false,
 };
 
 const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => {
   const navigate = useNavigate();
-  const [formValues, setFormValues] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    country: "",
-    city: "",
-    phoneCountryCode: "",
-    phone: "",
-    languages: ["", "", "", ""],
-    sports: ["", "", "", ""],
-    addressLine1: "",
-    addressLine2: "",
-    photo: "",
-    birthday: "",
-    gender: "Not Sharing",
-    agreeTermsAndConditions: false,
-    agreePromotionsAndMarketingEmails: false
-  });
+  const [formValues, setFormValues] = useState(initialForm);
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,59 +76,50 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   const phoneCodeDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
   const phoneCodeListRef = useRef(null);
-  const selectedCountry = useMemo(
-    () => {
-      const normalizedCountryInput = formValues.country.trim().toLowerCase();
-      return (
-        COUNTRY_OPTIONS.find(
-          (countryOption) => countryOption.name.toLowerCase() === normalizedCountryInput
-        ) ?? null
-      );
-    },
-    [formValues.country]
-  );
+
+  const selectedCountry = useMemo(() => {
+    const search = formValues.country.trim().toLowerCase();
+    return (
+      COUNTRY_OPTIONS.find((c) => c.name.toLowerCase() === search) ?? null
+    );
+  }, [formValues.country]);
+
   const selectedPhoneCodeCountry = useMemo(
     () =>
-      COUNTRY_OPTIONS.find((countryOption) => countryOption.code === formValues.phoneCountryCode) ??
+      COUNTRY_OPTIONS.find((c) => c.code === formValues.phoneCountryCode) ??
       selectedCountry ??
       null,
     [formValues.phoneCountryCode, selectedCountry]
   );
-  const filteredCountryOptions = useMemo(() => {
-    const normalizedSearch = countrySearchValue.trim().toLowerCase();
-    if (!normalizedSearch) {
-      return COUNTRY_OPTIONS;
-    }
 
-    return COUNTRY_OPTIONS.filter((countryOption) =>
-      countryOption.name.toLowerCase().includes(normalizedSearch)
+  const filteredCountryOptions = useMemo(() => {
+    const search = countrySearchValue.trim().toLowerCase();
+    if (!search) return COUNTRY_OPTIONS;
+    return COUNTRY_OPTIONS.filter((c) =>
+      c.name.toLowerCase().includes(search)
     );
   }, [countrySearchValue]);
-  const availableCities = useMemo(() => {
-    if (!selectedCountry) {
-      return [];
-    }
-    const cityOptions = COUNTRY_CITY_OPTIONS[selectedCountry.code] ?? [];
-    if (formValues.city && !cityOptions.includes(formValues.city)) {
-      return [formValues.city, ...cityOptions];
-    }
-    return cityOptions;
-  }, [selectedCountry, formValues.city]);
-  const filteredCityOptions = useMemo(() => {
-    const normalizedSearch = citySearchValue.trim().toLowerCase();
-    if (!normalizedSearch) {
-      return availableCities;
-    }
-    return availableCities.filter((cityOption) => cityOption.toLowerCase().includes(normalizedSearch));
-  }, [availableCities, citySearchValue]);
-  const filteredPhoneCodeOptions = useMemo(() => {
-    const normalizedSearch = phoneCodeSearchValue.trim().toLowerCase();
-    if (!normalizedSearch) {
-      return COUNTRY_OPTIONS;
-    }
 
-    return COUNTRY_OPTIONS.filter((countryOption) =>
-      `${countryOption.name} ${countryOption.dialCode}`.toLowerCase().includes(normalizedSearch)
+  const availableCities = useMemo(() => {
+    if (!selectedCountry) return [];
+    const cities = COUNTRY_CITY_OPTIONS[selectedCountry.code] ?? [];
+    if (formValues.city && !cities.includes(formValues.city)) {
+      return [formValues.city, ...cities];
+    }
+    return cities;
+  }, [selectedCountry, formValues.city]);
+
+  const filteredCityOptions = useMemo(() => {
+    const search = citySearchValue.trim().toLowerCase();
+    if (!search) return availableCities;
+    return availableCities.filter((c) => c.toLowerCase().includes(search));
+  }, [availableCities, citySearchValue]);
+
+  const filteredPhoneCodeOptions = useMemo(() => {
+    const search = phoneCodeSearchValue.trim().toLowerCase();
+    if (!search) return COUNTRY_OPTIONS;
+    return COUNTRY_OPTIONS.filter((c) =>
+      `${c.name} ${c.dialCode}`.toLowerCase().includes(search)
     );
   }, [phoneCodeSearchValue]);
 
@@ -175,7 +132,6 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       ) {
         setIsCountryDropdownOpen(false);
       }
-
       if (
         isPhoneCodeDropdownOpen &&
         phoneCodeDropdownRef.current &&
@@ -183,87 +139,72 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       ) {
         setIsPhoneCodeDropdownOpen(false);
       }
-
-      if (isCityDropdownOpen && cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+      if (
+        isCityDropdownOpen &&
+        cityDropdownRef.current &&
+        !cityDropdownRef.current.contains(event.target)
+      ) {
         setIsCityDropdownOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleOutsideClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [isCountryDropdownOpen, isPhoneCodeDropdownOpen, isCityDropdownOpen]);
 
   useEffect(() => {
-    if (!isPhoneCodeDropdownOpen || !selectedPhoneCodeCountry || !phoneCodeListRef.current) {
+    if (
+      !isPhoneCodeDropdownOpen ||
+      !selectedPhoneCodeCountry ||
+      !phoneCodeListRef.current
+    ) {
       return;
     }
-
-    const selectedOption = phoneCodeListRef.current.querySelector(
+    const selected = phoneCodeListRef.current.querySelector(
       `[data-country-code="${selectedPhoneCodeCountry.code}"]`
     );
-    selectedOption?.scrollIntoView({
-      block: "center",
-      behavior: "smooth"
-    });
+    selected?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [isPhoneCodeDropdownOpen, selectedPhoneCodeCountry]);
 
   const onInputChange = (event) => {
     const { name, value, type, checked } = event.target;
-    const nextValue = name === "birthday" ? formatBirthdayFromDigits(value) : value;
-    setFormValues((previousValues) => ({
-      ...previousValues,
-      [name]: type === "checkbox" ? checked : nextValue
+    const next = name === "birthday" ? formatBirthdayFromDigits(value) : value;
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : next,
     }));
   };
 
-  const onLanguageChange = (languageIndex, languageValue) => {
-    setFormValues((previousValues) => {
-      const nextLanguages = [...previousValues.languages];
-      nextLanguages[languageIndex] = languageValue;
-      return {
-        ...previousValues,
-        languages: nextLanguages
-      };
+  const onLanguageChange = (index, value) => {
+    setFormValues((prev) => {
+      const next = [...prev.languages];
+      next[index] = value;
+      return { ...prev, languages: next };
     });
   };
 
-  const onSportChange = (sportIndex, sportValue) => {
-    setFormValues((previousValues) => {
-      const nextSports = [...previousValues.sports];
-      nextSports[sportIndex] = sportValue;
-      return {
-        ...previousValues,
-        sports: nextSports
-      };
+  const onSportChange = (index, value) => {
+    setFormValues((prev) => {
+      const next = [...prev.sports];
+      next[index] = value;
+      return { ...prev, sports: next };
     });
   };
 
   const onPhotoSelect = (event) => {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile) {
-      return;
-    }
-
-    const fileReader = new FileReader();
-    fileReader.onload = () => {
-      setFormValues((previousValues) => ({
-        ...previousValues,
-        photo: String(fileReader.result)
-      }));
-    };
-    fileReader.readAsDataURL(selectedFile);
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () =>
+      setFormValues((prev) => ({ ...prev, photo: String(reader.result) }));
+    reader.readAsDataURL(file);
   };
 
   const onEmailSubmit = async (event) => {
     event.preventDefault();
-
     if (formValues.password !== formValues.confirmPassword) {
       setErrorMessage("Password confirmation does not match.");
       return;
     }
-
     if (!selectedCountry) {
       setErrorMessage("Please select a valid country from the list.");
       return;
@@ -280,19 +221,18 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     const firstName = formValues.firstName.trim();
     const lastName = formValues.lastName.trim();
     const fullName = `${firstName} ${lastName}`.trim();
-    const selectedDialCodeCountry = formValues.phoneCountryCode
-      ? COUNTRY_OPTIONS.find((countryOption) => countryOption.code === formValues.phoneCountryCode)
+    const dialCountry = formValues.phoneCountryCode
+      ? COUNTRY_OPTIONS.find((c) => c.code === formValues.phoneCountryCode)
       : selectedCountry;
-    if (!selectedDialCodeCountry) {
+    if (!dialCountry) {
       setErrorMessage("Please select a valid phone area code.");
       return;
     }
-    const rawPhone = formValues.phone.trim();
-    const phoneDigitsOnly = rawPhone.replace(/\D/g, "");
-    const dialCodeDigits = selectedDialCodeCountry.dialCode.replace(/\D/g, "");
-    const localPhoneDigits = phoneDigitsOnly.startsWith(dialCodeDigits)
-      ? phoneDigitsOnly.slice(dialCodeDigits.length)
-      : phoneDigitsOnly;
+    const phoneDigits = formValues.phone.trim().replace(/\D/g, "");
+    const dialDigits = dialCountry.dialCode.replace(/\D/g, "");
+    const localDigits = phoneDigits.startsWith(dialDigits)
+      ? phoneDigits.slice(dialDigits.length)
+      : phoneDigits;
     const normalizedBirthday = normalizeBirthdayInput(formValues.birthday);
     if (normalizedBirthday && !isValidBirthday(normalizedBirthday)) {
       setErrorMessage("Please enter a valid birthday in DD/MM/YYYY format.");
@@ -301,7 +241,6 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
 
     setErrorMessage("");
     setIsSubmitting(true);
-
     let result;
     try {
       result = await onEmailSignUp?.({
@@ -313,22 +252,26 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
         country: selectedCountry.name,
         countryCode: selectedCountry.code,
         city: formValues.city.trim(),
-        phoneCountryCode: selectedDialCodeCountry.code,
-        countryDialCode: selectedDialCodeCountry.dialCode,
-        phone: `${selectedDialCodeCountry.dialCode} ${localPhoneDigits}`.trim(),
-        languages: formValues.languages.map((languageOption) => languageOption.trim()),
-        sports: formValues.sports.map((sportOption) => sportOption.trim()),
-        address: [formValues.addressLine1.trim(), formValues.addressLine2.trim()]
+        phoneCountryCode: dialCountry.code,
+        countryDialCode: dialCountry.dialCode,
+        phone: `${dialCountry.dialCode} ${localDigits}`.trim(),
+        languages: formValues.languages.map((l) => l.trim()),
+        sports: formValues.sports.map((s) => s.trim()),
+        address: [
+          formValues.addressLine1.trim(),
+          formValues.addressLine2.trim(),
+        ]
           .filter(Boolean)
           .join(", "),
         photo: formValues.photo,
         birthday: normalizedBirthday,
         gender: formValues.gender,
         agreedToTermsAndConditions: formValues.agreeTermsAndConditions,
-        agreedToPromotionsAndMarketingEmails: formValues.agreePromotionsAndMarketingEmails,
+        agreedToPromotionsAndMarketingEmails:
+          formValues.agreePromotionsAndMarketingEmails,
       });
     } catch (e) {
-      console.error("onEmailSignUp error:", e);
+      console.error("[signup] onEmailSignUp:", e);
       result = { success: false, message: "Sign up failed. Please try again." };
     } finally {
       setIsSubmitting(false);
@@ -338,16 +281,34 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       setErrorMessage(result?.message || "Sign up failed. Please try again.");
       return;
     }
-
     setPendingVerification({ email: formValues.email.trim().toLowerCase() });
   };
 
-  const getCountryFlag = (countryCode) =>
-    countryCode
-      .toUpperCase()
-      .replace(/./g, (char) =>
-        String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + char.charCodeAt(0))
-      );
+  const countryDropdown = {
+    containerRef: countryDropdownRef,
+    isOpen: isCountryDropdownOpen,
+    setIsOpen: setIsCountryDropdownOpen,
+    searchValue: countrySearchValue,
+    setSearchValue: setCountrySearchValue,
+    filteredOptions: filteredCountryOptions,
+  };
+  const cityDropdown = {
+    containerRef: cityDropdownRef,
+    isOpen: isCityDropdownOpen,
+    setIsOpen: setIsCityDropdownOpen,
+    searchValue: citySearchValue,
+    setSearchValue: setCitySearchValue,
+    filteredOptions: filteredCityOptions,
+  };
+  const phoneCodeDropdown = {
+    containerRef: phoneCodeDropdownRef,
+    listRef: phoneCodeListRef,
+    isOpen: isPhoneCodeDropdownOpen,
+    setIsOpen: setIsPhoneCodeDropdownOpen,
+    searchValue: phoneCodeSearchValue,
+    setSearchValue: setPhoneCodeSearchValue,
+    filteredOptions: filteredPhoneCodeOptions,
+  };
 
   return (
     <div className="home-page">
@@ -359,7 +320,10 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
         <main className="middle-section auth-page">
           <section className="auth-card">
             <h1>Create your account</h1>
-            <p>Sign up with Google, Apple, or email. Phone is required for all verified accounts.</p>
+            <p>
+              Sign up with Google, Apple, or email. Phone is required for all
+              verified accounts.
+            </p>
 
             <div className="auth-social-grid">
               <button
@@ -389,395 +353,33 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
             </div>
 
             {!pendingVerification ? (
-              <form className="auth-form" onSubmit={onEmailSubmit}>
-                <label htmlFor="firstName">First name</label>
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  required
-                  value={formValues.firstName}
-                  onChange={onInputChange}
-                />
-
-                <label htmlFor="lastName">Last name</label>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  required
-                  value={formValues.lastName}
-                  onChange={onInputChange}
-                />
-
-                <label htmlFor="email">Email</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={formValues.email}
-                  onChange={onInputChange}
-                />
-
-                <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  minLength={8}
-                  required
-                  value={formValues.password}
-                  onChange={onInputChange}
-                />
-
-                <label htmlFor="confirmPassword">Confirm password</label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  minLength={8}
-                  required
-                  value={formValues.confirmPassword}
-                  onChange={onInputChange}
-                />
-
-                <label htmlFor="addressLine1">Address</label>
-                <input
-                  id="addressLine1"
-                  name="addressLine1"
-                  type="text"
-                  required
-                  value={formValues.addressLine1}
-                  onChange={onInputChange}
-                />
-                <input
-                  id="addressLine2"
-                  name="addressLine2"
-                  type="text"
-                  aria-label="Address line 2"
-                  value={formValues.addressLine2}
-                  onChange={onInputChange}
-                />
-
-                <label id="country-label" htmlFor="country">
-                  Country
-                </label>
-                <div className="auth-search-dropdown" ref={countryDropdownRef}>
-                  <button
-                    id="country"
-                    type="button"
-                    className="auth-dropdown-trigger"
-                    aria-haspopup="listbox"
-                    aria-expanded={isCountryDropdownOpen}
-                    aria-controls="country-listbox"
-                    onClick={() => {
-                      setIsCountryDropdownOpen((previousState) => !previousState);
-                      setCountrySearchValue("");
-                    }}
-                  >
-                    {selectedCountry ? (
-                      <>
-                        <span>{getCountryFlag(selectedCountry.code)}</span>
-                        <span>{selectedCountry.name}</span>
-                      </>
-                    ) : (
-                      <span>Select country</span>
-                    )}
-                  </button>
-                  {isCountryDropdownOpen && (
-                    <div className="auth-dropdown-panel">
-                      <input
-                        type="search"
-                        className="auth-dropdown-search"
-                        placeholder="Search country"
-                        value={countrySearchValue}
-                        onChange={(event) => setCountrySearchValue(event.target.value)}
-                      />
-                      <ul
-                        id="country-listbox"
-                        className="auth-dropdown-options"
-                        role="listbox"
-                        aria-labelledby="country-label"
-                      >
-                        {filteredCountryOptions.map((countryOption) => (
-                          <li key={countryOption.code}>
-                            <button
-                              type="button"
-                              className="auth-dropdown-option"
-                              role="option"
-                              aria-selected={selectedCountry?.code === countryOption.code}
-                              onClick={() => {
-                                const nextCities = COUNTRY_CITY_OPTIONS[countryOption.code] ?? [];
-                                setFormValues((previousValues) => ({
-                                  ...previousValues,
-                                  country: countryOption.name,
-                                  city: nextCities.includes(previousValues.city)
-                                    ? previousValues.city
-                                    : nextCities[0] || "",
-                                  phoneCountryCode: countryOption.code
-                                }));
-                                setIsCountryDropdownOpen(false);
-                              }}
-                            >
-                              <span>{getCountryFlag(countryOption.code)}</span>
-                              <span>{countryOption.name}</span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                <label id="city-label" htmlFor="city-selector">
-                  City
-                </label>
-                <div className="auth-search-dropdown" ref={cityDropdownRef}>
-                  <button
-                    id="city-selector"
-                    type="button"
-                    className="auth-dropdown-trigger"
-                    aria-haspopup="listbox"
-                    aria-expanded={isCityDropdownOpen}
-                    aria-controls="city-listbox"
-                    disabled={!selectedCountry}
-                    onClick={() => {
-                      setIsCityDropdownOpen((previousState) => !previousState);
-                      setCitySearchValue("");
-                    }}
-                  >
-                    {formValues.city || "Select city"}
-                  </button>
-                  {isCityDropdownOpen && (
-                    <div className="auth-dropdown-panel">
-                      <input
-                        type="search"
-                        className="auth-dropdown-search"
-                        placeholder="Search city"
-                        value={citySearchValue}
-                        onChange={(event) => setCitySearchValue(event.target.value)}
-                      />
-                      <ul
-                        id="city-listbox"
-                        className="auth-dropdown-options"
-                        role="listbox"
-                        aria-labelledby="city-label"
-                      >
-                        {filteredCityOptions.map((cityOption) => (
-                          <li key={cityOption}>
-                            <button
-                              type="button"
-                              className="auth-dropdown-option"
-                              role="option"
-                              aria-selected={formValues.city === cityOption}
-                              onClick={() => {
-                                setFormValues((previousValues) => ({
-                                  ...previousValues,
-                                  city: cityOption
-                                }));
-                                setIsCityDropdownOpen(false);
-                              }}
-                            >
-                              <span>{cityOption}</span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                <label id="phone-label" htmlFor="phone">
-                  Phone
-                </label>
-                <div className="auth-phone-field">
-                  <div className="auth-search-dropdown auth-phone-code-picker" ref={phoneCodeDropdownRef}>
-                    <button
-                      type="button"
-                      className="auth-dropdown-trigger auth-phone-code-trigger"
-                      aria-haspopup="listbox"
-                      aria-expanded={isPhoneCodeDropdownOpen}
-                      aria-controls="phone-code-listbox"
-                      onClick={() => {
-                        setIsPhoneCodeDropdownOpen((previousState) => !previousState);
-                        setPhoneCodeSearchValue("");
-                      }}
-                    >
-                      {selectedPhoneCodeCountry ? (
-                        <>
-                          <span>{getCountryFlag(selectedPhoneCodeCountry.code)}</span>
-                          <span>{selectedPhoneCodeCountry.dialCode}</span>
-                        </>
-                      ) : (
-                        <span>Code</span>
-                      )}
-                    </button>
-                    {isPhoneCodeDropdownOpen && (
-                      <div className="auth-dropdown-panel">
-                        <input
-                          type="search"
-                          className="auth-dropdown-search"
-                          placeholder="Search country or code"
-                          value={phoneCodeSearchValue}
-                          onChange={(event) => setPhoneCodeSearchValue(event.target.value)}
-                        />
-                        <ul
-                          id="phone-code-listbox"
-                          className="auth-dropdown-options"
-                          role="listbox"
-                          aria-labelledby="phone-label"
-                          ref={phoneCodeListRef}
-                        >
-                          {filteredPhoneCodeOptions.map((countryOption) => (
-                            <li key={`phone-code-${countryOption.code}`}>
-                              <button
-                                type="button"
-                                className="auth-dropdown-option"
-                                data-country-code={countryOption.code}
-                                role="option"
-                                aria-selected={selectedPhoneCodeCountry?.code === countryOption.code}
-                                onClick={() => {
-                                  setFormValues((previousValues) => ({
-                                    ...previousValues,
-                                    phoneCountryCode: countryOption.code
-                                  }));
-                                  setIsPhoneCodeDropdownOpen(false);
-                                }}
-                              >
-                                <span>{getCountryFlag(countryOption.code)}</span>
-                                <span>
-                                  {countryOption.name} ({countryOption.dialCode})
-                                </span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    required
-                    value={formValues.phone}
-                    onChange={onInputChange}
-                  />
-                </div>
-
-                <label htmlFor="photo">Photo</label>
-                <input id="photo" name="photo" type="file" accept="image/*" onChange={onPhotoSelect} />
-                {formValues.photo && (
-                  <img src={formValues.photo} alt="Selected profile" className="auth-photo-preview" />
-                )}
-
-                <label htmlFor="birthday">Birthday</label>
-                <input
-                  id="birthday"
-                  name="birthday"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="31/01/1980"
-                  pattern={BIRTHDAY_PATTERN_SOURCE}
-                  title="Please use DD/MM/YYYY format, for example 31/01/1980."
-                  value={formValues.birthday}
-                  onChange={onInputChange}
-                />
-
-                <label htmlFor="gender">Gender</label>
-                <select id="gender" name="gender" value={formValues.gender} onChange={onInputChange}>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Not Sharing">Not Sharing</option>
-                </select>
-
-                <label htmlFor="signup-language-0">Language</label>
-                <div className="auth-language-row">
-                  {LANGUAGE_SLOT_LABELS.map((languageSlotLabel, languageIndex) => (
-                    <select
-                      key={`signup-language-${languageIndex}`}
-                      id={`signup-language-${languageIndex}`}
-                      aria-label={`Language ${languageSlotLabel}`}
-                      value={formValues.languages[languageIndex] ?? ""}
-                      onChange={(event) => onLanguageChange(languageIndex, event.target.value)}
-                      required={languageIndex === 0}
-                    >
-                      <option value="" disabled>
-                        {languageSlotLabel}
-                      </option>
-                      {LANGUAGE_OPTIONS.map((languageOption) => (
-                        <option key={languageOption} value={languageOption}>
-                          {languageOption}
-                        </option>
-                      ))}
-                    </select>
-                  ))}
-                </div>
-
-                <label htmlFor="signup-sport-0">Sports</label>
-                <div className="auth-language-row">
-                  {SPORT_SLOT_LABELS.map((sportSlotLabel, sportIndex) => (
-                    <select
-                      key={`signup-sport-${sportIndex}`}
-                      id={`signup-sport-${sportIndex}`}
-                      aria-label={`Sport ${sportSlotLabel}`}
-                      value={formValues.sports[sportIndex] ?? ""}
-                      onChange={(event) => onSportChange(sportIndex, event.target.value)}
-                      required={sportIndex === 0}
-                    >
-                      <option value="" disabled>
-                        {sportSlotLabel}
-                      </option>
-                      {SPORT_OPTIONS.map((sportOption) => (
-                        <option key={sportOption} value={sportOption}>
-                          {sportOption}
-                        </option>
-                      ))}
-                    </select>
-                  ))}
-                </div>
-
-                <div className="form-consent-group">
-                  <label className="form-consent-option" htmlFor="agreeTermsAndConditions">
-                    <input
-                      id="agreeTermsAndConditions"
-                      name="agreeTermsAndConditions"
-                      type="checkbox"
-                      checked={formValues.agreeTermsAndConditions}
-                      onChange={onInputChange}
-                    />
-                    <span>
-                      I agree to{" "}
-                      <Link to="/terms-and-conditions">
-                        Terms &amp; Conditions
-                      </Link>
-                    </span>
-                  </label>
-                  <label className="form-consent-option" htmlFor="agreePromotionsAndMarketingEmails">
-                    <input
-                      id="agreePromotionsAndMarketingEmails"
-                      name="agreePromotionsAndMarketingEmails"
-                      type="checkbox"
-                      checked={formValues.agreePromotionsAndMarketingEmails}
-                      onChange={onInputChange}
-                    />
-                    <span>I agree to receive Promotions &amp; Marketing emails</span>
-                  </label>
-                </div>
-
-                {errorMessage && <p className="auth-error">{errorMessage}</p>}
-                <button type="submit" className="btn btn-primary auth-submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Creating account…" : "Continue"}
-                </button>
-              </form>
+              <SignUpForm
+                formValues={formValues}
+                setFormValues={setFormValues}
+                selectedCountry={selectedCountry}
+                selectedPhoneCodeCountry={selectedPhoneCodeCountry}
+                countryDropdown={countryDropdown}
+                cityDropdown={cityDropdown}
+                phoneCodeDropdown={phoneCodeDropdown}
+                errorMessage={errorMessage}
+                isSubmitting={isSubmitting}
+                onInputChange={onInputChange}
+                onLanguageChange={onLanguageChange}
+                onSportChange={onSportChange}
+                onPhotoSelect={onPhotoSelect}
+                onSubmit={onEmailSubmit}
+              />
             ) : (
               <div className="verify-card">
                 <h2>Check your email</h2>
                 <p>
-                  We sent a confirmation link to <strong>{pendingVerification.email}</strong>.
+                  We sent a confirmation link to{" "}
+                  <strong>{pendingVerification.email}</strong>.
                 </p>
-                <p>Click the link in the email to activate your account. You will be logged in automatically.</p>
+                <p>
+                  Click the link in the email to activate your account. You will
+                  be logged in automatically.
+                </p>
               </div>
             )}
 
