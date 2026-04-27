@@ -333,7 +333,7 @@ const _doApplyPendingProfile = async (authUser) => {
       address: pending.address || "",
       country: pending.country || "",
       city: pending.city || "",
-      photo_url: pending.photo || "",
+      photo_url: (typeof pending.photo === "string" && pending.photo.startsWith("http")) ? pending.photo : "",
       birthday: pending.birthday || "",
       gender: pending.gender || "",
       is_host: false,
@@ -539,19 +539,12 @@ const useAuth = () => {
             return { success: false, message: error.message || "Incorrect email or password." };
           }
 
-          if (data?.user) {
-            try {
-              await applyPendingProfile(data.user);
-              const user = await fetchUserProfile(data.user);
-              if (user) setCurrentUser(user);
-            } catch (e) {
-              console.error("Login fetchUserProfile failed:", e);
-              // Still mark the user as logged in using minimal auth data so a
-              // transient DB error doesn't leave the UI stuck on Login/Sign Up.
-              setCurrentUser(buildUserObject(data.user, { email: data.user?.email }, [], [], null, null));
-            }
-          }
-
+          // Profile loading and pending-profile upsert are handled by the
+          // onAuthStateChange SIGNED_IN handler that fires automatically after
+          // signInWithPassword succeeds. Awaiting those DB calls here blocks
+          // onEmailLogin (and the UI) until every round-trip completes —
+          // causing the login button to appear permanently frozen when the DB
+          // is slow or a large payload stalls the upsert.
           return { success: true };
         } catch (e) {
           console.error("onEmailLogin unexpected error:", e);
