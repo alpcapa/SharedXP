@@ -137,7 +137,7 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
         <div className="profile-summary-header">
           <div className="profile-summary-top-row">
             <h1 className="profile-name-with-age">
-              {currentUser.fullName || "User"}
+              {currentUser.fullName || currentUser.firstName || "User"}
               {userAge != null && (
                 <span className="profile-name-age" aria-label={`age ${userAge}`}>
                   ({userAge})
@@ -160,7 +160,7 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
         </div>
         <div className="profile-summary-body">
           <div className="profile-summary-photo-column">
-            <img src={currentUser.photo} alt={currentUser.fullName || "User"} className="profile-main-image" />
+            <img src={currentUser.photo} alt={currentUser.fullName || currentUser.firstName || "User"} className="profile-main-image" />
             <div className="profile-summary-meta">
               <p>{locationLine}</p>
               <p>Member since {memberSince}</p>
@@ -176,7 +176,7 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
         {galleryPhotos.length > 0 ? (
           <div className="gallery-grid">
             {galleryPhotos.map((photo) => (
-              <img key={photo} src={photo} alt={`${currentUser.fullName || "User"} history gallery`} />
+              <img key={photo} src={photo} alt={`${currentUser.fullName || currentUser.firstName || "User"} history gallery`} />
             ))}
           </div>
         ) : (
