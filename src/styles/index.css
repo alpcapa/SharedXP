@@ -1,3 +1,34 @@
+/* ==================================================================
+ * SharedXP global stylesheet
+ *
+ * NOTE: This file is intentionally not split into per-module CSS yet —
+ * rules from the same feature are scattered (e.g. .history-* appears in
+ * 4 separate ranges) and the file mixes 8 @media queries that close
+ * across feature boundaries. A safe split requires reading rule-by-rule
+ * rather than naive line-range extraction.
+ *
+ * Until then, navigate by these section markers (line numbers approximate):
+ *   line 1     — base reset, :root, body
+ *   line 30    — shared section typography
+ *   line 60    — locals grid (Home page)
+ *   line 220   — Explore by sport / How it works
+ *   line 362   — Site header, nav, user menu, buttons
+ *   line 525   — Hero search bar
+ *   line 700   — Explore page
+ *   line 1188  — Follow page + auth/signup/login/profile forms (mixed)
+ *   line 2660  — About page hero + story + values + CTA
+ *   line 2930  — The Field page
+ *   line 3060  — Profile review breakdown
+ *   line 3083  — About page steps + testimonials
+ *   line 3213  — History page photo upload
+ *   line 3290  — History page Share-to-Field modal
+ *   line 3375  — The Field carousel + filters + delete button
+ *   line 3485  — Host Settings tab bar + payment banners
+ *
+ * Search by class prefix (.local-, .host-, .history-, .field-,
+ * .auth-, .profile-, .about-, .site-, .booking-) to find related rules.
+ * ================================================================== */
+
 * {
   box-sizing: border-box;
 }
