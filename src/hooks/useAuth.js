@@ -555,10 +555,16 @@ const useAuth = () => {
 
       onEmailLogin: async (email, password) => {
         try {
-          const { error } = await supabase.auth.signInWithPassword({
+          // Race signInWithPassword against a 15-second timeout so a stalled
+          // network request can never leave the UI permanently stuck.
+          const signInPromise = supabase.auth.signInWithPassword({
             email: email.trim().toLowerCase(),
             password,
           });
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("login_timeout")), 15000)
+          );
+          const { error } = await Promise.race([signInPromise, timeoutPromise]);
 
           if (error) {
             const msg = error.message || "";
@@ -585,6 +591,9 @@ const useAuth = () => {
           return { success: true };
         } catch (e) {
           console.error("onEmailLogin unexpected error:", e);
+          if (e?.message === "login_timeout") {
+            return { success: false, message: "Login is taking too long. Please check your connection and try again." };
+          }
           return { success: false, message: "Login failed. Please try again." };
         }
       },
