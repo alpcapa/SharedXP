@@ -256,6 +256,22 @@ const _doApplyPendingProfile = async (authUser) => {
   if (!pending) return;
 
   // Step 4: upsert the full profile into the profiles table.
+  // Only store the photo if it is a plain https/http URL.  Base64 data URLs
+  // from the sign-up form can be several MB; including them in the upsert
+  // payload causes the request to fail (413 / timeout), which aborts the
+  // entire upsert and leaves the profile row empty.  Users can upload a photo
+  // later via Edit Profile.
+  let pendingPhotoUrl = "";
+  if (typeof pending.photo === "string" && pending.photo.trim()) {
+    try {
+      const parsedUrl = new URL(pending.photo.trim());
+      if (parsedUrl.protocol === "https:" || parsedUrl.protocol === "http:") {
+        pendingPhotoUrl = parsedUrl.href;
+      }
+    } catch {
+      // Not a valid URL (e.g. base64 data URL) — skip
+    }
+  }
   try {
     const { error: upsertError } = await supabase.from("profiles").upsert({
       id: authUser.id,
@@ -271,7 +287,7 @@ const _doApplyPendingProfile = async (authUser) => {
       address: pending.address || "",
       country: pending.country || "",
       city: pending.city || "",
-      photo_url: pending.photo || "",
+      photo_url: pendingPhotoUrl,
       birthday: pending.birthday || "",
       gender: pending.gender || "",
       is_host: false,

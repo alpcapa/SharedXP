@@ -9,22 +9,26 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const destination = location.state?.from?.pathname ?? "/";
 
   const onSubmit = async (event) => {
     event.preventDefault();
+    setIsLoggingIn(true);
     let loginResult;
     try {
       loginResult = await onEmailLogin?.(email, password);
     } catch (e) {
       console.error("onEmailLogin error:", e);
       setErrorMessage("Login failed. Please try again.");
+      setIsLoggingIn(false);
       return;
     }
 
     if (!loginResult?.success) {
       setErrorMessage(loginResult?.message ?? "Unable to login.");
+      setIsLoggingIn(false);
       return;
     }
 
@@ -91,8 +95,8 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
               />
 
               {errorMessage && <p className="auth-error">{errorMessage}</p>}
-              <button type="submit" className="btn btn-primary auth-submit">
-                Log in
+              <button type="submit" className="btn btn-primary auth-submit" disabled={isLoggingIn}>
+                {isLoggingIn ? "Logging in…" : "Log in"}
               </button>
             </form>
 
