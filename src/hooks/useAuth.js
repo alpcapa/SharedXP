@@ -116,24 +116,107 @@ const buildUserObject = (authUser, profile, languages, sports, hostProfile, host
   };
 };
 
-// Returns a fully-assembled user object, or null when the profiles row is
-// missing (e.g. the pending profile hasn't been upserted yet after email
-// confirmation, or the user has no profile row in the database).
+// Returns a fully-assembled user object.
+// When the profiles row is missing or has empty default values (e.g. the
+// _doApplyPendingProfile upsert was blocked by a transient error or an
+// oversized payload), the function falls back to
+// authUser.user_metadata.sharedxp_pending_profile so the user always sees
+// their sign-up data rather than an empty "User" profile.
 const fetchUserProfile = async (authUser) => {
   if (!authUser) return null;
 
+  // user_metadata is the most reliable cross-browser fallback: it is embedded
+  // in the access-token JWT and available in every browser context without an
+  // extra round-trip.  photo is intentionally absent (stripped at sign-up time
+  // to keep the JWT small).
+  const meta = authUser.user_metadata?.sharedxp_pending_profile;
+
   const [profileResult, languagesResult, sportsResult] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", authUser.id).single(),
-    supabase.from("user_languages").select("*").eq("user_id", authUser.id).order("position").catch(() => ({ data: [] })),
-    supabase.from("user_sports").select("*").eq("user_id", authUser.id).order("position").catch(() => ({ data: [] })),
+    // maybeSingle() returns {data: null, error: null} for 0 rows (expected for
+    // new users before the trigger row is created) instead of PGRST116.
+    supabase.from("profiles").select("*").eq("id", authUser.id).maybeSingle(),
+    supabase.from("user_languages").select("*").eq("user_id", authUser.id).order("position").catch((e) => { console.error("[useAuth] user_languages fetch failed:", e); return { data: [] }; }),
+    supabase.from("user_sports").select("*").eq("user_id", authUser.id).order("position").catch((e) => { console.error("[useAuth] user_sports fetch failed:", e); return { data: [] }; }),
   ]);
 
-  const profile = profileResult.data;
+  let profile = profileResult.data;
+
   if (!profile) {
-    console.error("[useAuth] fetchUserProfile: no profile row found for", authUser.id, profileResult.error);
-    // Return minimal user from auth data so login still shows the user as logged in
-    // even when the DB query is blocked (e.g. RLS misconfiguration).
-    return buildUserObject(authUser, { email: authUser.email }, [], [], null, null);
+    if (profileResult.error) {
+      console.error("[useAuth] fetchUserProfile: profiles query error for", authUser.id, profileResult.error);
+    } else {
+      console.error("[useAuth] fetchUserProfile: no profile row found for", authUser.id);
+    }
+    // Build a synthetic profile row from user_metadata so the user sees their
+    // data even when the profiles table row is missing (trigger didn't fire,
+    // RLS blocks the read, or the project migrations haven't been applied yet).
+    if (meta) {
+      profile = {
+        id: authUser.id,
+        email: authUser.email || "",
+        first_name: meta.firstName || "",
+        last_name: meta.lastName || "",
+        full_name: meta.fullName ? meta.fullName : `${meta.firstName || ""} ${meta.lastName || ""}`.trim(),
+        phone: meta.phone || "",
+        phone_country_code: meta.phoneCountryCode || "",
+        country_dial_code: meta.countryDialCode || "",
+        address: meta.address || "",
+        country: meta.country || "",
+        city: meta.city || "",
+        photo_url: "",
+        birthday: meta.birthday || "",
+        gender: meta.gender || "",
+        is_host: false,
+        agreed_to_terms: meta.agreedToTermsAndConditions ?? false,
+        agreed_to_promotions: meta.agreedToPromotionsAndMarketingEmails ?? false,
+        signed_up_at: authUser.created_at || new Date().toISOString(),
+      };
+    } else {
+      // No user_metadata either — return minimal auth-only stub so the login
+      // session is preserved even when the DB is entirely unreachable.
+      return buildUserObject(authUser, { email: authUser.email }, [], [], null, null);
+    }
+  } else if (!profile.full_name && meta) {
+    // Profile row exists but has empty default values (the handle_new_user
+    // trigger created it with id/email/signed_up_at only, and the subsequent
+    // _doApplyPendingProfile upsert hasn't completed or was blocked).
+    // Supplement every empty field from user_metadata so the user sees their
+    // sign-up data immediately without waiting for the upsert to succeed.
+    profile = {
+      ...profile,
+      first_name: profile.first_name || meta.firstName || "",
+      last_name: profile.last_name || meta.lastName || "",
+      full_name: profile.full_name
+        ? profile.full_name
+        : meta.fullName
+          ? meta.fullName
+          : `${meta.firstName || ""} ${meta.lastName || ""}`.trim(),
+      phone: profile.phone || meta.phone || "",
+      phone_country_code: profile.phone_country_code || meta.phoneCountryCode || "",
+      country_dial_code: profile.country_dial_code || meta.countryDialCode || "",
+      address: profile.address || meta.address || "",
+      country: profile.country || meta.country || "",
+      city: profile.city || meta.city || "",
+      birthday: profile.birthday || meta.birthday || "",
+      gender: profile.gender || meta.gender || "",
+      agreed_to_terms: profile.agreed_to_terms || (meta.agreedToTermsAndConditions ?? false),
+      agreed_to_promotions: profile.agreed_to_promotions || (meta.agreedToPromotionsAndMarketingEmails ?? false),
+    };
+  }
+
+  // Supplement empty languages/sports from user_metadata when the join tables
+  // are also empty (upsert never ran).
+  let langs = languagesResult.data || [];
+  let sports = sportsResult.data || [];
+  if (langs.length === 0 && meta?.languages) {
+    langs = (Array.isArray(meta.languages) ? meta.languages : [])
+      .map((l, i) => ({ user_id: authUser.id, language: typeof l === "string" ? l.trim() : "", position: i }))
+      .filter((r) => r.language);
+  }
+  if (sports.length === 0 && meta?.sports) {
+    sports = (Array.isArray(meta.sports) ? meta.sports : [])
+      .map((s, i) => ({ user_id: authUser.id, sport: typeof s === "string" ? s.trim() : "", position: i }))
+      .filter((r) => r.sport);
   }
 
   let hostProfile = null;
@@ -164,8 +247,8 @@ const fetchUserProfile = async (authUser) => {
   return buildUserObject(
     authUser,
     profile,
-    languagesResult.data || [],
-    sportsResult.data || [],
+    langs,
+    sports,
     hostProfile,
     hostSports
   );
