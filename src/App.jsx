@@ -17,7 +17,7 @@ import PaymentsAndPayoutTermsPage from "./pages/PaymentsAndPayoutTermsPage";
 import PrivacyNoticePage from "./pages/PrivacyNoticePage";
 import SafetyAndRiskPolicyPage from "./pages/SafetyAndRiskPolicyPage";
 import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
-import useAuth from "./hooks/useAuth";
+import useAuth from "./context/AuthContext";
 import NotFoundPage from "./pages/NotFoundPage";
 import AboutPage from "./pages/AboutPage";
 import UserProfilePage from "./pages/UserProfilePage";
