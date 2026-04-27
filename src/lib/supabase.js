@@ -24,3 +24,27 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: { flowType: "implicit" },
 });
 export { supabaseUrl, supabaseAnonKey };
+
+// Connectivity check — fires once at module load and logs a clear diagnostic
+// to the browser console if Supabase is unreachable.  This helps identify
+// missing / wrong env-var values in Vercel deployments (the fallback key is
+// used when VITE_SUPABASE_ANON_KEY is not set, which causes all auth to fail).
+fetch(`${supabaseUrl}/auth/v1/settings`, {
+  headers: { apikey: supabaseAnonKey },
+  signal: AbortSignal.timeout?.(8000),
+})
+  .then((res) => {
+    if (!res.ok) {
+      console.error(
+        `[SharedXP] Supabase connectivity check failed (HTTP ${res.status}).` +
+        " Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel project settings."
+      );
+    }
+  })
+  .catch(() => {
+    console.error(
+      "[SharedXP] Cannot reach Supabase at " + supabaseUrl + "." +
+      " Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel project settings," +
+      " and ensure the Supabase project is not paused (free-tier projects pause after 1 week of inactivity)."
+    );
+  });

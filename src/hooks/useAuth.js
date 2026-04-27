@@ -276,6 +276,53 @@ const upsertLanguagesAndSports = async (userId, languages, sports) => {
   if (sportResult?.error) console.error("Failed to insert sports:", sportResult.error);
 };
 
+// Converts a File or Blob to a base64 data URL.
+// Used as a local fallback when Supabase Storage upload is unavailable.
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not read selected image."));
+    reader.readAsDataURL(file);
+  });
+
+// MIME type → file extension map used by uploadProfilePhoto.
+const PHOTO_MIME_TO_EXT = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "image/bmp": "bmp",
+};
+
+// Uploads a File (or Blob) to the `avatars` Supabase Storage bucket.
+// Returns the public URL of the uploaded photo.
+// Path: avatars/{userId}/avatar.{ext}
+const uploadProfilePhoto = async (userId, file) => {
+  // Derive the extension from the MIME type (authoritative) first, then fall
+  // back to the filename extension.  Both are sanitised against an allowlist so
+  // a spoofed type or an unusual filename can never produce an unsafe path.
+  const mimeExt = PHOTO_MIME_TO_EXT[file.type];
+  const nameParts = (file.name || "").split(".");
+  const nameExt =
+    nameParts.length > 1
+      ? nameParts.pop().toLowerCase().replace(/[^a-z]/g, "").slice(0, 4)
+      : "";
+  const safeExt =
+    mimeExt ||
+    (Object.values(PHOTO_MIME_TO_EXT).includes(nameExt) ? nameExt : "jpg");
+  const path = `${userId}/avatar.${safeExt}`;
+  const { error } = await supabase.storage.from("avatars").upload(path, file, {
+    upsert: true,
+    // Always derive contentType from the allowlist — never trust the raw
+    // file.type without validation, as it is client-supplied.
+    contentType: Object.keys(PHOTO_MIME_TO_EXT).find((k) => PHOTO_MIME_TO_EXT[k] === safeExt) || "image/jpeg",
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  return data.publicUrl;
+};
+
 // Shared promise used to coordinate concurrent callers of applyPendingProfile.
 // When getSession and onAuthStateChange both fire at the same time (e.g. right
 // after email confirmation), only the first caller performs the DB upsert.  The
@@ -352,9 +399,31 @@ const _doApplyPendingProfile = async (authUser) => {
         pendingPhotoUrl = parsedUrl.href;
       }
     } catch {
-      // Not a valid URL (e.g. base64 data URL) — skip
+      // Not a valid URL (e.g. base64 data URL) — fall through to Storage upload
     }
   }
+
+  // If the pending photo is a base64 data URL (stored in localStorage during
+  // sign-up), upload it to Supabase Storage now that we have an authenticated
+  // session.  This gives the photo a permanent https URL and avoids storing
+  // large binary data in the profiles row.
+  if (!pendingPhotoUrl && typeof pending.photo === "string" && pending.photo.startsWith("data:image/")) {
+    try {
+      // Extract the MIME type from the data URL prefix (e.g. "image/png") to
+      // ensure the uploaded file gets the correct extension and content-type.
+      const mimeMatch = pending.photo.match(/^data:(image\/[a-z+]+);base64,/i);
+      const mimeType = mimeMatch ? mimeMatch[1].toLowerCase() : "image/jpeg";
+      const ext = PHOTO_MIME_TO_EXT[mimeType] || "jpg";
+      const res = await fetch(pending.photo);
+      const blob = await res.blob();
+      const file = new File([blob], `avatar.${ext}`, { type: mimeType });
+      pendingPhotoUrl = await uploadProfilePhoto(authUser.id, file);
+    } catch (e) {
+      console.error("[useAuth] Failed to upload pending profile photo to Storage:", e);
+      // Non-fatal — photo can be added later from Edit Profile
+    }
+  }
+
   try {
     const { error: upsertError } = await supabase.from("profiles").upsert({
       id: authUser.id,
@@ -738,6 +807,24 @@ const useAuth = () => {
             ? profileUpdates.city.trim()
             : inferCityFromAddress(profileUpdates.address);
 
+        // If a new photo File was provided, upload it to Supabase Storage and
+        // store the resulting https URL.  Fall back to base64 conversion if
+        // Storage is unavailable, or keep the existing URL if no file was given.
+        let nextPhotoUrl = profileUpdates.photo ?? currentUser.photo ?? "";
+        if (profileUpdates.photoFile instanceof File) {
+          try {
+            nextPhotoUrl = await uploadProfilePhoto(currentUser.id, profileUpdates.photoFile);
+          } catch (e) {
+            console.error("[useAuth] Photo upload to Storage failed:", e);
+            // Fall back to base64 so the photo change is not silently lost
+            try {
+              nextPhotoUrl = await fileToDataUrl(profileUpdates.photoFile);
+            } catch {
+              nextPhotoUrl = currentUser.photo ?? "";
+            }
+          }
+        }
+
         await supabase
           .from("profiles")
           .update({
@@ -748,7 +835,7 @@ const useAuth = () => {
             address: profileUpdates.address ?? currentUser.address ?? "",
             country: profileUpdates.country ?? currentUser.country ?? "",
             city: normalizedCity || currentUser.city || "",
-            photo_url: profileUpdates.photo ?? currentUser.photo ?? "",
+            photo_url: nextPhotoUrl,
             birthday: profileUpdates.birthday ?? currentUser.birthday ?? "",
             gender: profileUpdates.gender ?? currentUser.gender ?? "",
             agreed_to_promotions:

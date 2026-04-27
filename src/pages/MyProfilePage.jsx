@@ -86,7 +86,14 @@ const getAddressLines = (address) => {
 };
 
 const DEFAULT_PROFILE_PHOTO =
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&h=300&q=80";
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<circle cx="50" cy="50" r="50" fill="#e0e0e0"/>' +
+    '<circle cx="50" cy="37" r="20" fill="#9e9e9e"/>' +
+    '<ellipse cx="50" cy="90" rx="32" ry="26" fill="#9e9e9e"/>' +
+    "</svg>"
+  );
 
 const getSafeImageSource = (imageSource, fallbackImageSource) => {
   if (typeof imageSource !== "string") {
@@ -425,15 +432,9 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
     }
 
     let nextPhoto = formValues.photo;
-    if (selectedPhotoFile) {
-      try {
-        nextPhoto = await fileToDataUrl(selectedPhotoFile);
-      } catch (error) {
-        setSuccessMessage("");
-        setErrorMessage("Could not read the selected photo. Please try again.");
-        return;
-      }
-    }
+    // selectedPhotoFile is the raw File object; pass it to onUpdateProfile which
+    // will upload it to Supabase Storage.  The base64 conversion below is no
+    // longer needed (and is avoided because large base64 strings bloat the DB row).
 
     const rawPhone = formValues.phone.trim();
     const phoneDigitsOnly = rawPhone.replace(/\D/g, "");
@@ -461,6 +462,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
         .filter(Boolean)
         .join(", "),
       photo: nextPhoto,
+      photoFile: selectedPhotoFile || null,
       birthday: normalizedBirthday,
       gender: formValues.gender,
       agreedToPromotionsAndMarketingEmails: formValues.agreedToPromotionsAndMarketingEmails
