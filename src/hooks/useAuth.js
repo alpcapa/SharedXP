@@ -555,7 +555,7 @@ const useAuth = () => {
 
       onEmailLogin: async (email, password) => {
         try {
-          const { data, error } = await supabase.auth.signInWithPassword({
+          const { error } = await supabase.auth.signInWithPassword({
             email: email.trim().toLowerCase(),
             password,
           });
@@ -576,19 +576,12 @@ const useAuth = () => {
             return { success: false, message: error.message || "Incorrect email or password." };
           }
 
-          if (data?.user) {
-            try {
-              await applyPendingProfile(data.user);
-              const user = await fetchUserProfile(data.user);
-              if (user) setCurrentUser(user);
-            } catch (e) {
-              console.error("Login fetchUserProfile failed:", e);
-              // Still mark the user as logged in using minimal auth data so a
-              // transient DB error doesn't leave the UI stuck on Login/Sign Up.
-              setCurrentUser(buildUserObject(data.user, { email: data.user?.email }, [], [], null, null));
-            }
-          }
-
+          // Profile fetch and pending-profile upsert are handled by the
+          // onAuthStateChange SIGNED_IN handler that fires automatically after
+          // signInWithPassword succeeds.  Awaiting those DB calls here would
+          // block this function (and the UI) until every Supabase round-trip
+          // completes, causing the "Logging in…" button to appear frozen when
+          // the DB is slow or an RLS policy stalls a query.
           return { success: true };
         } catch (e) {
           console.error("onEmailLogin unexpected error:", e);
