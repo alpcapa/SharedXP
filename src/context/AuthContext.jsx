@@ -770,7 +770,7 @@ return { success: true, requiresReauthentication: false };
 onSaveHistory: (historyItems) => {
 if (!currentUser) return;
 const items = Array.isArray(historyItems) ? historyItems : [];
-setCurrentUser((prev) => (prev ? { …prev, history: items } : null));
+setCurrentUser((prev) => (prev ? { ...prev, history: items } : null));
 syncBookings(currentUser.id, "attended", items);
 },
 
@@ -778,7 +778,7 @@ onSaveHostHistory: (hostHistoryItems) => {
 if (!currentUser) return;
 const items = Array.isArray(hostHistoryItems) ? hostHistoryItems : [];
 setCurrentUser((prev) =>
-prev ? { …prev, hostHistory: items } : null
+prev ? { ...prev, hostHistory: items } : null
 );
 syncBookings(currentUser.id, "hosted", items);
 },
