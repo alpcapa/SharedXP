@@ -348,7 +348,7 @@ const { data: uploadData, error: uploadError } = await supabase.storage
   .upload(fileName, blob, { contentType: blob.type, upsert: true });
 
 if (uploadError) {
-  console.error("[auth] avatar upload:", uploadError);
+  console.error("[auth] Avatar upload:", uploadError);
   return "";
 }
 
