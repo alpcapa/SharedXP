@@ -271,7 +271,7 @@ const metaPhotoUrl =
 authUser.user_metadata?.sharedxp_pending_profile?.photoUrl || "";
 if (metaPhotoUrl) {
 profile = { ...profile, photo_url: metaPhotoUrl };
-supabase
+await supabase
 .from("profiles")
 .upsert(
 { id: authUser.id, email: authUser.email, photo_url: metaPhotoUrl },
@@ -480,20 +480,7 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
         "An account with this email already exists. Please sign in instead.",
     };
   }
-
-  if (photoUrl && data.user) {
-    // Use upsert here because the profile row may not exist yet at sign-up
-    // time (it is typically created by a DB trigger on email confirmation).
-    // update() silently does nothing when there is no matching row, so the
-    // photo would be lost. upsert() creates the row if absent, or updates
-    // photo_url if the row already exists.
-    await supabase
-      .from("profiles")
-      .upsert(
-        { id: data.user.id, email: normalizedEmail, photo_url: photoUrl },
-        { onConflict: "id" }
-      );
-  }
+// photoUrl is stored in user_metadata and applied in fetchUserProfile after first login.
 
   return { success: true };
 } catch (e) {
