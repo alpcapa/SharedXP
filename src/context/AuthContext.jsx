@@ -268,17 +268,15 @@ if (!profile) {
 }
 
 if (!profile.photo_url) {
-const metaPhotoUrl =
-authUser.user_metadata?.sharedxp_pending_profile?.photoUrl || "";
-if (metaPhotoUrl) {
-profile = { ...profile, photo_url: metaPhotoUrl };
-await supabase
-.from("profiles")
-.upsert(
-{ id: authUser.id, email: authUser.email, photo_url: metaPhotoUrl },
-{ onConflict: "id" }
-);
-}
+  const metaPhotoUrl =
+    authUser.user_metadata?.sharedxp_pending_profile?.photoUrl || "";
+  if (metaPhotoUrl) {
+    profile = { ...profile, photo_url: metaPhotoUrl };
+    await supabase
+      .from("profiles")
+      .update({ photo_url: metaPhotoUrl })
+      .eq("id", authUser.id);
+  }
 }
 
 let hostProfile = null;
