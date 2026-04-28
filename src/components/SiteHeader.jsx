@@ -103,7 +103,15 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
               <Link to="/history" className="user-dropdown-link" role="menuitem">
                 History
               </Link>
+              <Link
+                to={navHostRoute}
+                className={`user-dropdown-link${isHostLabelPaused ? " site-nav-link-paused" : ""}`}
+                role="menuitem"
+              >
+                {navHostLabel}
+              </Link>
               <button
+
                 type="button"
                 className="user-dropdown-link user-dropdown-logout"
                 onClick={() => {
