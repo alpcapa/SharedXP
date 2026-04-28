@@ -260,10 +260,11 @@ fetchUserBookings(authUser.id),
 let profile = profileResult.data?.[0] ?? null;
 
 if (!profile) {
-const meta = authUser.user_metadata?.sharedxp_pending_profile;
-profile = meta
-? metaToProfileShape(meta, authUser)
-: { email: authUser.email };
+  const meta = authUser.user_metadata?.sharedxp_pending_profile;
+  profile = meta
+    ? metaToProfileShape(meta, authUser)
+    : { email: authUser.email };
+  await supabase.from("profiles").insert({ id: authUser.id, ...profile });
 }
 
 if (!profile.photo_url) {
