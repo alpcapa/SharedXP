@@ -147,10 +147,6 @@ confirmed_at: item.confirmedAt || null,
 payment_released: !!item.paymentReleased,
 });
 
-// Replace-all sync. The HistoryPage always saves the entire array, so we
-// mirror that semantic in the DB: drop the user’s rows for this role then
-// re-insert. Not the most efficient, but correctness-preserving without
-// requiring HistoryPage to track per-item operations.
 const syncBookings = async (userId, role, items) => {
 const { error: delError } = await supabase
 .from("bookings")
@@ -220,10 +216,6 @@ agreedToPromotionsAndMarketingEmails: p.agreed_to_promotions || false,
 };
 };
 
-// Maps the user_metadata.sharedxp_pending_profile shape (camelCase, written by
-// onEmailSignUp) onto the profiles table column shape (snake_case). Used as a
-// last-resort fallback when the DB profile row is unreachable — the row should
-// already exist via the handle_new_user trigger (migration 005).
 const metaToProfileShape = (meta, authUser) => ({
 email: authUser.email,
 full_name:
@@ -267,27 +259,23 @@ fetchUserBookings(authUser.id),
 
 let profile = profileResult.data?.[0] ?? null;
 
-// Fallback: profile row missing (e.g. handle_new_user trigger didn’t run, or
-// RLS is misconfigured). Reconstruct a minimal profile from user_metadata so
-// the UI can still render a logged-in state.
 if (!profile) {
 const meta = authUser.user_metadata?.sharedxp_pending_profile;
 profile = meta
 ? metaToProfileShape(meta, authUser)
 : { email: authUser.email };
 }
-// If photo_url is blank, recover it from user_metadata (RLS blocks the
-// photo update during signup before a session exists).
+
 if (!profile.photo_url) {
-  const metaPhotoUrl =
-    authUser.user_metadata?.sharedxp_pending_profile?.photoUrl || "";
-  if (metaPhotoUrl) {
-    profile = { ...profile, photo_url: metaPhotoUrl };
-    supabase
-      .from("profiles")
-      .update({ photo_url: metaPhotoUrl })
-      .eq("id", authUser.id);
-  }
+const metaPhotoUrl =
+authUser.user_metadata?.sharedxp_pending_profile?.photoUrl || "";
+if (metaPhotoUrl) {
+profile = { …profile, photo_url: metaPhotoUrl };
+supabase
+.from("profiles")
+.update({ photo_url: metaPhotoUrl })
+.eq("id", authUser.id);
+}
 }
 
 let hostProfile = null;
@@ -344,14 +332,11 @@ if (langResult?.error) console.error("[auth] insert languages:", langResult.erro
 if (sportResult?.error) console.error("[auth] insert sports:", sportResult.error);
 };
 
-// Uploads a base64 data URL to Supabase Storage and returns the public URL.
-// Returns an empty string if upload fails (non-fatal — profile saves without photo).
 const uploadAvatarFromDataUrl = async (dataUrl, userEmail) => {
 try {
 const res = await fetch(dataUrl);
 const blob = await res.blob();
 const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
-// Use email + timestamp for a unique, deterministic filename
 const safeName = userEmail.replace(/[^a-zA-Z0-9]/g, "_");
 const fileName = `${safeName}_${Date.now()}.${ext}`;
 
@@ -394,8 +379,6 @@ const loadUser = async (authUser) => {
     if (mounted && u) setCurrentUser(u);
   } catch (e) {
     console.error("[auth] fetchUserProfile failed:", e);
-    // Keep the UI in a logged-in state with whatever we have on the auth
-    // session, so a transient DB error doesn't strand the user on Login.
     if (mounted) {
       setCurrentUser(
         buildUserObject(
@@ -416,9 +399,6 @@ supabase.auth
   .getSession()
   .then(({ data: { session } }) => {
     if (!mounted) return;
-    // Resolve the loading gate as soon as the session is known. The profile
-    // fetch continues in the background — the UI just shows the
-    // logged-out shell until it completes (no arbitrary timeouts needed).
     setAuthLoading(false);
     if (session?.user) loadUser(session.user);
   })
@@ -449,7 +429,7 @@ const value = useMemo(
 currentUser,
 authLoading,
 
-
+```
   onLogout: async () => {
     await supabase.auth.signOut();
     setCurrentUser(null);
@@ -466,16 +446,11 @@ authLoading,
         ...profileMeta
       } = newUser;
 
-      // Upload photo to Supabase Storage before creating the auth user.
-      // This gives us a permanent public URL instead of a base64 blob,
-      // which is safe to store in user_metadata and the profiles table.
       let photoUrl = "";
       if (photo && photo.startsWith("data:")) {
         photoUrl = await uploadAvatarFromDataUrl(photo, normalizedEmail);
       }
 
-      // user_metadata is the single source of truth the handle_new_user
-      // trigger reads to populate profiles + user_languages + user_sports.
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
@@ -505,10 +480,6 @@ authLoading,
         };
       }
 
-      // If we have a photoUrl and the user session is immediately available
-      // (email confirmation disabled), write photo_url directly to the profile.
-      // When email confirmation is required the handle_new_user trigger will
-      // pick up photoUrl from user_metadata instead.
       if (photoUrl && data.user) {
         await supabase
           .from("profiles")
@@ -546,8 +517,6 @@ authLoading,
           message: error.message || "Incorrect email or password.",
         };
       }
-      // Profile loading happens via onAuthStateChange SIGNED_IN; awaiting
-      // it here would freeze the UI on slow DB responses.
       return { success: true };
     } catch (e) {
       console.error("[auth] onEmailLogin:", e);
@@ -726,8 +695,6 @@ authLoading,
         ? profileUpdates.city.trim()
         : inferCityFromAddress(profileUpdates.address);
 
-    // If an updated photo comes in as a base64 data URL, upload it to
-    // Storage first and use the resulting public URL instead.
     let resolvedPhotoUrl = profileUpdates.photo ?? currentUser.photo ?? "";
     if (resolvedPhotoUrl.startsWith("data:")) {
       const uploaded = await uploadAvatarFromDataUrl(resolvedPhotoUrl, nextEmail);
@@ -785,8 +752,6 @@ authLoading,
   onSaveHistory: (historyItems) => {
     if (!currentUser) return;
     const items = Array.isArray(historyItems) ? historyItems : [];
-    // Optimistic local update; DB sync runs in background. Errors are
-    // logged inside syncBookings but don't roll back the UI state.
     setCurrentUser((prev) => (prev ? { ...prev, history: items } : null));
     syncBookings(currentUser.id, "attended", items);
   },
