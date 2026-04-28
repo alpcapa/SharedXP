@@ -270,7 +270,7 @@ if (!profile.photo_url) {
 const metaPhotoUrl =
 authUser.user_metadata?.sharedxp_pending_profile?.photoUrl || "";
 if (metaPhotoUrl) {
-profile = { …profile, photo_url: metaPhotoUrl };
+profile = { ...profile, photo_url: metaPhotoUrl };
 supabase
 .from("profiles")
 .update({ photo_url: metaPhotoUrl })
