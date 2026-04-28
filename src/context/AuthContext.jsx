@@ -3,52 +3,52 @@ import { supabase } from "../lib/supabase";
 
 const padStringArray = (arr, n) =>
 Array.from({ length: n }, (_, i) =>
-typeof arr?.[i] === “string” ? arr[i].trim() : “”
+typeof arr?.[i] === "string" ? arr[i].trim() : ""
 );
 const normalizeLanguages = (langs) => padStringArray(langs, 4);
 const normalizeSports = (sports) => padStringArray(sports, 4);
 
 const inferCityFromAddress = (address) => {
-if (!address) return “”;
-const parts = address.split(”,”).map((p) => p.trim()).filter(Boolean);
-return parts.length >= 2 ? parts[1] : parts[0] ?? “”;
+if (!address) return "";
+const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+return parts.length >= 2 ? parts[1] : parts[0] ?? "";
 };
 
 const buildHostProfileObject = (hostProfile, hostSports) => {
 if (!hostProfile) return null;
 return {
-country: hostProfile.country || “”,
-city: hostProfile.city || “”,
+country: hostProfile.country || "",
+city: hostProfile.city || "",
 pauseHosting: hostProfile.pause_hosting || false,
 bankDetailsComplete: hostProfile.bank_details_complete || false,
 sports: (hostSports || []).map((hs) => ({
-sport: hs.sport || “”,
-description: hs.description || “”,
-about: hs.about || “”,
+sport: hs.sport || "",
+description: hs.description || "",
+about: hs.about || "",
 pricing: hs.pricing || 0,
-pricingCurrency: hs.pricing_currency || “EUR”,
-level: hs.level || “”,
+pricingCurrency: hs.pricing_currency || "EUR",
+level: hs.level || "",
 paused: hs.paused || false,
 equipmentAvailable: hs.equipment_available || false,
-equipmentDetails: hs.equipment_details || “”,
+equipmentDetails: hs.equipment_details || "",
 availability: {
 days: hs.availability_days || [],
-startTime: hs.availability_start_time || “09:00”,
-endTime: hs.availability_end_time || “18:00”,
+startTime: hs.availability_start_time || "09:00",
+endTime: hs.availability_end_time || "18:00",
 },
 images: (hs.host_sport_images || [])
 .sort((a, b) => a.position - b.position)
 .map((img) => img.image_url),
 })),
 stripe: {
-stripeEmail: hostProfile.stripe_email || “”,
-accountHolderName: hostProfile.account_holder_name || “”,
-citizenIdNumber: hostProfile.citizen_id_number || “”,
-taxNumber: hostProfile.tax_number || “”,
-bankName: hostProfile.bank_name || “”,
-accountNumber: hostProfile.account_number || “”,
-routingNumber: hostProfile.routing_number || “”,
-payoutCurrency: hostProfile.payout_currency || “EUR”,
+stripeEmail: hostProfile.stripe_email || "",
+accountHolderName: hostProfile.account_holder_name || "",
+citizenIdNumber: hostProfile.citizen_id_number || "",
+taxNumber: hostProfile.tax_number || "",
+bankName: hostProfile.bank_name || "",
+accountNumber: hostProfile.account_number || "",
+routingNumber: hostProfile.routing_number || "",
+payoutCurrency: hostProfile.payout_currency || "EUR",
 },
 consents: {
 agreeTermsAndConditions: hostProfile.agree_terms || false,
@@ -99,20 +99,20 @@ paymentReleased: row.payment_released,
 const splitBookings = (rows) => {
 const out = { history: [], hostHistory: [] };
 for (const row of rows || []) {
-if (row.role === “attended”) out.history.push(bookingRowToAttended(row));
-else if (row.role === “hosted”) out.hostHistory.push(bookingRowToHosted(row));
+if (row.role === "attended") out.history.push(bookingRowToAttended(row));
+else if (row.role === "hosted") out.hostHistory.push(bookingRowToHosted(row));
 }
 return out;
 };
 
 const fetchUserBookings = async (userId) => {
 const { data, error } = await supabase
-.from(“bookings”)
-.select(”*”)
-.eq(“user_id”, userId)
-.order(“completed_at”, { ascending: false, nullsFirst: false });
+.from("bookings")
+.select("*")
+.eq("user_id", userId)
+.order("completed_at", { ascending: false, nullsFirst: false });
 if (error) {
-console.error(”[auth] fetchUserBookings:”, error);
+console.error("[auth] fetchUserBookings:", error);
 return { history: [], hostHistory: [] };
 }
 return splitBookings(data);
@@ -121,28 +121,28 @@ return splitBookings(data);
 const toBookingRow = (userId, role, item) => ({
 user_id: userId,
 role,
-event_name: item.eventName ?? item.label ?? “”,
-sport: item.sport ?? “”,
+event_name: item.eventName ?? item.label ?? "",
+sport: item.sport ?? "",
 counterparty_name:
-role === “attended”
-? item.hostName ?? “”
-: item.participantName ?? “”,
+role === "attended"
+? item.hostName ?? ""
+: item.participantName ?? "",
 counterparty_photo:
-role === “hosted” ? item.participantPhoto ?? “” : “”,
-photo: item.photo ?? “”,
+role === "hosted" ? item.participantPhoto ?? "" : "",
+photo: item.photo ?? "",
 photo_gallery: Array.isArray(item.photoGallery) ? item.photoGallery : [],
 rating: Number.isFinite(Number(item.rating)) ? Number(item.rating) : 0,
 host_ratings:
-item.hostRatings && typeof item.hostRatings === “object”
+item.hostRatings && typeof item.hostRatings === "object"
 ? item.hostRatings
 : {},
 attendee_rating: Number.isFinite(Number(item.attendeeRating))
 ? Number(item.attendeeRating)
 : 0,
-review: item.review ?? “”,
+review: item.review ?? "",
 shared_to_field: !!item.sharedToField,
 completed_at: item.completedAt || null,
-confirmation_status: item.confirmationStatus || “pending”,
+confirmation_status: item.confirmationStatus || "pending",
 confirmed_at: item.confirmedAt || null,
 payment_released: !!item.paymentReleased,
 });
@@ -153,20 +153,20 @@ payment_released: !!item.paymentReleased,
 // requiring HistoryPage to track per-item operations.
 const syncBookings = async (userId, role, items) => {
 const { error: delError } = await supabase
-.from(“bookings”)
+.from("bookings")
 .delete()
-.eq(“user_id”, userId)
-.eq(“role”, role);
+.eq("user_id", userId)
+.eq("role", role);
 if (delError) {
-console.error(”[auth] syncBookings delete:”, delError);
+console.error("[auth] syncBookings delete:", delError);
 return;
 }
 const rows = (Array.isArray(items) ? items : []).map((item) =>
 toBookingRow(userId, role, item)
 );
 if (!rows.length) return;
-const { error: insError } = await supabase.from(“bookings”).insert(rows);
-if (insError) console.error(”[auth] syncBookings insert:”, insError);
+const { error: insError } = await supabase.from("bookings").insert(rows);
+if (insError) console.error("[auth] syncBookings insert:", insError);
 };
 
 const buildUserObject = (
@@ -182,22 +182,22 @@ if (!authUser) return null;
 const p = profile || {};
 return {
 id: authUser.id,
-email: p.email || authUser.email || “”,
+email: p.email || authUser.email || "",
 fullName:
 p.full_name ||
 `${p.first_name || ""} ${p.last_name || ""}`.trim() ||
-“”,
-firstName: p.first_name || “”,
-lastName: p.last_name || “”,
-phone: p.phone || “”,
-phoneCountryCode: p.phone_country_code || “”,
-countryDialCode: p.country_dial_code || “”,
-address: p.address || “”,
-country: p.country || “”,
-city: p.city || “”,
-photo: p.photo_url || “”,
-birthday: p.birthday || “”,
-gender: p.gender || “”,
+"",
+firstName: p.first_name || "",
+lastName: p.last_name || "",
+phone: p.phone || "",
+phoneCountryCode: p.phone_country_code || "",
+countryDialCode: p.country_dial_code || "",
+address: p.address || "",
+country: p.country || "",
+city: p.city || "",
+photo: p.photo_url || "",
+birthday: p.birthday || "",
+gender: p.gender || "",
 languages: normalizeLanguages(
 (languages || [])
 .slice()
@@ -229,17 +229,17 @@ email: authUser.email,
 full_name:
 meta.fullName ||
 `${meta.firstName || ""} ${meta.lastName || ""}`.trim(),
-first_name: meta.firstName || “”,
-last_name: meta.lastName || “”,
-phone: meta.phone || “”,
-phone_country_code: meta.phoneCountryCode || “”,
-country_dial_code: meta.countryDialCode || “”,
-address: meta.address || “”,
-country: meta.country || “”,
-city: meta.city || “”,
-photo_url: meta.photoUrl || “”,
-birthday: meta.birthday || “”,
-gender: meta.gender || “”,
+first_name: meta.firstName || "",
+last_name: meta.lastName || "",
+phone: meta.phone || "",
+phone_country_code: meta.phoneCountryCode || "",
+country_dial_code: meta.countryDialCode || "",
+address: meta.address || "",
+country: meta.country || "",
+city: meta.city || "",
+photo_url: meta.photoUrl || "",
+birthday: meta.birthday || "",
+gender: meta.gender || "",
 is_host: false,
 agreed_to_terms: meta.agreedToTermsAndConditions || false,
 agreed_to_promotions: meta.agreedToPromotionsAndMarketingEmails || false,
@@ -251,17 +251,17 @@ if (!authUser) return null;
 
 const [profileResult, languagesResult, sportsResult, bookings] =
 await Promise.all([
-supabase.from(“profiles”).select(”*”).eq(“id”, authUser.id),
+supabase.from("profiles").select("*").eq("id", authUser.id),
 supabase
-.from(“user_languages”)
-.select(”*”)
-.eq(“user_id”, authUser.id)
-.order(“position”),
+.from("user_languages")
+.select("*")
+.eq("user_id", authUser.id)
+.order("position"),
 supabase
-.from(“user_sports”)
-.select(”*”)
-.eq(“user_id”, authUser.id)
-.order(“position”),
+.from("user_sports")
+.select("*")
+.eq("user_id", authUser.id)
+.order("position"),
 fetchUserBookings(authUser.id),
 ]);
 
@@ -294,16 +294,16 @@ let hostProfile = null;
 let hostSports = [];
 if (profile.is_host) {
 const { data: hp } = await supabase
-.from(“host_profiles”)
-.select(”*”)
-.eq(“user_id”, authUser.id)
+.from("host_profiles")
+.select("*")
+.eq("user_id", authUser.id)
 .maybeSingle();
 hostProfile = hp;
 if (hp) {
 const { data: hs } = await supabase
-.from(“host_sports”)
-.select(”*, host_sport_images(*)”)
-.eq(“host_profile_id”, hp.id);
+.from("host_sports")
+.select("*, host_sport_images(*)")
+.eq("host_profile_id", hp.id);
 hostSports = hs || [];
 }
 }
@@ -328,20 +328,20 @@ const sportRows = normalizeSports(sports)
 .filter((r) => r.sport);
 
 await Promise.all([
-supabase.from(“user_languages”).delete().eq(“user_id”, userId),
-supabase.from(“user_sports”).delete().eq(“user_id”, userId),
+supabase.from("user_languages").delete().eq("user_id", userId),
+supabase.from("user_sports").delete().eq("user_id", userId),
 ]);
 
 const [langResult, sportResult] = await Promise.all([
 langRows.length
-? supabase.from(“user_languages”).insert(langRows)
+? supabase.from("user_languages").insert(langRows)
 : Promise.resolve({ error: null }),
 sportRows.length
-? supabase.from(“user_sports”).insert(sportRows)
+? supabase.from("user_sports").insert(sportRows)
 : Promise.resolve({ error: null }),
 ]);
-if (langResult?.error) console.error(”[auth] insert languages:”, langResult.error);
-if (sportResult?.error) console.error(”[auth] insert sports:”, sportResult.error);
+if (langResult?.error) console.error("[auth] insert languages:", langResult.error);
+if (sportResult?.error) console.error("[auth] insert sports:", sportResult.error);
 };
 
 // Uploads a base64 data URL to Supabase Storage and returns the public URL.
@@ -350,9 +350,9 @@ const uploadAvatarFromDataUrl = async (dataUrl, userEmail) => {
 try {
 const res = await fetch(dataUrl);
 const blob = await res.blob();
-const ext = blob.type.split(”/”)[1]?.replace(“jpeg”, “jpg”) || “jpg”;
+const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
 // Use email + timestamp for a unique, deterministic filename
-const safeName = userEmail.replace(/[^a-zA-Z0-9]/g, “_”);
+const safeName = userEmail.replace(/[^a-zA-Z0-9]/g, "_");
 const fileName = `${safeName}_${Date.now()}.${ext}`;
 
 ```
@@ -373,8 +373,8 @@ return publicUrl || "";
 ```
 
 } catch (e) {
-console.error(”[auth] uploadAvatarFromDataUrl:”, e);
-return “”;
+console.error("[auth] uploadAvatarFromDataUrl:", e);
+return "";
 }
 };
 
@@ -810,7 +810,7 @@ return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 
 const useAuth = () => {
 const ctx = useContext(AuthContext);
-if (!ctx) throw new Error(“useAuth must be used inside <AuthProvider>”);
+if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
 return ctx;
 };
 
