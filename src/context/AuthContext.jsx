@@ -496,7 +496,7 @@ authLoading,
       // (email confirmation disabled), write photo_url directly to the profile.
       // When email confirmation is required the handle_new_user trigger will
       // pick up photoUrl from user_metadata instead.
-      if (photoUrl && data.session) {
+      if (photoUrl && data.user) {
         await supabase
           .from("profiles")
           .update({ photo_url: photoUrl })
