@@ -449,7 +449,7 @@ const value = useMemo(
 currentUser,
 authLoading,
 
-```
+
   onLogout: async () => {
     await supabase.auth.signOut();
     setCurrentUser(null);
