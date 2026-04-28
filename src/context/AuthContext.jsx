@@ -276,6 +276,19 @@ profile = meta
 ? metaToProfileShape(meta, authUser)
 : { email: authUser.email };
 }
+// If photo_url is blank, recover it from user_metadata (RLS blocks the
+// photo update during signup before a session exists).
+if (!profile.photo_url) {
+  const metaPhotoUrl =
+    authUser.user_metadata?.sharedxp_pending_profile?.photoUrl || "";
+  if (metaPhotoUrl) {
+    profile = { ...profile, photo_url: metaPhotoUrl };
+    supabase
+      .from("profiles")
+      .update({ photo_url: metaPhotoUrl })
+      .eq("id", authUser.id);
+  }
+}
 
 let hostProfile = null;
 let hostSports = [];
