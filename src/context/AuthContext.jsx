@@ -273,8 +273,10 @@ if (metaPhotoUrl) {
 profile = { ...profile, photo_url: metaPhotoUrl };
 supabase
 .from("profiles")
-.update({ photo_url: metaPhotoUrl })
-.eq("id", authUser.id);
+.upsert(
+{ id: authUser.id, email: authUser.email, photo_url: metaPhotoUrl },
+{ onConflict: "id" }
+);
 }
 }
 
@@ -340,7 +342,6 @@ const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
 const safeName = userEmail.replace(/[^a-zA-Z0-9]/g, "_");
 const fileName = `${safeName}_${Date.now()}.${ext}`;
 
-```
 const { data: uploadData, error: uploadError } = await supabase.storage
   .from("Avatars")
   .upload(fileName, blob, { contentType: blob.type, upsert: true });
@@ -355,7 +356,7 @@ const { data: { publicUrl } } = supabase.storage
   .getPublicUrl(uploadData.path);
 
 return publicUrl || "";
-```
+
 
 } catch (e) {
 console.error("[auth] uploadAvatarFromDataUrl:", e);
@@ -372,7 +373,7 @@ const [authLoading, setAuthLoading] = useState(true);
 useEffect(() => {
 let mounted = true;
 
-```
+
 const loadUser = async (authUser) => {
   try {
     const u = await fetchUserProfile(authUser);
@@ -420,7 +421,7 @@ return () => {
   mounted = false;
   subscription.unsubscribe();
 };
-```
+
 
 }, []);
 
@@ -429,344 +430,360 @@ const value = useMemo(
 currentUser,
 authLoading,
 
+onLogout: async () => {
+await supabase.auth.signOut();
+setCurrentUser(null);
+},
 
-  onLogout: async () => {
-    await supabase.auth.signOut();
-    setCurrentUser(null);
-  },
+onEmailSignUp: async (newUser) => {
+try {
+const normalizedEmail = newUser.email.trim().toLowerCase();
 
-  onEmailSignUp: async (newUser) => {
-    try {
-      const normalizedEmail = newUser.email.trim().toLowerCase();
 
-      const {
-        password,
-        confirmPassword: _confirmPassword,
-        photo,
-        ...profileMeta
-      } = newUser;
+  const {
+    password,
+    confirmPassword: _confirmPassword,
+    photo,
+    ...profileMeta
+  } = newUser;
 
-      let photoUrl = "";
-      if (photo && photo.startsWith("data:")) {
-        photoUrl = await uploadAvatarFromDataUrl(photo, normalizedEmail);
-      }
+  let photoUrl = "";
+  if (photo && photo.startsWith("data:")) {
+    photoUrl = await uploadAvatarFromDataUrl(photo, normalizedEmail);
+  }
 
-      const { data, error } = await supabase.auth.signUp({
-        email: normalizedEmail,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            sharedxp_pending_profile: {
-              ...profileMeta,
-              email: normalizedEmail,
-              photoUrl,
-            },
-          },
+  const { data, error } = await supabase.auth.signUp({
+    email: normalizedEmail,
+    password,
+    options: {
+      emailRedirectTo: window.location.origin,
+      data: {
+        sharedxp_pending_profile: {
+          ...profileMeta,
+          email: normalizedEmail,
+          photoUrl,
         },
-      });
+      },
+    },
+  });
 
-      if (error) {
-        return { success: false, message: error.message || "Sign up failed." };
-      }
-      if (!data?.user) {
-        return { success: false, message: "Sign up failed — no user returned." };
-      }
-      if (data.user.identities?.length === 0) {
-        return {
-          success: false,
-          message:
-            "An account with this email already exists. Please sign in instead.",
-        };
-      }
+  if (error) {
+    return { success: false, message: error.message || "Sign up failed." };
+  }
+  if (!data?.user) {
+    return { success: false, message: "Sign up failed — no user returned." };
+  }
+  if (data.user.identities?.length === 0) {
+    return {
+      success: false,
+      message:
+        "An account with this email already exists. Please sign in instead.",
+    };
+  }
 
-      if (photoUrl && data.user) {
-        await supabase
-          .from("profiles")
-          .update({ photo_url: photoUrl })
-          .eq("id", data.user.id);
-      }
-
-      return { success: true };
-    } catch (e) {
-      console.error("[auth] onEmailSignUp:", e);
-      return { success: false, message: "Sign up failed. Please try again." };
-    }
-  },
-
-  onEmailLogin: async (email, password) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      });
-      if (error) {
-        const msg = error.message || "";
-        if (
-          error.code === "email_not_confirmed" ||
-          msg.toLowerCase().includes("email not confirmed")
-        ) {
-          return {
-            success: false,
-            message:
-              "Please confirm your email address before logging in. Check your inbox for the confirmation email.",
-          };
-        }
-        return {
-          success: false,
-          message: error.message || "Incorrect email or password.",
-        };
-      }
-      return { success: true };
-    } catch (e) {
-      console.error("[auth] onEmailLogin:", e);
-      return { success: false, message: "Login failed. Please try again." };
-    }
-  },
-
-  onSocialLogin: async (provider) => {
-    await supabase.auth.signInWithOAuth({
-      provider: provider === "apple" ? "apple" : "google",
-      options: { redirectTo: window.location.origin },
-    });
-  },
-
-  onToggleHost: async () => {
-    if (!currentUser) return;
+  if (photoUrl && data.user) {
+    // Use upsert here because the profile row may not exist yet at sign-up
+    // time (it is typically created by a DB trigger on email confirmation).
+    // update() silently does nothing when there is no matching row, so the
+    // photo would be lost. upsert() creates the row if absent, or updates
+    // photo_url if the row already exists.
     await supabase
       .from("profiles")
-      .update({ is_host: true })
-      .eq("id", currentUser.id);
-
-    const { data: existing } = await supabase
-      .from("host_profiles")
-      .select("id")
-      .eq("user_id", currentUser.id)
-      .maybeSingle();
-
-    if (!existing) {
-      await supabase.from("host_profiles").insert({
-        user_id: currentUser.id,
-        country: currentUser.country || "",
-        city: currentUser.city || inferCityFromAddress(currentUser.address),
-      });
-    }
-
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-    if (authUser) setCurrentUser(await fetchUserProfile(authUser));
-  },
-
-  onSaveHostProfile: async (hostProfile) => {
-    if (!currentUser) return { success: false, message: "Not logged in." };
-
-    const { data: savedHostProfile, error: hpError } = await supabase
-      .from("host_profiles")
       .upsert(
-        {
-          user_id: currentUser.id,
-          country: hostProfile.country || currentUser.country || "",
-          city: hostProfile.city || currentUser.city || "",
-          pause_hosting: hostProfile.pauseHosting || false,
-          bank_details_complete: hostProfile.bankDetailsComplete || false,
-          stripe_email: hostProfile.stripe?.stripeEmail || currentUser.email,
-          account_holder_name: hostProfile.stripe?.accountHolderName || "",
-          citizen_id_number: hostProfile.stripe?.citizenIdNumber || "",
-          tax_number: hostProfile.stripe?.taxNumber || "",
-          bank_name: hostProfile.stripe?.bankName || "",
-          account_number: hostProfile.stripe?.accountNumber || "",
-          routing_number: hostProfile.stripe?.routingNumber || "",
-          payout_currency: hostProfile.stripe?.payoutCurrency || "EUR",
-          agree_terms: hostProfile.consents?.agreeTermsAndConditions || false,
-          agree_promotions:
-            hostProfile.consents?.agreePromotionsAndMarketingEmails || false,
-          agree_hosting_emails:
-            hostProfile.consents?.agreeHostingRelatedEmailsAndCalls || false,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      )
+        { id: data.user.id, email: normalizedEmail, photo_url: photoUrl },
+        { onConflict: "id" }
+      );
+  }
+
+  return { success: true };
+} catch (e) {
+  console.error("[auth] onEmailSignUp:", e);
+  return { success: false, message: "Sign up failed. Please try again." };
+}
+
+},
+
+onEmailLogin: async (email, password) => {
+try {
+const { error } = await supabase.auth.signInWithPassword({
+email: email.trim().toLowerCase(),
+password,
+});
+if (error) {
+const msg = error.message || "";
+if (
+error.code === "email_not_confirmed" ||
+msg.toLowerCase().includes("email not confirmed")
+) {
+return {
+success: false,
+message:
+"Please confirm your email address before logging in. Check your inbox for the confirmation email.",
+};
+}
+return {
+success: false,
+message: error.message || "Incorrect email or password.",
+};
+}
+return { success: true };
+} catch (e) {
+console.error("[auth] onEmailLogin:", e);
+return { success: false, message: "Login failed. Please try again." };
+}
+},
+
+onSocialLogin: async (provider) => {
+await supabase.auth.signInWithOAuth({
+provider: provider === "apple" ? "apple" : "google",
+options: { redirectTo: window.location.origin },
+});
+},
+
+onToggleHost: async () => {
+if (!currentUser) return;
+await supabase
+.from("profiles")
+.update({ is_host: true })
+.eq("id", currentUser.id);
+
+
+const { data: existing } = await supabase
+  .from("host_profiles")
+  .select("id")
+  .eq("user_id", currentUser.id)
+  .maybeSingle();
+
+if (!existing) {
+  await supabase.from("host_profiles").insert({
+    user_id: currentUser.id,
+    country: currentUser.country || "",
+    city: currentUser.city || inferCityFromAddress(currentUser.address),
+  });
+}
+
+const {
+  data: { user: authUser },
+} = await supabase.auth.getUser();
+if (authUser) setCurrentUser(await fetchUserProfile(authUser));
+
+
+},
+
+onSaveHostProfile: async (hostProfile) => {
+if (!currentUser) return { success: false, message: "Not logged in." };
+
+
+const { data: savedHostProfile, error: hpError } = await supabase
+  .from("host_profiles")
+  .upsert(
+    {
+      user_id: currentUser.id,
+      country: hostProfile.country || currentUser.country || "",
+      city: hostProfile.city || currentUser.city || "",
+      pause_hosting: hostProfile.pauseHosting || false,
+      bank_details_complete: hostProfile.bankDetailsComplete || false,
+      stripe_email: hostProfile.stripe?.stripeEmail || currentUser.email,
+      account_holder_name: hostProfile.stripe?.accountHolderName || "",
+      citizen_id_number: hostProfile.stripe?.citizenIdNumber || "",
+      tax_number: hostProfile.stripe?.taxNumber || "",
+      bank_name: hostProfile.stripe?.bankName || "",
+      account_number: hostProfile.stripe?.accountNumber || "",
+      routing_number: hostProfile.stripe?.routingNumber || "",
+      payout_currency: hostProfile.stripe?.payoutCurrency || "EUR",
+      agree_terms: hostProfile.consents?.agreeTermsAndConditions || false,
+      agree_promotions:
+        hostProfile.consents?.agreePromotionsAndMarketingEmails || false,
+      agree_hosting_emails:
+        hostProfile.consents?.agreeHostingRelatedEmailsAndCalls || false,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  )
+  .select()
+  .single();
+
+if (hpError || !savedHostProfile) {
+  console.error("[auth] host_profiles upsert failed:", hpError);
+  return {
+    success: false,
+    message:
+      hpError?.message ||
+      "Failed to save host profile. Check Supabase RLS policies.",
+  };
+}
+
+if (hostProfile.sports?.length > 0) {
+  await supabase
+    .from("host_sports")
+    .delete()
+    .eq("host_profile_id", savedHostProfile.id);
+
+  for (const sportConfig of hostProfile.sports) {
+    const { data: savedSport } = await supabase
+      .from("host_sports")
+      .insert({
+        host_profile_id: savedHostProfile.id,
+        sport: sportConfig.sport || "",
+        description: sportConfig.description || "",
+        about: sportConfig.about || "",
+        pricing: sportConfig.pricing || 0,
+        pricing_currency: sportConfig.pricingCurrency || "EUR",
+        level: sportConfig.level || "",
+        paused: sportConfig.paused || false,
+        equipment_available: sportConfig.equipmentAvailable || false,
+        equipment_details: sportConfig.equipmentDetails || "",
+        availability_days: sportConfig.availability?.days || [],
+        availability_start_time:
+          sportConfig.availability?.startTime || "09:00",
+        availability_end_time:
+          sportConfig.availability?.endTime || "18:00",
+      })
       .select()
       .single();
 
-    if (hpError || !savedHostProfile) {
-      console.error("[auth] host_profiles upsert failed:", hpError);
-      return {
-        success: false,
-        message:
-          hpError?.message ||
-          "Failed to save host profile. Check Supabase RLS policies.",
-      };
-    }
-
-    if (hostProfile.sports?.length > 0) {
-      await supabase
-        .from("host_sports")
-        .delete()
-        .eq("host_profile_id", savedHostProfile.id);
-
-      for (const sportConfig of hostProfile.sports) {
-        const { data: savedSport } = await supabase
-          .from("host_sports")
-          .insert({
-            host_profile_id: savedHostProfile.id,
-            sport: sportConfig.sport || "",
-            description: sportConfig.description || "",
-            about: sportConfig.about || "",
-            pricing: sportConfig.pricing || 0,
-            pricing_currency: sportConfig.pricingCurrency || "EUR",
-            level: sportConfig.level || "",
-            paused: sportConfig.paused || false,
-            equipment_available: sportConfig.equipmentAvailable || false,
-            equipment_details: sportConfig.equipmentDetails || "",
-            availability_days: sportConfig.availability?.days || [],
-            availability_start_time:
-              sportConfig.availability?.startTime || "09:00",
-            availability_end_time:
-              sportConfig.availability?.endTime || "18:00",
-          })
-          .select()
-          .single();
-
-        if (savedSport && sportConfig.images?.length > 0) {
-          const imageRows = sportConfig.images
-            .filter(Boolean)
-            .map((url, i) => ({
-              host_sport_id: savedSport.id,
-              image_url: url,
-              position: i,
-            }));
-          if (imageRows.length > 0) {
-            await supabase.from("host_sport_images").insert(imageRows);
-          }
-        }
+    if (savedSport && sportConfig.images?.length > 0) {
+      const imageRows = sportConfig.images
+        .filter(Boolean)
+        .map((url, i) => ({
+          host_sport_id: savedSport.id,
+          image_url: url,
+          position: i,
+        }));
+      if (imageRows.length > 0) {
+        await supabase.from("host_sport_images").insert(imageRows);
       }
     }
+  }
+}
 
-    await supabase
-      .from("profiles")
-      .update({ is_host: true })
-      .eq("id", currentUser.id);
+await supabase
+  .from("profiles")
+  .update({ is_host: true })
+  .eq("id", currentUser.id);
 
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-    if (authUser) setCurrentUser(await fetchUserProfile(authUser));
-    return { success: true };
-  },
+const {
+  data: { user: authUser },
+} = await supabase.auth.getUser();
+if (authUser) setCurrentUser(await fetchUserProfile(authUser));
+return { success: true };
 
-  onUpdateProfile: async (profileUpdates) => {
-    if (!currentUser) {
-      return {
-        success: false,
-        message: "Please log in to update your profile.",
-      };
-    }
 
-    const previousEmail = currentUser.email.trim().toLowerCase();
-    const nextEmail = (profileUpdates.email ?? currentUser.email)
-      .trim()
-      .toLowerCase();
-    const nextPhone = (
-      profileUpdates.phone ?? currentUser.phone ?? ""
-    ).trim();
-    const previousPhone = (currentUser.phone ?? "").trim();
-    const hasCriticalChanges =
-      nextEmail !== previousEmail || nextPhone !== previousPhone;
+},
 
-    if (nextEmail !== previousEmail) {
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", nextEmail)
-        .neq("id", currentUser.id)
-        .maybeSingle();
-      if (existing) {
-        return {
-          success: false,
-          message: "This email is already in use by another account.",
-        };
-      }
-    }
+onUpdateProfile: async (profileUpdates) => {
+if (!currentUser) {
+return {
+success: false,
+message: "Please log in to update your profile.",
+};
+}
 
-    const normalizedCity =
-      typeof profileUpdates.city === "string"
-        ? profileUpdates.city.trim()
-        : inferCityFromAddress(profileUpdates.address);
 
-    let resolvedPhotoUrl = profileUpdates.photo ?? currentUser.photo ?? "";
-    if (resolvedPhotoUrl.startsWith("data:")) {
-      const uploaded = await uploadAvatarFromDataUrl(resolvedPhotoUrl, nextEmail);
-      if (uploaded) resolvedPhotoUrl = uploaded;
-    }
+const previousEmail = currentUser.email.trim().toLowerCase();
+const nextEmail = (profileUpdates.email ?? currentUser.email)
+  .trim()
+  .toLowerCase();
+const nextPhone = (
+  profileUpdates.phone ?? currentUser.phone ?? ""
+).trim();
+const previousPhone = (currentUser.phone ?? "").trim();
+const hasCriticalChanges =
+  nextEmail !== previousEmail || nextPhone !== previousPhone;
 
-    await supabase
-      .from("profiles")
-      .update({
-        email: nextEmail,
-        phone: nextPhone,
-        phone_country_code:
-          profileUpdates.phoneCountryCode ?? currentUser.phoneCountryCode ?? "",
-        country_dial_code:
-          profileUpdates.countryDialCode ?? currentUser.countryDialCode ?? "",
-        address: profileUpdates.address ?? currentUser.address ?? "",
-        country: profileUpdates.country ?? currentUser.country ?? "",
-        city: normalizedCity || currentUser.city || "",
-        photo_url: resolvedPhotoUrl,
-        birthday: profileUpdates.birthday ?? currentUser.birthday ?? "",
-        gender: profileUpdates.gender ?? currentUser.gender ?? "",
-        agreed_to_promotions:
-          profileUpdates.agreedToPromotionsAndMarketingEmails ??
-          currentUser.agreedToPromotionsAndMarketingEmails ??
-          false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", currentUser.id);
+if (nextEmail !== previousEmail) {
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", nextEmail)
+    .neq("id", currentUser.id)
+    .maybeSingle();
+  if (existing) {
+    return {
+      success: false,
+      message: "This email is already in use by another account.",
+    };
+  }
+}
 
-    if (profileUpdates.languages || profileUpdates.sports) {
-      await upsertLanguagesAndSports(
-        currentUser.id,
-        profileUpdates.languages ?? currentUser.languages,
-        profileUpdates.sports ?? currentUser.sports
-      );
-    }
+const normalizedCity =
+  typeof profileUpdates.city === "string"
+    ? profileUpdates.city.trim()
+    : inferCityFromAddress(profileUpdates.address);
 
-    if (hasCriticalChanges && nextEmail !== previousEmail) {
-      await supabase.auth.updateUser({ email: nextEmail });
-    }
+let resolvedPhotoUrl = profileUpdates.photo ?? currentUser.photo ?? "";
+if (resolvedPhotoUrl.startsWith("data:")) {
+  const uploaded = await uploadAvatarFromDataUrl(resolvedPhotoUrl, nextEmail);
+  if (uploaded) resolvedPhotoUrl = uploaded;
+}
 
-    if (hasCriticalChanges) {
-      await supabase.auth.signOut();
-      setCurrentUser(null);
-      return { success: true, requiresReauthentication: true };
-    }
+await supabase
+  .from("profiles")
+  .update({
+    email: nextEmail,
+    phone: nextPhone,
+    phone_country_code:
+      profileUpdates.phoneCountryCode ?? currentUser.phoneCountryCode ?? "",
+    country_dial_code:
+      profileUpdates.countryDialCode ?? currentUser.countryDialCode ?? "",
+    address: profileUpdates.address ?? currentUser.address ?? "",
+    country: profileUpdates.country ?? currentUser.country ?? "",
+    city: normalizedCity || currentUser.city || "",
+    photo_url: resolvedPhotoUrl,
+    birthday: profileUpdates.birthday ?? currentUser.birthday ?? "",
+    gender: profileUpdates.gender ?? currentUser.gender ?? "",
+    agreed_to_promotions:
+      profileUpdates.agreedToPromotionsAndMarketingEmails ??
+      currentUser.agreedToPromotionsAndMarketingEmails ??
+      false,
+    updated_at: new Date().toISOString(),
+  })
+  .eq("id", currentUser.id);
 
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-    if (authUser) setCurrentUser(await fetchUserProfile(authUser));
-    return { success: true, requiresReauthentication: false };
-  },
+if (profileUpdates.languages || profileUpdates.sports) {
+  await upsertLanguagesAndSports(
+    currentUser.id,
+    profileUpdates.languages ?? currentUser.languages,
+    profileUpdates.sports ?? currentUser.sports
+  );
+}
 
-  onSaveHistory: (historyItems) => {
-    if (!currentUser) return;
-    const items = Array.isArray(historyItems) ? historyItems : [];
-    setCurrentUser((prev) => (prev ? { ...prev, history: items } : null));
-    syncBookings(currentUser.id, "attended", items);
-  },
+if (hasCriticalChanges && nextEmail !== previousEmail) {
+  await supabase.auth.updateUser({ email: nextEmail });
+}
 
-  onSaveHostHistory: (hostHistoryItems) => {
-    if (!currentUser) return;
-    const items = Array.isArray(hostHistoryItems) ? hostHistoryItems : [];
-    setCurrentUser((prev) =>
-      prev ? { ...prev, hostHistory: items } : null
-    );
-    syncBookings(currentUser.id, "hosted", items);
-  },
+if (hasCriticalChanges) {
+  await supabase.auth.signOut();
+  setCurrentUser(null);
+  return { success: true, requiresReauthentication: true };
+}
+
+const {
+  data: { user: authUser },
+} = await supabase.auth.getUser();
+if (authUser) setCurrentUser(await fetchUserProfile(authUser));
+return { success: true, requiresReauthentication: false };
+
+
+},
+
+onSaveHistory: (historyItems) => {
+if (!currentUser) return;
+const items = Array.isArray(historyItems) ? historyItems : [];
+setCurrentUser((prev) => (prev ? { …prev, history: items } : null));
+syncBookings(currentUser.id, "attended", items);
+},
+
+onSaveHostHistory: (hostHistoryItems) => {
+if (!currentUser) return;
+const items = Array.isArray(hostHistoryItems) ? hostHistoryItems : [];
+setCurrentUser((prev) =>
+prev ? { …prev, hostHistory: items } : null
+);
+syncBookings(currentUser.id, "hosted", items);
+},
 }),
 [currentUser, authLoading]
-
 
 );
 
