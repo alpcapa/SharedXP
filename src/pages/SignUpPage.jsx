@@ -124,6 +124,12 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   }, [phoneCodeSearchValue]);
 
   useEffect(() => {
+    if (currentUser && pendingVerification) {
+      navigate("/");
+    }
+  }, [currentUser, pendingVerification, navigate]);
+
+  useEffect(() => {
     const handleOutsideClick = (event) => {
       if (
         isCountryDropdownOpen &&
