@@ -1,7 +1,7 @@
 // Constants and pure helpers extracted from HostPage so the page itself is
 // just orchestration (state + handlers + tab routing).
 
-export const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced", "I’m Flexible"];
+export const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced", "I'm Flexible"];
 export const AVAILABILITY_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR", "BRL"];
 
@@ -117,12 +117,18 @@ export const validateSportsTab = (draft) => {
       (s.equipmentAvailable && !s.equipmentDetails.trim()) ||
       availability.days.length === 0 ||
       !availability.startTime ||
-      !availability.endTime ||
-      s.images.length === 0
+      !availability.endTime
     );
   });
   if (invalidIndex !== -1)
     return `Complete all required fields for Sport ${invalidIndex + 1}.`;
+
+  const missingPhotoIndex = draft.sports.findIndex(
+    (s) => s.images.length === 0
+  );
+  if (missingPhotoIndex !== -1)
+    return `Please add at least one photo for Sport ${missingPhotoIndex + 1}.`;
+
   return "";
 };
 
