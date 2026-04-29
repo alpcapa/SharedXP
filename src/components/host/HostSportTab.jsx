@@ -23,6 +23,7 @@ const HostSportTab = ({
   countryDropdown,
   cityDropdown,
   onSubmit,
+  isSaving,
 }) => {
   const activeSport =
     draft.sports[activeSportIndex] ?? createEmptySportConfig();
@@ -626,9 +627,8 @@ const HostSportTab = ({
       )}
 
       <button type="submit" className="btn btn-primary" disabled={isSaving}>
-  {isSaving ? "Saving..." : "Save Sport Settings"}
-</button>
-
+        {isSaving ? "Saving..." : "Save Sport Settings"}
+      </button>
     </form>
   );
 };
