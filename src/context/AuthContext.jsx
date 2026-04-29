@@ -356,7 +356,6 @@ const { data: { publicUrl } } = supabase.storage
 
 return publicUrl || "";
 
-
 } catch (e) {
 console.error("[auth] uploadAvatarFromDataUrl:", e);
 return "";
@@ -371,7 +370,6 @@ const [authLoading, setAuthLoading] = useState(true);
 
 useEffect(() => {
 let mounted = true;
-
 
 const loadUser = async (authUser) => {
   try {
@@ -421,7 +419,6 @@ return () => {
   subscription.unsubscribe();
 };
 
-
 }, []);
 
 const value = useMemo(
@@ -437,7 +434,6 @@ setCurrentUser(null);
 onEmailSignUp: async (newUser) => {
 try {
 const normalizedEmail = newUser.email.trim().toLowerCase();
-
 
   const {
     password,
@@ -479,7 +475,6 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
         "An account with this email already exists. Please sign in instead.",
     };
   }
-// photoUrl is stored in user_metadata and applied in fetchUserProfile after first login.
 
   return { success: true };
 } catch (e) {
@@ -533,7 +528,6 @@ await supabase
 .update({ is_host: true })
 .eq("id", currentUser.id);
 
-
 const { data: existing } = await supabase
   .from("host_profiles")
   .select("id")
@@ -553,12 +547,10 @@ const {
 } = await supabase.auth.getUser();
 if (authUser) setCurrentUser(await fetchUserProfile(authUser));
 
-
 },
 
 onSaveHostProfile: async (hostProfile) => {
 if (!currentUser) return { success: false, message: "Not logged in." };
-
 
 const { data: savedHostProfile, error: hpError } = await supabase
   .from("host_profiles")
@@ -606,7 +598,37 @@ if (hostProfile.sports?.length > 0) {
     .eq("host_profile_id", savedHostProfile.id);
 
   for (const sportConfig of hostProfile.sports) {
-    const { data: savedSport } = await supabase
+    const resolvedImageUrls = await Promise.all(
+      (sportConfig.images || []).filter(Boolean).map(async (src, i) => {
+        if (!src.startsWith("data:")) return src;
+        try {
+          const res = await fetch(src);
+          const blob = await res.blob();
+          const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+          const fileName = `${currentUser.id}_${Date.now()}_${i}.${ext}`;
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage
+              .from("host-sport-images")
+              .upload(fileName, blob, { contentType: blob.type, upsert: true });
+          if (uploadError) {
+            console.error("[auth] sport image upload:", uploadError);
+            return null;
+          }
+          const {
+            data: { publicUrl },
+          } = supabase.storage
+            .from("host-sport-images")
+            .getPublicUrl(uploadData.path);
+          return publicUrl || null;
+        } catch (e) {
+          console.error("[auth] sport image upload exception:", e);
+          return null;
+        }
+      })
+    );
+    const validImageUrls = resolvedImageUrls.filter(Boolean);
+
+    const { data: savedSport, error: sportError } = await supabase
       .from("host_sports")
       .insert({
         host_profile_id: savedHostProfile.id,
@@ -628,16 +650,33 @@ if (hostProfile.sports?.length > 0) {
       .select()
       .single();
 
-    if (savedSport && sportConfig.images?.length > 0) {
-      const imageRows = sportConfig.images
-        .filter(Boolean)
-        .map((url, i) => ({
-          host_sport_id: savedSport.id,
-          image_url: url,
-          position: i,
-        }));
-      if (imageRows.length > 0) {
-        await supabase.from("host_sport_images").insert(imageRows);
+    if (sportError || !savedSport) {
+      console.error("[auth] host_sports insert failed:", sportError);
+      return {
+        success: false,
+        message:
+          sportError?.message ||
+          `Failed to save sport "${sportConfig.sport}". Please try again.`,
+      };
+    }
+
+    if (validImageUrls.length > 0) {
+      const imageRows = validImageUrls.map((url, i) => ({
+        host_sport_id: savedSport.id,
+        image_url: url,
+        position: i,
+      }));
+      const { error: imgError } = await supabase
+        .from("host_sport_images")
+        .insert(imageRows);
+      if (imgError) {
+        console.error("[auth] host_sport_images insert failed:", imgError);
+        return {
+          success: false,
+          message:
+            imgError?.message ||
+            `Failed to save photos for "${sportConfig.sport}". Please try again.`,
+        };
       }
     }
   }
@@ -654,7 +693,6 @@ const {
 if (authUser) setCurrentUser(await fetchUserProfile(authUser));
 return { success: true };
 
-
 },
 
 onUpdateProfile: async (profileUpdates) => {
@@ -664,7 +702,6 @@ success: false,
 message: "Please log in to update your profile.",
 };
 }
-
 
 const previousEmail = currentUser.email.trim().toLowerCase();
 const nextEmail = (profileUpdates.email ?? currentUser.email)
@@ -749,7 +786,6 @@ const {
 } = await supabase.auth.getUser();
 if (authUser) setCurrentUser(await fetchUserProfile(authUser));
 return { success: true, requiresReauthentication: false };
-
 
 },
 
