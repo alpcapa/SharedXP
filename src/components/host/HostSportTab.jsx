@@ -374,7 +374,12 @@ const HostSportTab = ({
         </div>
 
         <div className="host-images-block">
-          <h3>Photo Gallery</h3>
+          <h3>
+            Photo Gallery{" "}
+            <span className="host-field-required" aria-hidden="true">
+              *
+            </span>
+          </h3>
           <input
             id="hostPhotoUpload"
             className="history-photo-upload-input"
@@ -390,8 +395,13 @@ const HostSportTab = ({
             Upload photos
           </label>
           <span className="host-photo-upload-hint">
-            You can select multiple photos at once.
+            At least one photo is required. You can select multiple at once.
           </span>
+          {activeSport.images.length === 0 && (
+            <p className="host-photo-required-hint" role="alert">
+              Please add at least one photo to continue.
+            </p>
+          )}
           {activeSport.images.length > 0 && (
             <div className="host-image-grid">
               {activeSport.images.map((src, imageIndex) => (
