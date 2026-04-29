@@ -126,14 +126,18 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
   const isSportsTabComplete = validateSportsTab(hostProfileDraft) === "";
   const isPaymentTabComplete = hostProfileDraft.bankDetailsComplete === true;
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const onSaveSports = async (event) => {
     event.preventDefault();
+    if (isSaving) return;
     const validationError = validateSportsTab(hostProfileDraft);
     if (validationError) {
       setErrorMessage(validationError);
       setSuccessMessage("");
       return;
     }
+    setIsSaving(true);
     const profileToSave = {
       ...hostProfileDraft,
       sports: hostProfileDraft.sports.map((s) => ({
@@ -142,12 +146,14 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
       })),
     };
     const result = await onSaveHostProfile?.(profileToSave);
+    setIsSaving(false);
     if (result?.success === false) {
       setErrorMessage(result.message || "Failed to save. Please try again.");
       setSuccessMessage("");
     } else {
       setErrorMessage("");
       setSuccessMessage("Sport settings saved successfully.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
