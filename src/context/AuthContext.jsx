@@ -549,6 +549,22 @@ if (authUser) setCurrentUser(await fetchUserProfile(authUser));
 
 },
 
+onTogglePauseHosting: async (pauseHosting) => {
+if (!currentUser) return;
+const { error } = await supabase
+  .from("host_profiles")
+  .update({ pause_hosting: pauseHosting, updated_at: new Date().toISOString() })
+  .eq("user_id", currentUser.id);
+if (error) {
+  console.error("[auth] onTogglePauseHosting:", error);
+  return;
+}
+const {
+  data: { user: authUser },
+} = await supabase.auth.getUser();
+if (authUser) setCurrentUser(await fetchUserProfile(authUser));
+},
+
 onSaveHostProfile: async (hostProfile) => {
 if (!currentUser) return { success: false, message: "Not logged in." };
 

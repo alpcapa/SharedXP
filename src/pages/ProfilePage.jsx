@@ -221,7 +221,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     );
   }
 
-  const recommendations = buddies.filter((item) => item.id !== buddy.id);
+  const recommendations = buddies.filter((item) => item.id !== buddy.id && !item.paused);
   const { firstName, lastName, fullName: hostDisplayName } = getNameParts(buddy);
   const { rating: hostRating, reviewCount } = getHostRatingSummary(buddy);
   const { city, country } = getLocationParts(buddy);
@@ -231,6 +231,10 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const availableDates = activeSport.availableDates ?? buddy.availableDates ?? [];
   const availableTimes = activeSport.availableTimes ?? buddy.availableTimes ?? [];
   const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
+  const isHostPaused =
+    Boolean(buddy.paused) ||
+    (isCurrentUserHostForBuddy(currentUser, buddy) &&
+      Boolean(currentUser?.hostProfile?.pauseHosting));
   const canRequestBooking = Boolean(selectedDate && selectedTime);
   const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
   const perLabel = activeSport.priceUnit ?? buddy.priceUnit ?? "per session";
@@ -368,6 +372,12 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           <h3>Booking with {hostDisplayName}</h3>
           {activeSport.description && <p className="booking-subtitle">{activeSport.description}</p>}
           {activeSport.about && <p>{activeSport.about}</p>}
+          {isHostPaused ? (
+            <p className="booking-paused-notice">
+              This host is currently not accepting new bookings.
+            </p>
+          ) : (
+          <>
           {hostSports.length > 0 && (
             <div className="host-sport-tabs booking-sport-tabs" aria-label={`${hostDisplayName} sports`}>
               {hostSports.map((sportConfig, sportIndex) => (
@@ -488,6 +498,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           >
             Request booking
           </button>
+          </>
+          )}
         </div>
       </section>
 

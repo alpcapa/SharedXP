@@ -103,18 +103,20 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     );
   }, []);
 
+  const activeBuddies = useMemo(() => buddies.filter((buddy) => !buddy.paused), []);
+
   const sportOptions = useMemo(
-    () => ["All", ...new Set(buddies.map((buddy) => buddy.sport).filter(Boolean))],
-    [buddies]
+    () => ["All", ...new Set(activeBuddies.map((buddy) => buddy.sport).filter(Boolean))],
+    [activeBuddies]
   );
   const genderOptions = useMemo(
-    () => ["All", ...new Set(buddies.map((buddy) => buddy.gender).filter(Boolean))],
-    [buddies]
+    () => ["All", ...new Set(activeBuddies.map((buddy) => buddy.gender).filter(Boolean))],
+    [activeBuddies]
   );
   const locationOptions = useMemo(() => {
     const nearestDistanceByLocation = new Map();
 
-    buddies.forEach((buddy) => {
+    activeBuddies.forEach((buddy) => {
       if (!buddy.location) {
         return;
       }
@@ -135,8 +137,8 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     return [USER_LOCATION_FILTER, ...nearbyLocations];
   }, [userLocation, buddies]);
   const levelOptions = useMemo(
-    () => ["All", ...new Set(buddies.map((buddy) => buddy.level).filter(Boolean))],
-    [buddies]
+    () => ["All", ...new Set(activeBuddies.map((buddy) => buddy.level).filter(Boolean))],
+    [activeBuddies]
   );
 
   useEffect(() => {
@@ -174,7 +176,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const visibleBuddies = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return buddies
+    return activeBuddies
       .map((buddy) => {
         const coordinates = buddy.coordinates ?? DEFAULT_CENTER;
         return {

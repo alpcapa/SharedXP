@@ -12,7 +12,7 @@ import {
   validateSportsTab,
 } from "../components/host/hostUtils";
 
-const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
+const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosting }) => {
   const location = useLocation();
   const isHostSettingsRoute = location.pathname === "/host-settings";
 
@@ -232,12 +232,11 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
                 role="switch"
                 aria-checked={isHostingPaused}
                 checked={isHostingPaused}
-                onChange={(event) =>
-                  setHostProfileDraft((prev) => ({
-                    ...prev,
-                    pauseHosting: event.target.checked,
-                  }))
-                }
+                onChange={(event) => {
+                  const newPaused = event.target.checked;
+                  setHostProfileDraft((prev) => ({ ...prev, pauseHosting: newPaused }));
+                  onTogglePauseHosting?.(newPaused);
+                }}
               />
               <span className="hosting-pause-switch" aria-hidden="true" />
             </label>
