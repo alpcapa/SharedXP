@@ -29,6 +29,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [citySearchValue, setCitySearchValue] = useState("");
   const [activeTab, setActiveTab] = useState("sports");
+  const [isSaving, setIsSaving] = useState(false);
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
 
@@ -125,8 +126,6 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
   const isHostingPaused = Boolean(hostProfileDraft.pauseHosting);
   const isSportsTabComplete = validateSportsTab(hostProfileDraft) === "";
   const isPaymentTabComplete = hostProfileDraft.bankDetailsComplete === true;
-
-  const [isSaving, setIsSaving] = useState(false);
 
   const onSaveSports = async (event) => {
     event.preventDefault();
@@ -324,6 +323,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile }) => {
               countryDropdown={countryDropdown}
               cityDropdown={cityDropdown}
               onSubmit={onSaveSports}
+              isSaving={isSaving}
             />
           )}
 
