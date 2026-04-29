@@ -625,9 +625,10 @@ const HostSportTab = ({
         <p className="host-success-message">{successMessage}</p>
       )}
 
-      <button type="submit" className="btn btn-primary">
-        Save Sport Settings
-      </button>
+      <button type="submit" className="btn btn-primary" disabled={isSaving}>
+  {isSaving ? "Saving..." : "Save Sport Settings"}
+</button>
+
     </form>
   );
 };
