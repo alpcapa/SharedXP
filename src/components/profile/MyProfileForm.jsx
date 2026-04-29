@@ -369,44 +369,48 @@ const MyProfileForm = ({
         <label htmlFor="profile-language-0">Language</label>
         <div className="auth-language-row">
           {LANGUAGE_SLOT_LABELS.map((slotLabel, languageIndex) => (
-            <input
+            <select
               key={`profile-language-${languageIndex}`}
               id={`profile-language-${languageIndex}`}
-              list="profile-language-options"
-              placeholder={slotLabel}
               aria-label={`Language ${slotLabel}`}
               value={formValues.languages[languageIndex] ?? ""}
               onChange={(e) => onLanguageChange(languageIndex, e.target.value)}
               required={languageIndex === 0}
-            />
+            >
+              <option value="" disabled>
+                {slotLabel}
+              </option>
+              {LANGUAGE_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
           ))}
         </div>
-        <datalist id="profile-language-options">
-          {LANGUAGE_OPTIONS.map((opt) => (
-            <option key={opt} value={opt} />
-          ))}
-        </datalist>
 
         <label htmlFor="profile-sport-0">Sports</label>
         <div className="auth-language-row">
           {SPORT_SLOT_LABELS.map((slotLabel, sportIndex) => (
-            <input
+            <select
               key={`profile-sport-${sportIndex}`}
               id={`profile-sport-${sportIndex}`}
-              list="profile-sport-options"
-              placeholder={slotLabel}
               aria-label={`Sport ${slotLabel}`}
               value={formValues.sports[sportIndex] ?? ""}
               onChange={(e) => onSportChange(sportIndex, e.target.value)}
               required={sportIndex === 0}
-            />
+            >
+              <option value="" disabled>
+                {slotLabel}
+              </option>
+              {SPORT_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
           ))}
         </div>
-        <datalist id="profile-sport-options">
-          {SPORT_OPTIONS.map((opt) => (
-            <option key={opt} value={opt} />
-          ))}
-        </datalist>
       </div>
 
       <div className="form-consent-group">
