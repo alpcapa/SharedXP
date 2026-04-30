@@ -5,7 +5,7 @@ import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
 
 const EXPLORE_HOSTS_PER_PAGE = 12;
-const GENDER_OPTIONS = ["All Hosts", "Male Hosts", "Female Hosts"];
+const GENDER_OPTIONS = ["All", "Male", "Female"];
 
 const ExplorePage = ({ currentUser, onLogout }) => {
   const [searchParams] = useSearchParams();
@@ -15,7 +15,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const [selectedCountry, setSelectedCountry] = useState("All");
   const [selectedCity, setSelectedCity] = useState("All");
   const [selectedSport, setSelectedSport] = useState("All");
-  const [selectedGender, setSelectedGender] = useState("All Hosts");
+  const [selectedGender, setSelectedGender] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All");
   const [selectedEquipment, setSelectedEquipment] = useState("All");
   const [resultsPage, setResultsPage] = useState(1);
@@ -113,9 +113,9 @@ const ExplorePage = ({ currentUser, onLogout }) => {
       const matchesSport =
         selectedSport === "All" || host.sports.some((s) => s.sport === selectedSport);
       const genderValue =
-        selectedGender === "Male Hosts"
+        selectedGender === "Male"
           ? "Male"
-          : selectedGender === "Female Hosts"
+          : selectedGender === "Female"
             ? "Female"
             : null;
       const matchesGender = !genderValue || host.gender === genderValue;
@@ -208,7 +208,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                   >
                     {countryOptions.map((c) => (
                       <option key={c} value={c}>
-                        {c === "All" ? "All Countries" : c}
+                        {c}
                       </option>
                     ))}
                   </select>
@@ -223,7 +223,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                   >
                     {cityOptions.map((c) => (
                       <option key={c} value={c}>
-                        {c === "All" ? "All Cities" : c}
+                        {c}
                       </option>
                     ))}
                   </select>
@@ -237,7 +237,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                   >
                     {sportOptions.map((s) => (
                       <option key={s} value={s}>
-                        {s === "All" ? "All Sports" : s}
+                        {s}
                       </option>
                     ))}
                   </select>
@@ -265,7 +265,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                   >
                     {levelOptions.map((l) => (
                       <option key={l} value={l}>
-                        {l === "All" ? "All Levels" : l}
+                        {l}
                       </option>
                     ))}
                   </select>

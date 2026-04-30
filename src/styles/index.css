@@ -584,7 +584,7 @@ body {
 .search-bar {
   margin-top: 30px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr auto;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
   gap: 0;
   background: #fff;
   border-radius: 16px;
@@ -699,6 +699,16 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.when-selects {
+  display: flex;
+  gap: 6px;
+}
+
+.when-selects select {
+  flex: 1;
+  min-width: 0;
 }
 
 .date-input {
