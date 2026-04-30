@@ -753,13 +753,24 @@ body {
 }
 
 .explore-filters {
-  display: grid;
-  grid-template-columns: 2fr repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   margin-top: 14px;
 }
 
-.explore-filters select,
+.explore-filter-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.explore-filter-search label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
 .explore-search-input {
   min-height: 46px;
   border: 1px solid #dbe1d8;
@@ -768,6 +779,61 @@ body {
   font-family: inherit;
   font-size: 14px;
   background: #fff;
+  width: 100%;
+}
+
+.explore-filter-dropdowns {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.explore-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.explore-filter-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.explore-filter-group select {
+  min-height: 46px;
+  border: 1px solid #dbe1d8;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  background: #fff;
+  width: 100%;
+}
+
+.explore-loading,
+.explore-empty {
+  margin-top: 32px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.local-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: #f0f4ec;
+  font-size: 48px;
+  color: #9ca3af;
+}
+
+.local-sport-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 10px;
 }
 
 .explore-geo-notice {
@@ -2548,8 +2614,8 @@ body {
     font-size: clamp(18px, 2.4vw, 24px);
   }
 
-  .explore-filters {
-    grid-template-columns: 1fr 1fr;
+  .explore-filter-dropdowns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .footer-promo {
@@ -2621,8 +2687,8 @@ body {
     min-height: 56px;
   }
 
-  .explore-filters {
-    grid-template-columns: 1fr;
+  .explore-filter-dropdowns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .explore-map {
