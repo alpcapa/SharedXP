@@ -305,7 +305,6 @@ const ExplorePage = ({ currentUser, onLogout }) => {
             ) : (
               <div className="locals-grid">
                 {pagedHosts.map((host) => {
-                  const primarySport = host.sports[0];
                   const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                   const hasEquipment = host.sports.some((s) => s.equipment_available);
                   return (
@@ -332,9 +331,12 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                               </span>
                             ))}
                           </div>
-                          <ul className="local-meta">
+                        <ul className="local-meta">
                             {host.gender && <li>👤 {host.gender}</li>}
-                            {primarySport?.level && <li>🏅 {primarySport.level}</li>}
+                            {(() => {
+                              const levels = [...new Set(host.sports.map((s) => s.level).filter(Boolean))];
+                              return levels.length > 0 && <li>🏅 {levels.join(", ")}</li>;
+                            })()}
                             <li>🎒 Equipment: {hasEquipment ? "Yes" : "No"}</li>
                           </ul>
                         </div>
