@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import SignUpForm from "../components/auth/SignUpForm";
@@ -62,6 +62,7 @@ const initialForm = {
 
 const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formValues, setFormValues] = useState(initialForm);
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
@@ -125,9 +126,14 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
 
   useEffect(() => {
     if (currentUser && pendingVerification) {
-      navigate("/");
+      const redirect =
+        sessionStorage.getItem("postAuthRedirect") ||
+        location.state?.from?.pathname ||
+        "/";
+      sessionStorage.removeItem("postAuthRedirect");
+      navigate(redirect);
     }
-  }, [currentUser, pendingVerification, navigate]);
+  }, [currentUser, pendingVerification, navigate, location.state?.from?.pathname]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -336,8 +342,13 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 type="button"
                 className="btn btn-light social-btn"
                 onClick={() => {
+                  const redirect =
+                    sessionStorage.getItem("postAuthRedirect") ||
+                    location.state?.from?.pathname ||
+                    "/";
+                  sessionStorage.removeItem("postAuthRedirect");
                   onSocialLogin?.("google");
-                  navigate("/");
+                  navigate(redirect);
                 }}
               >
                 Continue with Google
@@ -346,8 +357,13 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 type="button"
                 className="btn btn-light social-btn"
                 onClick={() => {
+                  const redirect =
+                    sessionStorage.getItem("postAuthRedirect") ||
+                    location.state?.from?.pathname ||
+                    "/";
+                  sessionStorage.removeItem("postAuthRedirect");
                   onSocialLogin?.("apple");
-                  navigate("/");
+                  navigate(redirect);
                 }}
               >
                 Continue with Apple

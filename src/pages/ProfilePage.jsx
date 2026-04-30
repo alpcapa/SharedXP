@@ -1,11 +1,114 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
+import { supabase } from "../lib/supabase";
 import { getDateKey } from "../utils/date";
 import { getProfileAge } from "../utils/profileAge";
+
+const DAY_NAME_TO_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+const WEEKS_AHEAD = 8;
+
+const ALL_DAY_INDICES = [0, 1, 2, 3, 4, 5, 6];
+
+const generateAvailableDates = (availabilityDays) => {
+  const dayIndices =
+    !Array.isArray(availabilityDays) || availabilityDays.length === 0
+      ? ALL_DAY_INDICES
+      : availabilityDays
+          .map((d) => DAY_NAME_TO_INDEX[d])
+          .filter((d) => d !== undefined);
+  if (dayIndices.length === 0) return [];
+  const dates = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let offset = 0; offset < WEEKS_AHEAD * 7; offset++) {
+    const candidate = new Date(today);
+    candidate.setDate(today.getDate() + offset);
+    if (dayIndices.includes(candidate.getDay())) {
+      dates.push(
+        `${candidate.getFullYear()}-${String(candidate.getMonth() + 1).padStart(2, "0")}-${String(candidate.getDate()).padStart(2, "0")}`
+      );
+    }
+  }
+  return dates;
+};
+
+const generateTimeSlots = (startTime, endTime) => {
+  const slots = [];
+  const [startHour, startMin] = String(startTime || "09:00").split(":").map(Number);
+  const [endHour, endMin] = String(endTime || "18:00").split(":").map(Number);
+  let currentMinutes = startHour * 60 + (startMin || 0);
+  const endMinutes = endHour * 60 + (endMin || 0);
+  while (currentMinutes <= endMinutes) {
+    const h = Math.floor(currentMinutes / 60);
+    const m = currentMinutes % 60;
+    slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    currentMinutes += 60;
+  }
+  return slots;
+};
+
+const shapeSupabaseHost = (data) => {
+  const hp = data;
+  const profile = data.profile;
+  const languages = (profile.user_languages || [])
+    .sort((a, b) => a.position - b.position)
+    .map((ul) => ul.language)
+    .filter(Boolean);
+  const sports = (hp.host_sports || [])
+    .filter((hs) => !hs.paused)
+    .map((hs) => ({
+      sport: hs.sport || "",
+      description: hs.description || "",
+      about: hs.about || "",
+      pricing: hs.pricing || 0,
+      pricingCurrency: hs.pricing_currency || "EUR",
+      level: hs.level || "",
+      paused: false,
+      equipmentAvailable: hs.equipment_available || false,
+      equipmentDetails: hs.equipment_details || "",
+      availability: {
+        days: hs.availability_days || [],
+        startTime: hs.availability_start_time || "09:00",
+        endTime: hs.availability_end_time || "18:00",
+      },
+      availableDates: generateAvailableDates(hs.availability_days),
+      availableTimes: generateTimeSlots(
+        hs.availability_start_time || "09:00",
+        hs.availability_end_time || "18:00"
+      ),
+      images: (hs.host_sport_images || [])
+        .sort((a, b) => a.position - b.position)
+        .map((img) => img.image_url)
+        .filter(Boolean),
+    }));
+  const fullName =
+    profile.full_name ||
+    [profile.first_name, profile.last_name].filter(Boolean).join(" ") ||
+    "Host";
+  return {
+    id: profile.id,
+    name: fullName,
+    fullName,
+    email: profile.email || "",
+    image: profile.photo_url || "",
+    gender: profile.gender || "",
+    birthday: profile.birthday || "",
+    signedUpAt: profile.signed_up_at || "",
+    city: hp.city || "",
+    country: hp.country || "",
+    paused: hp.pause_hosting || false,
+    sports,
+    languages,
+    reviews: [],
+    rating: 0,
+    reviewCount: 0,
+    gallery: [],
+  };
+};
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const getStars = (value) => `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
@@ -154,7 +257,16 @@ const getSportConfigs = (buddy, currentUser) => {
       equipmentAvailable: sportConfig.equipmentAvailable ?? buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false,
       pricing: sportConfig.pricing ?? buddy.price ?? "",
       pricingCurrency: sportConfig.pricingCurrency ?? "EUR",
-      priceUnit: sportConfig.priceUnit ?? buddy.priceUnit ?? "per session"
+      priceUnit: sportConfig.priceUnit ?? buddy.priceUnit ?? "per session",
+      availableDates: Array.isArray(sportConfig.availableDates) && sportConfig.availableDates.length > 0
+        ? sportConfig.availableDates
+        : generateAvailableDates(sportConfig.availability?.days ?? []),
+      availableTimes: Array.isArray(sportConfig.availableTimes) && sportConfig.availableTimes.length > 0
+        ? sportConfig.availableTimes
+        : generateTimeSlots(
+            sportConfig.availability?.startTime ?? "09:00",
+            sportConfig.availability?.endTime ?? "18:00"
+          )
     }));
   }
 
@@ -200,63 +312,127 @@ const formatPrice = (amount, currency) => {
 
 const ProfilePage = ({ currentUser, onLogout }) => {
   const { buddyId } = useParams();
-  const buddy = buddies.find((item) => String(item.id) === buddyId);
+  const location = useLocation();
+
+  // ── All hooks first (before any conditional returns) ────────────────────
+  const [buddyFromSupabase, setBuddyFromSupabase] = useState(null);
+  const [supabaseLoading, setSupabaseLoading] = useState(false);
   const [selectedSportIndex, setSelectedSportIndex] = useState(0);
   const [recommendationsPage, setRecommendationsPage] = useState(0);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isRequestSubmitted, setIsRequestSubmitted] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
-  if (!buddy) {
-    return (
-      <div className="profile-page">
-        <p>Buddy not found.</p>
-        <Link to="/">Back to home</Link>
-      </div>
-    );
-  }
+  const staticBuddy = useMemo(
+    () => buddies.find((item) => String(item.id) === buddyId) ?? null,
+    [buddyId]
+  );
 
-  const recommendations = buddies.filter((item) => item.id !== buddy.id && !item.paused);
-  const { firstName, lastName, fullName: hostDisplayName } = getNameParts(buddy);
-  const { rating: hostRating, reviewCount } = getHostRatingSummary(buddy);
-  const { city, country } = getLocationParts(buddy);
-  const memberSince = getMemberSinceLabel(buddy);
-  const hostSports = getSportConfigs(buddy, currentUser);
-  const activeSport = hostSports[selectedSportIndex] ?? hostSports[0] ?? {};
-  const availableDates = activeSport.availableDates ?? buddy.availableDates ?? [];
-  const availableTimes = activeSport.availableTimes ?? buddy.availableTimes ?? [];
+  // Fetch from Supabase when the static array has no match (UUID-based IDs)
+  useEffect(() => {
+    if (staticBuddy) {
+      setBuddyFromSupabase(null);
+      setSupabaseLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setSupabaseLoading(true);
+    supabase
+      .from("host_profiles")
+      .select(
+        `pause_hosting, city, country,
+         profile:profiles!user_id(
+           id, email, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at,
+           user_languages(language, position)
+         ),
+         host_sports(
+           id, sport, description, about, pricing, pricing_currency, level, paused,
+           equipment_available, equipment_details, availability_days,
+           availability_start_time, availability_end_time,
+           host_sport_images(image_url, position)
+         )`
+      )
+      .eq("user_id", buddyId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (!error && data?.profile) {
+          setBuddyFromSupabase(shapeSupabaseHost(data));
+        } else {
+          setBuddyFromSupabase(null);
+        }
+        setSupabaseLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [buddyId, staticBuddy]);
+
+  useEffect(() => {
+    setRecommendationsPage(0);
+    setSelectedSportIndex(0);
+    setSelectedDate("");
+    setSelectedTime("");
+  }, [buddyId]);
+
+  // Clear booking selection when switching sport tabs
+  useEffect(() => {
+    setSelectedDate("");
+    setSelectedTime("");
+  }, [selectedSportIndex]);
+
+  const buddy = staticBuddy ?? buddyFromSupabase;
+
+  const recommendations = useMemo(
+    () => buddies.filter((item) => String(item.id) !== buddyId && !item.paused),
+    [buddyId]
+  );
+
+  const hostSports = useMemo(
+    () => (buddy ? getSportConfigs(buddy, currentUser) : []),
+    [buddy, currentUser]
+  );
+  const activeSport = useMemo(
+    () => hostSports[selectedSportIndex] ?? hostSports[0] ?? {},
+    [hostSports, selectedSportIndex]
+  );
+  const availableDates = useMemo(
+    () => activeSport.availableDates ?? buddy?.availableDates ?? [],
+    [activeSport, buddy]
+  );
+  const availableTimes = useMemo(
+    () => activeSport.availableTimes ?? buddy?.availableTimes ?? [],
+    [activeSport, buddy]
+  );
   const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
-  const isHostPaused =
-    Boolean(buddy.paused) ||
-    (isCurrentUserHostForBuddy(currentUser, buddy) &&
-      Boolean(currentUser?.hostProfile?.pauseHosting));
-  const canRequestBooking = Boolean(selectedDate && selectedTime);
-  const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
-  const perLabel = activeSport.priceUnit ?? buddy.priceUnit ?? "per session";
-  const languageLine = getLanguageLine(buddy);
-  const hostAge = getDisplayedProfileAge(buddy, currentUser);
-  const locationLine = [city, country].filter(Boolean).join(", ") || "Location unavailable";
-  const selectedLevel = activeSport.level ?? buddy.level ?? "Not specified";
-  const isEquipmentAvailable =
-    activeSport.equipmentAvailable ?? buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false;
-  const selectedSportGallery = Array.isArray(activeSport.images) ? activeSport.images.filter(Boolean) : [];
-  const fallbackGallery = Array.isArray(buddy.gallery) ? buddy.gallery.filter(Boolean) : [];
-  const galleryPhotos =
-    selectedSportGallery.length > 0
-      ? selectedSportGallery
-      : fallbackGallery.length > 0
-        ? fallbackGallery
-        : [];
+
+  // Auto-advance the calendar to the first month that contains available dates.
+  // This runs when dates first load (buddy fetched) or when the sport tab changes.
+  useEffect(() => {
+    if (availableDates.length === 0) return;
+    setCalendarMonth((prev) => {
+      const hasAvailableThisMonth = availableDates.some((dateStr) => {
+        const [y, m] = dateStr.split("-").map(Number);
+        return y === prev.getFullYear() && m === prev.getMonth() + 1;
+      });
+      if (hasAvailableThisMonth) return prev;
+      const [y, m] = availableDates[0].split("-").map(Number);
+      return new Date(y, m - 1, 1);
+    });
+  }, [availableDates]);
+
   const totalRecommendationPages = Math.max(1, Math.ceil(recommendations.length / LOCALS_PER_PAGE));
   const visibleRecommendations = useMemo(() => {
     const startIndex = recommendationsPage * LOCALS_PER_PAGE;
     return recommendations.slice(startIndex, startIndex + LOCALS_PER_PAGE);
   }, [recommendations, recommendationsPage]);
+
   const monthYearLabel = new Intl.DateTimeFormat("en-GB", {
     month: "long",
     year: "numeric"
@@ -288,6 +464,59 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     return [...leadingEmpty, ...days];
   }, [availableDateSet, calendarMonth]);
 
+  useEffect(() => {
+    setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
+  }, [totalRecommendationPages]);
+
+  // ── Guards (after all hooks) ─────────────────────────────────────────────
+  if (!buddy && supabaseLoading) {
+    return (
+      <div className="profile-page">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <p style={{ padding: "40px 20px", textAlign: "center", color: "#6b7280" }}>
+          Loading host profile…
+        </p>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (!buddy) {
+    return (
+      <div className="profile-page">
+        <p>Buddy not found.</p>
+        <Link to="/">Back to home</Link>
+      </div>
+    );
+  }
+
+  // ── Derived values that depend on buddy (safe now that buddy is non-null) ─
+  const { firstName, lastName, fullName: hostDisplayName } = getNameParts(buddy);
+  const { rating: hostRating, reviewCount } = getHostRatingSummary(buddy);
+  const { city, country } = getLocationParts(buddy);
+  const memberSince = getMemberSinceLabel(buddy);
+  const isHostPaused =
+    Boolean(buddy.paused) ||
+    (isCurrentUserHostForBuddy(currentUser, buddy) &&
+      Boolean(currentUser?.hostProfile?.pauseHosting));
+  const canRequestBooking = Boolean(selectedDate && selectedTime);
+  const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
+  const perLabel = activeSport.priceUnit ?? buddy.priceUnit ?? "per session";
+  const languageLine = getLanguageLine(buddy);
+  const hostAge = getDisplayedProfileAge(buddy, currentUser);
+  const locationLine = [city, country].filter(Boolean).join(", ") || "Location unavailable";
+  const selectedLevel = activeSport.level ?? buddy.level ?? "Not specified";
+  const isEquipmentAvailable =
+    activeSport.equipmentAvailable ?? buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false;
+  const selectedSportGallery = Array.isArray(activeSport.images) ? activeSport.images.filter(Boolean) : [];
+  const fallbackGallery = Array.isArray(buddy.gallery) ? buddy.gallery.filter(Boolean) : [];
+  const galleryPhotos =
+    selectedSportGallery.length > 0
+      ? selectedSportGallery
+      : fallbackGallery.length > 0
+        ? fallbackGallery
+        : [];
+
   const formatDate = (dateValue) =>
     new Intl.DateTimeFormat("en-GB", {
       weekday: "short",
@@ -315,6 +544,14 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       return;
     }
 
+    if (!currentUser) {
+      // Store the current path so post-auth redirect works for sign-up too
+      sessionStorage.setItem("postAuthRedirect", location.pathname);
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    setShowLoginPrompt(false);
     setIsRequestSubmitted(false);
     setIsConfirmationOpen(true);
   };
@@ -323,21 +560,19 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     setIsRequestSubmitted(true);
   };
 
-  useEffect(() => {
-    setRecommendationsPage(0);
-  }, [buddy.id]);
-
-  useEffect(() => {
-    setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
-  }, [totalRecommendationPages]);
-
   return (
     <div className="profile-page">
       <SiteHeader currentUser={currentUser} onLogout={onLogout} />
       <div className="profile-back-wrap">
-        <Link to="/" className="back-link">
-          ← Back to home
-        </Link>
+        {location.state?.from === "explore" ? (
+          <Link to="/locals" className="back-link">
+            ← Back to Explore
+          </Link>
+        ) : (
+          <Link to="/" className="back-link">
+            ← Back to home
+          </Link>
+        )}
       </div>
 
       <section className="profile-summary">
@@ -498,6 +733,27 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           >
             Request booking
           </button>
+          {showLoginPrompt && (
+            <div className="booking-login-prompt" role="alert">
+              <p>You need to login to book with a host.</p>
+              <div className="booking-login-prompt-actions">
+                <Link
+                  to="/login"
+                  state={{ from: { pathname: location.pathname } }}
+                  className="find-button booking-login-button"
+                >
+                  Log in
+                </Link>
+                <Link
+                  to="/signup"
+                  state={{ from: { pathname: location.pathname } }}
+                  className="find-button booking-signup-button"
+                >
+                  Sign up
+                </Link>
+              </div>
+            </div>
+          )}
           </>
           )}
         </div>
