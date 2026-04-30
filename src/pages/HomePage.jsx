@@ -218,7 +218,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                 >
                   {countryOptions.map((c) => (
                     <option key={c} value={c}>
-                      {c === "All" ? "All Countries" : c}
+                      {c}
                     </option>
                   ))}
                 </select>
@@ -233,7 +233,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                 >
                   {cityOptions.map((c) => (
                     <option key={c} value={c}>
-                      {c === "All" ? "All Cities" : c}
+                      {c}
                     </option>
                   ))}
                 </select>
@@ -247,7 +247,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                 >
                   {sportOptions.map((s) => (
                     <option key={s} value={s}>
-                      {s === "All" ? "All Sports" : s}
+                      {s}
                     </option>
                   ))}
                 </select>
