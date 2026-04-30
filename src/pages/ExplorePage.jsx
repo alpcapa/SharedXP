@@ -5,7 +5,7 @@ import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
 
 const EXPLORE_HOSTS_PER_PAGE = 12;
-const GENDER_OPTIONS = ["All", "Male Hosts", "Female Hosts"];
+const GENDER_OPTIONS = ["All", "Male", "Female"];
 
 const ExplorePage = ({ currentUser, onLogout }) => {
   const [searchParams] = useSearchParams();
@@ -113,9 +113,9 @@ const ExplorePage = ({ currentUser, onLogout }) => {
       const matchesSport =
         selectedSport === "All" || host.sports.some((s) => s.sport === selectedSport);
       const genderValue =
-        selectedGender === "Male Hosts"
+        selectedGender === "Male"
           ? "Male"
-          : selectedGender === "Female Hosts"
+          : selectedGender === "Female"
             ? "Female"
             : null;
       const matchesGender = !genderValue || host.gender === genderValue;
