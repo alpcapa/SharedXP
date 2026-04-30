@@ -2,10 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { buddies } from "../data/buddies";
+import { supabase } from "../lib/supabase";
 
 const featuredStatuses = ["Online", "New", "Online", "Online"];
 const LOCALS_PER_PAGE = 4;
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
 
 const sports = [
   { name: "Cycling", count: "1,248 locals", icon: "🚲", active: true },
@@ -39,17 +44,10 @@ const steps = [
   }
 ];
 
-const sportOptions = ["Cycling", "Tennis", "Running", "Football", "Surfing", "Basketball"];
-
-const locationOptions = [
-  "Lisbon, Portugal",
-  "Porto, Portugal",
-  "Madrid, Spain",
-  "Barcelona, Spain",
-  "Paris, France",
-  "Berlin, Germany",
-  "Rome, Italy"
-];
+const currentDate = new Date();
+const DEFAULT_MONTH = currentDate.getMonth() + 1; // 1-12
+const DEFAULT_YEAR = currentDate.getFullYear();
+const YEAR_OPTIONS = Array.from({ length: 3 }, (_, i) => DEFAULT_YEAR + i);
 
 const LockIcon = () => (
   <svg
@@ -74,70 +72,122 @@ const LockIcon = () => (
 
 const HomePage = ({ currentUser, onLogout }) => {
   const navigate = useNavigate();
-  const [selectedSport, setSelectedSport] = useState("Cycling");
-  const [selectedLocation, setSelectedLocation] = useState("Lisbon, Portugal");
-  const [sportQuery, setSportQuery] = useState("");
-  const [locationQuery, setLocationQuery] = useState("");
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [hosts, setHosts] = useState([]);
+  const [hostsLoading, setHostsLoading] = useState(true);
+  const [selectedCountry, setSelectedCountry] = useState("All");
+  const [selectedCity, setSelectedCity] = useState("All");
+  const [selectedSport, setSelectedSport] = useState("All");
+  const [selectedMonth, setSelectedMonth] = useState(DEFAULT_MONTH);
+  const [selectedYear, setSelectedYear] = useState(DEFAULT_YEAR);
   const [localsPage, setLocalsPage] = useState(0);
   const searchBarRef = useRef(null);
 
   useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (!searchBarRef.current?.contains(event.target)) {
-        setOpenDropdown(null);
-      }
-    };
+    let cancelled = false;
+    setHostsLoading(true);
 
-    document.addEventListener("mousedown", handleOutsideClick);
+    supabase
+      .from("host_profiles")
+      .select(
+        `id, country, city, pause_hosting,
+         profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, signed_up_at),
+         host_sports(id, sport, level, equipment_available, paused)`
+      )
+      .eq("pause_hosting", false)
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          console.error("[home] Failed to fetch hosts:", error);
+          setHosts([]);
+        } else {
+          const transformed = (data || [])
+            .filter((hp) => hp.profile && (hp.host_sports || []).some((hs) => !hs.paused))
+            .map((hp) => ({
+              id: hp.id,
+              userId: hp.profile.id,
+              name:
+                hp.profile.full_name ||
+                [hp.profile.first_name, hp.profile.last_name].filter(Boolean).join(" ") ||
+                "Host",
+              photo: hp.profile.photo_url || "",
+              gender: hp.profile.gender || "",
+              country: hp.country || "",
+              city: hp.city || "",
+              signedUpAt: hp.profile.signed_up_at || "",
+              sports: (hp.host_sports || []).filter((hs) => !hs.paused)
+            }));
+          setHosts(transformed);
+        }
+        setHostsLoading(false);
+      });
 
     return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
+      cancelled = true;
     };
   }, []);
 
-  const filteredSports = useMemo(() => {
-    if (!sportQuery.trim()) {
-      return sportOptions.slice(0, 5);
+  const countryOptions = useMemo(
+    () => ["All", ...[...new Set(hosts.map((h) => h.country).filter(Boolean))].sort()],
+    [hosts]
+  );
+
+  const cityOptions = useMemo(() => {
+    const hostsForCountry =
+      selectedCountry === "All" ? hosts : hosts.filter((h) => h.country === selectedCountry);
+    return ["All", ...[...new Set(hostsForCountry.map((h) => h.city).filter(Boolean))].sort()];
+  }, [hosts, selectedCountry]);
+
+  const sportOptions = useMemo(
+    () => [
+      "All",
+      ...[...new Set(hosts.flatMap((h) => h.sports.map((s) => s.sport)).filter(Boolean))].sort()
+    ],
+    [hosts]
+  );
+
+  useEffect(() => {
+    if (selectedCity !== "All" && !cityOptions.includes(selectedCity)) {
+      setSelectedCity("All");
     }
+  }, [cityOptions, selectedCity]);
 
-    return sportOptions
-      .filter((sport) => sport.toLowerCase().includes(sportQuery.toLowerCase()))
-      .slice(0, 5);
-  }, [sportQuery]);
+  const filteredHosts = useMemo(() => {
+    return hosts.filter((host) => {
+      const matchesCountry = selectedCountry === "All" || host.country === selectedCountry;
+      const matchesCity = selectedCity === "All" || host.city === selectedCity;
+      const matchesSport =
+        selectedSport === "All" || host.sports.some((s) => s.sport === selectedSport);
+      return matchesCountry && matchesCity && matchesSport;
+    });
+  }, [hosts, selectedCountry, selectedCity, selectedSport]);
 
-  const filteredLocations = useMemo(() => {
-    if (!locationQuery.trim()) {
-      return locationOptions.slice(0, 5);
-    }
+  useEffect(() => {
+    setLocalsPage(0);
+  }, [selectedCountry, selectedCity, selectedSport]);
 
-    return locationOptions
-      .filter((location) => location.toLowerCase().includes(locationQuery.toLowerCase()))
-      .slice(0, 5);
-  }, [locationQuery]);
-
-  const totalLocalsPages = Math.max(1, Math.ceil(buddies.length / LOCALS_PER_PAGE));
+  const totalLocalsPages = Math.max(1, Math.ceil(filteredHosts.length / LOCALS_PER_PAGE));
   const featuredLocals = useMemo(() => {
     const startIndex = localsPage * LOCALS_PER_PAGE;
-    return buddies.slice(startIndex, startIndex + LOCALS_PER_PAGE);
-  }, [localsPage, buddies]);
+    return filteredHosts.slice(startIndex, startIndex + LOCALS_PER_PAGE);
+  }, [localsPage, filteredHosts]);
+
+  const localsHeadingLocation = useMemo(() => {
+    if (selectedCity !== "All") return selectedCity;
+    if (selectedCountry !== "All") return selectedCountry;
+    return "the world";
+  }, [selectedCity, selectedCountry]);
 
   const handleFindBuddies = () => {
     const params = new URLSearchParams();
 
-    if (selectedSport) {
+    if (selectedCountry !== "All") {
+      params.set("country", selectedCountry);
+    }
+    if (selectedCity !== "All") {
+      params.set("city", selectedCity);
+    }
+    if (selectedSport !== "All") {
       params.set("sport", selectedSport);
-    }
-    if (selectedLocation) {
-      params.set("location", selectedLocation);
-    }
-    if (dateFrom) {
-      params.set("dateFrom", dateFrom);
-    }
-    if (dateTo) {
-      params.set("dateTo", dateTo);
     }
 
     navigate(`/locals?${params.toString()}`);
@@ -157,143 +207,77 @@ const HomePage = ({ currentUser, onLogout }) => {
             <p>Join locals and travelers for unforgettable sports experiences.</p>
             <div className="search-bar" role="search" aria-label="Find sports buddies" ref={searchBarRef}>
               <div className="search-field">
-                <label id="sport-label" htmlFor="sport-select">
-                  Sport
-                </label>
-                <button
-                  id="sport-select"
-                  type="button"
-                  className="dropdown-toggle"
-                  aria-haspopup="listbox"
-                  aria-expanded={openDropdown === "sport"}
-                  aria-labelledby="sport-label"
-                  onClick={() =>
-                    setOpenDropdown((currentDropdown) =>
-                      currentDropdown === "sport" ? null : "sport"
-                    )
-                  }
+                <label htmlFor="filter-home-country">Country</label>
+                <select
+                  id="filter-home-country"
+                  value={selectedCountry}
+                  onChange={(event) => {
+                    setSelectedCountry(event.target.value);
+                    setSelectedCity("All");
+                  }}
                 >
-                  {selectedSport}
-                  <span className="dropdown-caret" aria-hidden="true">
-                    ▾
-                  </span>
-                </button>
-                {openDropdown === "sport" && (
-                  <div className="dropdown-menu">
-                    <input
-                      id="sport-search"
-                      type="text"
-                      className="option-search"
-                      aria-label="Search sports"
-                      placeholder="Search sport"
-                      value={sportQuery}
-                      onChange={(event) => setSportQuery(event.target.value)}
-                    />
-                    <div className="option-list" role="listbox" aria-label="Sport options">
-                      {filteredSports.map((sport) => (
-                        <button
-                          key={sport}
-                          type="button"
-                          role="option"
-                          aria-selected={selectedSport === sport}
-                          className={`option-item${selectedSport === sport ? " selected" : ""}`}
-                          onClick={() => {
-                            setSelectedSport(sport);
-                            setOpenDropdown(null);
-                            setSportQuery("");
-                          }}
-                        >
-                          {sport}
-                        </button>
-                      ))}
-                      {!filteredSports.length && (
-                        <p className="option-empty">No sport found</p>
-                      )}
-                    </div>
-                  </div>
-                )}
+                  {countryOptions.map((c) => (
+                    <option key={c} value={c}>
+                      {c === "All" ? "All Countries" : c}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="search-field">
-                <label id="location-label" htmlFor="location-select">
-                  Location
-                </label>
-                <button
-                  id="location-select"
-                  type="button"
-                  className="dropdown-toggle"
-                  aria-haspopup="listbox"
-                  aria-expanded={openDropdown === "location"}
-                  aria-labelledby="location-label"
-                  onClick={() =>
-                    setOpenDropdown((currentDropdown) =>
-                      currentDropdown === "location" ? null : "location"
-                    )
-                  }
+                <label htmlFor="filter-home-city">City</label>
+                <select
+                  id="filter-home-city"
+                  value={selectedCity}
+                  onChange={(event) => setSelectedCity(event.target.value)}
+                  disabled={cityOptions.length <= 1}
                 >
-                  {selectedLocation}
-                  <span className="dropdown-caret" aria-hidden="true">
-                    ▾
-                  </span>
-                </button>
-                {openDropdown === "location" && (
-                  <div className="dropdown-menu">
-                    <input
-                      id="location-search"
-                      type="text"
-                      className="option-search"
-                      aria-label="Search locations"
-                      placeholder="Search location"
-                      value={locationQuery}
-                      onChange={(event) => setLocationQuery(event.target.value)}
-                    />
-                    <div className="option-list" role="listbox" aria-label="Location options">
-                      {filteredLocations.map((location) => (
-                        <button
-                          key={location}
-                          type="button"
-                          role="option"
-                          aria-selected={selectedLocation === location}
-                          className={`option-item${
-                            selectedLocation === location ? " selected" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedLocation(location);
-                            setOpenDropdown(null);
-                            setLocationQuery("");
-                          }}
-                        >
-                          {location}
-                        </button>
-                      ))}
-                      {!filteredLocations.length && (
-                        <p className="option-empty">No location found</p>
-                      )}
-                    </div>
-                  </div>
-                )}
+                  {cityOptions.map((c) => (
+                    <option key={c} value={c}>
+                      {c === "All" ? "All Cities" : c}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="search-field">
-                <label id="date-label" htmlFor="date-from">
-                  Date
-                </label>
-                <div className="date-range">
-                  <input
-                    id="date-from"
-                    className="date-input"
-                    type="date"
-                    value={dateFrom}
-                    aria-label="From date"
-                    onChange={(event) => setDateFrom(event.target.value)}
-                  />
-                  <span className="range-separator">to</span>
-                  <input
-                    id="date-to"
-                    className="date-input"
-                    type="date"
-                    value={dateTo}
-                    aria-label="To date"
-                    onChange={(event) => setDateTo(event.target.value)}
-                  />
+                <label htmlFor="filter-home-sport">Sport</label>
+                <select
+                  id="filter-home-sport"
+                  value={selectedSport}
+                  onChange={(event) => setSelectedSport(event.target.value)}
+                >
+                  {sportOptions.map((s) => (
+                    <option key={s} value={s}>
+                      {s === "All" ? "All Sports" : s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="search-field">
+                <label htmlFor="filter-home-month">When</label>
+                <div className="when-selects">
+                  <select
+                    id="filter-home-month"
+                    aria-label="Month"
+                    value={selectedMonth}
+                    onChange={(event) => setSelectedMonth(Number(event.target.value))}
+                  >
+                    {MONTH_NAMES.map((name, index) => (
+                      <option key={name} value={index + 1}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label="Year"
+                    value={selectedYear}
+                    onChange={(event) => setSelectedYear(Number(event.target.value))}
+                  >
+                    {YEAR_OPTIONS.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <button
@@ -313,7 +297,9 @@ const HomePage = ({ currentUser, onLogout }) => {
           <section className="locals-section" id="locals">
             <div className="section-head">
               <div>
-                <h2 className="section-title">Locals ready to play in Lisbon</h2>
+                <h2 className="section-title">
+                  Locals ready to play in {localsHeadingLocation}
+                </h2>
                 <p className="section-sub">
                   Sports buddies near you. Real people. Real connections.
                 </p>
@@ -324,72 +310,84 @@ const HomePage = ({ currentUser, onLogout }) => {
             </div>
 
             <div className="locals-grid-wrap">
-              <div className="locals-grid">
-                {featuredLocals.map((buddy, index) => {
-                  const statusIndex =
-                    (localsPage * LOCALS_PER_PAGE + index) % featuredStatuses.length;
-                  return (
-                  <Link to={`/buddy/${buddy.id}`} key={buddy.id} className="local-card-link">
-                    <article className="local-card">
-                      <div className="local-image-wrap">
-                        <img src={buddy.image} alt={buddy.name} />
-                        <span className="status-badge">
-                          <span className="status-dot" />
-                          {featuredStatuses[statusIndex]}
-                        </span>
-                      </div>
-                      <div className="local-body">
-                        <div className="local-title-row">
-                          <h3>{buddy.name}</h3>
-                          <p className="local-rating">
-                            <span className="star">★</span> {buddy.rating}{" "}
-                            <span className="review-count">({buddy.reviewCount})</span>
-                          </p>
-                        </div>
-                        <p className="local-location">📍 {buddy.location}</p>
-                        <span className="sport-pill">{buddy.sport}</span>
-                        <p className="local-bio">{buddy.bio}</p>
-                        <ul className="local-meta">
-                          <li>
-                            🧰{" "}
-                            {buddy.equipmentAvailable ?? buddy.bikeAvailable
-                              ? "Equipment available"
-                              : "Equipment not available"}
-                          </li>
-                          <li>🏅 {buddy.level}</li>
-                          <li>
-                            💶 €{buddy.price}{" "}
-                            {buddy.priceUnit ?? "per session"}
-                          </li>
-                        </ul>
-                      </div>
-                    </article>
-                  </Link>
-                  );
-                })}
-              </div>
-              <div className="locals-nav-row">
-                <button
-                  type="button"
-                  className="locals-nav"
-                  aria-label="Show previous 4 locals"
-                  onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
-                  disabled={localsPage === 0}
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  className="locals-nav"
-                  aria-label="Show next 4 locals"
-                  onClick={() =>
-                    setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
-                  }
-                  disabled={localsPage >= totalLocalsPages - 1}
-                >
-                  ›
-                </button>
-              </div>
+              {hostsLoading ? (
+                <p className="explore-loading">Loading locals…</p>
+              ) : filteredHosts.length === 0 ? (
+                <p className="explore-empty">No locals found matching your filters.</p>
+              ) : (
+                <div className="locals-grid">
+                          {featuredLocals.map((host, index) => {
+                    const statusIndex =
+                      (localsPage * LOCALS_PER_PAGE + index) % featuredStatuses.length;
+                    const locationLine = [host.city, host.country].filter(Boolean).join(", ");
+                    const hasEquipment = host.sports.some((s) => s.equipment_available);
+                    const levels = [
+                      ...new Set(host.sports.map((s) => s.level).filter(Boolean))
+                    ];
+                    return (
+                      <Link to={`/buddy/${host.userId}`} key={host.id} className="local-card-link">
+                        <article className="local-card">
+                          <div className="local-image-wrap">
+                            {host.photo ? (
+                              <img src={host.photo} alt={host.name} />
+                            ) : (
+                              <div className="local-image-placeholder">👤</div>
+                            )}
+                            <span className="status-badge">
+                              <span className="status-dot" />
+                              {featuredStatuses[statusIndex]}
+                            </span>
+                          </div>
+                          <div className="local-body">
+                            <div className="local-title-row">
+                              <h3>{host.name}</h3>
+                            </div>
+                            {locationLine && (
+                              <p className="local-location">📍 {locationLine}</p>
+                            )}
+                            <div className="local-sport-pills">
+                              {host.sports.slice(0, 3).map((s) => (
+                                <span key={s.id} className="sport-pill">
+                                  {s.sport}
+                                </span>
+                              ))}
+                            </div>
+                            <ul className="local-meta">
+                              {host.gender && <li>👤 {host.gender}</li>}
+                              {levels.length > 0 && <li>🏅 {levels.join(", ")}</li>}
+                              <li>🎒 Equipment: {hasEquipment ? "Yes" : "No"}</li>
+                            </ul>
+                          </div>
+                        </article>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+              {!hostsLoading && filteredHosts.length > 0 && (
+                <div className="locals-nav-row">
+                  <button
+                    type="button"
+                    className="locals-nav"
+                    aria-label="Show previous 4 locals"
+                    onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
+                    disabled={localsPage === 0}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    className="locals-nav"
+                    aria-label="Show next 4 locals"
+                    onClick={() =>
+                      setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
+                    }
+                    disabled={localsPage >= totalLocalsPages - 1}
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
