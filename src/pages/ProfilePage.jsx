@@ -253,7 +253,16 @@ const getSportConfigs = (buddy, currentUser) => {
       equipmentAvailable: sportConfig.equipmentAvailable ?? buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false,
       pricing: sportConfig.pricing ?? buddy.price ?? "",
       pricingCurrency: sportConfig.pricingCurrency ?? "EUR",
-      priceUnit: sportConfig.priceUnit ?? buddy.priceUnit ?? "per session"
+      priceUnit: sportConfig.priceUnit ?? buddy.priceUnit ?? "per session",
+      availableDates: Array.isArray(sportConfig.availableDates) && sportConfig.availableDates.length > 0
+        ? sportConfig.availableDates
+        : generateAvailableDates(sportConfig.availability?.days ?? []),
+      availableTimes: Array.isArray(sportConfig.availableTimes) && sportConfig.availableTimes.length > 0
+        ? sportConfig.availableTimes
+        : generateTimeSlots(
+            sportConfig.availability?.startTime ?? "09:00",
+            sportConfig.availability?.endTime ?? "18:00"
+          )
     }));
   }
 
@@ -513,7 +522,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       <SiteHeader currentUser={currentUser} onLogout={onLogout} />
       <div className="profile-back-wrap">
         {location.state?.from === "explore" ? (
-          <Link to="/explore" className="back-link">
+          <Link to="/locals" className="back-link">
             ← Back to Explore
           </Link>
         ) : (
