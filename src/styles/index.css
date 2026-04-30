@@ -2375,6 +2375,46 @@ body {
   cursor: not-allowed;
 }
 
+.booking-login-prompt {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: #fffbeb;
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #92400e;
+}
+
+.booking-login-prompt p {
+  margin: 0 0 10px;
+  font-weight: 500;
+}
+
+.booking-login-prompt-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.booking-login-button,
+.booking-signup-button {
+  margin-top: 0;
+  font-size: 14px;
+  min-height: 36px;
+  padding: 0 16px;
+  width: fit-content;
+}
+
+.booking-signup-button {
+  background: #ffffff;
+  color: #1d4ed8;
+  border: 1.5px solid #1d4ed8;
+}
+
+.booking-signup-button:hover {
+  background: #eff6ff;
+}
+
 .booking-modal-backdrop {
   position: fixed;
   inset: 0;

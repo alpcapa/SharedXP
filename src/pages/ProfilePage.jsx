@@ -323,6 +323,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const [selectedTime, setSelectedTime] = useState("");
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isRequestSubmitted, setIsRequestSubmitted] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -543,6 +544,14 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       return;
     }
 
+    if (!currentUser) {
+      // Store the current path so post-auth redirect works for sign-up too
+      sessionStorage.setItem("postAuthRedirect", location.pathname);
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    setShowLoginPrompt(false);
     setIsRequestSubmitted(false);
     setIsConfirmationOpen(true);
   };
@@ -724,6 +733,27 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           >
             Request booking
           </button>
+          {showLoginPrompt && (
+            <div className="booking-login-prompt" role="alert">
+              <p>You need to login to book with a host.</p>
+              <div className="booking-login-prompt-actions">
+                <Link
+                  to="/login"
+                  state={{ from: { pathname: location.pathname } }}
+                  className="find-button booking-login-button"
+                >
+                  Log in
+                </Link>
+                <Link
+                  to="/signup"
+                  state={{ from: { pathname: location.pathname } }}
+                  className="find-button booking-signup-button"
+                >
+                  Sign up
+                </Link>
+              </div>
+            </div>
+          )}
           </>
           )}
         </div>
