@@ -11,11 +11,15 @@ import { getProfileAge } from "../utils/profileAge";
 const DAY_NAME_TO_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 const WEEKS_AHEAD = 8;
 
+const ALL_DAY_INDICES = [0, 1, 2, 3, 4, 5, 6];
+
 const generateAvailableDates = (availabilityDays) => {
-  if (!Array.isArray(availabilityDays) || availabilityDays.length === 0) return [];
-  const dayIndices = availabilityDays
-    .map((d) => DAY_NAME_TO_INDEX[d])
-    .filter((d) => d !== undefined);
+  const dayIndices =
+    !Array.isArray(availabilityDays) || availabilityDays.length === 0
+      ? ALL_DAY_INDICES
+      : availabilityDays
+          .map((d) => DAY_NAME_TO_INDEX[d])
+          .filter((d) => d !== undefined);
   if (dayIndices.length === 0) return [];
   const dates = [];
   const today = new Date();
