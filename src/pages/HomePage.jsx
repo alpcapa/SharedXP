@@ -207,7 +207,7 @@ const HomePage = ({ currentUser, onLogout }) => {
             <p>Join locals and travelers for unforgettable sports experiences.</p>
             <div className="search-bar" role="search" aria-label="Find sports buddies" ref={searchBarRef}>
               <div className="search-field">
-                <label htmlFor="filter-home-country">Country</label>
+                <label htmlFor="filter-home-country">Select Country</label>
                 <select
                   id="filter-home-country"
                   value={selectedCountry}
@@ -224,7 +224,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                 </select>
               </div>
               <div className="search-field">
-                <label htmlFor="filter-home-city">City</label>
+                <label htmlFor="filter-home-city">Select City</label>
                 <select
                   id="filter-home-city"
                   value={selectedCity}
@@ -239,7 +239,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                 </select>
               </div>
               <div className="search-field">
-                <label htmlFor="filter-home-sport">Sport</label>
+                <label htmlFor="filter-home-sport">Select Sport</label>
                 <select
                   id="filter-home-sport"
                   value={selectedSport}
