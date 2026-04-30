@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
@@ -7,6 +7,30 @@ import { buddies } from "../data/buddies";
 import { supabase } from "../lib/supabase";
 import { getDateKey } from "../utils/date";
 import { getProfileAge } from "../utils/profileAge";
+
+const DAY_NAME_TO_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+const WEEKS_AHEAD = 8;
+
+const generateAvailableDates = (availabilityDays) => {
+  if (!Array.isArray(availabilityDays) || availabilityDays.length === 0) return [];
+  const dayIndices = availabilityDays
+    .map((d) => DAY_NAME_TO_INDEX[d])
+    .filter((d) => d !== undefined);
+  if (dayIndices.length === 0) return [];
+  const dates = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let offset = 0; offset < WEEKS_AHEAD * 7; offset++) {
+    const candidate = new Date(today);
+    candidate.setDate(today.getDate() + offset);
+    if (dayIndices.includes(candidate.getDay())) {
+      dates.push(
+        `${candidate.getFullYear()}-${String(candidate.getMonth() + 1).padStart(2, "0")}-${String(candidate.getDate()).padStart(2, "0")}`
+      );
+    }
+  }
+  return dates;
+};
 
 const generateTimeSlots = (startTime, endTime) => {
   const slots = [];
@@ -47,7 +71,7 @@ const shapeSupabaseHost = (data) => {
         startTime: hs.availability_start_time || "09:00",
         endTime: hs.availability_end_time || "18:00",
       },
-      availableDates: [],
+      availableDates: generateAvailableDates(hs.availability_days),
       availableTimes: generateTimeSlots(
         hs.availability_start_time || "09:00",
         hs.availability_end_time || "18:00"
@@ -275,6 +299,7 @@ const formatPrice = (amount, currency) => {
 
 const ProfilePage = ({ currentUser, onLogout }) => {
   const { buddyId } = useParams();
+  const location = useLocation();
 
   // ── All hooks first (before any conditional returns) ────────────────────
   const [buddyFromSupabase, setBuddyFromSupabase] = useState(null);
@@ -487,9 +512,15 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     <div className="profile-page">
       <SiteHeader currentUser={currentUser} onLogout={onLogout} />
       <div className="profile-back-wrap">
-        <Link to="/" className="back-link">
-          ← Back to home
-        </Link>
+        {location.state?.from === "explore" ? (
+          <Link to="/explore" className="back-link">
+            ← Back to Explore
+          </Link>
+        ) : (
+          <Link to="/" className="back-link">
+            ← Back to home
+          </Link>
+        )}
       </div>
 
       <section className="profile-summary">

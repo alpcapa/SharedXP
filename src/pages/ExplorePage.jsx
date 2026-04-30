@@ -308,7 +308,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                   const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                   const hasEquipment = host.sports.some((s) => s.equipment_available);
                   return (
-                    <Link to={`/buddy/${host.userId}`} key={host.id} className="local-card-link">
+                    <Link to={`/buddy/${host.userId}`} state={{ from: "explore" }} key={host.id} className="local-card-link">
                       <article className="local-card">
                         <div className="local-image-wrap">
                           {host.photo ? (
