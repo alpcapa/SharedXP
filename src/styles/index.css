@@ -1066,11 +1066,20 @@ body {
 .auth-form input,
 .auth-form textarea,
 .auth-form select {
-  border: 1px solid #d1d5db;
-  border-radius: 9px;
+  border: 1px solid #dbe1d8;
+  border-radius: 12px;
   padding: 10px 12px;
   font-size: 14px;
   font-family: inherit;
+  min-height: 46px;
+  background: #fff;
+}
+
+.auth-form input[type="checkbox"],
+.auth-form input[type="radio"],
+.auth-form input[type="file"] {
+  min-height: unset;
+  background: unset;
 }
 
 .auth-language-row {
@@ -1118,8 +1127,8 @@ body {
 
 .auth-dropdown-trigger {
   width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: 9px;
+  border: 1px solid #dbe1d8;
+  border-radius: 12px;
   padding: 10px 12px;
   font-size: 14px;
   background: #fff;
@@ -1129,6 +1138,7 @@ body {
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  min-height: 46px;
 }
 
 .auth-dropdown-panel {
@@ -1137,8 +1147,8 @@ body {
   left: 0;
   right: 0;
   z-index: 20;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
+  border: 1px solid #dbe1d8;
+  border-radius: 12px;
   background: #fff;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
   padding: 8px;
@@ -1146,7 +1156,7 @@ body {
 
 .auth-dropdown-search {
   width: 100%;
-  border: 1px solid #d1d5db;
+  border: 1px solid #dbe1d8;
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 13px;
@@ -1461,11 +1471,13 @@ body {
 .host-form-grid input,
 .host-form-grid textarea,
 .host-form-grid select {
-  border: 1px solid #d1d5db;
-  border-radius: 9px;
+  border: 1px solid #dbe1d8;
+  border-radius: 12px;
   padding: 10px 12px;
   font-size: 14px;
   font-family: inherit;
+  min-height: 46px;
+  background: #fff;
 }
 
 .host-form-grid textarea {
@@ -1961,13 +1973,14 @@ body {
 
 .history-field select,
 .history-field textarea {
-  border: 1px solid #d1d5db;
-  border-radius: 9px;
+  border: 1px solid #dbe1d8;
+  border-radius: 12px;
   padding: 10px 12px;
   font-size: 14px;
   font-family: inherit;
   font-weight: 400;
   background: #fff;
+  min-height: 46px;
 }
 
 .history-field textarea {
@@ -2341,10 +2354,10 @@ body {
 
 .booking-time-select {
   width: min(100%, 220px);
-  border: 1px solid #d3d8cf;
-  border-radius: 10px;
+  border: 1px solid #dbe1d8;
+  border-radius: 12px;
   background: #fff;
-  min-height: 42px;
+  min-height: 46px;
   padding: 0 10px;
   font-size: 15px;
   font-weight: 600;
