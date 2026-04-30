@@ -5,11 +5,9 @@ export const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced", "I'm Flexi
 export const AVAILABILITY_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR", "BRL"];
 
-export const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, index) => {
-  const totalMinutes = index * 15;
-  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
-  const minutes = String(totalMinutes % 60).padStart(2, "0");
-  return `${hours}:${minutes}`;
+export const TIME_OPTIONS = Array.from({ length: 24 }, (_, index) => {
+  const hours = String(index).padStart(2, "0");
+  return `${hours}:00`;
 });
 
 const REGIONAL_INDICATOR_OFFSET = 127397;

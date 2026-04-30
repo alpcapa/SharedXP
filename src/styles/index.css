@@ -1628,6 +1628,16 @@ body {
   gap: 10px;
 }
 
+.host-availability-time select {
+  border: 1px solid #dbe1d8;
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  width: 100%;
+}
+
 .host-availability-time > div {
   display: grid;
   gap: 6px;
