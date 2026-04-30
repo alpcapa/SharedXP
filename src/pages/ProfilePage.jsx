@@ -380,6 +380,12 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     setSelectedTime("");
   }, [buddyId]);
 
+  // Clear booking selection when switching sport tabs
+  useEffect(() => {
+    setSelectedDate("");
+    setSelectedTime("");
+  }, [selectedSportIndex]);
+
   const buddy = staticBuddy ?? buddyFromSupabase;
 
   const recommendations = useMemo(
@@ -391,10 +397,34 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     () => (buddy ? getSportConfigs(buddy, currentUser) : []),
     [buddy, currentUser]
   );
-  const activeSport = hostSports[selectedSportIndex] ?? hostSports[0] ?? {};
-  const availableDates = activeSport.availableDates ?? buddy?.availableDates ?? [];
-  const availableTimes = activeSport.availableTimes ?? buddy?.availableTimes ?? [];
+  const activeSport = useMemo(
+    () => hostSports[selectedSportIndex] ?? hostSports[0] ?? {},
+    [hostSports, selectedSportIndex]
+  );
+  const availableDates = useMemo(
+    () => activeSport.availableDates ?? buddy?.availableDates ?? [],
+    [activeSport, buddy]
+  );
+  const availableTimes = useMemo(
+    () => activeSport.availableTimes ?? buddy?.availableTimes ?? [],
+    [activeSport, buddy]
+  );
   const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
+
+  // Auto-advance the calendar to the first month that contains available dates.
+  // This runs when dates first load (buddy fetched) or when the sport tab changes.
+  useEffect(() => {
+    if (availableDates.length === 0) return;
+    setCalendarMonth((prev) => {
+      const hasAvailableThisMonth = availableDates.some((dateStr) => {
+        const [y, m] = dateStr.split("-").map(Number);
+        return y === prev.getFullYear() && m === prev.getMonth() + 1;
+      });
+      if (hasAvailableThisMonth) return prev;
+      const [y, m] = availableDates[0].split("-").map(Number);
+      return new Date(y, m - 1, 1);
+    });
+  }, [availableDates]);
 
   const totalRecommendationPages = Math.max(1, Math.ceil(recommendations.length / LOCALS_PER_PAGE));
   const visibleRecommendations = useMemo(() => {
