@@ -587,6 +587,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             )}
           </h1>
           <p className="profile-location-line">{locationLine}</p>
+          <p>Member since {memberSince}</p>
           <p>
             ⭐ {hostRating}
             {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
@@ -596,8 +597,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           <div className="profile-summary-photo-column">
             <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
             <div className="profile-summary-meta">
-              <p>Member since {memberSince}</p>
               <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
+              {activeSport.about && <p>About: {activeSport.about}</p>}
             </div>
           </div>
         </div>
@@ -607,7 +608,6 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         <div className="booking-engine">
           <h3>Booking with {hostDisplayName}</h3>
           {activeSport.description && <p className="booking-subtitle">{activeSport.description}</p>}
-          {activeSport.about && <p>{activeSport.about}</p>}
           {isHostPaused ? (
             <p className="booking-paused-notice">
               This host is currently not accepting new bookings.
@@ -698,22 +698,24 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             </div>
           </div>
 
-          <label className="booking-label" htmlFor="booking-time-select">
-            Time
-          </label>
-          <select
-            id="booking-time-select"
-            className="booking-time-select"
-            value={selectedTime}
-            onChange={(event) => setSelectedTime(event.target.value)}
-          >
-            <option value="">Select time</option>
-            {availableTimes.map((timeOption) => (
-              <option key={timeOption} value={timeOption}>
-                {formatTime(timeOption)}
-              </option>
-            ))}
-          </select>
+          <div className="booking-time-row">
+            <label className="booking-label" htmlFor="booking-time-select">
+              Time
+            </label>
+            <select
+              id="booking-time-select"
+              className="booking-time-select"
+              value={selectedTime}
+              onChange={(event) => setSelectedTime(event.target.value)}
+            >
+              <option value="">Select time</option>
+              {availableTimes.map((timeOption) => (
+                <option key={timeOption} value={timeOption}>
+                  {formatTime(timeOption)}
+                </option>
+              ))}
+            </select>
+          </div>
           {selectedPrice && (
             <p className="booking-label">
               Price: {selectedPrice} {perLabel}
