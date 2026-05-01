@@ -2474,6 +2474,9 @@ body {
   padding: 0 16px;
   width: fit-content;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .booking-signup-button {
