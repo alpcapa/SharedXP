@@ -54,8 +54,7 @@ const AboutPage = ({ currentUser, onLogout }) => {
         <section className="about-hero">
           <h1>Sport doesn't stop when you travel. Neither should you.</h1>
           <p className="about-hero-sub">
-            SharedXP connects sports-loving travelers with local people who share their
-            passion — their knowledge, their routes, and their gear.
+            Behind every great sports experience is someone local who made it possible — a cyclist who knows the best hidden trails, a yoga teacher with a studio tucked down a side street, a bike shop owner who's seen it all. SharedXP brings sports-loving travelers and passionate locals together, so that knowledge, gear, and experience get shared — not just sold.
           </p>
           <img
             className="about-hero-img"
