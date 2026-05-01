@@ -609,7 +609,6 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       <section className="booking-engine-section" aria-label="Booking engine">
         <div className="booking-engine">
           <h3>Booking with {hostDisplayName}</h3>
-          {activeSport.description && <p className="booking-subtitle">{activeSport.description}</p>}
           {isHostPaused ? (
             <p className="booking-paused-notice">
               This host is currently not accepting new bookings.
@@ -617,22 +616,25 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           ) : (
           <>
           {hostSports.length > 0 && (
-            <div className="host-sport-tabs booking-sport-tabs" aria-label={`${hostDisplayName} sports`}>
-              {hostSports.map((sportConfig, sportIndex) => (
-                <button
-                  key={sportIndex}
-                  type="button"
-                  className={`host-sport-tab${sportIndex === selectedSportIndex ? " active" : ""}`}
-                  onClick={() => setSelectedSportIndex(sportIndex)}
-                >
-                  {sportConfig.sport || `Sport ${sportIndex + 1}`}
-                </button>
-              ))}
-            </div>
+            <>
+              <p className="booking-label"><strong>Choose Category:</strong></p>
+              <div className="host-sport-tabs booking-sport-tabs" aria-label={`${hostDisplayName} sports`}>
+                {hostSports.map((sportConfig, sportIndex) => (
+                  <button
+                    key={sportIndex}
+                    type="button"
+                    className={`host-sport-tab${sportIndex === selectedSportIndex ? " active" : ""}`}
+                    onClick={() => setSelectedSportIndex(sportIndex)}
+                  >
+                    {sportConfig.sport || `Sport ${sportIndex + 1}`}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
-          <p className="booking-subtitle">Choose one available date and time.</p>
+          {activeSport.description && <p className="booking-subtitle">{activeSport.description}</p>}
 
-          <p className="booking-label">Date</p>
+          <p className="booking-label"><strong>Choose Date:</strong></p>
           <div className="booking-calendar" aria-label="Available dates calendar">
             <div className="booking-calendar-header">
               <button
@@ -702,7 +704,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
           <div className="booking-time-row">
             <label className="booking-label" htmlFor="booking-time-select">
-              Time
+              <strong>Choose Time:</strong>
             </label>
             <select
               id="booking-time-select"
@@ -718,16 +720,19 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               ))}
             </select>
           </div>
-          {selectedPrice && (
-            <p className="booking-label">
-              Price: {selectedPrice} {perLabel}
-            </p>
-          )}
-          <p className="booking-label">Level: {selectedLevel}</p>
-          <p className="booking-label">Equipment: {isEquipmentAvailable ? "Available" : "Not available"}</p>
-          {equipmentDetails && (
-            <p className="booking-subtitle">{equipmentDetails}</p>
-          )}
+          <p className="booking-label"><strong>Details:</strong></p>
+          <div className="booking-details-group">
+            {selectedPrice && (
+              <p className="booking-label">
+                <strong>Price:</strong> {selectedPrice} {perLabel}
+              </p>
+            )}
+            <p className="booking-label"><strong>Level:</strong> {selectedLevel}</p>
+            <p className="booking-label"><strong>Equipment:</strong> {isEquipmentAvailable ? "Available" : "Not available"}</p>
+            {equipmentDetails && (
+              <p className="booking-subtitle">{equipmentDetails}</p>
+            )}
+          </div>
 
           <p className="booking-selection-hint">
             {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
