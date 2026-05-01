@@ -2422,9 +2422,16 @@ body {
 
 .booking-selection-hint {
   margin: 14px 0 0;
-  color: #97ca3f;
   font-size: 14px;
   font-weight: 700;
+}
+
+.booking-hint-selected {
+  color: #97ca3f;
+}
+
+.booking-hint-unselected {
+  color: #ef4444;
 }
 
 .booking-request-button,

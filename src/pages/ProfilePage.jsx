@@ -786,8 +786,13 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           </div>
 
           <p className="booking-selection-hint">
-            {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
-            {selectedTime ? formatTime(selectedTime) : "No time selected"}
+            <span className={selectedDate ? "booking-hint-selected" : "booking-hint-unselected"}>
+              {selectedDate ? formatDate(selectedDate) : "No date selected"}
+            </span>
+            {" · "}
+            <span className={selectedTime ? "booking-hint-selected" : "booking-hint-unselected"}>
+              {selectedTime ? formatTime(selectedTime) : "No time selected"}
+            </span>
           </p>
           <button
             type="button"
