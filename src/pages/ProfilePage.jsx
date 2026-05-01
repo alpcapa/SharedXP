@@ -578,27 +578,29 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
       <section className="profile-summary">
         <div className="profile-summary-header">
-          <h1 className="profile-name-with-age">
-            {firstName} {lastName}
-            {hostAge != null && (
-              <span className="profile-name-age" aria-label={`age ${hostAge}`}>
-                ({hostAge})
-              </span>
-            )}
-          </h1>
+          <div className="profile-name-rating-row">
+            <h1 className="profile-name-with-age">
+              {firstName} {lastName}
+              {hostAge != null && (
+                <span className="profile-name-age" aria-label={`age ${hostAge}`}>
+                  ({hostAge})
+                </span>
+              )}
+            </h1>
+            <p className="profile-rating-inline">
+              ⭐ {hostRating}
+              {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
+            </p>
+          </div>
           <p className="profile-location-line">{locationLine}</p>
           <p>Member since {memberSince}</p>
-          <p>
-            ⭐ {hostRating}
-            {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
-          </p>
         </div>
         <div className="profile-summary-body">
           <div className="profile-summary-photo-column">
             <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
             <div className="profile-summary-meta">
-              <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
-              {activeSport.about && <p>About: {activeSport.about}</p>}
+              <p><strong>Language:</strong> {languageLine || "Not specified"}</p>
+              {activeSport.about && <p><strong>About:</strong> {activeSport.about}</p>}
             </div>
           </div>
         </div>

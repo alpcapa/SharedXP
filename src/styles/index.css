@@ -2167,6 +2167,18 @@ body {
   margin: 0;
 }
 
+.profile-name-rating-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.profile-rating-inline {
+  margin: 0;
+  white-space: nowrap;
+}
+
 .profile-name-with-age {
   display: inline-flex;
   align-items: baseline;
@@ -2288,6 +2300,10 @@ body {
   font-weight: 700;
 }
 
+.booking-label + .booking-label {
+  margin-top: 4px;
+}
+
 .booking-time-row {
   display: flex;
   align-items: center;
@@ -2301,7 +2317,8 @@ body {
 }
 
 .booking-time-row .booking-time-select {
-  flex: 1;
+  width: min(160px, 100%);
+  flex: none;
 }
 
 .booking-paused-notice {
