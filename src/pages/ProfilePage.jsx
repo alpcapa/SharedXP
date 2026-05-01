@@ -586,6 +586,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               </span>
             )}
           </h1>
+          <p className="profile-location-line">{locationLine}</p>
           <p>
             ⭐ {hostRating}
             {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
@@ -595,7 +596,6 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           <div className="profile-summary-photo-column">
             <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
             <div className="profile-summary-meta">
-              <p>{locationLine}</p>
               <p>Member since {memberSince}</p>
               <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
             </div>
