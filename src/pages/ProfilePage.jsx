@@ -508,6 +508,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const selectedLevel = activeSport.level ?? buddy.level ?? "Not specified";
   const isEquipmentAvailable =
     activeSport.equipmentAvailable ?? buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false;
+  const equipmentDetails = activeSport.equipmentDetails ?? "";
   const selectedSportGallery = Array.isArray(activeSport.images) ? activeSport.images.filter(Boolean) : [];
   const fallbackGallery = Array.isArray(buddy.gallery) ? buddy.gallery.filter(Boolean) : [];
   const galleryPhotos =
@@ -720,6 +721,9 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           )}
           <p className="booking-label">Level: {selectedLevel}</p>
           <p className="booking-label">Equipment: {isEquipmentAvailable ? "Available" : "Not available"}</p>
+          {equipmentDetails && (
+            <p className="booking-subtitle">{equipmentDetails}</p>
+          )}
 
           <p className="booking-selection-hint">
             {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
