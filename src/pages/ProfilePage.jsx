@@ -654,7 +654,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
       <section className="booking-engine-section" aria-label="Booking engine">
         <div className="booking-engine">
-          <h3>Booking with {hostDisplayName}</h3>
+          <h3>Book with {hostDisplayName}</h3>
           {isHostPaused ? (
             <p className="booking-paused-notice">
               This host is currently not accepting new bookings.
