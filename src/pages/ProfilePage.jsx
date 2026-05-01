@@ -508,6 +508,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const selectedLevel = activeSport.level ?? buddy.level ?? "Not specified";
   const isEquipmentAvailable =
     activeSport.equipmentAvailable ?? buddy.equipmentAvailable ?? buddy.bikeAvailable ?? false;
+  const equipmentDetails = activeSport.equipmentDetails ?? "";
   const selectedSportGallery = Array.isArray(activeSport.images) ? activeSport.images.filter(Boolean) : [];
   const fallbackGallery = Array.isArray(buddy.gallery) ? buddy.gallery.filter(Boolean) : [];
   const galleryPhotos =
@@ -577,26 +578,29 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
       <section className="profile-summary">
         <div className="profile-summary-header">
-          <h1 className="profile-name-with-age">
-            {firstName} {lastName}
-            {hostAge != null && (
-              <span className="profile-name-age" aria-label={`age ${hostAge}`}>
-                ({hostAge})
-              </span>
-            )}
-          </h1>
-          <p>
-            ⭐ {hostRating}
-            {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
-          </p>
+          <div className="profile-name-rating-row">
+            <h1 className="profile-name-with-age">
+              {firstName} {lastName}
+              {hostAge != null && (
+                <span className="profile-name-age" aria-label={`age ${hostAge}`}>
+                  ({hostAge})
+                </span>
+              )}
+            </h1>
+            <p className="profile-rating-inline">
+              ⭐ {hostRating}
+              {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
+            </p>
+          </div>
+          <p className="profile-location-line">{locationLine}</p>
+          <p>Member since {memberSince}</p>
         </div>
         <div className="profile-summary-body">
           <div className="profile-summary-photo-column">
             <img src={buddy.image} alt={hostDisplayName} className="profile-main-image" />
             <div className="profile-summary-meta">
-              <p>{locationLine}</p>
-              <p>Member since {memberSince}</p>
-              <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
+              <p><strong>Language:</strong> {languageLine || "Not specified"}</p>
+              {activeSport.about && <p><strong>About:</strong> {activeSport.about}</p>}
             </div>
           </div>
         </div>
@@ -606,7 +610,6 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         <div className="booking-engine">
           <h3>Booking with {hostDisplayName}</h3>
           {activeSport.description && <p className="booking-subtitle">{activeSport.description}</p>}
-          {activeSport.about && <p>{activeSport.about}</p>}
           {isHostPaused ? (
             <p className="booking-paused-notice">
               This host is currently not accepting new bookings.
@@ -697,22 +700,24 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             </div>
           </div>
 
-          <label className="booking-label" htmlFor="booking-time-select">
-            Time
-          </label>
-          <select
-            id="booking-time-select"
-            className="booking-time-select"
-            value={selectedTime}
-            onChange={(event) => setSelectedTime(event.target.value)}
-          >
-            <option value="">Select time</option>
-            {availableTimes.map((timeOption) => (
-              <option key={timeOption} value={timeOption}>
-                {formatTime(timeOption)}
-              </option>
-            ))}
-          </select>
+          <div className="booking-time-row">
+            <label className="booking-label" htmlFor="booking-time-select">
+              Time
+            </label>
+            <select
+              id="booking-time-select"
+              className="booking-time-select"
+              value={selectedTime}
+              onChange={(event) => setSelectedTime(event.target.value)}
+            >
+              <option value="">Select time</option>
+              {availableTimes.map((timeOption) => (
+                <option key={timeOption} value={timeOption}>
+                  {formatTime(timeOption)}
+                </option>
+              ))}
+            </select>
+          </div>
           {selectedPrice && (
             <p className="booking-label">
               Price: {selectedPrice} {perLabel}
@@ -720,6 +725,9 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           )}
           <p className="booking-label">Level: {selectedLevel}</p>
           <p className="booking-label">Equipment: {isEquipmentAvailable ? "Available" : "Not available"}</p>
+          {equipmentDetails && (
+            <p className="booking-subtitle">{equipmentDetails}</p>
+          )}
 
           <p className="booking-selection-hint">
             {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
