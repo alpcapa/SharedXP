@@ -593,7 +593,6 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             </p>
           </div>
           <p className="profile-location-line">{locationLine}</p>
-          <p>Member since {memberSince}</p>
         </div>
         <div className="profile-summary-body">
           <div className="profile-summary-photo-column">
@@ -632,7 +631,11 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               </div>
             </>
           )}
-          {activeSport.description && <p className="booking-subtitle">{activeSport.description}</p>}
+          {activeSport.description && (
+            <p className="booking-subtitle">
+              <strong>Description:</strong> {activeSport.description}
+            </p>
+          )}
 
           <p className="booking-label"><strong>Choose Date:</strong></p>
           <div className="booking-calendar" aria-label="Available dates calendar">
@@ -720,8 +723,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               ))}
             </select>
           </div>
-          <p className="booking-label"><strong>Details:</strong></p>
           <div className="booking-details-group">
+            <p className="booking-label"><strong>Details:</strong></p>
             {selectedPrice && (
               <p className="booking-label">
                 <strong>Price:</strong> {selectedPrice} {perLabel}
