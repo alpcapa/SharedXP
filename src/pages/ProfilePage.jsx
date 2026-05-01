@@ -569,7 +569,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     new Intl.DateTimeFormat("en-GB", {
       weekday: "short",
       day: "numeric",
-      month: "short"
+      month: "short",
+      year: "numeric"
     }).format(new Date(`${dateValue}T00:00:00`));
 
   const formatTime = (timeValue) =>
@@ -785,8 +786,13 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           </div>
 
           <p className="booking-selection-hint">
-            {selectedDate ? formatDate(selectedDate) : "No date selected"} ·{" "}
-            {selectedTime ? formatTime(selectedTime) : "No time selected"}
+            <span className={selectedDate ? "booking-hint-selected" : "booking-hint-unselected"}>
+              {selectedDate ? formatDate(selectedDate) : "No date selected"}
+            </span>
+            {" · "}
+            <span className={selectedTime ? "booking-hint-selected" : "booking-hint-unselected"}>
+              {selectedTime ? formatTime(selectedTime) : "No time selected"}
+            </span>
           </p>
           <button
             type="button"

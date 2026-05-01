@@ -2422,8 +2422,16 @@ body {
 
 .booking-selection-hint {
   margin: 14px 0 0;
-  color: #4b5563;
   font-size: 14px;
+  font-weight: 700;
+}
+
+.booking-hint-selected {
+  color: #97ca3f;
+}
+
+.booking-hint-unselected {
+  color: #ef4444;
 }
 
 .booking-request-button,
@@ -2472,16 +2480,20 @@ body {
   min-height: 36px;
   padding: 0 16px;
   width: fit-content;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .booking-signup-button {
-  background: #ffffff;
-  color: #1d4ed8;
-  border: 1.5px solid #1d4ed8;
+  background: #97ca3f;
+  color: #fff;
+  border: none;
 }
 
 .booking-signup-button:hover {
-  background: #eff6ff;
+  background: #88b837;
 }
 
 .booking-modal-backdrop {
