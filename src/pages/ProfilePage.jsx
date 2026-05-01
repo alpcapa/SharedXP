@@ -569,7 +569,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     new Intl.DateTimeFormat("en-GB", {
       weekday: "short",
       day: "numeric",
-      month: "short"
+      month: "short",
+      year: "numeric"
     }).format(new Date(`${dateValue}T00:00:00`));
 
   const formatTime = (timeValue) =>
