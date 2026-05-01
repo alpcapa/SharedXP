@@ -123,6 +123,7 @@ const CURRENCY_SYMBOLS = {
   BRL: "R$"
 };
 const LOCALS_PER_PAGE = 4;
+const REVIEWS_PER_PAGE = 3;
 const normalizeIdentifier = (value) => String(value ?? "").trim().toLowerCase();
 
 const isCurrentUserHostForBuddy = (currentUser, buddy) => {
@@ -321,6 +322,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const [recommendationsPage, setRecommendationsPage] = useState(0);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [reviewsPage, setReviewsPage] = useState(0);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isRequestSubmitted, setIsRequestSubmitted] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -343,32 +345,47 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     }
     let cancelled = false;
     setSupabaseLoading(true);
-    supabase
-      .from("host_profiles")
-      .select(
-        `pause_hosting, city, country,
-         profile:profiles!user_id(
-           id, email, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at,
-           user_languages(language, position)
-         ),
-         host_sports(
-           id, sport, description, about, pricing, pricing_currency, level, paused,
-           equipment_available, equipment_details, availability_days,
-           availability_start_time, availability_end_time,
-           host_sport_images(image_url, position)
-         )`
-      )
-      .eq("user_id", buddyId)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (!error && data?.profile) {
-          setBuddyFromSupabase(shapeSupabaseHost(data));
-        } else {
-          setBuddyFromSupabase(null);
-        }
-        setSupabaseLoading(false);
-      });
+    Promise.all([
+      supabase
+        .from("host_profiles")
+        .select(
+          `pause_hosting, city, country,
+           profile:profiles!user_id(
+             id, email, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at,
+             user_languages(language, position)
+           ),
+           host_sports(
+             id, sport, description, about, pricing, pricing_currency, level, paused,
+             equipment_available, equipment_details, availability_days,
+             availability_start_time, availability_end_time,
+             host_sport_images(image_url, position)
+           )`
+        )
+        .eq("user_id", buddyId)
+        .maybeSingle(),
+      supabase
+        .from("bookings")
+        .select("counterparty_name, attendee_rating, sport, completed_at")
+        .eq("user_id", buddyId)
+        .eq("role", "hosted")
+        .gt("attendee_rating", 0)
+        .order("completed_at", { ascending: false }),
+    ]).then(([hostResult, reviewsResult]) => {
+      if (cancelled) return;
+      if (!hostResult.error && hostResult.data?.profile) {
+        const shapedHost = shapeSupabaseHost(hostResult.data);
+        const reviews = (reviewsResult.data ?? []).map((r) => ({
+          author: r.counterparty_name || "Attendee",
+          overall: r.attendee_rating,
+          sport: r.sport,
+          date: r.completed_at,
+        }));
+        setBuddyFromSupabase({ ...shapedHost, reviews });
+      } else {
+        setBuddyFromSupabase(null);
+      }
+      setSupabaseLoading(false);
+    });
     return () => {
       cancelled = true;
     };
@@ -379,12 +396,14 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     setSelectedSportIndex(0);
     setSelectedDate("");
     setSelectedTime("");
+    setReviewsPage(0);
   }, [buddyId]);
 
-  // Clear booking selection when switching sport tabs
+  // Clear booking selection and reviews page when switching sport tabs
   useEffect(() => {
     setSelectedDate("");
     setSelectedTime("");
+    setReviewsPage(0);
   }, [selectedSportIndex]);
 
   const buddy = staticBuddy ?? buddyFromSupabase;
@@ -433,6 +452,30 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     return recommendations.slice(startIndex, startIndex + LOCALS_PER_PAGE);
   }, [recommendations, recommendationsPage]);
 
+  const filteredReviews = useMemo(() => {
+    const reviews = Array.isArray(buddy?.reviews) ? buddy.reviews : [];
+    const sportName = activeSport?.sport ?? "";
+    return reviews.filter((r) => !r.sport || r.sport === sportName);
+  }, [buddy, activeSport]);
+
+  const sortedReviews = useMemo(
+    () =>
+      [...filteredReviews].sort((a, b) => {
+        if (!a.date && !b.date) return 0;
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }),
+    [filteredReviews]
+  );
+
+  const totalReviewPages = Math.max(1, Math.ceil(sortedReviews.length / REVIEWS_PER_PAGE));
+
+  const visibleReviews = useMemo(() => {
+    const start = reviewsPage * REVIEWS_PER_PAGE;
+    return sortedReviews.slice(start, start + REVIEWS_PER_PAGE);
+  }, [sortedReviews, reviewsPage]);
+
   const monthYearLabel = new Intl.DateTimeFormat("en-GB", {
     month: "long",
     year: "numeric"
@@ -467,6 +510,10 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   useEffect(() => {
     setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
   }, [totalRecommendationPages]);
+
+  useEffect(() => {
+    setReviewsPage((p) => Math.min(p, Math.max(0, totalReviewPages - 1)));
+  }, [totalReviewPages]);
 
   // ── Guards (after all hooks) ─────────────────────────────────────────────
   if (!buddy && supabaseLoading) {
@@ -790,29 +837,60 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
       <section className="reviews">
         <h3>Reviews</h3>
-        {buddy.reviews.map((review) => (
-          <article key={`${review.author}-${review.comment}`} className="review-card">
-            <p>
-              <strong>{review.author}</strong> · ⭐ {review.overall ?? review.rating}
-            </p>
-            {review.overall != null && (
-              <div className="review-breakdown">
-                {review.punctuality != null && <span>Punctuality {getStars(review.punctuality)}</span>}
-                {review.equipmentQuality != null && (
-                  <span>Equipment {getStars(review.equipmentQuality)}</span>
+        {sortedReviews.length > 0 ? (
+          <>
+            {visibleReviews.map((review, reviewIndex) => {
+              const globalIndex = reviewsPage * REVIEWS_PER_PAGE + reviewIndex;
+              return (
+              <article key={globalIndex} className="review-card">
+                <p>
+                  <strong>{review.author}</strong> · ⭐ {review.overall ?? review.rating}
+                </p>
+                {review.overall != null && (
+                  <div className="review-breakdown">
+                    {review.punctuality != null && <span>Punctuality {getStars(review.punctuality)}</span>}
+                    {review.equipmentQuality != null && (
+                      <span>Equipment {getStars(review.equipmentQuality)}</span>
+                    )}
+                    {review.localKnowledge != null && (
+                      <span>Local knowledge {getStars(review.localKnowledge)}</span>
+                    )}
+                    {review.friendliness != null && (
+                      <span>Friendliness {getStars(review.friendliness)}</span>
+                    )}
+                    {review.value != null && <span>Value {getStars(review.value)}</span>}
+                  </div>
                 )}
-                {review.localKnowledge != null && (
-                  <span>Local knowledge {getStars(review.localKnowledge)}</span>
-                )}
-                {review.friendliness != null && (
-                  <span>Friendliness {getStars(review.friendliness)}</span>
-                )}
-                {review.value != null && <span>Value {getStars(review.value)}</span>}
+                {review.comment && <p>{review.comment}</p>}
+              </article>
+              );
+            })}
+            {totalReviewPages > 1 && (
+              <div className="locals-nav-row">
+                <button
+                  type="button"
+                  className="locals-nav"
+                  aria-label="Show previous reviews"
+                  onClick={() => setReviewsPage((p) => Math.max(p - 1, 0))}
+                  disabled={reviewsPage === 0}
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="locals-nav"
+                  aria-label="Show next reviews"
+                  onClick={() => setReviewsPage((p) => Math.min(p + 1, totalReviewPages - 1))}
+                  disabled={reviewsPage >= totalReviewPages - 1}
+                >
+                  ›
+                </button>
               </div>
             )}
-            <p>{review.comment}</p>
-          </article>
-        ))}
+          </>
+        ) : (
+          <p>No reviews for this sport yet.</p>
+        )}
       </section>
 
       <section className="recommendations">
