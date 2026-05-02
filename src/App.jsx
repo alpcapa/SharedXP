@@ -25,6 +25,7 @@ import useAuth from "./context/AuthContext";
 import NotFoundPage from "./pages/NotFoundPage";
 import AboutPage from "./pages/AboutPage";
 import UserProfilePage from "./pages/UserProfilePage";
+import GuestProfilePage from "./pages/GuestProfilePage";
 
 function App() {
   const authActions = useAuth();
@@ -39,6 +40,7 @@ function App() {
       <Route path="/login" element={<LoginPage {...authActions} />} />
       <Route path="/my-profile" element={<MyProfilePage {...authActions} />} />
       <Route path="/user-profile" element={<UserProfilePage {...authActions} />} />
+      <Route path="/user/:userId" element={<GuestProfilePage {...authActions} />} />
       <Route path="/become-a-host" element={<HostPage {...authActions} />} />
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />

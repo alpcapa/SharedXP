@@ -66,19 +66,17 @@ const getName = (profile) => {
 };
 
 const ProfileLink = ({ profile, userId, name }) => {
-  if (profile?.is_host) {
-    return (
-      <a
-        href={`/buddy/${userId}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="pending-profile-link"
-      >
-        {name}
-      </a>
-    );
-  }
-  return <span>{name}</span>;
+  const href = profile?.is_host ? `/buddy/${userId}` : `/user/${userId}`;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="pending-profile-link"
+    >
+      {name}
+    </a>
+  );
 };
 
 const PendingBookingCard = ({

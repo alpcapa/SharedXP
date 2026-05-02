@@ -4794,3 +4794,150 @@ body {
   font-style: italic;
 }
 
+/* ── Guest Profile Page ──────────────────────────────── */
+.guest-profile-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+.guest-profile-header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 40px;
+}
+
+.guest-profile-photo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #e5e7eb;
+}
+
+.guest-profile-photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  color: #6b7280;
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.guest-profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guest-profile-name {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.guest-profile-host-link {
+  align-self: flex-start;
+  font-size: 13px;
+  padding: 4px 12px;
+}
+
+.guest-profile-member-since {
+  margin: 0;
+  font-size: 14px;
+  color: #596164;
+}
+
+.guest-profile-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.guest-profile-rating-label {
+  font-size: 14px;
+  color: #596164;
+}
+
+.guest-profile-stars .star {
+  font-size: 18px;
+}
+.guest-profile-stars .star.filled { color: #f59e0b; }
+.guest-profile-stars .star.half   { color: #f59e0b; opacity: 0.6; }
+.guest-profile-stars .star.empty  { color: #d1d5db; }
+
+.guest-profile-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: #1a1a1a;
+}
+
+.guest-review-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.guest-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.guest-review-host {
+  margin: 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1a1a1a;
+}
+
+.guest-review-sport {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #596164;
+  text-transform: capitalize;
+}
+
+.guest-review-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.guest-review-date {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+@media (max-width: 480px) {
+  .guest-profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .guest-profile-info {
+    align-items: center;
+  }
+  .guest-profile-host-link {
+    align-self: center;
+  }
+  .guest-review-header {
+    flex-direction: column;
+  }
+  .guest-review-meta {
+    align-items: flex-start;
+  }
+}
+
