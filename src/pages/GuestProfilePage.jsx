@@ -25,7 +25,7 @@ const StarRating = ({ rating }) => {
   );
 };
 
-const GuestProfilePage = ({ currentUser, onLogout, authLoading }) => {
+const GuestProfilePage = ({ currentUser, onLogout }) => {
   const { userId } = useParams();
   const [profile, setProfile] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -77,33 +77,6 @@ const GuestProfilePage = ({ currentUser, onLogout, authLoading }) => {
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + Number(r.host_rating), 0) / reviews.length
       : null;
-
-  if (authLoading) {
-    return (
-      <div className="home-page">
-        <div className="middle-page-frame">
-          <section className="hero auth-hero"><SiteHeader /></section>
-          <main className="middle-section simple-page">
-            <p>Loading…</p>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <div className="home-page">
-        <div className="middle-page-frame">
-          <section className="hero auth-hero"><SiteHeader /></section>
-          <main className="middle-section simple-page">
-            <h1>Please log in</h1>
-            <Link to="/login" className="btn btn-primary">Log in</Link>
-          </main>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="home-page">
