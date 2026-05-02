@@ -379,7 +379,7 @@ const HistoryPage = ({
         <main className="middle-section simple-page history-page">
           <h1>History</h1>
           <p className="history-subtitle">
-            Your completed experiences, shown from latest to oldest.
+            Your experiences, shown from latest to oldest.
           </p>
           <div
             className="host-sport-tabs history-role-tabs"
