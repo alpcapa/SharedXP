@@ -4475,6 +4475,7 @@ body {
   align-self: flex-start;
 }
 
+.chat-sidebar-title {
   margin: 0 0 12px;
   font-size: 24px;
   font-weight: 700;
