@@ -5,6 +5,19 @@ import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
 import { sendNotification } from "../utils/sendNotification";
 
+const STATUS_LABELS = {
+  pending:             { label: "Awaiting host response",    cls: "pending" },
+  accepted:            { label: "Accepted — payment needed", cls: "accepted" },
+  payment_pending:     { label: "Payment pending",           cls: "payment-pending" },
+  in_progress:         { label: "Experience in progress",    cls: "in-progress" },
+  completed:           { label: "Completed",                 cls: "completed" },
+  declined:            { label: "Declined by host",          cls: "declined" },
+  cancelled:           { label: "Cancelled",                 cls: "cancelled" },
+  disputed:            { label: "Dispute in progress",       cls: "disputed" },
+  resolved_paid_host:  { label: "Resolved — payment released", cls: "resolved" },
+  resolved_refunded:   { label: "Resolved — refunded",       cls: "resolved" },
+};
+
 const fmtTime = (iso) =>
   iso
     ? new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", day: "numeric", month: "short" })
@@ -193,9 +206,10 @@ const ChatPage = ({ currentUser, onLogout }) => {
               {new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit" })
                 .format(new Date(`2000-01-01T${booking.requested_time}:00`))}
             </p>
-            <span className={`chat-status-badge status-${booking.status}`}>
-              {booking.status.replace(/_/g, " ")}
-            </span>
+            {(() => {
+              const s = STATUS_LABELS[booking.status] ?? { label: booking.status.replace(/_/g, " "), cls: "pending" };
+              return <span className={`pending-status-badge status-${s.cls}`}>{s.label}</span>;
+            })()}
           </aside>
 
           {/* Chat panel */}
