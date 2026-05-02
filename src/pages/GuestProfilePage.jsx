@@ -1,0 +1,164 @@
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import SiteFooter from "../components/SiteFooter";
+import SiteHeader from "../components/SiteHeader";
+import { supabase } from "../lib/supabase";
+
+const fmtDate = (iso) => {
+  if (!iso) return "";
+  return new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" }).format(new Date(iso));
+};
+
+const StarRating = ({ rating }) => {
+  const r = Math.round(Number(rating) * 2) / 2;
+  return (
+    <span className="guest-profile-stars" aria-label={`${r} out of 5`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <span key={n} className={r >= n ? "star filled" : r >= n - 0.5 ? "star half" : "star empty"}>
+          ★
+        </span>
+      ))}
+    </span>
+  );
+};
+
+const GuestProfilePage = ({ currentUser, onLogout }) => {
+  const { userId } = useParams();
+  const [profile, setProfile] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    setLoading(true);
+
+    Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, full_name, first_name, last_name, photo_url, signed_up_at, is_host")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("bookings")
+        .select("host_rating, sport, completed_at, counterparty_name")
+        .eq("user_id", userId)
+        .eq("role", "attended")
+        .gt("host_rating", 0)
+        .order("completed_at", { ascending: false }),
+    ]).then(([profileResult, reviewsResult]) => {
+      if (!profileResult.error && profileResult.data) {
+        setProfile(profileResult.data);
+      }
+      setReviews(reviewsResult.data ?? []);
+      setLoading(false);
+    });
+  }, [userId]);
+
+  const getName = (p) =>
+    p?.full_name ||
+    [p?.first_name, p?.last_name].filter(Boolean).join(" ") ||
+    "User";
+
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + Number(r.host_rating), 0) / reviews.length
+      : null;
+
+  if (!currentUser) {
+    return (
+      <div className="home-page">
+        <div className="middle-page-frame">
+          <section className="hero auth-hero"><SiteHeader /></section>
+          <main className="middle-section simple-page">
+            <h1>Please log in</h1>
+            <Link to="/login" className="btn btn-primary">Log in</Link>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="home-page">
+      <div className="middle-page-frame">
+        <section className="hero auth-hero">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </section>
+
+        <main className="middle-section simple-page guest-profile-page">
+          {loading ? (
+            <p>Loading profile…</p>
+          ) : !profile ? (
+            <>
+              <h1>Profile not found</h1>
+              <Link to="/" className="btn btn-primary">Go home</Link>
+            </>
+          ) : (
+            <>
+              <div className="guest-profile-header">
+                {profile.photo_url ? (
+                  <img
+                    src={profile.photo_url}
+                    alt={getName(profile)}
+                    className="guest-profile-photo"
+                  />
+                ) : (
+                  <div className="guest-profile-photo guest-profile-photo-placeholder">
+                    {getName(profile).charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="guest-profile-info">
+                  <h1 className="guest-profile-name">{getName(profile)}</h1>
+                  {profile.is_host && (
+                    <Link to={`/buddy/${userId}`} className="btn btn-light guest-profile-host-link">
+                      View host profile →
+                    </Link>
+                  )}
+                  {profile.signed_up_at && (
+                    <p className="guest-profile-member-since">
+                      Member since {fmtDate(profile.signed_up_at)}
+                    </p>
+                  )}
+                  {avgRating !== null && (
+                    <div className="guest-profile-rating">
+                      <StarRating rating={avgRating} />
+                      <span className="guest-profile-rating-label">
+                        {avgRating.toFixed(1)} · {reviews.length} {reviews.length === 1 ? "review" : "reviews"} as guest
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <section className="guest-profile-reviews">
+                <h2 className="guest-profile-section-title">
+                  {reviews.length === 0 ? "No reviews yet" : "Reviews from hosts"}
+                </h2>
+                {reviews.map((r, i) => (
+                  <article key={i} className="guest-review-card">
+                    <div className="guest-review-header">
+                      <div>
+                        <p className="guest-review-host">{r.counterparty_name || "Host"}</p>
+                        <p className="guest-review-sport">{r.sport}</p>
+                      </div>
+                      <div className="guest-review-meta">
+                        <StarRating rating={r.host_rating} />
+                        {r.completed_at && (
+                          <p className="guest-review-date">{fmtDate(r.completed_at)}</p>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </section>
+            </>
+          )}
+        </main>
+
+        <SiteFooter />
+      </div>
+    </div>
+  );
+};
+
+export default GuestProfilePage;
