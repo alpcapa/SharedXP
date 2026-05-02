@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import HistoryCard from "../components/history/HistoryCard";
+import PendingBookingCard from "../components/history/PendingBookingCard";
 import HistoryPhotoGallery from "../components/history/HistoryPhotoGallery";
 import ShareToFieldModal from "../components/history/ShareToFieldModal";
 import {
@@ -18,6 +19,7 @@ import {
   toStoredHosted,
 } from "../utils/historyItem";
 import { saveFieldPost } from "../utils/fieldPosts";
+import { useBookingRequests } from "../hooks/useBookingRequests";
 
 const buildFieldPost = (item, currentUser, caption) => {
   const realPhotos = (item.photoGallery ?? []).filter(
@@ -49,6 +51,9 @@ const HistoryPage = ({
   onSaveHistory,
   onSaveHostHistory,
 }) => {
+  const location = useLocation();
+  const queryTab = new URLSearchParams(location.search).get("tab");
+
   if (!currentUser) {
     return (
       <div className="home-page">
@@ -75,7 +80,22 @@ const HistoryPage = ({
     )
   );
   const [selectedSport, setSelectedSport] = useState("All");
-  const [selectedRole, setSelectedRole] = useState("all");
+  const [selectedRole, setSelectedRole] = useState(queryTab === "pending" ? "pending" : "all");
+
+  const {
+    requests: bookingRequests,
+    loading: requestsLoading,
+    acceptRequest,
+    declineRequest,
+    cancelRequest,
+    confirmExperience,
+    openDispute,
+  } = useBookingRequests(currentUser);
+
+  // Sync tab from URL (e.g. after booking submission redirect)
+  useEffect(() => {
+    if (queryTab === "pending") setSelectedRole("pending");
+  }, [queryTab]);
   const [dirtyIds, setDirtyIds] = useState(() => new Set());
   const [activeGallery, setActiveGallery] = useState(null);
   const [sharePromptItemId, setSharePromptItemId] = useState(null);
@@ -368,6 +388,7 @@ const HistoryPage = ({
           >
             {[
               { value: "all", label: "All" },
+              { value: "pending", label: `Pending${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length ? ` (${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length})` : ""}` },
               { value: "hosted", label: "Hosted" },
               { value: "attended", label: "Attended" },
             ].map((tab) => (
@@ -409,7 +430,28 @@ const HistoryPage = ({
             </div>
           )}
 
-          {visibleItems.length ? (
+          {selectedRole === "pending" ? (
+            requestsLoading ? (
+              <p className="history-loading">Loading…</p>
+            ) : bookingRequests.length ? (
+              <div className="history-list">
+                {bookingRequests.map((req) => (
+                  <PendingBookingCard
+                    key={req.id}
+                    request={req}
+                    currentUserId={currentUser.id}
+                    onAccept={acceptRequest}
+                    onDecline={declineRequest}
+                    onCancel={cancelRequest}
+                    onConfirmExperience={confirmExperience}
+                    onOpenDispute={openDispute}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p>No booking requests yet. <Link to="/locals">Find a host</Link> to get started.</p>
+            )
+          ) : visibleItems.length ? (
             <div className="history-list">
               {visibleItems.map((item) => (
                 <HistoryCard
