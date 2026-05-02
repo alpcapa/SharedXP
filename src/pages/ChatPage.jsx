@@ -166,6 +166,8 @@ const ChatPage = ({ currentUser, onLogout }) => {
     ? (otherUser.full_name || `${otherUser.first_name ?? ""} ${otherUser.last_name ?? ""}`.trim() || "User")
     : "User";
 
+  const myName = currentUser.fullName || currentUser.firstName || "You";
+
   return (
     <div className="chat-page">
       <SiteHeader currentUser={currentUser} onLogout={onLogout} />
@@ -209,6 +211,7 @@ const ChatPage = ({ currentUser, onLogout }) => {
                     key={msg.id}
                     className={`chat-bubble ${isMe ? "chat-bubble-me" : "chat-bubble-them"}`}
                   >
+                    <p className="chat-bubble-author">{isMe ? myName : otherName} wrote</p>
                     <p className="chat-bubble-text">{msg.content}</p>
                     <time className="chat-bubble-time">{fmtTime(msg.created_at)}</time>
                   </div>
