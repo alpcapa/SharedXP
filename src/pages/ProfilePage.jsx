@@ -547,10 +547,10 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const { rating: hostRating, reviewCount } = getHostRatingSummary(buddy);
   const { city, country } = getLocationParts(buddy);
   const memberSince = getMemberSinceLabel(buddy);
+  const isOwnProfile = isCurrentUserHostForBuddy(currentUser, buddy);
   const isHostPaused =
     Boolean(buddy.paused) ||
-    (isCurrentUserHostForBuddy(currentUser, buddy) &&
-      Boolean(currentUser?.hostProfile?.pauseHosting));
+    (isOwnProfile && Boolean(currentUser?.hostProfile?.pauseHosting));
   const canRequestBooking = Boolean(selectedDate && selectedTime);
   const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
   const perLabel = activeSport.priceUnit ?? buddy.priceUnit ?? "per session";
@@ -837,14 +837,18 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               {selectedTime ? formatTime(selectedTime) : "No time selected"}
             </span>
           </p>
-          <button
-            type="button"
-            className="find-button booking-request-button"
-            disabled={!canRequestBooking}
-            onClick={handleOpenConfirmation}
-          >
-            Request booking
-          </button>
+          {isOwnProfile ? (
+            <p className="booking-own-profile-notice">You cannot book your own events</p>
+          ) : (
+            <button
+              type="button"
+              className="find-button booking-request-button"
+              disabled={!canRequestBooking}
+              onClick={handleOpenConfirmation}
+            >
+              Request booking
+            </button>
+          )}
           {showLoginPrompt && (
             <div className="booking-login-prompt" role="alert">
               <p>You need to login to book with a host.</p>
