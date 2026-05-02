@@ -4919,6 +4919,10 @@ body {
   font-size: 26px;
   font-weight: 700;
   color: #1a1a1a;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .guest-profile-host-link {
@@ -4928,9 +4932,9 @@ body {
 }
 
 .guest-profile-age {
-  font-size: 20px;
-  font-weight: 400;
-  color: #596164;
+  font-size: 0.62em;
+  font-weight: 500;
+  color: #6b7280;
 }
 
 .guest-profile-location {
