@@ -165,8 +165,8 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
           <div className="profile-summary-photo-column">
             <img src={currentUser.photo} alt={currentUser.fullName || currentUser.firstName || "User"} className="profile-main-image" />
             <div className="profile-summary-meta">
-              <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
-              <p>{sportsSelection.length ? `Sports: ${sportsSelection.join(", ")}` : "Sports: Not specified"}</p>
+              <p><strong>Language:</strong> {languageLine || "Not specified"}</p>
+              <p><strong>Sports:</strong> {sportsSelection.length ? sportsSelection.join(", ") : "Not specified"}</p>
             </div>
           </div>
         </div>
