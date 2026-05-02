@@ -1469,7 +1469,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: 280px;
+  max-width: 340px;
 }
 
 .pause-warning-text {
