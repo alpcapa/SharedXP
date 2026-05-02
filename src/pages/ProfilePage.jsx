@@ -677,6 +677,10 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                   ({hostAge})
                 </span>
               )}
+              <span className="profile-rating-inline">
+                ⭐ {hostRating}
+                {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
+              </span>
             </h1>
             {isOwnProfile && (
               <div className="profile-summary-actions">
@@ -686,10 +690,6 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               </div>
             )}
           </div>
-          <p className="profile-rating-inline">
-            ⭐ {hostRating}
-            {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
-          </p>
           <p className="profile-location-line">{locationLine}</p>
         </div>
         <div className="profile-summary-body">
