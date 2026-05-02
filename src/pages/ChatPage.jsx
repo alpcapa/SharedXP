@@ -179,7 +179,7 @@ const ChatPage = ({ currentUser, onLogout }) => {
         <div className="chat-layout">
           {/* Sidebar */}
           <aside className="chat-sidebar">
-            <h2 className="chat-sidebar-title">Booking details</h2>
+            <h2 className="chat-sidebar-title">Chat</h2>
             {otherUser?.photo_url && (
               <img src={otherUser.photo_url} alt={otherName} className="chat-other-photo" />
             )}
