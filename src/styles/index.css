@@ -4471,7 +4471,10 @@ body {
   align-self: start;
 }
 
-.chat-sidebar-title {
+.chat-sidebar .pending-status-badge {
+  align-self: flex-start;
+}
+
   margin: 0 0 12px;
   font-size: 24px;
   font-weight: 700;
