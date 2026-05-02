@@ -58,6 +58,13 @@ const STATUS_LABELS = {
   resolved_refunded: { label: "Resolved — refunded", cls: "resolved" },
 };
 
+const getName = (profile) => {
+  if (!profile) return null;
+  return profile.full_name ||
+    `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() ||
+    null;
+};
+
 const PendingBookingCard = ({
   request,
   currentUserId,
@@ -73,6 +80,9 @@ const PendingBookingCard = ({
 
   const isHost = request.host_id === currentUserId;
   const isRequester = request.requester_id === currentUserId;
+
+  const hostName = getName(request.host_profile) ?? "Host";
+  const requesterName = getName(request.requester_profile) ?? "Guest";
   const statusInfo = STATUS_LABELS[request.status] ?? { label: request.status, cls: "pending" };
 
   const autoConfirmCountdown = useCountdown(
@@ -134,7 +144,7 @@ const PendingBookingCard = ({
             {fmt(request.price, request.currency)} per session
           </p>
           <p className="pending-card-role">
-            {isHost ? "Requested by a guest" : `Hosted by someone`}
+            {isHost ? `Requested by ${requesterName}` : `Hosted by ${hostName}`}
           </p>
         </div>
 
@@ -152,7 +162,7 @@ const PendingBookingCard = ({
             )}
             <div className="pending-card-actions">
               <Link to={`/chat/${request.id}`} className="btn btn-light pending-chat-btn">
-                💬 {isHost ? "Contact Guest" : "Contact Host"}
+                💬 {isHost ? `Contact ${requesterName}` : `Contact ${hostName}`}
               </Link>
               {isRequester && experienceEnded && (
                 <>
@@ -247,7 +257,7 @@ const PendingBookingCard = ({
         {request.status === "completed" && (
           <div className="pending-card-actions">
             <Link to={`/chat/${request.id}`} className="btn btn-light pending-chat-btn">
-              💬 {isHost ? "Contact Guest" : "Contact Host"}
+              💬 {isHost ? `Contact ${requesterName}` : `Contact ${hostName}`}
             </Link>
           </div>
         )}

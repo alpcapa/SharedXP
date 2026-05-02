@@ -14,7 +14,11 @@ export const useBookingRequests = (currentUser) => {
     setLoading(true);
     const { data, error } = await supabase
       .from("booking_requests")
-      .select("*")
+      .select(`
+        *,
+        host_profile:profiles!host_id(full_name, first_name, last_name, photo_url),
+        requester_profile:profiles!requester_id(full_name, first_name, last_name, photo_url)
+      `)
       .or(`requester_id.eq.${currentUser.id},host_id.eq.${currentUser.id}`)
       .order("created_at", { ascending: false });
     if (!error) setRequests(data ?? []);
