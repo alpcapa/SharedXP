@@ -392,7 +392,7 @@ const HistoryPage = ({
           >
             {[
               { value: "all", label: "All" },
-              { value: "pending", label: `Pending${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length ? ` (${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length})` : ""}` },
+              { value: "pending", label: `Ongoing${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length ? ` (${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length})` : ""}` },
               { value: "hosted", label: "Hosted" },
               { value: "attended", label: "Attended" },
             ].map((tab) => (

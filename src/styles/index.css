@@ -4025,6 +4025,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  text-decoration: none;
 }
 
 .pending-unread-badge {
@@ -4053,8 +4054,7 @@ body {
 
 .pending-profile-link {
   color: #2563eb;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
   font-weight: 500;
 }
 .pending-profile-link:hover {
@@ -4470,9 +4470,13 @@ body {
   align-self: start;
 }
 
+.chat-sidebar .pending-status-badge {
+  align-self: flex-start;
+}
+
 .chat-sidebar-title {
   margin: 0 0 12px;
-  font-size: 15px;
+  font-size: 24px;
   font-weight: 700;
   color: #1a1a1a;
 }
@@ -4564,7 +4568,7 @@ body {
 .chat-bubble-author {
   margin: 0 0 3px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   color: #9ca3af;
   padding: 0 4px;
 }
@@ -4919,12 +4923,28 @@ body {
   font-size: 26px;
   font-weight: 700;
   color: #1a1a1a;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .guest-profile-host-link {
   align-self: flex-start;
   font-size: 13px;
   padding: 4px 12px;
+}
+
+.guest-profile-age {
+  font-size: 0.62em;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.guest-profile-location {
+  margin: 0;
+  font-size: 14px;
+  color: #596164;
 }
 
 .guest-profile-member-since {
