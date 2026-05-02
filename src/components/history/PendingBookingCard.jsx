@@ -81,7 +81,7 @@ const ProfileLink = ({ profile, userId, name }) => {
 
 const ContactLink = ({ requestId, name, unreadCount }) => (
   <Link to={`/chat/${requestId}`} className="btn btn-light pending-chat-btn">
-    💬 Contact {name}
+    💬 Chat with {name}
     {unreadCount > 0 && <span className="pending-unread-badge">{unreadCount}</span>}
   </Link>
 );
