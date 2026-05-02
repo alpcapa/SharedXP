@@ -156,6 +156,7 @@ const PaymentPage = ({ currentUser, onLogout }) => {
             <div className="payment-success-icon">✓</div>
             <h1>Payment confirmed!</h1>
             <p>Your <strong>{booking.sport}</strong> experience with <strong>{hostName}</strong> on {fmtDate(booking.requested_date)} at {fmtTime(booking.requested_time)} is now confirmed.</p>
+            <p className="payment-booking-ref">Booking ref: #{booking.id.slice(0, 8).toUpperCase()}</p>
             <p className="payment-success-sub">You can message the host directly for meeting details.</p>
             <div className="payment-success-actions">
               <Link to={`/chat/${booking.id}`} className="find-button">
@@ -190,6 +191,7 @@ const PaymentPage = ({ currentUser, onLogout }) => {
             )}
             <p className="payment-summary-host">{hostName}</p>
             <p className="payment-summary-sport">{booking.sport}</p>
+            <p className="payment-booking-ref">Ref: #{booking.id.slice(0, 8).toUpperCase()}</p>
             <p className="payment-summary-datetime">
               {fmtDate(booking.requested_date)}<br />{fmtTime(booking.requested_time)}
             </p>
