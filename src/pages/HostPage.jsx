@@ -6,6 +6,7 @@ import HostSportTab from "../components/host/HostSportTab";
 import HostPaymentTab from "../components/host/HostPaymentTab";
 import { COUNTRY_OPTIONS } from "../data/countries";
 import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
+import { supabase } from "../lib/supabase";
 import {
   getInitialHostProfile,
   validatePaymentTab,
@@ -24,6 +25,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
   const [activeSportIndex, setActiveSportIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [pauseWarning, setPauseWarning] = useState("");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearchValue, setCountrySearchValue] = useState("");
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
@@ -232,14 +234,30 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                 role="switch"
                 aria-checked={isHostingPaused}
                 checked={isHostingPaused}
-                onChange={(event) => {
+                onChange={async (event) => {
                   const newPaused = event.target.checked;
+                  if (newPaused && currentUser?.id) {
+                    const { data } = await supabase
+                      .from("booking_requests")
+                      .select("id")
+                      .eq("host_id", currentUser.id)
+                      .eq("status", "in_progress")
+                      .limit(1);
+                    if (data?.length > 0) {
+                      setPauseWarning("You have an experience currently in progress. You cannot pause hosting until it is completed.");
+                      return;
+                    }
+                  }
+                  setPauseWarning("");
                   setHostProfileDraft((prev) => ({ ...prev, pauseHosting: newPaused }));
                   onTogglePauseHosting?.(newPaused);
                 }}
               />
               <span className="hosting-pause-switch" aria-hidden="true" />
             </label>
+            {pauseWarning && (
+              <p className="pause-warning" role="alert">{pauseWarning}</p>
+            )}
           </div>
 
           <div
