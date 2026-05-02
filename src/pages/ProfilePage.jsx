@@ -665,16 +665,11 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             ← Back to home
           </Link>
         )}
-        {isOwnProfile && (
-          <Link to="/host-settings" className="btn btn-primary">
-            Host Settings
-          </Link>
-        )}
       </div>
 
       <section className="profile-summary">
         <div className="profile-summary-header">
-          <div className="profile-name-rating-row">
+          <div className="profile-summary-top-row">
             <h1 className="profile-name-with-age">
               {firstName} {lastName}
               {hostAge != null && (
@@ -683,11 +678,18 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                 </span>
               )}
             </h1>
-            <p className="profile-rating-inline">
-              ⭐ {hostRating}
-              {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
-            </p>
+            {isOwnProfile && (
+              <div className="profile-summary-actions">
+                <Link to="/host-settings" className="btn btn-primary">
+                  Host Settings
+                </Link>
+              </div>
+            )}
           </div>
+          <p className="profile-rating-inline">
+            ⭐ {hostRating}
+            {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
+          </p>
           <p className="profile-location-line">{locationLine}</p>
         </div>
         <div className="profile-summary-body">
