@@ -101,7 +101,7 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
                 My Profile
               </Link>
               <Link to="/history" className="user-dropdown-link" role="menuitem">
-                History
+                My History
               </Link>
               <Link
                 to={navHostRoute}

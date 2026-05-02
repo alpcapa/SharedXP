@@ -98,7 +98,7 @@ const HistoryPage = ({
 
   // Sync tab from URL (e.g. after booking submission redirect)
   useEffect(() => {
-    if (queryTab === "pending") setSelectedRole("pending");
+    setSelectedRole(queryTab === "pending" ? "pending" : "all");
   }, [queryTab]);
   const [dirtyIds, setDirtyIds] = useState(() => new Set());
   const [activeGallery, setActiveGallery] = useState(null);
