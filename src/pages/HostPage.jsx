@@ -245,7 +245,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                         .eq("status", "in_progress")
                         .limit(1);
                       if (data?.length > 0) {
-                        setPauseWarning("You have an experience currently in progress. You cannot pause hosting until it is completed.");
+                        setPauseWarning("An experience is in progress. You can pause once it's completed.");
                         return;
                       }
                     }
