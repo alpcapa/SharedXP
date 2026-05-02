@@ -6,6 +6,7 @@ import HostSportTab from "../components/host/HostSportTab";
 import HostPaymentTab from "../components/host/HostPaymentTab";
 import { COUNTRY_OPTIONS } from "../data/countries";
 import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
+import { supabase } from "../lib/supabase";
 import {
   getInitialHostProfile,
   validatePaymentTab,
@@ -24,6 +25,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
   const [activeSportIndex, setActiveSportIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [pauseWarning, setPauseWarning] = useState("");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearchValue, setCountrySearchValue] = useState("");
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
@@ -224,22 +226,49 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                   : "Manage your sport offerings and payment details."}
               </p>
             </div>
-            <label className="hosting-pause-toggle" htmlFor="pauseHosting">
-              <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
-              <input
-                id="pauseHosting"
-                type="checkbox"
-                role="switch"
-                aria-checked={isHostingPaused}
-                checked={isHostingPaused}
-                onChange={(event) => {
-                  const newPaused = event.target.checked;
-                  setHostProfileDraft((prev) => ({ ...prev, pauseHosting: newPaused }));
-                  onTogglePauseHosting?.(newPaused);
-                }}
-              />
-              <span className="hosting-pause-switch" aria-hidden="true" />
-            </label>
+            <div className="pause-hosting-group">
+              <label className="hosting-pause-toggle" htmlFor="pauseHosting">
+                <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
+                <input
+                  id="pauseHosting"
+                  type="checkbox"
+                  role="switch"
+                  aria-checked={isHostingPaused}
+                  checked={isHostingPaused}
+                  onChange={async (event) => {
+                    const newPaused = event.target.checked;
+                    if (newPaused && currentUser?.id) {
+                      const { data } = await supabase
+                        .from("booking_requests")
+                        .select("id")
+                        .eq("host_id", currentUser.id)
+                        .eq("status", "in_progress")
+                        .limit(1);
+                      if (data?.length > 0) {
+                        setPauseWarning("You have an experience in progress. You can pause once it's completed.");
+                        return;
+                      }
+                    }
+                    setPauseWarning("");
+                    setHostProfileDraft((prev) => ({ ...prev, pauseHosting: newPaused }));
+                    onTogglePauseHosting?.(newPaused);
+                  }}
+                />
+                <span className="hosting-pause-switch" aria-hidden="true" />
+              </label>
+              {pauseWarning && (
+                <div className="pause-warning" role="alert">
+                  <p className="pause-warning-text">{pauseWarning}</p>
+                  <button
+                    type="button"
+                    className="pause-warning-ok"
+                    onClick={() => setPauseWarning("")}
+                  >
+                    OK
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div
