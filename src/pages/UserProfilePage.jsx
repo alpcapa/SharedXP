@@ -148,6 +148,11 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
               <Link to="/my-profile" className="btn btn-primary">
                 Edit Profile
               </Link>
+              {currentUser.isHost && (
+                <Link to={`/buddy/${currentUser.id}`} className="btn btn-primary">
+                  Hosting Page
+                </Link>
+              )}
               <Link to={hostActionRoute} className="btn btn-primary">
                 {hostActionLabel}
               </Link>
