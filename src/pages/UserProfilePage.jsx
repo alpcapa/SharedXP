@@ -133,14 +133,22 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
       <section className="profile-summary">
         <div className="profile-summary-header">
           <div className="profile-summary-top-row">
-            <h1 className="profile-name-with-age">
-              {currentUser.fullName || currentUser.firstName || "User"}
-              {userAge != null && (
-                <span className="profile-name-age" aria-label={`age ${userAge}`}>
-                  ({userAge})
+            <div>
+              <h1 className="profile-name-with-age">
+                {currentUser.fullName || currentUser.firstName || "User"}
+                {userAge != null && (
+                  <span className="profile-name-age" aria-label={`age ${userAge}`}>
+                    ({userAge})
+                  </span>
+                )}
+                <span className="profile-rating-inline">
+                  ⭐ {averageRating}
+                  {hostRatings.length > 0 ? ` (${hostRatings.length})` : ""} · <span className="verified">Verified</span>
                 </span>
-              )}
-            </h1>
+              </h1>
+              <p className="profile-location-line">{locationLine}</p>
+              <p className="profile-member-since">Member since {memberSince}</p>
+            </div>
             <div className="profile-summary-actions">
               <Link to="/my-profile" className="btn btn-primary">
                 Edit Profile
@@ -152,17 +160,11 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
               )}
             </div>
           </div>
-          <p>
-            ⭐ {averageRating}
-            {hostRatings.length > 0 ? ` (${hostRatings.length})` : ""} · <span className="verified">Verified</span>
-          </p>
         </div>
         <div className="profile-summary-body">
           <div className="profile-summary-photo-column">
             <img src={currentUser.photo} alt={currentUser.fullName || currentUser.firstName || "User"} className="profile-main-image" />
             <div className="profile-summary-meta">
-              <p>{locationLine}</p>
-              <p>Member since {memberSince}</p>
               <p>{languageLine ? `Language: ${languageLine}` : "Language: Not specified"}</p>
               <p>{sportsSelection.length ? `Sports: ${sportsSelection.join(", ")}` : "Sports: Not specified"}</p>
             </div>
