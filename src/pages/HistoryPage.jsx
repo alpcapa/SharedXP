@@ -85,12 +85,16 @@ const HistoryPage = ({
   const {
     requests: bookingRequests,
     loading: requestsLoading,
+    unreadCounts,
     acceptRequest,
     declineRequest,
     cancelRequest,
     confirmExperience,
     openDispute,
   } = useBookingRequests(currentUser);
+
+  const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
+  const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status));
 
   // Sync tab from URL (e.g. after booking submission redirect)
   useEffect(() => {
@@ -440,6 +444,7 @@ const HistoryPage = ({
                     key={req.id}
                     request={req}
                     currentUserId={currentUser.id}
+                    unreadCount={unreadCounts[req.id] ?? 0}
                     onAccept={acceptRequest}
                     onDecline={declineRequest}
                     onCancel={cancelRequest}
@@ -451,29 +456,50 @@ const HistoryPage = ({
             ) : (
               <p>No booking requests yet. <Link to="/locals">Find a host</Link> to get started.</p>
             )
-          ) : visibleItems.length ? (
-            <div className="history-list">
-              {visibleItems.map((item) => (
-                <HistoryCard
-                  key={item.id}
-                  item={item}
-                  isDirty={dirtyIds.has(item.id)}
-                  onUpdateField={updateItem}
-                  onUpdateHostRating={updateHostRating}
-                  onSaveItem={saveItem}
-                  onConfirmCompletion={confirmCompletion}
-                  onOpenGallery={openGallery}
-                  onUploadPhotos={handlePhotoUpload}
-                  onDeletePhoto={handlePhotoDelete}
-                />
-              ))}
-            </div>
           ) : (
-            <p>
-              {allItems.length
-                ? "No completed experiences for this sport yet."
-                : "No completed experiences yet."}
-            </p>
+            <>
+              {selectedRole === "all" && activeBookingRequests.length > 0 && (
+                <div className="history-list">
+                  {activeBookingRequests.map((req) => (
+                    <PendingBookingCard
+                      key={req.id}
+                      request={req}
+                      currentUserId={currentUser.id}
+                      unreadCount={unreadCounts[req.id] ?? 0}
+                      onAccept={acceptRequest}
+                      onDecline={declineRequest}
+                      onCancel={cancelRequest}
+                      onConfirmExperience={confirmExperience}
+                      onOpenDispute={openDispute}
+                    />
+                  ))}
+                </div>
+              )}
+              {visibleItems.length > 0 ? (
+                <div className="history-list">
+                  {visibleItems.map((item) => (
+                    <HistoryCard
+                      key={item.id}
+                      item={item}
+                      isDirty={dirtyIds.has(item.id)}
+                      onUpdateField={updateItem}
+                      onUpdateHostRating={updateHostRating}
+                      onSaveItem={saveItem}
+                      onConfirmCompletion={confirmCompletion}
+                      onOpenGallery={openGallery}
+                      onUploadPhotos={handlePhotoUpload}
+                      onDeletePhoto={handlePhotoDelete}
+                    />
+                  ))}
+                </div>
+              ) : selectedRole === "all" && activeBookingRequests.length > 0 ? null : (
+                <p>
+                  {allItems.length
+                    ? "No completed experiences for this sport yet."
+                    : "No completed experiences yet."}
+                </p>
+              )}
+            </>
           )}
 
           <HistoryPhotoGallery

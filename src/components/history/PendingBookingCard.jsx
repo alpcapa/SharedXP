@@ -79,9 +79,17 @@ const ProfileLink = ({ profile, userId, name }) => {
   );
 };
 
+const ContactLink = ({ requestId, name, unreadCount }) => (
+  <Link to={`/chat/${requestId}`} className="btn btn-light pending-chat-btn">
+    💬 Contact {name}
+    {unreadCount > 0 && <span className="pending-unread-badge">{unreadCount}</span>}
+  </Link>
+);
+
 const PendingBookingCard = ({
   request,
   currentUserId,
+  unreadCount = 0,
   onAccept,
   onDecline,
   onCancel,
@@ -179,9 +187,11 @@ const PendingBookingCard = ({
               </p>
             )}
             <div className="pending-card-actions">
-              <Link to={`/chat/${request.id}`} className="btn btn-light pending-chat-btn">
-                💬 {isHost ? `Contact ${requesterName}` : `Contact ${hostName}`}
-              </Link>
+              <ContactLink
+                requestId={request.id}
+                name={isHost ? requesterName : hostName}
+                unreadCount={unreadCount}
+              />
               {isRequester && experienceEnded && (
                 <>
                   <button
@@ -271,12 +281,14 @@ const PendingBookingCard = ({
           </div>
         )}
 
-        {/* Completed — prompt for review if no bookings row yet */}
+        {/* Completed */}
         {request.status === "completed" && (
           <div className="pending-card-actions">
-            <Link to={`/chat/${request.id}`} className="btn btn-light pending-chat-btn">
-              💬 {isHost ? `Contact ${requesterName}` : `Contact ${hostName}`}
-            </Link>
+            <ContactLink
+              requestId={request.id}
+              name={isHost ? requesterName : hostName}
+              unreadCount={unreadCount}
+            />
           </div>
         )}
       </article>

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
+import { sendNotification } from "../utils/sendNotification";
 
 const fmtTime = (iso) =>
   iso
@@ -52,6 +53,15 @@ const ChatPage = ({ currentUser, onLogout }) => {
         .eq("booking_request_id", bookingRequestId)
         .order("created_at", { ascending: true });
       setMessages(msgs ?? []);
+
+      // Mark all incoming messages as read
+      await supabase
+        .from("messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq("booking_request_id", bookingRequestId)
+        .neq("sender_id", currentUser.id)
+        .is("read_at", null);
+
       setLoading(false);
     })();
   }, [currentUser, bookingRequestId]);
@@ -74,6 +84,14 @@ const ChatPage = ({ currentUser, onLogout }) => {
             if (prev.some((m) => m.id === payload.new.id)) return prev;
             return [...prev, payload.new];
           });
+          // Mark as read immediately if the message is from the other person
+          if (payload.new.sender_id !== currentUser.id) {
+            supabase
+              .from("messages")
+              .update({ read_at: new Date().toISOString() })
+              .eq("id", payload.new.id)
+              .is("read_at", null);
+          }
         },
       )
       .subscribe();
@@ -95,6 +113,8 @@ const ChatPage = ({ currentUser, onLogout }) => {
       sender_id: currentUser.id,
       content: text,
     });
+    // Fire-and-forget email notification to the other participant
+    sendNotification("new_message", booking.id, { senderId: currentUser.id });
     setSending(false);
   };
 

@@ -308,6 +308,28 @@ function buildDisputeHostRespondedToCS(
   };
 }
 
+function buildNewMessage(
+  booking: Record<string, unknown>,
+  recipient: Record<string, unknown>,
+  senderName: string,
+): { to: string; subject: string; html: string } {
+  const recipientName = String(recipient.full_name ?? `${recipient.first_name ?? ""} ${recipient.last_name ?? ""}`.trim() || "there");
+  const ctaUrl = `${APP_URL}/chat/${booking.id}`;
+  return {
+    to: String(recipient.email),
+    subject: `New message from ${senderName} — SharedXP`,
+    html: emailHtml(
+      `New message, ${recipientName}!`,
+      [
+        `<strong>${senderName}</strong> sent you a message about your <strong>${booking.sport}</strong> booking on ${booking.requested_date}.`,
+        `Log in to your SharedXP account to read and reply.`,
+      ],
+      ctaUrl,
+      "View Message",
+    ),
+  };
+}
+
 function buildDisputeResolvedRefund(
   booking: Record<string, unknown>,
   requester: Record<string, unknown>,
@@ -405,10 +427,11 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { emailType, bookingRequestId, disputeId } = body as {
+  const { emailType, bookingRequestId, disputeId, senderId } = body as {
     emailType: string;
     bookingRequestId?: string;
     disputeId?: string;
+    senderId?: string;
   };
 
   if (!emailType) {
@@ -531,6 +554,15 @@ serve(async (req: Request): Promise<Response> => {
       case "dispute_host_responded": {
         if (!dispute) break;
         const e = buildDisputeHostRespondedToCS(booking, requester, host, dispute);
+        await sendEmail(e.to, e.subject, e.html);
+        break;
+      }
+      case "new_message": {
+        const isRequesterSender = String(booking.requester_id) === senderId;
+        const recipient = isRequesterSender ? host : requester;
+        const senderProfile = isRequesterSender ? requester : host;
+        const senderName = String(senderProfile.full_name ?? `${senderProfile.first_name ?? ""} ${senderProfile.last_name ?? ""}`.trim() || "Someone");
+        const e = buildNewMessage(booking, recipient, senderName);
         await sendEmail(e.to, e.subject, e.html);
         break;
       }

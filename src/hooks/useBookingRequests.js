@@ -8,6 +8,7 @@ const TAX_RATE = 0.05;
 export const useBookingRequests = (currentUser) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState({});
 
   const fetchRequests = useCallback(async () => {
     if (!currentUser?.id) return;
@@ -21,7 +22,26 @@ export const useBookingRequests = (currentUser) => {
       `)
       .or(`requester_id.eq.${currentUser.id},host_id.eq.${currentUser.id}`)
       .order("created_at", { ascending: false });
-    if (!error) setRequests(data ?? []);
+    if (!error) {
+      const rows = data ?? [];
+      setRequests(rows);
+      const ids = rows.map((r) => r.id);
+      if (ids.length > 0) {
+        const { data: unread } = await supabase
+          .from("messages")
+          .select("booking_request_id")
+          .in("booking_request_id", ids)
+          .neq("sender_id", currentUser.id)
+          .is("read_at", null);
+        const counts = {};
+        for (const row of unread ?? []) {
+          counts[row.booking_request_id] = (counts[row.booking_request_id] ?? 0) + 1;
+        }
+        setUnreadCounts(counts);
+      } else {
+        setUnreadCounts({});
+      }
+    }
     setLoading(false);
   }, [currentUser?.id]);
 
@@ -190,6 +210,7 @@ export const useBookingRequests = (currentUser) => {
   return {
     requests,
     loading,
+    unreadCounts,
     fetchRequests,
     acceptRequest,
     declineRequest,
