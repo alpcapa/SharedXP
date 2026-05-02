@@ -159,6 +159,7 @@ const PendingBookingCard = ({
               {statusInfo.label}
             </span>
           </div>
+          <p className="pending-card-ref">Ref: #{request.id.slice(0, 8).toUpperCase()}</p>
           <p className="pending-card-date">
             {fmtDate(request.requested_date)} · {fmtTime(request.requested_time)}
           </p>
