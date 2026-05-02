@@ -1460,8 +1460,7 @@ body {
   border-radius: 8px;
   font-size: 14px;
   color: #b91c1c;
-  max-width: 480px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 12px;
 }
@@ -1469,6 +1468,7 @@ body {
 .pause-warning-text {
   margin: 0;
   flex: 1;
+  font-weight: 700;
 }
 
 .pause-warning-ok {
