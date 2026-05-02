@@ -665,6 +665,11 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             ← Back to home
           </Link>
         )}
+        {isOwnProfile && (
+          <Link to="/host-settings" className="btn btn-primary">
+            Host Settings
+          </Link>
+        )}
       </div>
 
       <section className="profile-summary">

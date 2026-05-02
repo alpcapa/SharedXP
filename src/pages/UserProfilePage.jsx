@@ -122,9 +122,6 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
     .filter(Boolean)
     .join(", ");
   const galleryPhotos = getHistoryGalleryPhotos(currentUser.history);
-  const hostActionRoute = currentUser.isHost ? "/host-settings" : "/become-a-host";
-  const hostActionLabel = currentUser.isHost ? "Host Settings" : "Become a Host";
-
   useEffect(() => {
     setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
   }, [totalRecommendationPages]);
@@ -153,9 +150,6 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
                   Hosting Page
                 </Link>
               )}
-              <Link to={hostActionRoute} className="btn btn-primary">
-                {hostActionLabel}
-              </Link>
             </div>
           </div>
           <p>
