@@ -3979,6 +3979,16 @@ body {
   color: #596164;
 }
 
+.pending-profile-link {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+.pending-profile-link:hover {
+  color: #1d4ed8;
+}
+
 /* ── Status badges ───────────────────────────────── */
 .pending-status-badge {
   display: inline-block;

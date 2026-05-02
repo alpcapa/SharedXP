@@ -65,6 +65,22 @@ const getName = (profile) => {
     null;
 };
 
+const ProfileLink = ({ profile, userId, name }) => {
+  if (profile?.is_host) {
+    return (
+      <a
+        href={`/buddy/${userId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="pending-profile-link"
+      >
+        {name}
+      </a>
+    );
+  }
+  return <span>{name}</span>;
+};
+
 const PendingBookingCard = ({
   request,
   currentUserId,
@@ -144,7 +160,11 @@ const PendingBookingCard = ({
             {fmt(request.price, request.currency)} per session
           </p>
           <p className="pending-card-role">
-            {isHost ? `Requested by ${requesterName}` : `Hosted by ${hostName}`}
+            {isHost ? (
+              <>Requested by <ProfileLink profile={request.requester_profile} userId={request.requester_id} name={requesterName} /></>
+            ) : (
+              <>Hosted by <ProfileLink profile={request.host_profile} userId={request.host_id} name={hostName} /></>
+            )}
           </p>
         </div>
 
