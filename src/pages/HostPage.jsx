@@ -256,7 +256,16 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
               <span className="hosting-pause-switch" aria-hidden="true" />
             </label>
             {pauseWarning && (
-              <p className="pause-warning" role="alert">{pauseWarning}</p>
+              <div className="pause-warning" role="alert">
+                <p className="pause-warning-text">{pauseWarning}</p>
+                <button
+                  type="button"
+                  className="pause-warning-ok"
+                  onClick={() => setPauseWarning("")}
+                >
+                  OK
+                </button>
+              </div>
             )}
           </div>
 

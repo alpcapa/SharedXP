@@ -1461,6 +1461,30 @@ body {
   font-size: 14px;
   color: #b91c1c;
   max-width: 480px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pause-warning-text {
+  margin: 0;
+  flex: 1;
+}
+
+.pause-warning-ok {
+  flex-shrink: 0;
+  background: #b91c1c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pause-warning-ok:hover {
+  background: #991b1b;
 }
 
 .host-onboarding-form {
