@@ -226,47 +226,49 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                   : "Manage your sport offerings and payment details."}
               </p>
             </div>
-            <label className="hosting-pause-toggle" htmlFor="pauseHosting">
-              <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
-              <input
-                id="pauseHosting"
-                type="checkbox"
-                role="switch"
-                aria-checked={isHostingPaused}
-                checked={isHostingPaused}
-                onChange={async (event) => {
-                  const newPaused = event.target.checked;
-                  if (newPaused && currentUser?.id) {
-                    const { data } = await supabase
-                      .from("booking_requests")
-                      .select("id")
-                      .eq("host_id", currentUser.id)
-                      .eq("status", "in_progress")
-                      .limit(1);
-                    if (data?.length > 0) {
-                      setPauseWarning("You have an experience currently in progress. You cannot pause hosting until it is completed.");
-                      return;
+            <div className="pause-hosting-group">
+              <label className="hosting-pause-toggle" htmlFor="pauseHosting">
+                <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
+                <input
+                  id="pauseHosting"
+                  type="checkbox"
+                  role="switch"
+                  aria-checked={isHostingPaused}
+                  checked={isHostingPaused}
+                  onChange={async (event) => {
+                    const newPaused = event.target.checked;
+                    if (newPaused && currentUser?.id) {
+                      const { data } = await supabase
+                        .from("booking_requests")
+                        .select("id")
+                        .eq("host_id", currentUser.id)
+                        .eq("status", "in_progress")
+                        .limit(1);
+                      if (data?.length > 0) {
+                        setPauseWarning("You have an experience currently in progress. You cannot pause hosting until it is completed.");
+                        return;
+                      }
                     }
-                  }
-                  setPauseWarning("");
-                  setHostProfileDraft((prev) => ({ ...prev, pauseHosting: newPaused }));
-                  onTogglePauseHosting?.(newPaused);
-                }}
-              />
-              <span className="hosting-pause-switch" aria-hidden="true" />
-            </label>
-            {pauseWarning && (
-              <div className="pause-warning" role="alert">
-                <p className="pause-warning-text">{pauseWarning}</p>
-                <button
-                  type="button"
-                  className="pause-warning-ok"
-                  onClick={() => setPauseWarning("")}
-                >
-                  OK
-                </button>
-              </div>
-            )}
+                    setPauseWarning("");
+                    setHostProfileDraft((prev) => ({ ...prev, pauseHosting: newPaused }));
+                    onTogglePauseHosting?.(newPaused);
+                  }}
+                />
+                <span className="hosting-pause-switch" aria-hidden="true" />
+              </label>
+              {pauseWarning && (
+                <div className="pause-warning" role="alert">
+                  <p className="pause-warning-text">{pauseWarning}</p>
+                  <button
+                    type="button"
+                    className="pause-warning-ok"
+                    onClick={() => setPauseWarning("")}
+                  >
+                    OK
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div
