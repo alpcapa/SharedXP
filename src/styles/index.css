@@ -2219,6 +2219,8 @@ body {
 .profile-rating-inline {
   margin: 0;
   white-space: nowrap;
+  font-size: 1rem;
+  font-weight: normal;
 }
 
 .profile-name-with-age {
