@@ -1460,15 +1460,15 @@ body {
 }
 
 .pause-warning {
-  padding: 7px 12px;
+  padding: 5px 10px;
   background: #fef2f2;
   border: 1px solid #fca5a5;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 12px;
   color: #b91c1c;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: fit-content;
 }
 
