@@ -4927,6 +4927,18 @@ body {
   padding: 4px 12px;
 }
 
+.guest-profile-age {
+  font-size: 20px;
+  font-weight: 400;
+  color: #596164;
+}
+
+.guest-profile-location {
+  margin: 0;
+  font-size: 14px;
+  color: #596164;
+}
+
 .guest-profile-member-since {
   margin: 0;
   font-size: 14px;

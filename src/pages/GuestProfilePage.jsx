@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
+import { getAgeFromBirthday } from "../utils/profileAge";
 
 const FALLBACK_PHOTO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='840' height='480' viewBox='0 0 840 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2384cc16'/%3E%3Cstop offset='1' stop-color='%23065f46'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='840' height='480' fill='url(%23g)'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='52' fill='white'%3ESharedXP Event%3C/text%3E%3C/svg%3E";
 
@@ -38,7 +39,7 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
     Promise.all([
       supabase
         .from("profiles")
-        .select("id, full_name, first_name, last_name, photo_url, signed_up_at, is_host")
+        .select("id, full_name, first_name, last_name, photo_url, signed_up_at, is_host, birthday, city, country")
         .eq("id", userId)
         .maybeSingle(),
       supabase
@@ -121,7 +122,17 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
                   </div>
                 )}
                 <div className="guest-profile-info">
-                  <h1 className="guest-profile-name">{getName(profile)}</h1>
+                  <h1 className="guest-profile-name">
+                    {getName(profile)}
+                    {getAgeFromBirthday(profile.birthday) != null && (
+                      <span className="guest-profile-age"> ({getAgeFromBirthday(profile.birthday)})</span>
+                    )}
+                  </h1>
+                  {(profile.city || profile.country) && (
+                    <p className="guest-profile-location">
+                      {[profile.city, profile.country].filter(Boolean).join(", ")}
+                    </p>
+                  )}
                   {profile.is_host && (
                     <Link to={`/buddy/${userId}`} className="btn btn-light guest-profile-host-link">
                       View host profile →
