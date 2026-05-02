@@ -147,7 +147,7 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
               </Link>
               {currentUser.isHost && (
                 <Link to={`/buddy/${currentUser.id}`} className="btn btn-primary">
-                  Hosting Page
+                  My Host Page
                 </Link>
               )}
             </div>
