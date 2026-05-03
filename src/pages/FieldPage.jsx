@@ -3,8 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { fieldPosts } from "../data/fieldPosts";
+import { deleteFieldPost, getStoredFieldPosts } from "../utils/fieldPosts";
 
-const FIELD_POSTS_STORAGE_KEY = "sharedxp-field-posts";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const isSafeHttpImageUrl = (value) => {
@@ -56,25 +56,7 @@ const sanitizeUserFieldPost = (post) => {
   };
 };
 
-const getUserFieldPosts = () => {
-  try {
-    const raw = localStorage.getItem(FIELD_POSTS_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.map(sanitizeUserFieldPost) : [];
-  } catch {
-    return [];
-  }
-};
-
-const deleteUserFieldPost = (postId) => {
-  try {
-    const existing = getUserFieldPosts();
-    const updated = existing.filter((post) => post.id !== postId);
-    localStorage.setItem(FIELD_POSTS_STORAGE_KEY, JSON.stringify(updated));
-  } catch {
-    // silently fail
-  }
-};
+const getUserFieldPosts = () => getStoredFieldPosts().map(sanitizeUserFieldPost);
 
 const getRelativePostedLabel = (postedAt) => {
   const postDate = new Date(postedAt);
@@ -120,7 +102,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
 
   const handleDeletePost = useCallback((postId) => {
     if (!window.confirm("Remove this post from The Field?")) return;
-    deleteUserFieldPost(postId);
+    deleteFieldPost(postId);
     setDeletedIds((prev) => new Set([...prev, postId]));
   }, []);
 
