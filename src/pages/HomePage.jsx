@@ -467,7 +467,7 @@ const HomePage = ({ currentUser, onLogout }) => {
 
           {/* ── How it works ─────────────────────────────────── */}
           <section className="how-section">
-            <h2 className="section-title">How it works</h2>
+            <h2 className="section-title">How SharedXP works?</h2>
             <p className="section-sub">Simple steps to connect and play.</p>
             <div className="how-grid">
               {steps.map((step) => (
