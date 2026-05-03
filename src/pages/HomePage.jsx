@@ -410,9 +410,11 @@ const HomePage = ({ currentUser, onLogout }) => {
                           <div className="local-card-meta">
                             {host.gender && <span>{host.gender}</span>}
                             {host.sports[0]?.level && <span>{host.sports[0].level}</span>}
-                            <span>
-                              Equipment: {host.sports[0]?.equipment_available ? "Yes" : "No"}
-                            </span>
+                            {host.sports.length > 0 && (
+                              <span>
+                                Equipment: {host.sports[0].equipment_available ? "Yes" : "No"}
+                              </span>
+                            )}
                           </div>
                         </article>
                       </Link>
