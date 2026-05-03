@@ -7,7 +7,7 @@ import { fieldPosts } from "../data/fieldPosts";
 import { loadMajorEvents } from "../lib/events";
 import { supabase } from "../lib/supabase";
 
-const LOCALS_PER_PAGE = 4;
+const LOCALS_PER_PAGE = 3;
 const FIELD_PER_PAGE = 3;
 const HOME_EVENTS_PAGE_SIZE = 3;
 
@@ -402,6 +402,18 @@ const HomePage = ({ currentUser, onLogout }) => {
                               </div>
                             </div>
                           </div>
+                          {host.photo && (
+                            <div className="local-card-photo">
+                              <img src={host.photo} alt={host.name} />
+                            </div>
+                          )}
+                          <div className="local-card-meta">
+                            {host.gender && <span>{host.gender}</span>}
+                            {host.sports[0]?.level && <span>{host.sports[0].level}</span>}
+                            <span>
+                              Equipment: {host.sports[0]?.equipment_available ? "Yes" : "No"}
+                            </span>
+                          </div>
                         </article>
                       </Link>
                     );
@@ -413,7 +425,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show previous 4 locals"
+                    aria-label="Show previous 3 locals"
                     onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
                     disabled={localsPage === 0}
                   >
@@ -422,7 +434,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show next 4 locals"
+                    aria-label="Show next 3 locals"
                     onClick={() =>
                       setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
                     }

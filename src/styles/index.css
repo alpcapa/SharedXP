@@ -94,7 +94,7 @@ body {
 
 .locals-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -111,6 +111,27 @@ body {
   overflow: hidden;
   padding: 12px 14px;
   width: 100%;
+}
+
+.local-card-photo {
+  margin: 10px -14px 0;
+}
+
+.local-card-photo img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.local-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .local-image-wrap {
