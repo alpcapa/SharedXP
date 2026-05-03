@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { formatEventDateRange } from "../lib/events";
 
-// Free, no-key og:image extractor. Given the event's website URL, this
-// resolves to that page's <meta property="og:image"> as raw image bytes.
-// On rate-limit or network failure we fall back to a colored gradient + sport
-// emoji via the onError handler below.
-const buildOgImageUrl = (eventUrl) => {
+// Clearbit's free Logo API: takes a bare hostname and returns the official
+// logo as PNG/SVG with transparent background. Returns 404 when no logo is
+// known — handled by onError which flips to a gradient + sport emoji.
+const buildLogoUrl = (eventUrl) => {
   if (!eventUrl) return "";
-  return (
-    "https://api.microlink.io/?url=" +
-    encodeURIComponent(eventUrl) +
-    "&embed=image.url"
-  );
+  try {
+    const hostname = new URL(eventUrl).hostname.replace(/^www\./i, "");
+    if (!hostname) return "";
+    return "https://logo.clearbit.com/" + hostname;
+  } catch {
+    return "";
+  }
 };
 
 const SPORT_EMOJI = {
@@ -44,31 +45,12 @@ const FALLBACK_GRADIENT = "linear-gradient(135deg,#6ca43b,#3a7a1f)";
 const EventCard = ({ event, compact = false }) => {
   const dateLabel = formatEventDateRange(event.startsAt, event.endsAt);
   const location = [event.city, event.country].filter(Boolean).join(", ");
-  const ogImageUrl = buildOgImageUrl(event.url);
-  const [imageFailed, setImageFailed] = useState(false);
+  const logoUrl = buildLogoUrl(event.url);
+  const [logoFailed, setLogoFailed] = useState(false);
 
-  const showImage = ogImageUrl && !imageFailed;
+  const showLogo = logoUrl && !logoFailed;
   const emoji = SPORT_EMOJI[event.sport] || FALLBACK_EMOJI;
   const gradient = SPORT_GRADIENT[event.sport] || FALLBACK_GRADIENT;
-
-  const mediaContent = showImage ? (
-    <img
-      src={ogImageUrl}
-      alt=""
-      className="event-card-image"
-      loading="lazy"
-      referrerPolicy="no-referrer"
-      onError={() => setImageFailed(true)}
-    />
-  ) : (
-    <div
-      className="event-card-placeholder"
-      style={{ backgroundImage: gradient }}
-      aria-hidden="true"
-    >
-      <span className="event-card-placeholder-emoji">{emoji}</span>
-    </div>
-  );
 
   return (
     <article className={`event-card${compact ? " event-card-compact" : ""}`}>
@@ -79,7 +61,24 @@ const EventCard = ({ event, compact = false }) => {
         className="event-card-image-link"
         aria-label={`Open ${event.title}`}
       >
-        {mediaContent}
+        <div
+          className="event-card-placeholder"
+          style={{ backgroundImage: gradient }}
+          aria-hidden="true"
+        >
+          {showLogo ? (
+            <img
+              src={logoUrl}
+              alt=""
+              className="event-card-logo"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={() => setLogoFailed(true)}
+            />
+          ) : (
+            <span className="event-card-placeholder-emoji">{emoji}</span>
+          )}
+        </div>
         {event.category && (
           <span className="event-card-badge">{event.category}</span>
         )}

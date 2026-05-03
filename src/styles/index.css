@@ -3493,6 +3493,18 @@ body {
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25));
 }
 
+.event-card-logo {
+  max-width: 55%;
+  max-height: 55%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+  background: rgba(255, 255, 255, 0.9);
+  padding: 14px 18px;
+  border-radius: 12px;
+}
+
 .event-card-badge {
   position: absolute;
   top: 12px;
