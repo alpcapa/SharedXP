@@ -15,29 +15,35 @@ export const MAJOR_EVENTS_SOURCES = [
   { name: "Wikidata", url: "https://www.wikidata.org" }
 ];
 
-// Image URLs come from Unsplash (free, attribution-friendly) and match the
-// look of existing imagery in the app.
+// Image URLs come from Unsplash (free, attribution-friendly). The IDs marked
+// "verified" below are also used in src/data/fieldPosts.js so they're known to
+// match their sport. The rest are best-effort and can be swapped if any look
+// wrong on the page.
 const IMG = {
+  // Verified runner photos (also used on The Field).
   running:
-    "https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1400&q=80",
   marathon:
-    "https://images.unsplash.com/photo-1530143584546-02191bc84eb5?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1549570652-97324981a6fd?auto=format&fit=crop&w=1400&q=80",
+  // Verified tennis photo (also used on The Field).
   tennis:
-    "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1529422643029-d4585747aaf2?auto=format&fit=crop&w=1400&q=80",
+  // Verified cycling photos (also used on The Field).
   cycling:
     "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1400&q=80",
   cyclingRoad:
-    "https://images.unsplash.com/photo-1541625602330-2277a4c46182?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1559348349-86f1f65817fe?auto=format&fit=crop&w=1400&q=80",
   formula1:
     "https://images.unsplash.com/photo-1504707748692-419802cf939d?auto=format&fit=crop&w=1400&q=80",
   football:
     "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1400&q=80",
   americanFootball:
-    "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1400&q=80",
   golf:
     "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?auto=format&fit=crop&w=1400&q=80",
+  // Triathlon — use the verified runner photo (Ironman ends with a marathon).
   triathlon:
-    "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1400&q=80",
   olympicsWinter:
     "https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1400&q=80"
 };
