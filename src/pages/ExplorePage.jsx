@@ -179,7 +179,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           <div className="explore-hero-content">
             <h1>
-              Find your Host, Anywhere<span className="accent">.</span>
+              Find your Host<span className="accent">.</span> Anywhere<span className="accent">.</span>
             </h1>
             <p>Search and filter hosts by location, sport, gender, level, and equipment.</p>
             <section className="explore-filters">
