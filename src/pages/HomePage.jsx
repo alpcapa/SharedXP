@@ -3,10 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import EventCard from "../components/EventCard";
+import { fieldPosts } from "../data/fieldPosts";
 import { loadMajorEvents } from "../lib/events";
 import { supabase } from "../lib/supabase";
 
 const HOME_EVENTS_PAGE_SIZE = 3;
+const HOME_FIELD_PREVIEW_SIZE = 3;
 
 const featuredStatuses = ["Online", "New", "Online", "Online"];
 const LOCALS_PER_PAGE = 4;
@@ -14,17 +16,6 @@ const LOCALS_PER_PAGE = 4;
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
-];
-
-const sports = [
-  { name: "Cycling", count: "1,248 locals", icon: "🚲", active: true },
-  { name: "Tennis", count: "842 locals", icon: "🎾" },
-  { name: "Running", count: "643 locals", icon: "🏃" },
-  { name: "Football", count: "512 locals", icon: "⚽" },
-  { name: "Surfing", count: "320 locals", icon: "🏄" },
-  { name: "Basketball", count: "211 locals", icon: "🏀" },
-  { name: "Volleyball", count: "189 locals", icon: "🏐" },
-  { name: "More", count: "+7 sports", icon: "···" }
 ];
 
 const steps = [
@@ -158,6 +149,17 @@ const HomePage = ({ currentUser, onLogout }) => {
     const startIndex = majorEventsPage * HOME_EVENTS_PAGE_SIZE;
     return majorEventsList.slice(startIndex, startIndex + HOME_EVENTS_PAGE_SIZE);
   }, [majorEventsList, majorEventsPage]);
+
+  const fieldPreviewPosts = useMemo(
+    () =>
+      [...fieldPosts]
+        .sort(
+          (a, b) =>
+            new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
+        )
+        .slice(0, HOME_FIELD_PREVIEW_SIZE),
+    []
+  );
 
   const countryOptions = useMemo(
     () => ["All", ...[...new Set(hosts.map((h) => h.country).filter(Boolean))].sort()],
@@ -424,27 +426,8 @@ const HomePage = ({ currentUser, onLogout }) => {
             </div>
           </section>
 
-          {/* ── Explore by sport ─────────────────────────────── */}
-          <section className="sports-section">
-            <h2 className="section-title">Explore by sport</h2>
-            <p className="section-sub">All sports. All levels. All people.</p>
-            <div className="sports-scroll">
-              {sports.map((sport) => (
-                <Link
-                  key={sport.name}
-                  to={sport.name === "More" ? "/locals" : `/locals?sport=${encodeURIComponent(sport.name)}`}
-                  className={`sport-chip${sport.active ? " active" : ""}`}
-                >
-                  <span className="sport-icon">{sport.icon}</span>
-                  <h3>{sport.name}</h3>
-                  <p>{sport.count}</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-
           {/* ── What's happening on the Field ─────────────────── */}
-          <section className="field-teaser-section">
+          <section className="home-field-section" id="home-field">
             <div className="section-head">
               <div>
                 <h2 className="section-title">What's happening on the Field</h2>
@@ -453,8 +436,51 @@ const HomePage = ({ currentUser, onLogout }) => {
                 </p>
               </div>
               <Link to="/the-field" className="view-all-link">
-                Open The Field
+                View all
               </Link>
+            </div>
+
+            <div className="home-field-grid">
+              {fieldPreviewPosts.map((post) => (
+                <Link
+                  key={post.id}
+                  to="/the-field"
+                  className="home-field-card-link"
+                  aria-label={`Open The Field — ${post.hostName}'s ${post.sport} session`}
+                >
+                  <article className="home-field-card">
+                    {post.photo && (
+                      <img
+                        src={post.photo}
+                        alt={post.sport}
+                        className="home-field-card-image"
+                      />
+                    )}
+                    <div className="home-field-card-body">
+                      <div className="home-field-card-host">
+                        {post.hostPhoto && (
+                          <img
+                            src={post.hostPhoto}
+                            alt={post.hostName}
+                            className="home-field-card-avatar"
+                          />
+                        )}
+                        <div>
+                          <p className="home-field-card-name">{post.hostName}</p>
+                          <p className="home-field-card-meta">
+                            {post.city}
+                            {post.country ? `, ${post.country}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="sport-pill home-field-card-sport">
+                        {post.sport}
+                      </span>
+                      <p className="home-field-card-caption">{post.caption}</p>
+                    </div>
+                  </article>
+                </Link>
+              ))}
             </div>
           </section>
 

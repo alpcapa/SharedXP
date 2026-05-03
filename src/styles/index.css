@@ -3479,9 +3479,94 @@ body {
   }
 }
 
-/* ── HomePage: What's happening on the Field teaser ─── */
-.field-teaser-section {
+/* ── HomePage: What's happening on the Field preview ─── */
+.home-field-section {
   margin-top: 32px;
+}
+
+.home-field-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (min-width: 720px) {
+  .home-field-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.home-field-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.home-field-card {
+  background: #fff;
+  border: 1px solid #e8e9e4;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.home-field-card-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  display: block;
+}
+
+.home-field-card-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-field-card-host {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-field-card-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #d7dccf;
+}
+
+.home-field-card-name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 14px;
+  color: #273033;
+}
+
+.home-field-card-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #596164;
+}
+
+.home-field-card-sport {
+  align-self: flex-start;
+}
+
+.home-field-card-caption {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #3a3f2b;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ── HomePage: Major Events section ─────── */
