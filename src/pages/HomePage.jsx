@@ -7,8 +7,7 @@ import { fieldPosts } from "../data/fieldPosts";
 import { loadMajorEvents } from "../lib/events";
 import { supabase } from "../lib/supabase";
 
-const featuredStatuses = ["Online", "New", "Online", "Online"];
-const LOCALS_PER_PAGE = 4;
+const LOCALS_PER_PAGE = 3;
 const FIELD_PER_PAGE = 3;
 const HOME_EVENTS_PAGE_SIZE = 3;
 
@@ -362,48 +361,51 @@ const HomePage = ({ currentUser, onLogout }) => {
               ) : filteredHosts.length === 0 ? (
                 <p className="explore-empty">No locals found matching your filters.</p>
               ) : (
-                <div className="locals-grid">
-                          {featuredLocals.map((host, index) => {
-                    const statusIndex =
-                      (localsPage * LOCALS_PER_PAGE + index) % featuredStatuses.length;
+                <div className="hosts-card-grid">
+                          {featuredLocals.map((host) => {
                     const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                     const hasEquipment = host.sports.some((s) => s.equipment_available);
                     const levels = [
                       ...new Set(host.sports.map((s) => s.level).filter(Boolean))
                     ];
+                    const initials =
+                      host.name.trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?";
                     return (
                       <Link to={`/buddy/${host.userId}`} key={host.id} className="local-card-link">
-                        <article className="local-card">
-                          <div className="local-image-wrap">
+                        <article className="host-showcase-card">
+                          <div className="host-showcase-photo">
                             {host.photo ? (
                               <img src={host.photo} alt={host.name} />
                             ) : (
-                              <div className="local-image-placeholder">👤</div>
+                              <div className="host-showcase-placeholder">{initials}</div>
                             )}
-                            <span className="status-badge">
-                              <span className="status-dot" />
-                              {featuredStatuses[statusIndex]}
-                            </span>
+                            {host.sports[0] && (
+                              <span className="sport-pill host-showcase-sport-badge">
+                                {host.sports[0].sport}
+                              </span>
+                            )}
                           </div>
-                          <div className="local-body">
-                            <div className="local-title-row">
+                          <div className="host-showcase-body">
+                            <div className="host-showcase-name-row">
                               <h3>{host.name}</h3>
+                              {host.sports.length > 1 && (
+                                <span className="host-showcase-extra-sports">+{host.sports.length - 1} more</span>
+                              )}
                             </div>
                             {locationLine && (
-                              <p className="local-location">📍 {locationLine}</p>
+                              <p className="host-showcase-location">📍 {locationLine}</p>
                             )}
-                            <div className="local-sport-pills">
-                              {host.sports.slice(0, 3).map((s) => (
-                                <span key={s.id} className="sport-pill">
-                                  {s.sport}
-                                </span>
-                              ))}
+                            <div className="host-showcase-meta">
+                              {host.gender && (
+                                <span className="host-showcase-meta-chip">👤 {host.gender}</span>
+                              )}
+                              {levels[0] && (
+                                <span className="host-showcase-meta-chip">🏅 {levels[0]}</span>
+                              )}
+                              <span className="host-showcase-meta-chip">
+                                🎒 {hasEquipment ? "Gear included" : "Own gear"}
+                              </span>
                             </div>
-                            <ul className="local-meta">
-                              {host.gender && <li>👤 {host.gender}</li>}
-                              {levels.length > 0 && <li>🏅 {levels.join(", ")}</li>}
-                              <li>🎒 Equipment: {hasEquipment ? "Yes" : "No"}</li>
-                            </ul>
                           </div>
                         </article>
                       </Link>
@@ -416,7 +418,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show previous 4 locals"
+                    aria-label="Show previous 3 locals"
                     onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
                     disabled={localsPage === 0}
                   >
@@ -425,7 +427,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show next 4 locals"
+                    aria-label="Show next 3 locals"
                     onClick={() =>
                       setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
                     }
