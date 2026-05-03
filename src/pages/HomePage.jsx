@@ -411,7 +411,7 @@ const HomePage = ({ currentUser, onLogout }) => {
           <section className="field-home-section">
             <div className="section-head">
               <div>
-                <h2 className="section-title">The Field</h2>
+                <h2 className="section-title">What's happening on the Field?</h2>
                 <p className="section-sub">Real sessions. Real people.</p>
               </div>
               <Link to="/the-field" className="view-all-link">View all</Link>
