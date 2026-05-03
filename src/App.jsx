@@ -20,6 +20,7 @@ import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
 import useAuth from "./context/AuthContext";
 import NotFoundPage from "./pages/NotFoundPage";
 import AboutPage from "./pages/AboutPage";
+import EventsPage from "./pages/EventsPage";
 import UserProfilePage from "./pages/UserProfilePage";
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
       />
       <Route path="/disclaimers" element={<DisclaimersPage {...authActions} />} />
       <Route path="/about" element={<AboutPage {...authActions} />} />
+      <Route path="/events" element={<EventsPage {...authActions} />} />
       <Route path="*" element={<NotFoundPage {...authActions} />} />
     </Routes>
   );

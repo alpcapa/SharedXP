@@ -2,7 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import EventCard from "../components/EventCard";
+import { loadMajorEvents } from "../lib/events";
 import { supabase } from "../lib/supabase";
+
+const HOME_EVENTS_PAGE_SIZE = 3;
 
 const featuredStatuses = ["Online", "New", "Online", "Online"];
 const LOCALS_PER_PAGE = 4;
@@ -80,6 +84,9 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [selectedMonth, setSelectedMonth] = useState(DEFAULT_MONTH);
   const [selectedYear, setSelectedYear] = useState(DEFAULT_YEAR);
   const [localsPage, setLocalsPage] = useState(0);
+  const [majorEventsList, setMajorEventsList] = useState([]);
+  const [majorEventsLoading, setMajorEventsLoading] = useState(true);
+  const [majorEventsPage, setMajorEventsPage] = useState(0);
   const searchBarRef = useRef(null);
 
   useEffect(() => {
@@ -125,6 +132,32 @@ const HomePage = ({ currentUser, onLogout }) => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setMajorEventsLoading(true);
+    loadMajorEvents()
+      .then((rows) => {
+        if (cancelled) return;
+        setMajorEventsList(rows);
+      })
+      .finally(() => {
+        if (!cancelled) setMajorEventsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const totalMajorEventsPages = Math.max(
+    1,
+    Math.ceil(majorEventsList.length / HOME_EVENTS_PAGE_SIZE)
+  );
+
+  const visibleMajorEvents = useMemo(() => {
+    const startIndex = majorEventsPage * HOME_EVENTS_PAGE_SIZE;
+    return majorEventsList.slice(startIndex, startIndex + HOME_EVENTS_PAGE_SIZE);
+  }, [majorEventsList, majorEventsPage]);
 
   const countryOptions = useMemo(
     () => ["All", ...[...new Set(hosts.map((h) => h.country).filter(Boolean))].sort()],
@@ -408,6 +441,78 @@ const HomePage = ({ currentUser, onLogout }) => {
                 </Link>
               ))}
             </div>
+          </section>
+
+          {/* ── What's happening on the Field ─────────────────── */}
+          <section className="field-teaser-section">
+            <div className="section-head">
+              <div>
+                <h2 className="section-title">What's happening on the Field</h2>
+                <p className="section-sub">
+                  Real sessions posted by the SharedXP community.
+                </p>
+              </div>
+              <Link to="/the-field" className="view-all-link">
+                Open The Field
+              </Link>
+            </div>
+          </section>
+
+          {/* ── Major Events ─────────────────────────────────── */}
+          <section className="major-events-section" id="major-events">
+            <div className="section-head">
+              <div>
+                <h2 className="section-title">Major Events</h2>
+                <p className="section-sub">
+                  Marathons, Grand Slams, cycling Monuments, F1 and more.
+                </p>
+              </div>
+              <Link to="/events" className="view-all-link">
+                View all
+              </Link>
+            </div>
+
+            {majorEventsLoading ? (
+              <p className="explore-loading">Loading events…</p>
+            ) : majorEventsList.length === 0 ? (
+              <p className="explore-empty">No major events to show right now.</p>
+            ) : (
+              <>
+                <div className="major-events-grid">
+                  {visibleMajorEvents.map((event) => (
+                    <EventCard key={event.id} event={event} compact />
+                  ))}
+                </div>
+                {majorEventsList.length > HOME_EVENTS_PAGE_SIZE && (
+                  <div className="locals-nav-row">
+                    <button
+                      type="button"
+                      className="locals-nav"
+                      aria-label="Show previous events"
+                      onClick={() =>
+                        setMajorEventsPage((page) => Math.max(page - 1, 0))
+                      }
+                      disabled={majorEventsPage === 0}
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      className="locals-nav"
+                      aria-label="Show next events"
+                      onClick={() =>
+                        setMajorEventsPage((page) =>
+                          Math.min(page + 1, totalMajorEventsPages - 1)
+                        )
+                      }
+                      disabled={majorEventsPage >= totalMajorEventsPages - 1}
+                    >
+                      ›
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </section>
 
           {/* ── How it works ─────────────────────────────────── */}
