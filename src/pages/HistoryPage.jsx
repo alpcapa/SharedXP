@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import HistoryCard from "../components/history/HistoryCard";
+import PendingBookingCard from "../components/history/PendingBookingCard";
 import HistoryPhotoGallery from "../components/history/HistoryPhotoGallery";
 import ShareToFieldModal from "../components/history/ShareToFieldModal";
 import {
@@ -18,6 +19,7 @@ import {
   toStoredHosted,
 } from "../utils/historyItem";
 import { saveFieldPost } from "../utils/fieldPosts";
+import { useBookingRequests } from "../hooks/useBookingRequests";
 
 const buildFieldPost = (item, currentUser, caption) => {
   const realPhotos = (item.photoGallery ?? []).filter(
@@ -49,6 +51,9 @@ const HistoryPage = ({
   onSaveHistory,
   onSaveHostHistory,
 }) => {
+  const location = useLocation();
+  const queryTab = new URLSearchParams(location.search).get("tab");
+
   if (!currentUser) {
     return (
       <div className="home-page">
@@ -75,7 +80,26 @@ const HistoryPage = ({
     )
   );
   const [selectedSport, setSelectedSport] = useState("All");
-  const [selectedRole, setSelectedRole] = useState("all");
+  const [selectedRole, setSelectedRole] = useState(queryTab === "pending" ? "pending" : "all");
+
+  const {
+    requests: bookingRequests,
+    loading: requestsLoading,
+    unreadCounts,
+    acceptRequest,
+    declineRequest,
+    cancelRequest,
+    confirmExperience,
+    openDispute,
+  } = useBookingRequests(currentUser);
+
+  const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
+  const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status));
+
+  // Sync tab from URL (e.g. after booking submission redirect)
+  useEffect(() => {
+    setSelectedRole(queryTab === "pending" ? "pending" : "all");
+  }, [queryTab]);
   const [dirtyIds, setDirtyIds] = useState(() => new Set());
   const [activeGallery, setActiveGallery] = useState(null);
   const [sharePromptItemId, setSharePromptItemId] = useState(null);
@@ -359,7 +383,7 @@ const HistoryPage = ({
         <main className="middle-section simple-page history-page">
           <h1>History</h1>
           <p className="history-subtitle">
-            Your completed experiences, shown from latest to oldest.
+            Your experiences, shown from latest to oldest.
           </p>
           <div
             className="host-sport-tabs history-role-tabs"
@@ -368,6 +392,7 @@ const HistoryPage = ({
           >
             {[
               { value: "all", label: "All" },
+              { value: "pending", label: `Ongoing${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length ? ` (${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length})` : ""}` },
               { value: "hosted", label: "Hosted" },
               { value: "attended", label: "Attended" },
             ].map((tab) => (
@@ -409,29 +434,72 @@ const HistoryPage = ({
             </div>
           )}
 
-          {visibleItems.length ? (
-            <div className="history-list">
-              {visibleItems.map((item) => (
-                <HistoryCard
-                  key={item.id}
-                  item={item}
-                  isDirty={dirtyIds.has(item.id)}
-                  onUpdateField={updateItem}
-                  onUpdateHostRating={updateHostRating}
-                  onSaveItem={saveItem}
-                  onConfirmCompletion={confirmCompletion}
-                  onOpenGallery={openGallery}
-                  onUploadPhotos={handlePhotoUpload}
-                  onDeletePhoto={handlePhotoDelete}
-                />
-              ))}
-            </div>
+          {selectedRole === "pending" ? (
+            requestsLoading ? (
+              <p className="history-loading">Loading…</p>
+            ) : bookingRequests.length ? (
+              <div className="history-list">
+                {bookingRequests.map((req) => (
+                  <PendingBookingCard
+                    key={req.id}
+                    request={req}
+                    currentUserId={currentUser.id}
+                    unreadCount={unreadCounts[req.id] ?? 0}
+                    onAccept={acceptRequest}
+                    onDecline={declineRequest}
+                    onCancel={cancelRequest}
+                    onConfirmExperience={confirmExperience}
+                    onOpenDispute={openDispute}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p>No booking requests yet. <Link to="/locals">Find a host</Link> to get started.</p>
+            )
           ) : (
-            <p>
-              {allItems.length
-                ? "No completed experiences for this sport yet."
-                : "No completed experiences yet."}
-            </p>
+            <>
+              {selectedRole === "all" && activeBookingRequests.length > 0 && (
+                <div className="history-list">
+                  {activeBookingRequests.map((req) => (
+                    <PendingBookingCard
+                      key={req.id}
+                      request={req}
+                      currentUserId={currentUser.id}
+                      unreadCount={unreadCounts[req.id] ?? 0}
+                      onAccept={acceptRequest}
+                      onDecline={declineRequest}
+                      onCancel={cancelRequest}
+                      onConfirmExperience={confirmExperience}
+                      onOpenDispute={openDispute}
+                    />
+                  ))}
+                </div>
+              )}
+              {visibleItems.length > 0 ? (
+                <div className="history-list">
+                  {visibleItems.map((item) => (
+                    <HistoryCard
+                      key={item.id}
+                      item={item}
+                      isDirty={dirtyIds.has(item.id)}
+                      onUpdateField={updateItem}
+                      onUpdateHostRating={updateHostRating}
+                      onSaveItem={saveItem}
+                      onConfirmCompletion={confirmCompletion}
+                      onOpenGallery={openGallery}
+                      onUploadPhotos={handlePhotoUpload}
+                      onDeletePhoto={handlePhotoDelete}
+                    />
+                  ))}
+                </div>
+              ) : selectedRole === "all" && activeBookingRequests.length > 0 ? null : (
+                <p>
+                  {allItems.length
+                    ? "No completed experiences for this sport yet."
+                    : "No completed experiences yet."}
+                </p>
+              )}
+            </>
           )}
 
           <HistoryPhotoGallery

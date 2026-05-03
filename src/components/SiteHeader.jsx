@@ -69,11 +69,11 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
         <Link to="/the-field" className="site-nav-link">
           The Field
         </Link>
-        <Link to={navHostRoute} className={`site-nav-link${isHostLabelPaused ? " site-nav-link-paused" : ""}`}>
-          {navHostLabel}
-        </Link>
         <Link to="/events" className="site-nav-link">
           Events
+        </Link>
+        <Link to={navHostRoute} className={`site-nav-link${isHostLabelPaused ? " site-nav-link-paused" : ""}`}>
+          {navHostLabel}
         </Link>
       </nav>
 
@@ -101,7 +101,7 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
                 My Profile
               </Link>
               <Link to="/history" className="user-dropdown-link" role="menuitem">
-                History
+                My History
               </Link>
               <Link
                 to={navHostRoute}

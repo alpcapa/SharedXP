@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
@@ -7,6 +7,7 @@ import { buddies } from "../data/buddies";
 import { supabase } from "../lib/supabase";
 import { getDateKey } from "../utils/date";
 import { getProfileAge } from "../utils/profileAge";
+import { sendNotification } from "../utils/sendNotification";
 
 const DAY_NAME_TO_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 const WEEKS_AHEAD = 8;
@@ -61,6 +62,7 @@ const shapeSupabaseHost = (data) => {
   const sports = (hp.host_sports || [])
     .filter((hs) => !hs.paused)
     .map((hs) => ({
+      id: hs.id || null,
       sport: hs.sport || "",
       description: hs.description || "",
       about: hs.about || "",
@@ -314,6 +316,7 @@ const formatPrice = (amount, currency) => {
 const ProfilePage = ({ currentUser, onLogout }) => {
   const { buddyId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // ── All hooks first (before any conditional returns) ────────────────────
   const [buddyFromSupabase, setBuddyFromSupabase] = useState(null);
@@ -325,6 +328,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const [reviewsPage, setReviewsPage] = useState(0);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isRequestSubmitted, setIsRequestSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
@@ -542,10 +547,10 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const { rating: hostRating, reviewCount } = getHostRatingSummary(buddy);
   const { city, country } = getLocationParts(buddy);
   const memberSince = getMemberSinceLabel(buddy);
+  const isOwnProfile = isCurrentUserHostForBuddy(currentUser, buddy);
   const isHostPaused =
     Boolean(buddy.paused) ||
-    (isCurrentUserHostForBuddy(currentUser, buddy) &&
-      Boolean(currentUser?.hostProfile?.pauseHosting));
+    (isOwnProfile && Boolean(currentUser?.hostProfile?.pauseHosting));
   const canRequestBooking = Boolean(selectedDate && selectedTime);
   const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
   const perLabel = activeSport.priceUnit ?? buddy.priceUnit ?? "per session";
@@ -605,7 +610,45 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     setIsConfirmationOpen(true);
   };
 
-  const handleFinalConfirmation = () => {
+  const handleFinalConfirmation = async () => {
+    if (!currentUser || isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    const hostId = buddy.id;
+    if (!hostId) {
+      setSubmitError("Unable to identify host. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { data: bookingRequest, error } = await supabase
+      .from("booking_requests")
+      .insert({
+        requester_id: currentUser.id,
+        host_id: hostId,
+        host_sport_id: activeSport.id ?? null,
+        sport: activeSport.sport || "",
+        requested_date: selectedDate,
+        requested_time: selectedTime,
+        price: Number(activeSport.pricing) || 0,
+        currency: activeSport.pricingCurrency || "EUR",
+        status: "pending",
+      })
+      .select()
+      .single();
+
+    if (error || !bookingRequest) {
+      console.error("[ProfilePage] booking_requests insert:", error);
+      setSubmitError("Failed to send booking request. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Fire-and-forget — email failure should not block the UX
+    sendNotification("booking_request_to_host", bookingRequest.id);
+
+    setIsSubmitting(false);
     setIsRequestSubmitted(true);
   };
 
@@ -626,7 +669,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
       <section className="profile-summary">
         <div className="profile-summary-header">
-          <div className="profile-name-rating-row">
+          <div className="profile-summary-top-row">
             <h1 className="profile-name-with-age">
               {firstName} {lastName}
               {hostAge != null && (
@@ -634,11 +677,18 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                   ({hostAge})
                 </span>
               )}
+              <span className="profile-rating-inline">
+                ⭐ {hostRating}
+                {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
+              </span>
             </h1>
-            <p className="profile-rating-inline">
-              ⭐ {hostRating}
-              {reviewCount > 0 ? ` (${reviewCount})` : ""} · <span className="verified">Verified</span>
-            </p>
+            {isOwnProfile && (
+              <div className="profile-summary-actions">
+                <Link to="/host-settings" className="btn btn-primary">
+                  Host Settings
+                </Link>
+              </div>
+            )}
           </div>
           <p className="profile-location-line">{locationLine}</p>
         </div>
@@ -794,14 +844,18 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               {selectedTime ? formatTime(selectedTime) : "No time selected"}
             </span>
           </p>
-          <button
-            type="button"
-            className="find-button booking-request-button"
-            disabled={!canRequestBooking}
-            onClick={handleOpenConfirmation}
-          >
-            Request booking
-          </button>
+          {isOwnProfile ? (
+            <p className="booking-own-profile-notice">You cannot book your own events</p>
+          ) : (
+            <button
+              type="button"
+              className="find-button booking-request-button"
+              disabled={!canRequestBooking}
+              onClick={handleOpenConfirmation}
+            >
+              Request booking
+            </button>
+          )}
           {showLoginPrompt && (
             <div className="booking-login-prompt" role="alert">
               <p>You need to login to book with a host.</p>
@@ -968,11 +1022,15 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                     {formatDate(selectedDate)} at {formatTime(selectedTime)}
                   </p>
                 </div>
+                {submitError && (
+                  <p className="booking-modal-error" role="alert">{submitError}</p>
+                )}
                 <div className="booking-modal-actions">
                   <button
                     type="button"
                     className="btn btn-light"
                     onClick={() => setIsConfirmationOpen(false)}
+                    disabled={isSubmitting}
                   >
                     Back
                   </button>
@@ -980,22 +1038,32 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                     type="button"
                     className="find-button booking-confirm-button"
                     onClick={handleFinalConfirmation}
+                    disabled={isSubmitting}
                   >
-                    Final Confirmation
+                    {isSubmitting ? "Sending…" : "Final Confirmation"}
                   </button>
                 </div>
               </>
             ) : (
               <div className="booking-success">
-                <h3>Booking request sent</h3>
-                <p>We shared your selected options with {hostDisplayName}.</p>
-                <button
-                  type="button"
-                  className="find-button booking-confirm-button"
-                  onClick={() => setIsConfirmationOpen(false)}
-                >
-                  Done
-                </button>
+                <h3>Booking request sent!</h3>
+                <p>Your request has been sent to {hostDisplayName}. You'll receive an email when they respond.</p>
+                <div className="booking-modal-actions">
+                  <button
+                    type="button"
+                    className="btn btn-light"
+                    onClick={() => setIsConfirmationOpen(false)}
+                  >
+                    Stay here
+                  </button>
+                  <button
+                    type="button"
+                    className="find-button booking-confirm-button"
+                    onClick={() => { setIsConfirmationOpen(false); navigate("/history?tab=pending"); }}
+                  >
+                    View pending bookings
+                  </button>
+                </div>
               </div>
             )}
           </section>

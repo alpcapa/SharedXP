@@ -1,17 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import EventCard from "../components/EventCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import EventCard from "../components/EventCard";
 import { fieldPosts } from "../data/fieldPosts";
 import { loadMajorEvents } from "../lib/events";
 import { supabase } from "../lib/supabase";
 
-const HOME_EVENTS_PAGE_SIZE = 3;
-const HOME_FIELD_PREVIEW_SIZE = 3;
-
 const featuredStatuses = ["Online", "New", "Online", "Online"];
 const LOCALS_PER_PAGE = 4;
+const FIELD_PER_PAGE = 3;
+const HOME_EVENTS_PAGE_SIZE = 3;
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const getRelativePostedLabel = (postedAt) => {
+  const postDate = new Date(postedAt);
+  if (Number.isNaN(postDate.getTime())) return "";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  postDate.setHours(0, 0, 0, 0);
+  const dayDiff = Math.floor((today.getTime() - postDate.getTime()) / MS_PER_DAY);
+  if (dayDiff <= 0) return "Today";
+  if (dayDiff === 1) return "Yesterday";
+  return `${dayDiff} days ago`;
+};
+
+const sortedFieldPosts = [...fieldPosts].sort(
+  (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
+);
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -75,6 +92,7 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [selectedMonth, setSelectedMonth] = useState(DEFAULT_MONTH);
   const [selectedYear, setSelectedYear] = useState(DEFAULT_YEAR);
   const [localsPage, setLocalsPage] = useState(0);
+  const [fieldPage, setFieldPage] = useState(0);
   const [majorEventsList, setMajorEventsList] = useState([]);
   const [majorEventsLoading, setMajorEventsLoading] = useState(true);
   const [majorEventsPage, setMajorEventsPage] = useState(0);
@@ -140,27 +158,6 @@ const HomePage = ({ currentUser, onLogout }) => {
     };
   }, []);
 
-  const totalMajorEventsPages = Math.max(
-    1,
-    Math.ceil(majorEventsList.length / HOME_EVENTS_PAGE_SIZE)
-  );
-
-  const visibleMajorEvents = useMemo(() => {
-    const startIndex = majorEventsPage * HOME_EVENTS_PAGE_SIZE;
-    return majorEventsList.slice(startIndex, startIndex + HOME_EVENTS_PAGE_SIZE);
-  }, [majorEventsList, majorEventsPage]);
-
-  const fieldPreviewPosts = useMemo(
-    () =>
-      [...fieldPosts]
-        .sort(
-          (a, b) =>
-            new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
-        )
-        .slice(0, HOME_FIELD_PREVIEW_SIZE),
-    []
-  );
-
   const countryOptions = useMemo(
     () => ["All", ...[...new Set(hosts.map((h) => h.country).filter(Boolean))].sort()],
     [hosts]
@@ -205,6 +202,21 @@ const HomePage = ({ currentUser, onLogout }) => {
     const startIndex = localsPage * LOCALS_PER_PAGE;
     return filteredHosts.slice(startIndex, startIndex + LOCALS_PER_PAGE);
   }, [localsPage, filteredHosts]);
+
+  const totalFieldPages = Math.max(1, Math.ceil(sortedFieldPosts.length / FIELD_PER_PAGE));
+  const visibleFieldPosts = useMemo(() => {
+    const start = fieldPage * FIELD_PER_PAGE;
+    return sortedFieldPosts.slice(start, start + FIELD_PER_PAGE);
+  }, [fieldPage]);
+
+  const totalMajorEventsPages = Math.max(
+    1,
+    Math.ceil(majorEventsList.length / HOME_EVENTS_PAGE_SIZE)
+  );
+  const visibleMajorEvents = useMemo(() => {
+    const startIndex = majorEventsPage * HOME_EVENTS_PAGE_SIZE;
+    return majorEventsList.slice(startIndex, startIndex + HOME_EVENTS_PAGE_SIZE);
+  }, [majorEventsList, majorEventsPage]);
 
   const localsHeadingLocation = useMemo(() => {
     if (selectedCity !== "All") return selectedCity;
@@ -426,61 +438,61 @@ const HomePage = ({ currentUser, onLogout }) => {
             </div>
           </section>
 
-          {/* ── What's happening on the Field ─────────────────── */}
-          <section className="home-field-section" id="home-field">
+          {/* ── The Field ────────────────────────────────────── */}
+          <section className="field-home-section">
             <div className="section-head">
               <div>
-                <h2 className="section-title">What's happening on the Field</h2>
-                <p className="section-sub">
-                  Real sessions posted by the SharedXP community.
-                </p>
+                <h2 className="section-title">What's happening on the Field?</h2>
+                <p className="section-sub">Real sessions. Real people.</p>
               </div>
-              <Link to="/the-field" className="view-all-link">
-                View all
-              </Link>
+              <Link to="/the-field" className="view-all-link">View all</Link>
             </div>
-
-            <div className="home-field-grid">
-              {fieldPreviewPosts.map((post) => (
-                <Link
-                  key={post.id}
-                  to="/the-field"
-                  className="home-field-card-link"
-                  aria-label={`Open The Field — ${post.hostName}'s ${post.sport} session`}
-                >
-                  <article className="home-field-card">
-                    {post.photo && (
-                      <img
-                        src={post.photo}
-                        alt={post.sport}
-                        className="home-field-card-image"
-                      />
-                    )}
-                    <div className="home-field-card-body">
-                      <div className="home-field-card-host">
-                        {post.hostPhoto && (
-                          <img
-                            src={post.hostPhoto}
-                            alt={post.hostName}
-                            className="home-field-card-avatar"
-                          />
-                        )}
-                        <div>
-                          <p className="home-field-card-name">{post.hostName}</p>
-                          <p className="home-field-card-meta">
-                            {post.city}
-                            {post.country ? `, ${post.country}` : ""}
-                          </p>
-                        </div>
+            <div className="field-feed">
+              {visibleFieldPosts.map((post) => (
+                <article key={post.id} className="field-card">
+                  <div className="field-host-row">
+                    {post.hostPhoto ? (
+                      <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                    ) : (
+                      <div className="field-host-avatar field-host-avatar-fallback" aria-hidden="true">
+                        {String(post.hostName ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
                       </div>
-                      <span className="sport-pill home-field-card-sport">
-                        {post.sport}
-                      </span>
-                      <p className="home-field-card-caption">{post.caption}</p>
+                    )}
+                    <div>
+                      <p>
+                        <span className="field-host-name">{post.hostName}</span>
+                        <span className="field-host-city"> · {post.city}</span>
+                      </p>
+                      <span className="sport-pill">{post.sport}</span>
                     </div>
-                  </article>
-                </Link>
+                  </div>
+                  {post.photo && (
+                    <img src={post.photo} alt={post.sport} className="field-post-photo" />
+                  )}
+                  <p className="field-caption">{post.caption}</p>
+                  <p className="field-meta">🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}</p>
+                </article>
               ))}
+            </div>
+            <div className="locals-nav-row">
+              <button
+                type="button"
+                className="locals-nav"
+                aria-label="Show previous field posts"
+                onClick={() => setFieldPage((p) => Math.max(p - 1, 0))}
+                disabled={fieldPage === 0}
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                className="locals-nav"
+                aria-label="Show next field posts"
+                onClick={() => setFieldPage((p) => Math.min(p + 1, totalFieldPages - 1))}
+                disabled={fieldPage >= totalFieldPages - 1}
+              >
+                ›
+              </button>
             </div>
           </section>
 
@@ -543,7 +555,7 @@ const HomePage = ({ currentUser, onLogout }) => {
 
           {/* ── How it works ─────────────────────────────────── */}
           <section className="how-section">
-            <h2 className="section-title">How it works</h2>
+            <h2 className="section-title">How SharedXP works?</h2>
             <p className="section-sub">Simple steps to connect and play.</p>
             <div className="how-grid">
               {steps.map((step) => (

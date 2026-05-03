@@ -24,3 +24,13 @@ export const saveFieldPost = (post) => {
     // localStorage may be unavailable / quota exceeded — silently drop.
   }
 };
+
+export const deleteFieldPost = (postId) => {
+  try {
+    const existing = getStoredFieldPosts();
+    const updated = existing.filter((post) => post.id !== postId);
+    localStorage.setItem(FIELD_POSTS_STORAGE_KEY, JSON.stringify(updated));
+  } catch {
+    // localStorage may be unavailable / quota exceeded — silently drop.
+  }
+};
