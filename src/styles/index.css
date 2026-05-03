@@ -247,8 +247,12 @@ body {
   cursor: default;
 }
 
-/* ── Explore by sport ──────────────────────────── */
-.sports-section,
+/* ── The Field (home preview) ──────────────────── */
+.field-home-section {
+  margin-top: 36px;
+}
+
+/* ── How it works ─────────────────────────────── (margin shared below) */
 .how-section {
   margin-top: 36px;
 }

@@ -2,25 +2,34 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import { fieldPosts } from "../data/fieldPosts";
 import { supabase } from "../lib/supabase";
 
 const featuredStatuses = ["Online", "New", "Online", "Online"];
 const LOCALS_PER_PAGE = 4;
+const FIELD_PER_PAGE = 3;
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const getRelativePostedLabel = (postedAt) => {
+  const postDate = new Date(postedAt);
+  if (Number.isNaN(postDate.getTime())) return "";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  postDate.setHours(0, 0, 0, 0);
+  const dayDiff = Math.floor((today.getTime() - postDate.getTime()) / MS_PER_DAY);
+  if (dayDiff <= 0) return "Today";
+  if (dayDiff === 1) return "Yesterday";
+  return `${dayDiff} days ago`;
+};
+
+const sortedFieldPosts = [...fieldPosts].sort(
+  (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
+);
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
-];
-
-const sports = [
-  { name: "Cycling", count: "1,248 locals", icon: "🚲", active: true },
-  { name: "Tennis", count: "842 locals", icon: "🎾" },
-  { name: "Running", count: "643 locals", icon: "🏃" },
-  { name: "Football", count: "512 locals", icon: "⚽" },
-  { name: "Surfing", count: "320 locals", icon: "🏄" },
-  { name: "Basketball", count: "211 locals", icon: "🏀" },
-  { name: "Volleyball", count: "189 locals", icon: "🏐" },
-  { name: "More", count: "+7 sports", icon: "···" }
 ];
 
 const steps = [
@@ -80,6 +89,7 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [selectedMonth, setSelectedMonth] = useState(DEFAULT_MONTH);
   const [selectedYear, setSelectedYear] = useState(DEFAULT_YEAR);
   const [localsPage, setLocalsPage] = useState(0);
+  const [fieldPage, setFieldPage] = useState(0);
   const searchBarRef = useRef(null);
 
   useEffect(() => {
@@ -170,6 +180,12 @@ const HomePage = ({ currentUser, onLogout }) => {
     const startIndex = localsPage * LOCALS_PER_PAGE;
     return filteredHosts.slice(startIndex, startIndex + LOCALS_PER_PAGE);
   }, [localsPage, filteredHosts]);
+
+  const totalFieldPages = Math.max(1, Math.ceil(sortedFieldPosts.length / FIELD_PER_PAGE));
+  const visibleFieldPosts = useMemo(() => {
+    const start = fieldPage * FIELD_PER_PAGE;
+    return sortedFieldPosts.slice(start, start + FIELD_PER_PAGE);
+  }, [fieldPage]);
 
   const localsHeadingLocation = useMemo(() => {
     if (selectedCity !== "All") return selectedCity;
@@ -391,22 +407,61 @@ const HomePage = ({ currentUser, onLogout }) => {
             </div>
           </section>
 
-          {/* ── Explore by sport ─────────────────────────────── */}
-          <section className="sports-section">
-            <h2 className="section-title">Explore by sport</h2>
-            <p className="section-sub">All sports. All levels. All people.</p>
-            <div className="sports-scroll">
-              {sports.map((sport) => (
-                <Link
-                  key={sport.name}
-                  to={sport.name === "More" ? "/locals" : `/locals?sport=${encodeURIComponent(sport.name)}`}
-                  className={`sport-chip${sport.active ? " active" : ""}`}
-                >
-                  <span className="sport-icon">{sport.icon}</span>
-                  <h3>{sport.name}</h3>
-                  <p>{sport.count}</p>
-                </Link>
+          {/* ── The Field ────────────────────────────────────── */}
+          <section className="field-home-section">
+            <div className="section-head">
+              <div>
+                <h2 className="section-title">The Field</h2>
+                <p className="section-sub">Real sessions. Real people.</p>
+              </div>
+              <Link to="/the-field" className="view-all-link">View all</Link>
+            </div>
+            <div className="field-feed">
+              {visibleFieldPosts.map((post) => (
+                <article key={post.id} className="field-card">
+                  <div className="field-host-row">
+                    {post.hostPhoto ? (
+                      <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                    ) : (
+                      <div className="field-host-avatar field-host-avatar-fallback" aria-hidden="true">
+                        {String(post.hostName ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
+                      </div>
+                    )}
+                    <div>
+                      <p>
+                        <span className="field-host-name">{post.hostName}</span>
+                        <span className="field-host-city"> · {post.city}</span>
+                      </p>
+                      <span className="sport-pill">{post.sport}</span>
+                    </div>
+                  </div>
+                  {post.photo && (
+                    <img src={post.photo} alt={post.sport} className="field-post-photo" />
+                  )}
+                  <p className="field-caption">{post.caption}</p>
+                  <p className="field-meta">🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}</p>
+                </article>
               ))}
+            </div>
+            <div className="locals-nav-row">
+              <button
+                type="button"
+                className="locals-nav"
+                aria-label="Show previous field posts"
+                onClick={() => setFieldPage((p) => Math.max(p - 1, 0))}
+                disabled={fieldPage === 0}
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                className="locals-nav"
+                aria-label="Show next field posts"
+                onClick={() => setFieldPage((p) => Math.min(p + 1, totalFieldPages - 1))}
+                disabled={fieldPage >= totalFieldPages - 1}
+              >
+                ›
+              </button>
             </div>
           </section>
 
