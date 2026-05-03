@@ -56,47 +56,37 @@ SharedXP connects sports-loving travelers with local people who are eager to sha
 ### Platform
 
 - Sign up with email or social (Google / Apple — prototype)
-- SHA-256 password hashing via Web Crypto API
-- Legacy password migration on login
+- Email confirmation and password reset via Resend
 - Hosting paused indicator in nav
+- Admin dispute dashboard for customer service
 
 -----
 
 ## Tech Stack
 
-|Layer     |Technology                |
-|----------|--------------------------|
-|Framework |React 18                  |
-|Routing   |React Router v6           |
-|Bundler   |Vite 5                    |
-|Styling   |Custom CSS (no UI library)|
-|Auth      |SHA-256 via Web Crypto API|
-|Storage   |`localStorage` (prototype)|
-|Deployment|Vercel                    |
+|Layer     |Technology                     |
+|----------|-------------------------------|
+|Framework |React 18                       |
+|Routing   |React Router v6                |
+|Bundler   |Vite 5                         |
+|Styling   |Custom CSS (no UI library)     |
+|Backend   |Supabase (Postgres + Auth + Storage)|
+|Auth      |Supabase Auth (email + OAuth, implicit flow)|
+|Email     |Resend via Supabase Edge Functions (Deno)|
+|Deployment|Vercel                         |
 
-No external UI libraries. No TypeScript. Zero additional npm dependencies beyond React, React Router, and Vite.
+No external UI libraries. No TypeScript (frontend). The only runtime dependency beyond React and React Router is `@supabase/supabase-js`.
 
 -----
 
 ## Project Status
 
-🚧 **Frontend prototype.** The full user journey — browsing, profiles, sign-up, host onboarding, booking, history, and community feed — is demonstrated without a live backend. All data is stored in the browser’s `localStorage`.
+The core platform is live and backed by Supabase. Auth, profiles, host onboarding, booking requests, in-app chat, invoicing, disputes, and transactional email are all functional.
 
-### localStorage keys
+### Still to come
 
-|Key                   |Contents                    |
-|----------------------|----------------------------|
-|`sharedxp-users`      |All registered user accounts|
-|`sharedxp-session`    |Currently logged-in user    |
-|`sharedxp-field-posts`|User-generated Field posts  |
-
-### Planned backend work
-
-- Real database (users, bookings, reviews, posts)
-- OAuth via Google & Apple
-- Stripe Connect for host payouts
-- Messaging / chat system
-- Email notifications
+- Stripe Connect for host payouts (invoices are currently simulated)
+- Full OAuth via Google & Apple (wired up but prototype-only)
 - Moderation for The Field
 
 -----
@@ -110,6 +100,10 @@ cd SharedXP
 
 # Install dependencies
 npm install
+
+# Configure environment
+cp .env.example .env
+# Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY from your Supabase project
 
 # Start the dev server
 npm run dev
@@ -140,44 +134,49 @@ Sign up with any email and password to explore the full prototype. To test the h
 src/
 ├── assets/              # Static images and SVGs
 ├── components/          # Shared UI (SiteHeader, SiteFooter, BuddyCard)
-├── data/                # Mock data (buddies, field posts)
-├── hooks/               # useAuth — all auth and user state logic
+├── context/             # AuthContext — all auth state and user mutations
+├── data/                # Prototype seed data (buddies, field posts)
+├── hooks/               # useBookingRequests — booking lifecycle logic
+├── lib/                 # supabase.js — singleton Supabase client
 ├── pages/               # One file per route
-│   ├── HomePage.jsx
-│   ├── ExplorePage.jsx
-│   ├── ProfilePage.jsx
-│   ├── FieldPage.jsx
-│   ├── HistoryPage.jsx
-│   ├── HostPage.jsx
-│   ├── AboutPage.jsx
-│   ├── MyProfilePage.jsx
-│   ├── SignUpPage.jsx
-│   ├── LoginPage.jsx
-│   └── ...legal pages
-├── utils/               # Date helpers
+├── styles/              # index.css — global styles (~3,400 lines, no modules)
+├── utils/               # Date, age, and notification helpers
 ├── App.jsx              # Route declarations
-├── main.jsx             # Entry point
-└── style.css            # Global styles (~3,400 lines, no modules)
+└── main.jsx             # Entry point
+supabase/
+├── functions/
+│   ├── booking-notify/  # Transactional email dispatcher (Deno)
+│   └── send-email/      # Supabase Auth email hook (Deno)
+└── migrations/          # Numbered SQL migrations (001–012)
 ```
 
 -----
 
 ## Routes
 
-|Path            |Page                                                   |
-|----------------|-------------------------------------------------------|
-|`/`             |Home — hero, featured locals, sport chips, how it works|
-|`/locals`       |Explore — map + filtered list of hosts                 |
-|`/buddy/:id`    |Host profile — gallery, calendar, booking, reviews     |
-|`/the-field`    |Community experience feed                              |
-|`/about`        |About, story, how it works, values, CTA                |
-|`/signup`       |Sign up                                                |
-|`/login`        |Log in                                                 |
-|`/my-profile`   |Edit personal profile                                  |
-|`/become-a-host`|Host onboarding                                        |
-|`/host-settings`|Manage host profile                                    |
-|`/history`      |Booking history, photo upload, reviews, share to Field |
-|`/how-it-works` |→ redirects to `/about`                                |
+|Path                              |Page                                                   |
+|----------------------------------|-------------------------------------------------------|
+|`/`                               |Home — hero, featured locals, sport chips, how it works|
+|`/locals`                         |Explore — map + filtered list of hosts                 |
+|`/buddy/:buddyId`                 |Host profile — gallery, calendar, booking, reviews     |
+|`/the-field`                      |Community experience feed                              |
+|`/about`                          |About, story, how it works, values, CTA                |
+|`/signup`                         |Sign up                                                |
+|`/login`                          |Log in                                                 |
+|`/my-profile`                     |Edit personal profile                                  |
+|`/user-profile`                   |Logged-in user's public profile view                   |
+|`/user/:userId`                   |Another user's public profile                          |
+|`/become-a-host`                  |Host onboarding                                        |
+|`/host-settings`                  |Manage host profile                                    |
+|`/history`                        |Booking history, photo upload, reviews, share to Field |
+|`/payment/:bookingRequestId`      |Payment page for an accepted booking                   |
+|`/chat/:bookingRequestId`         |In-app messaging for a booking                         |
+|`/dispute-response/:disputeId`    |Host dispute response form                             |
+|`/admin/disputes`                 |Admin dispute dashboard (requires `is_admin = true`)   |
+|`/follow`                         |Follow / connections                                   |
+|`/help`                           |Help centre                                            |
+|`/how-it-works`                   |→ redirects to `/about`                                |
+|`/host-history`                   |→ redirects to `/history`                              |
 
 -----
 
@@ -194,7 +193,7 @@ Host availability dates are generated dynamically relative to today so the booki
 
 ## Photo Upload Notes
 
-Photos uploaded in the History page are stored as base64 data URLs in `localStorage` alongside the session record. A limit of **5 photos per session** is enforced to stay within browser storage limits (~5MB total across all keys). For production this will be replaced with cloud storage (S3 or equivalent).
+Photos uploaded in the History page are stored in the Supabase `host-sport-images` storage bucket. A limit of **5 photos per session** is enforced client-side. User avatars are stored in the `Avatars` bucket. Both buckets serve public URLs.
 
 -----
 
