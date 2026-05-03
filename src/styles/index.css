@@ -3361,6 +3361,224 @@ body {
   padding: 32px 16px;
 }
 
+/* ── Events page ──────────────────────────── */
+.events-page {
+  min-height: 100vh;
+  background: #f5f5f2;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.events-page .site-header {
+  margin: 10px;
+}
+
+.events-hero {
+  max-width: 1080px;
+  margin: 6px auto 0;
+  padding: 18px 20px 10px;
+}
+
+.events-hero h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.1;
+}
+
+.events-hero p {
+  margin: 10px 0 0;
+  color: #596164;
+  font-size: 17px;
+  max-width: 720px;
+}
+
+.events-main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 10px 20px 26px;
+}
+
+.events-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 18px;
+}
+
+.events-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #3a3f2b;
+  font-weight: 600;
+}
+
+.events-filter-field select {
+  border: 1px solid #d7dccf;
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #273033;
+  min-width: 140px;
+}
+
+.events-filter-reset {
+  align-self: flex-end;
+  border: 0;
+  background: transparent;
+  color: #6ca43b;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+
+.events-empty-state {
+  text-align: center;
+  color: #596164;
+  padding: 32px 16px;
+}
+
+.events-attribution {
+  margin: 28px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: #8a8f80;
+}
+
+.events-feed {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.event-card {
+  background: #fff;
+  border: 1px solid #e8e9e4;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-card-image-link {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+
+.event-card-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+
+.event-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.event-card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-card-sport {
+  align-self: flex-start;
+}
+
+.event-card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #273033;
+  line-height: 1.25;
+}
+
+.event-card-meta {
+  margin: 0;
+  font-size: 14px;
+  color: #596164;
+}
+
+.event-card-venue {
+  margin: 0;
+  font-size: 13px;
+  color: #6f7565;
+}
+
+.event-card-description {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #3a3f2b;
+}
+
+.event-card-link {
+  margin-top: 6px;
+  align-self: flex-start;
+  color: #6ca43b;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.event-card-link:hover,
+.event-card-link:focus-visible {
+  text-decoration: underline;
+}
+
+.event-card-compact .event-card-image {
+  aspect-ratio: 16 / 10;
+}
+
+.event-card-compact .event-card-body {
+  padding: 14px;
+  gap: 6px;
+}
+
+.event-card-compact .event-card-title {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  .events-feed {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── HomePage: Major Events section ─────── */
+.major-events-section {
+  margin-top: 24px;
+}
+
+.major-events-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (min-width: 720px) {
+  .major-events-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 /* ── Review breakdown (ProfilePage) ──────── */
 .review-breakdown {
   display: flex;

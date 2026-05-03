@@ -69,8 +69,8 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
         <Link to="/the-field" className="site-nav-link">
           The Field
         </Link>
-        <Link to="/about" className="site-nav-link">
-          About
+        <Link to="/events" className="site-nav-link">
+          Events
         </Link>
         <Link to={navHostRoute} className={`site-nav-link${isHostLabelPaused ? " site-nav-link-paused" : ""}`}>
           {navHostLabel}
