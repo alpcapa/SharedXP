@@ -3256,6 +3256,10 @@ body {
   font-weight: 700;
 }
 
+.field-main .explore-filters {
+  margin-bottom: 32px;
+}
+
 .field-feed {
   display: grid;
   grid-template-columns: 1fr;
