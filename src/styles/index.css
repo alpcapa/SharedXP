@@ -252,6 +252,35 @@ body {
   margin-top: 36px;
 }
 
+.field-home-section .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.field-home-section .field-feed {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.field-home-section .field-card {
+  padding: 12px;
+}
+
+.field-home-section .field-host-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.field-home-section .field-caption {
+  font-size: 13px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* ── How it works ─────────────────────────────── (margin shared below) */
 .how-section {
   margin-top: 36px;
@@ -2806,7 +2835,8 @@ body {
   .locals-grid,
   .sports-scroll,
   .how-grid,
-  .follow-grid {
+  .follow-grid,
+  .field-home-section .field-feed {
     grid-template-columns: 1fr;
   }
 
