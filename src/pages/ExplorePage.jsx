@@ -294,7 +294,6 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                 <h2 className="section-title">
                   {hostsLoading ? "Loading hosts…" : `Hosts (${visibleHosts.length})`}
                 </h2>
-                <p className="section-sub">Browse and discover hosts near you.</p>
               </div>
             </div>
 
