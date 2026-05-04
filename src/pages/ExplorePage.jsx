@@ -307,39 +307,35 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                 {pagedHosts.map((host) => {
                   const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                   const hasEquipment = host.sports.some((s) => s.equipment_available);
+                  const levels = [...new Set(host.sports.map((s) => s.level).filter(Boolean))];
                   return (
                     <Link to={`/buddy/${host.userId}`} state={{ from: "explore" }} key={host.id} className="local-card-link">
-                      <article className="local-card">
-                        <div className="local-image-wrap">
+                      <article className="field-card">
+                        <div className="field-host-row">
                           {host.photo ? (
-                            <img src={host.photo} alt={host.name} />
+                            <img src={host.photo} alt={host.name} className="field-host-avatar" />
                           ) : (
-                            <div className="local-image-placeholder">👤</div>
+                            <div className="field-host-avatar field-host-avatar-fallback">
+                              {String(host.name ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
+                            </div>
                           )}
+                          <div>
+                            <p>
+                              <span className="field-host-name">{host.name}</span>
+                              {locationLine && <span className="field-host-city"> · {locationLine}</span>}
+                            </p>
+                            <div className="local-sport-pills">
+                              {host.sports.slice(0, 3).map((s) => (
+                                <span key={s.id} className="sport-pill">{s.sport}</span>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                        <div className="local-body">
-                          <div className="local-title-row">
-                            <h3>{host.name}</h3>
-                          </div>
-                          {locationLine && (
-                            <p className="local-location">📍 {locationLine}</p>
-                          )}
-                          <div className="local-sport-pills">
-                            {host.sports.slice(0, 3).map((s) => (
-                              <span key={s.id} className="sport-pill">
-                                {s.sport}
-                              </span>
-                            ))}
-                          </div>
                         <ul className="local-meta">
-                            {host.gender && <li>👤 {host.gender}</li>}
-                            {(() => {
-                              const levels = [...new Set(host.sports.map((s) => s.level).filter(Boolean))];
-                              return levels.length > 0 && <li>🏅 {levels.join(", ")}</li>;
-                            })()}
-                            <li>🎒 Equipment: {hasEquipment ? "Yes" : "No"}</li>
-                          </ul>
-                        </div>
+                          {host.gender && <li>👤 {host.gender}</li>}
+                          {levels.length > 0 && <li>🏅 {levels.join(", ")}</li>}
+                          <li>🎒 Equipment: {hasEquipment ? "Yes" : "No"}</li>
+                        </ul>
                       </article>
                     </Link>
                   );

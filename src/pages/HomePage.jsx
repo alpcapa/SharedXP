@@ -7,8 +7,7 @@ import { fieldPosts } from "../data/fieldPosts";
 import { loadMajorEvents } from "../lib/events";
 import { supabase } from "../lib/supabase";
 
-const featuredStatuses = ["Online", "New", "Online", "Online"];
-const LOCALS_PER_PAGE = 4;
+const LOCALS_PER_PAGE = 3;
 const FIELD_PER_PAGE = 3;
 const HOME_EVENTS_PAGE_SIZE = 3;
 
@@ -363,9 +362,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                 <p className="explore-empty">No locals found matching your filters.</p>
               ) : (
                 <div className="locals-grid">
-                          {featuredLocals.map((host, index) => {
-                    const statusIndex =
-                      (localsPage * LOCALS_PER_PAGE + index) % featuredStatuses.length;
+                          {featuredLocals.map((host) => {
                     const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                     const hasEquipment = host.sports.some((s) => s.equipment_available);
                     const levels = [
@@ -373,38 +370,32 @@ const HomePage = ({ currentUser, onLogout }) => {
                     ];
                     return (
                       <Link to={`/buddy/${host.userId}`} key={host.id} className="local-card-link">
-                        <article className="local-card">
-                          <div className="local-image-wrap">
+                        <article className="field-card">
+                          <div className="field-host-row">
                             {host.photo ? (
-                              <img src={host.photo} alt={host.name} />
+                              <img src={host.photo} alt={host.name} className="field-host-avatar" />
                             ) : (
-                              <div className="local-image-placeholder">👤</div>
+                              <div className="field-host-avatar field-host-avatar-fallback">
+                                {String(host.name ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
+                              </div>
                             )}
-                            <span className="status-badge">
-                              <span className="status-dot" />
-                              {featuredStatuses[statusIndex]}
-                            </span>
-                          </div>
-                          <div className="local-body">
-                            <div className="local-title-row">
-                              <h3>{host.name}</h3>
+                            <div>
+                              <p>
+                                <span className="field-host-name">{host.name}</span>
+                                {locationLine && <span className="field-host-city"> · {locationLine}</span>}
+                              </p>
+                              <div className="local-sport-pills">
+                                {host.sports.slice(0, 3).map((s) => (
+                                  <span key={s.id} className="sport-pill">{s.sport}</span>
+                                ))}
+                              </div>
                             </div>
-                            {locationLine && (
-                              <p className="local-location">📍 {locationLine}</p>
-                            )}
-                            <div className="local-sport-pills">
-                              {host.sports.slice(0, 3).map((s) => (
-                                <span key={s.id} className="sport-pill">
-                                  {s.sport}
-                                </span>
-                              ))}
-                            </div>
-                            <ul className="local-meta">
-                              {host.gender && <li>👤 {host.gender}</li>}
-                              {levels.length > 0 && <li>🏅 {levels.join(", ")}</li>}
-                              <li>🎒 Equipment: {hasEquipment ? "Yes" : "No"}</li>
-                            </ul>
                           </div>
+                          <ul className="local-meta">
+                            {host.gender && <li>👤 {host.gender}</li>}
+                            {levels.length > 0 && <li>🏅 {levels.join(", ")}</li>}
+                            <li>🎒 Equipment: {hasEquipment ? "Yes" : "No"}</li>
+                          </ul>
                         </article>
                       </Link>
                     );
@@ -416,7 +407,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show previous 4 locals"
+                    aria-label="Show previous 3 locals"
                     onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
                     disabled={localsPage === 0}
                   >
@@ -425,7 +416,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show next 4 locals"
+                    aria-label="Show next 3 locals"
                     onClick={() =>
                       setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
                     }
