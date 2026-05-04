@@ -24,7 +24,7 @@ const fmtTime = (iso) =>
         .format(new Date(iso))
     : "";
 
-const ChatPage = ({ currentUser, onLogout }) => {
+const ChatPage = ({ currentUser, authLoading, onLogout }) => {
   const { bookingRequestId } = useParams();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
@@ -139,6 +139,15 @@ const ChatPage = ({ currentUser, onLogout }) => {
   };
 
   if (!currentUser) {
+    if (authLoading) {
+      return (
+        <div className="chat-page">
+          <SiteHeader />
+          <p className="chat-loading">Loading…</p>
+          <SiteFooter />
+        </div>
+      );
+    }
     return (
       <div className="home-page">
         <div className="middle-page-frame">

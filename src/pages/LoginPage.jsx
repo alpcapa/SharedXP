@@ -48,20 +48,14 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
               <button
                 type="button"
                 className="btn btn-light social-btn"
-                onClick={() => {
-                  onSocialLogin?.("google");
-                  navigate(destination);
-                }}
+                onClick={() => onSocialLogin?.("google")}
               >
                 Continue with Google
               </button>
               <button
                 type="button"
                 className="btn btn-light social-btn"
-                onClick={() => {
-                  onSocialLogin?.("apple");
-                  navigate(destination);
-                }}
+                onClick={() => onSocialLogin?.("apple")}
               >
                 Continue with Apple
               </button>

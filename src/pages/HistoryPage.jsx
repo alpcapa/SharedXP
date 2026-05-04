@@ -54,6 +54,26 @@ const HistoryPage = ({
   const location = useLocation();
   const queryTab = new URLSearchParams(location.search).get("tab");
 
+  const [allItems, setAllItems] = useState(() =>
+    mergeAndSort(
+      normalizeAttended(currentUser?.history),
+      normalizeHosted(currentUser?.hostHistory)
+    )
+  );
+  const [selectedSport, setSelectedSport] = useState("All");
+  const [selectedRole, setSelectedRole] = useState(queryTab === "pending" ? "pending" : "all");
+
+  const {
+    requests: bookingRequests,
+    loading: requestsLoading,
+    unreadCounts,
+    acceptRequest,
+    declineRequest,
+    cancelRequest,
+    confirmExperience,
+    openDispute,
+  } = useBookingRequests(currentUser);
+
   if (!currentUser) {
     return (
       <div className="home-page">
@@ -73,26 +93,6 @@ const HistoryPage = ({
     );
   }
 
-  const [allItems, setAllItems] = useState(() =>
-    mergeAndSort(
-      normalizeAttended(currentUser.history),
-      normalizeHosted(currentUser.hostHistory)
-    )
-  );
-  const [selectedSport, setSelectedSport] = useState("All");
-  const [selectedRole, setSelectedRole] = useState(queryTab === "pending" ? "pending" : "all");
-
-  const {
-    requests: bookingRequests,
-    loading: requestsLoading,
-    unreadCounts,
-    acceptRequest,
-    declineRequest,
-    cancelRequest,
-    confirmExperience,
-    openDispute,
-  } = useBookingRequests(currentUser);
-
   const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
   const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status));
 
@@ -111,12 +111,12 @@ const HistoryPage = ({
   useEffect(() => {
     setAllItems(
       mergeAndSort(
-        normalizeAttended(currentUser.history),
-        normalizeHosted(currentUser.hostHistory)
+        normalizeAttended(currentUser?.history),
+        normalizeHosted(currentUser?.hostHistory)
       )
     );
     setDirtyIds(new Set());
-  }, [currentUser.history, currentUser.hostHistory]);
+  }, [currentUser?.history, currentUser?.hostHistory]);
 
   // After items normalise, any session past the auto-confirm window is upgraded
   // to "completed" + paymentReleased. Persist this once per change so the

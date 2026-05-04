@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
@@ -15,7 +15,7 @@ const AdminDisputesPage = ({ currentUser, onLogout }) => {
   const [resolving, setResolving] = useState(null);
   const { resolveDispute } = useBookingRequests(currentUser);
 
-  const fetchDisputes = async () => {
+  const fetchDisputes = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
       .from("disputes")
@@ -30,12 +30,12 @@ const AdminDisputesPage = ({ currentUser, onLogout }) => {
       .order("opened_at", { ascending: false });
     setDisputes(data ?? []);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (currentUser?.is_admin) fetchDisputes();
     else setLoading(false);
-  }, [currentUser?.is_admin, currentUser?.id]);
+  }, [currentUser?.is_admin, currentUser?.id, fetchDisputes]);
 
   const handleResolve = async (disputeId, resolution) => {
     if (!confirm(`Resolve as "${resolution}"?`)) return;

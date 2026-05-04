@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { sendNotification } from "../utils/sendNotification";
-
-const COMMISSION_RATE = 0.15;
-const TAX_RATE = 0.05;
+import { COMMISSION_RATE, TAX_RATE } from "../utils/pricing";
 
 export const useBookingRequests = (currentUser) => {
   const [requests, setRequests] = useState([]);
@@ -64,22 +62,20 @@ export const useBookingRequests = (currentUser) => {
 
     (async () => {
       for (const r of expired) {
+        const now = new Date().toISOString();
         await supabase
           .from("booking_requests")
-          .update({ status: "completed", updated_at: new Date().toISOString() })
+          .update({ status: "completed", updated_at: now })
           .eq("id", r.id);
 
-        // Release invoice if requester is the current user
-        if (r.requester_id === currentUser.id) {
-          await supabase
-            .from("invoices")
-            .update({ released_at: new Date().toISOString() })
-            .eq("booking_request_id", r.id)
-            .is("released_at", null);
+        await supabase
+          .from("invoices")
+          .update({ released_at: now })
+          .eq("booking_request_id", r.id)
+          .is("released_at", null);
 
-          await sendNotification("payment_processed_to_host", r.id);
-          await sendNotification("experience_confirmed_to_host", r.id);
-        }
+        await sendNotification("payment_processed_to_host", r.id);
+        await sendNotification("experience_confirmed_to_host", r.id);
       }
       fetchRequests();
     })();

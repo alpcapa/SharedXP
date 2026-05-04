@@ -264,7 +264,7 @@ if (!profile) {
   profile = meta
     ? metaToProfileShape(meta, authUser)
     : { email: authUser.email };
-  await supabase.from("profiles").insert({ id: authUser.id, ...profile });
+  await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
 }
 
 if (!profile.photo_url) {
