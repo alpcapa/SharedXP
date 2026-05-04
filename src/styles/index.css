@@ -794,6 +794,10 @@ body {
   padding-top: 20px;
 }
 
+.explore-page-content .locals-grid {
+  margin-top: 10px;
+}
+
 .explore-filters {
   display: flex;
   flex-direction: column;
