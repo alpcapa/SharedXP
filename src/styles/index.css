@@ -774,9 +774,8 @@ body {
 }
 
 .explore-hero-content {
-  max-width: 1080px;
-  margin: 6px auto 0;
-  padding: 18px 20px 10px;
+  margin: 6px 0 0;
+  padding: 18px 0 10px;
 }
 
 .explore-hero-content h1 {
