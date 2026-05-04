@@ -68,14 +68,19 @@ export const useBookingRequests = (currentUser) => {
           .update({ status: "completed", updated_at: now })
           .eq("id", r.id);
 
-        await supabase
+        const { data: released } = await supabase
           .from("invoices")
           .update({ released_at: now })
           .eq("booking_request_id", r.id)
-          .is("released_at", null);
+          .is("released_at", null)
+          .select("id");
 
-        await sendNotification("payment_processed_to_host", r.id);
-        await sendNotification("experience_confirmed_to_host", r.id);
+        // Only the client that actually flipped released_at sends notifications,
+        // preventing duplicate emails when both participants are online.
+        if (released?.length > 0) {
+          await sendNotification("payment_processed_to_host", r.id);
+          await sendNotification("experience_confirmed_to_host", r.id);
+        }
       }
       fetchRequests();
     })();

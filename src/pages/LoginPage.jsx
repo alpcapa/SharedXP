@@ -48,14 +48,24 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
               <button
                 type="button"
                 className="btn btn-light social-btn"
-                onClick={() => onSocialLogin?.("google")}
+                onClick={() => {
+                  if (destination && destination !== "/") {
+                    sessionStorage.setItem("postAuthRedirect", destination);
+                  }
+                  onSocialLogin?.("google");
+                }}
               >
                 Continue with Google
               </button>
               <button
                 type="button"
                 className="btn btn-light social-btn"
-                onClick={() => onSocialLogin?.("apple")}
+                onClick={() => {
+                  if (destination && destination !== "/") {
+                    sessionStorage.setItem("postAuthRedirect", destination);
+                  }
+                  onSocialLogin?.("apple");
+                }}
               >
                 Continue with Apple
               </button>

@@ -74,25 +74,6 @@ const HistoryPage = ({
     openDispute,
   } = useBookingRequests(currentUser);
 
-  if (!currentUser) {
-    return (
-      <div className="home-page">
-        <div className="middle-page-frame">
-          <section className="hero auth-hero">
-            <SiteHeader />
-          </section>
-          <main className="middle-section simple-page">
-            <h1>Please log in</h1>
-            <p>You need to log in to view your experience history.</p>
-            <Link to="/login" className="btn btn-primary">
-              Go to Login
-            </Link>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
   const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status));
 
@@ -369,6 +350,25 @@ const HistoryPage = ({
     },
     [onSaveHistory, onSaveHostHistory]
   );
+
+  if (!currentUser) {
+    return (
+      <div className="home-page">
+        <div className="middle-page-frame">
+          <section className="hero auth-hero">
+            <SiteHeader />
+          </section>
+          <main className="middle-section simple-page">
+            <h1>Please log in</h1>
+            <p>You need to log in to view your experience history.</p>
+            <Link to="/login" className="btn btn-primary">
+              Go to Login
+            </Link>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   const sharePromptItem = sharePromptItemId
     ? allItems.find((item) => item.id === sharePromptItemId)

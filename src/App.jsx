@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
 import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
 import FieldPage from "./pages/FieldPage";
@@ -30,6 +31,20 @@ import GuestProfilePage from "./pages/GuestProfilePage";
 
 function App() {
   const authActions = useAuth();
+  const navigate = useNavigate();
+  const didRedirect = useRef(false);
+
+  // After OAuth login the browser lands on "/" with postAuthRedirect in
+  // sessionStorage. Consume it once to send the user to their intended page.
+  useEffect(() => {
+    if (!authActions.currentUser || didRedirect.current) return;
+    const redirect = sessionStorage.getItem("postAuthRedirect");
+    if (redirect) {
+      didRedirect.current = true;
+      sessionStorage.removeItem("postAuthRedirect");
+      navigate(redirect, { replace: true });
+    }
+  }, [authActions.currentUser, navigate]);
 
   return (
     <Routes>

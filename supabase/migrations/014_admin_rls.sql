@@ -1,3 +1,14 @@
+-- Allow admins to read booking_requests (needed to show dispute details)
+DROP POLICY IF EXISTS "booking_requests_read" ON public.booking_requests;
+CREATE POLICY "booking_requests_read" ON public.booking_requests
+  FOR SELECT USING (
+    auth.uid() = requester_id
+    OR auth.uid() = host_id
+    OR EXISTS (
+      SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_admin = TRUE
+    )
+  );
+
 -- Allow admins to update booking_requests (needed for dispute resolution)
 DROP POLICY IF EXISTS "booking_requests_update" ON public.booking_requests;
 CREATE POLICY "booking_requests_update" ON public.booking_requests

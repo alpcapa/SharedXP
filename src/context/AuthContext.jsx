@@ -208,6 +208,7 @@ sports: normalizeSports(
 ),
 signedUpAt: p.signed_up_at || authUser.created_at || new Date().toISOString(),
 isHost: p.is_host || false,
+isAdmin: p.is_admin || false,
 hostProfile: buildHostProfileObject(hostProfile, hostSports),
 history: bookings?.history ?? [],
 hostHistory: bookings?.hostHistory ?? [],
@@ -397,8 +398,13 @@ supabase.auth
   .getSession()
   .then(({ data: { session } }) => {
     if (!mounted) return;
-    setAuthLoading(false);
-    if (session?.user) loadUser(session.user);
+    if (session?.user) {
+      loadUser(session.user).finally(() => {
+        if (mounted) setAuthLoading(false);
+      });
+    } else {
+      setAuthLoading(false);
+    }
   })
   .catch((e) => {
     if (!mounted) return;
