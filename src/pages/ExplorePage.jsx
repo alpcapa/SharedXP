@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
+import { getAgeFromBirthday } from "../utils/profileAge";
 
 const EXPLORE_HOSTS_PER_PAGE = 12;
 const GENDER_OPTIONS = ["All", "Male", "Female"];
@@ -28,7 +29,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
       .from("host_profiles")
       .select(
         `id, country, city, pause_hosting,
-         profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, signed_up_at),
+         profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at),
          host_sports(id, sport, level, equipment_available, paused)`
       )
       .eq("pause_hosting", false)
@@ -49,6 +50,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                 "Host",
               photo: hp.profile.photo_url || "",
               gender: hp.profile.gender || "",
+              birthday: hp.profile.birthday || "",
               country: hp.country || "",
               city: hp.city || "",
               signedUpAt: hp.profile.signed_up_at || "",
@@ -337,7 +339,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                         )}
                         <p className="field-meta">
                           {[
-                            host.gender && `👤 ${host.gender}`,
+                            (host.gender || getAgeFromBirthday(host.birthday)) && `👤 ${[host.gender, getAgeFromBirthday(host.birthday)].filter(Boolean).join(", ")}`,
                             levels.length > 0 && `🏅 ${levels.join(", ")}`,
                             `🎒 ${hasEquipment ? "Yes" : "No"}`,
                           ].filter(Boolean).join(" · ")}
