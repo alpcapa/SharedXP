@@ -5,7 +5,7 @@ CREATE POLICY "booking_requests_read" ON public.booking_requests
     auth.uid() = requester_id
     OR auth.uid() = host_id
     OR EXISTS (
-      SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_admin = TRUE
+      SELECT 1 FROM public.profiles adm WHERE adm.id = auth.uid() AND adm.is_admin = TRUE
     )
   );
 
@@ -17,14 +17,14 @@ CREATE POLICY "booking_requests_update" ON public.booking_requests
     auth.uid() = requester_id
     OR auth.uid() = host_id
     OR EXISTS (
-      SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_admin = TRUE
+      SELECT 1 FROM public.profiles adm WHERE adm.id = auth.uid() AND adm.is_admin = TRUE
     )
   )
   WITH CHECK (
     auth.uid() = requester_id
     OR auth.uid() = host_id
     OR EXISTS (
-      SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_admin = TRUE
+      SELECT 1 FROM public.profiles adm WHERE adm.id = auth.uid() AND adm.is_admin = TRUE
     )
   );
 
@@ -40,7 +40,7 @@ CREATE POLICY "invoices_update" ON public.invoices
           br.requester_id = auth.uid()
           OR br.host_id = auth.uid()
           OR EXISTS (
-            SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_admin = TRUE
+            SELECT 1 FROM public.profiles adm WHERE adm.id = auth.uid() AND adm.is_admin = TRUE
           )
         )
     )
