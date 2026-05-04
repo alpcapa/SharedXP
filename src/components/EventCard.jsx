@@ -1,15 +1,30 @@
 import { useState } from "react";
 import { formatEventDateRange } from "../lib/events";
 
-// Clearbit's free Logo API: takes a bare hostname and returns the official
-// logo as PNG/SVG with transparent background. Returns 404 when no logo is
-// known — handled by onError which flips to a gradient + sport emoji.
-const buildLogoUrl = (eventUrl) => {
+// Google's favicon API. Free, no key, CORS-friendly, returns up to 256x256.
+// For most major event sites the favicon is the site's logo or a recognisable
+// monogram of it. If the endpoint returns the generic globe fallback for an
+// unknown domain we'd still get an image — the chained Clearbit attempt at
+// onError handles that edge case before we fall back to the sport emoji.
+const buildPrimaryLogoUrl = (eventUrl) => {
   if (!eventUrl) return "";
   try {
     const hostname = new URL(eventUrl).hostname.replace(/^www\./i, "");
     if (!hostname) return "";
-    return "https://logo.clearbit.com/" + hostname;
+    return (
+      "https://www.google.com/s2/favicons?sz=128&domain=" + hostname
+    );
+  } catch {
+    return "";
+  }
+};
+
+const buildSecondaryLogoUrl = (eventUrl) => {
+  if (!eventUrl) return "";
+  try {
+    const hostname = new URL(eventUrl).hostname.replace(/^www\./i, "");
+    if (!hostname) return "";
+    return "https://icons.duckduckgo.com/ip3/" + hostname + ".ico";
   } catch {
     return "";
   }
@@ -45,12 +60,27 @@ const FALLBACK_GRADIENT = "linear-gradient(135deg,#6ca43b,#3a7a1f)";
 const EventCard = ({ event, compact = false }) => {
   const dateLabel = formatEventDateRange(event.startsAt, event.endsAt);
   const location = [event.city, event.country].filter(Boolean).join(", ");
-  const logoUrl = buildLogoUrl(event.url);
-  const [logoFailed, setLogoFailed] = useState(false);
+  const primaryLogoUrl = buildPrimaryLogoUrl(event.url);
+  const secondaryLogoUrl = buildSecondaryLogoUrl(event.url);
+  const [logoStage, setLogoStage] = useState("primary");
 
-  const showLogo = logoUrl && !logoFailed;
+  const activeLogoUrl =
+    logoStage === "primary"
+      ? primaryLogoUrl
+      : logoStage === "secondary"
+        ? secondaryLogoUrl
+        : "";
+  const showLogo = Boolean(activeLogoUrl);
   const emoji = SPORT_EMOJI[event.sport] || FALLBACK_EMOJI;
   const gradient = SPORT_GRADIENT[event.sport] || FALLBACK_GRADIENT;
+
+  const handleLogoError = () => {
+    if (logoStage === "primary" && secondaryLogoUrl) {
+      setLogoStage("secondary");
+    } else {
+      setLogoStage("failed");
+    }
+  };
 
   return (
     <article className={`event-card${compact ? " event-card-compact" : ""}`}>
@@ -68,12 +98,12 @@ const EventCard = ({ event, compact = false }) => {
         >
           {showLogo ? (
             <img
-              src={logoUrl}
+              src={activeLogoUrl}
               alt=""
               className="event-card-logo"
               loading="lazy"
               referrerPolicy="no-referrer"
-              onError={() => setLogoFailed(true)}
+              onError={handleLogoError}
             />
           ) : (
             <span className="event-card-placeholder-emoji">{emoji}</span>
