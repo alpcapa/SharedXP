@@ -94,7 +94,7 @@ body {
 
 .locals-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -774,9 +774,8 @@ body {
 }
 
 .explore-hero-content {
-  max-width: 1080px;
-  margin: 6px auto 0;
-  padding: 18px 20px 10px;
+  margin: 6px 0 0;
+  padding: 18px 0 10px;
 }
 
 .explore-hero-content h1 {
@@ -792,7 +791,11 @@ body {
 }
 
 .explore-page-content {
-  padding-top: 0;
+  padding-top: 20px;
+}
+
+.explore-page-content .locals-grid {
+  margin-top: 10px;
 }
 
 .explore-filters {
@@ -3341,6 +3344,13 @@ body {
   aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: 10px;
+}
+
+.field-post-photo-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  background: #e8e9e4;
 }
 
 .field-caption {
