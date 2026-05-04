@@ -3576,6 +3576,13 @@ body {
   margin-top: 24px;
 }
 
+.major-events-section .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
 .major-events-grid {
   display: grid;
   grid-template-columns: 1fr;
