@@ -54,29 +54,10 @@ const HistoryPage = ({
   const location = useLocation();
   const queryTab = new URLSearchParams(location.search).get("tab");
 
-  if (!currentUser) {
-    return (
-      <div className="home-page">
-        <div className="middle-page-frame">
-          <section className="hero auth-hero">
-            <SiteHeader />
-          </section>
-          <main className="middle-section simple-page">
-            <h1>Please log in</h1>
-            <p>You need to log in to view your experience history.</p>
-            <Link to="/login" className="btn btn-primary">
-              Go to Login
-            </Link>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   const [allItems, setAllItems] = useState(() =>
     mergeAndSort(
-      normalizeAttended(currentUser.history),
-      normalizeHosted(currentUser.hostHistory)
+      normalizeAttended(currentUser?.history),
+      normalizeHosted(currentUser?.hostHistory)
     )
   );
   const [selectedSport, setSelectedSport] = useState("All");
@@ -111,12 +92,12 @@ const HistoryPage = ({
   useEffect(() => {
     setAllItems(
       mergeAndSort(
-        normalizeAttended(currentUser.history),
-        normalizeHosted(currentUser.hostHistory)
+        normalizeAttended(currentUser?.history),
+        normalizeHosted(currentUser?.hostHistory)
       )
     );
     setDirtyIds(new Set());
-  }, [currentUser.history, currentUser.hostHistory]);
+  }, [currentUser?.history, currentUser?.hostHistory]);
 
   // After items normalise, any session past the auto-confirm window is upgraded
   // to "completed" + paymentReleased. Persist this once per change so the
@@ -369,6 +350,25 @@ const HistoryPage = ({
     },
     [onSaveHistory, onSaveHostHistory]
   );
+
+  if (!currentUser) {
+    return (
+      <div className="home-page">
+        <div className="middle-page-frame">
+          <section className="hero auth-hero">
+            <SiteHeader />
+          </section>
+          <main className="middle-section simple-page">
+            <h1>Please log in</h1>
+            <p>You need to log in to view your experience history.</p>
+            <Link to="/login" className="btn btn-primary">
+              Go to Login
+            </Link>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   const sharePromptItem = sharePromptItemId
     ? allItems.find((item) => item.id === sharePromptItemId)

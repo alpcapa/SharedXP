@@ -208,6 +208,7 @@ sports: normalizeSports(
 ),
 signedUpAt: p.signed_up_at || authUser.created_at || new Date().toISOString(),
 isHost: p.is_host || false,
+isAdmin: p.is_admin || false,
 hostProfile: buildHostProfileObject(hostProfile, hostSports),
 history: bookings?.history ?? [],
 hostHistory: bookings?.hostHistory ?? [],
@@ -264,7 +265,7 @@ if (!profile) {
   profile = meta
     ? metaToProfileShape(meta, authUser)
     : { email: authUser.email };
-  await supabase.from("profiles").insert({ id: authUser.id, ...profile });
+  await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
 }
 
 if (!profile.photo_url) {
@@ -397,8 +398,13 @@ supabase.auth
   .getSession()
   .then(({ data: { session } }) => {
     if (!mounted) return;
-    setAuthLoading(false);
-    if (session?.user) loadUser(session.user);
+    if (session?.user) {
+      loadUser(session.user).finally(() => {
+        if (mounted) setAuthLoading(false);
+      });
+    } else {
+      setAuthLoading(false);
+    }
   })
   .catch((e) => {
     if (!mounted) return;

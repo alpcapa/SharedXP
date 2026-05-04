@@ -49,8 +49,10 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
                 type="button"
                 className="btn btn-light social-btn"
                 onClick={() => {
+                  if (destination && destination !== "/") {
+                    sessionStorage.setItem("postAuthRedirect", destination);
+                  }
                   onSocialLogin?.("google");
-                  navigate(destination);
                 }}
               >
                 Continue with Google
@@ -59,8 +61,10 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
                 type="button"
                 className="btn btn-light social-btn"
                 onClick={() => {
+                  if (destination && destination !== "/") {
+                    sessionStorage.setItem("postAuthRedirect", destination);
+                  }
                   onSocialLogin?.("apple");
-                  navigate(destination);
                 }}
               >
                 Continue with Apple

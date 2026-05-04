@@ -3,20 +3,10 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
+import { COMMISSION_RATE, TAX_RATE, formatCurrency as fmt } from "../utils/pricing";
 
-const CURRENCY_SYMBOLS = {
-  USD: "$", EUR: "€", GBP: "£", CAD: "C$",
-  AUD: "A$", JPY: "¥", INR: "₹", BRL: "R$",
-};
-const COMMISSION = 0.15;
-const TAX = 0.05;
 const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours assumed
 const AUTO_CONFIRM_MS = 72 * 60 * 60 * 1000;     // 72 hours
-
-const fmt = (n, currency) => {
-  const sym = CURRENCY_SYMBOLS[String(currency).toUpperCase()] ?? currency;
-  return `${sym}${Number(n).toFixed(2)}`;
-};
 
 const fmtDate = (d) =>
   d ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" })
@@ -26,7 +16,7 @@ const fmtTime = (t) =>
   t ? new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit" })
         .format(new Date(`2000-01-01T${t}:00`)) : "";
 
-const PaymentPage = ({ currentUser, onLogout }) => {
+const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
   const { bookingRequestId } = useParams();
   const navigate = useNavigate();
 
@@ -63,6 +53,15 @@ const PaymentPage = ({ currentUser, onLogout }) => {
   }, [currentUser, bookingRequestId]);
 
   if (!currentUser) {
+    if (authLoading) {
+      return (
+        <div className="payment-page">
+          <SiteHeader />
+          <p className="payment-loading">Loading…</p>
+          <SiteFooter />
+        </div>
+      );
+    }
     return (
       <div className="home-page">
         <div className="middle-page-frame">
@@ -101,8 +100,8 @@ const PaymentPage = ({ currentUser, onLogout }) => {
   }
 
   const gross = Number(booking.price);
-  const commission = Math.round(gross * COMMISSION * 100) / 100;
-  const tax = Math.round(gross * TAX * 100) / 100;
+  const commission = Math.round(gross * COMMISSION_RATE * 100) / 100;
+  const tax = Math.round(gross * TAX_RATE * 100) / 100;
   const net = Math.round((gross - commission - tax) * 100) / 100;
   const hostName = hostProfile
     ? (hostProfile.full_name || `${hostProfile.first_name ?? ""} ${hostProfile.last_name ?? ""}`.trim() || "Host")

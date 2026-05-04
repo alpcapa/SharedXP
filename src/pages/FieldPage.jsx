@@ -282,7 +282,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
                     Remove post
                   </button>
                 )}
-                {post.hostId != null && Number.isFinite(Number(post.hostId)) && (
+                {post.hostId != null && String(post.hostId).trim() !== "" && (
                   <Link
                     to={`/buddy/${post.hostId}`}
                     className="field-view-host-link"

@@ -69,6 +69,44 @@ const getHistoryGalleryPhotos = (historyItems) => {
 };
 
 const UserProfilePage = ({ currentUser, onLogout }) => {
+  const [recommendationsPage, setRecommendationsPage] = useState(0);
+  const sportsSelection = (Array.isArray(currentUser?.sports) ? currentUser.sports : [])
+    .map((sport) => String(sport ?? "").trim())
+    .filter(Boolean);
+  const selectedSports = new Set(sportsSelection.map((sport) => sport.toLowerCase()));
+  const hostRecommendations =
+    selectedSports.size > 0
+      ? buddies.filter((buddy) => selectedSports.has(String(buddy.sport ?? "").toLowerCase()))
+      : buddies;
+  const totalRecommendationPages = Math.max(1, Math.ceil(hostRecommendations.length / LOCALS_PER_PAGE));
+  const visibleRecommendations = useMemo(() => {
+    const startIndex = recommendationsPage * LOCALS_PER_PAGE;
+    return hostRecommendations.slice(startIndex, startIndex + LOCALS_PER_PAGE);
+  }, [hostRecommendations, recommendationsPage]);
+  const overallHostReviews = (Array.isArray(currentUser?.history) ? currentUser.history : [])
+    .map(toOverallHostReview)
+    .filter(Boolean);
+  const hostRatings = overallHostReviews
+    .map((review) => Number(review.rating))
+    .filter((rating) => Number.isFinite(rating) && rating > 0);
+  const averageRating =
+    hostRatings.length > 0
+      ? (hostRatings.reduce((sum, rating) => sum + rating, 0) / hostRatings.length).toFixed(1)
+      : "0.0";
+  const locationLine =
+    [String(currentUser?.city ?? "").trim(), String(currentUser?.country ?? "").trim()].filter(Boolean).join(", ") ||
+    "Location unavailable";
+  const memberSince = getMemberSinceLabel(currentUser);
+  const userAge = getProfileAge(currentUser);
+  const languageLine = (Array.isArray(currentUser?.languages) ? currentUser.languages : [])
+    .map((language) => String(language ?? "").trim())
+    .filter(Boolean)
+    .join(", ");
+  const galleryPhotos = getHistoryGalleryPhotos(currentUser?.history);
+  useEffect(() => {
+    setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
+  }, [totalRecommendationPages]);
+
   if (!currentUser) {
     return (
       <div className="home-page">
@@ -87,44 +125,6 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
       </div>
     );
   }
-
-  const [recommendationsPage, setRecommendationsPage] = useState(0);
-  const sportsSelection = (Array.isArray(currentUser.sports) ? currentUser.sports : [])
-    .map((sport) => String(sport ?? "").trim())
-    .filter(Boolean);
-  const selectedSports = new Set(sportsSelection.map((sport) => sport.toLowerCase()));
-  const hostRecommendations =
-    selectedSports.size > 0
-      ? buddies.filter((buddy) => selectedSports.has(String(buddy.sport ?? "").toLowerCase()))
-      : buddies;
-  const totalRecommendationPages = Math.max(1, Math.ceil(hostRecommendations.length / LOCALS_PER_PAGE));
-  const visibleRecommendations = useMemo(() => {
-    const startIndex = recommendationsPage * LOCALS_PER_PAGE;
-    return hostRecommendations.slice(startIndex, startIndex + LOCALS_PER_PAGE);
-  }, [hostRecommendations, recommendationsPage]);
-  const overallHostReviews = (Array.isArray(currentUser.history) ? currentUser.history : [])
-    .map(toOverallHostReview)
-    .filter(Boolean);
-  const hostRatings = overallHostReviews
-    .map((review) => Number(review.rating))
-    .filter((rating) => Number.isFinite(rating) && rating > 0);
-  const averageRating =
-    hostRatings.length > 0
-      ? (hostRatings.reduce((sum, rating) => sum + rating, 0) / hostRatings.length).toFixed(1)
-      : "0.0";
-  const locationLine =
-    [String(currentUser.city ?? "").trim(), String(currentUser.country ?? "").trim()].filter(Boolean).join(", ") ||
-    "Location unavailable";
-  const memberSince = getMemberSinceLabel(currentUser);
-  const userAge = getProfileAge(currentUser);
-  const languageLine = (Array.isArray(currentUser.languages) ? currentUser.languages : [])
-    .map((language) => String(language ?? "").trim())
-    .filter(Boolean)
-    .join(", ");
-  const galleryPhotos = getHistoryGalleryPhotos(currentUser.history);
-  useEffect(() => {
-    setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
-  }, [totalRecommendationPages]);
 
   return (
     <div className="profile-page">

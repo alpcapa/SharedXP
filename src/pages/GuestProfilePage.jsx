@@ -164,18 +164,20 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
                 )}
               </section>
 
-              <section className="guest-profile-gallery">
-                <h2 className="guest-profile-section-title">Photo gallery</h2>
-                {photos.length === 0 ? (
-                  <p>No history photos yet.</p>
-                ) : (
-                  <div className="gallery-grid">
-                    {photos.map((src) => (
-                      <img key={src} src={src} alt="Experience photo" />
-                    ))}
-                  </div>
-                )}
-              </section>
+              {currentUser && (
+                <section className="guest-profile-gallery">
+                  <h2 className="guest-profile-section-title">Photo gallery</h2>
+                  {photos.length === 0 ? (
+                    <p>No history photos yet.</p>
+                  ) : (
+                    <div className="gallery-grid">
+                      {photos.map((src) => (
+                        <img key={src} src={src} alt="Experience photo" />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
             </>
           )}
         </main>

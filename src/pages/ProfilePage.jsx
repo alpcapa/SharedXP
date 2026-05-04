@@ -8,6 +8,7 @@ import { supabase } from "../lib/supabase";
 import { getDateKey } from "../utils/date";
 import { getProfileAge } from "../utils/profileAge";
 import { sendNotification } from "../utils/sendNotification";
+import { CURRENCY_SYMBOLS } from "../utils/pricing";
 
 const DAY_NAME_TO_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 const WEEKS_AHEAD = 8;
@@ -114,16 +115,6 @@ const shapeSupabaseHost = (data) => {
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const getStars = (value) => `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
-const CURRENCY_SYMBOLS = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  CAD: "C$",
-  AUD: "A$",
-  JPY: "¥",
-  INR: "₹",
-  BRL: "R$"
-};
 const LOCALS_PER_PAGE = 4;
 const REVIEWS_PER_PAGE = 3;
 const normalizeIdentifier = (value) => String(value ?? "").trim().toLowerCase();
@@ -132,14 +123,12 @@ const isCurrentUserHostForBuddy = (currentUser, buddy) => {
   if (!currentUser || !buddy) {
     return false;
   }
-  const currentUserEmail = normalizeIdentifier(currentUser.email);
-  const buddyEmail = normalizeIdentifier(buddy.email ?? buddy.hostProfile?.email);
-  if (currentUserEmail && buddyEmail && currentUserEmail === buddyEmail) {
+  if (currentUser.id && buddy.id && currentUser.id === buddy.id) {
     return true;
   }
-  const currentUserName = normalizeIdentifier(currentUser.fullName ?? currentUser.name);
-  const buddyName = normalizeIdentifier(buddy.fullName ?? buddy.name);
-  return Boolean(currentUserName && buddyName && currentUserName === buddyName);
+  const currentUserEmail = normalizeIdentifier(currentUser.email);
+  const buddyEmail = normalizeIdentifier(buddy.email ?? buddy.hostProfile?.email);
+  return Boolean(currentUserEmail && buddyEmail && currentUserEmail === buddyEmail);
 };
 
 const getNameParts = (buddy) => {
@@ -536,8 +525,12 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   if (!buddy) {
     return (
       <div className="profile-page">
-        <p>Buddy not found.</p>
-        <Link to="/">Back to home</Link>
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <main style={{ padding: "40px 20px", textAlign: "center" }}>
+          <p>Host not found.</p>
+          <Link to="/">Back to home</Link>
+        </main>
+        <SiteFooter />
       </div>
     );
   }
