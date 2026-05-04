@@ -372,13 +372,9 @@ const HomePage = ({ currentUser, onLogout }) => {
                       <Link to={`/buddy/${host.userId}`} key={host.id} className="local-card-link">
                         <article className="field-card">
                           <div className="field-host-row">
-                            {host.photo ? (
-                              <img src={host.photo} alt={host.name} className="field-host-avatar" />
-                            ) : (
-                              <div className="field-host-avatar field-host-avatar-fallback">
-                                {String(host.name ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
-                              </div>
-                            )}
+                            <div className="field-host-avatar field-host-avatar-fallback">
+                              {String(host.name ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
+                            </div>
                             <div>
                               <p>
                                 <span className="field-host-name">{host.name}</span>
@@ -391,11 +387,18 @@ const HomePage = ({ currentUser, onLogout }) => {
                               </div>
                             </div>
                           </div>
-                          <ul className="local-meta">
-                            {host.gender && <li>👤 {host.gender}</li>}
-                            {levels.length > 0 && <li>🏅 {levels.join(", ")}</li>}
-                            <li>🎒 Equipment: {hasEquipment ? "Yes" : "No"}</li>
-                          </ul>
+                          {host.photo ? (
+                            <img src={host.photo} alt={host.name} className="field-post-photo" />
+                          ) : (
+                            <div className="field-post-photo-placeholder" />
+                          )}
+                          <p className="field-meta">
+                            {[
+                              host.gender && `👤 ${host.gender}`,
+                              levels.length > 0 && `🏅 ${levels.join(", ")}`,
+                              `🎒 ${hasEquipment ? "Yes" : "No"}`,
+                            ].filter(Boolean).join(" · ")}
+                          </p>
                         </article>
                       </Link>
                     );

@@ -3343,6 +3343,13 @@ body {
   border-radius: 10px;
 }
 
+.field-post-photo-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  background: #e8e9e4;
+}
+
 .field-caption {
   margin: 12px 0 0;
   color: #273033;
