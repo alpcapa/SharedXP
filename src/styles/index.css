@@ -3494,13 +3494,13 @@ body {
 }
 
 .event-card-logo {
-  width: clamp(64px, 22%, 96px);
-  height: clamp(64px, 22%, 96px);
+  width: clamp(128px, 44%, 192px);
+  height: clamp(128px, 44%, 192px);
   object-fit: contain;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
   background: rgba(255, 255, 255, 0.92);
-  padding: 12px;
-  border-radius: 14px;
+  padding: 18px;
+  border-radius: 18px;
 }
 
 .event-card-badge {

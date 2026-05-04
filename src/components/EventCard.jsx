@@ -12,7 +12,7 @@ const buildPrimaryLogoUrl = (eventUrl) => {
     const hostname = new URL(eventUrl).hostname.replace(/^www\./i, "");
     if (!hostname) return "";
     return (
-      "https://www.google.com/s2/favicons?sz=128&domain=" + hostname
+      "https://www.google.com/s2/favicons?sz=256&domain=" + hostname
     );
   } catch {
     return "";
