@@ -33,9 +33,9 @@ const AdminDisputesPage = ({ currentUser, onLogout }) => {
   }, []);
 
   useEffect(() => {
-    if (currentUser?.is_admin) fetchDisputes();
+    if (currentUser?.isAdmin) fetchDisputes();
     else setLoading(false);
-  }, [currentUser?.is_admin, currentUser?.id, fetchDisputes]);
+  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes]);
 
   const handleResolve = async (disputeId, resolution) => {
     if (!confirm(`Resolve as "${resolution}"?`)) return;
@@ -59,7 +59,7 @@ const AdminDisputesPage = ({ currentUser, onLogout }) => {
     );
   }
 
-  if (!currentUser.is_admin) {
+  if (!currentUser.isAdmin) {
     return (
       <div className="home-page">
         <div className="middle-page-frame">
