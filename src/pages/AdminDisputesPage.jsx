@@ -98,7 +98,9 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
 
   return (
     <div className="admin-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
       <main className="admin-main">
         <h1 className="admin-title">Dispute Dashboard</h1>
         <p className="admin-subtitle">Customer service view — all open and resolved disputes.</p>
@@ -191,7 +193,9 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
           </div>
         )}
       </main>
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };

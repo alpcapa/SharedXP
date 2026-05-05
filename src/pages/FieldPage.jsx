@@ -143,7 +143,9 @@ const FieldPage = ({ currentUser, onLogout }) => {
 
   return (
     <div className="field-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
       <section className="field-hero">
         <h1>The Field</h1>
         <p>See what’s happening on the ground. Real sessions. Real people.</p>
@@ -295,7 +297,9 @@ const FieldPage = ({ currentUser, onLogout }) => {
           </div>
         )}
       </main>
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };

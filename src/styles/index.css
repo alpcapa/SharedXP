@@ -2223,7 +2223,7 @@ body {
 }
 
 .profile-page .site-header {
-  margin: 10px;
+  margin: 0;
 }
 
 .profile-back-wrap {
@@ -3248,7 +3248,7 @@ body {
 }
 
 .field-page .site-header {
-  margin: 10px;
+  margin: 0;
 }
 
 .field-hero {
@@ -3385,7 +3385,7 @@ body {
 }
 
 .events-page .site-header {
-  margin: 10px;
+  margin: 0;
 }
 
 .events-hero {

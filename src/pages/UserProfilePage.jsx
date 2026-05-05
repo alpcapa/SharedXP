@@ -142,7 +142,9 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
 
   return (
     <div className="profile-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
 
       <section className="profile-summary">
         <div className="profile-summary-header">
@@ -252,7 +254,9 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
         )}
       </section>
 
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };

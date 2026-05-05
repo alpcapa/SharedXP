@@ -56,9 +56,13 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
     if (authLoading) {
       return (
         <div className="payment-page">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          <div className="middle-page-frame">
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          </div>
           <p className="payment-loading">Loading…</p>
-          <SiteFooter />
+          <div className="middle-page-frame">
+            <SiteFooter />
+          </div>
         </div>
       );
     }
@@ -79,9 +83,13 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
   if (loading) {
     return (
       <div className="payment-page">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <div className="middle-page-frame">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </div>
         <p className="payment-loading">Loading booking details…</p>
-        <SiteFooter />
+        <div className="middle-page-frame">
+          <SiteFooter />
+        </div>
       </div>
     );
   }
@@ -89,13 +97,17 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
   if (!booking) {
     return (
       <div className="payment-page">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <div className="middle-page-frame">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </div>
         <main className="payment-main">
           <h1>Booking not found</h1>
           <p>This booking may not exist, may already be paid, or you may not have permission to view it.</p>
           <Link to="/history?tab=pending" className="btn btn-primary">Back to History</Link>
         </main>
-        <SiteFooter />
+        <div className="middle-page-frame">
+          <SiteFooter />
+        </div>
       </div>
     );
   }
@@ -150,7 +162,9 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
   if (paid) {
     return (
       <div className="payment-page">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <div className="middle-page-frame">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </div>
         <main className="payment-main">
           <div className="payment-success">
             <div className="payment-success-icon">✓</div>
@@ -168,14 +182,18 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
             </div>
           </div>
         </main>
-        <SiteFooter />
+        <div className="middle-page-frame">
+          <SiteFooter />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="payment-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
       <main className="payment-main">
         <div className="payment-back-row">
           <Link to="/history?tab=pending" className="back-link">← Back to History</Link>
@@ -276,7 +294,9 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
           </section>
         </div>
       </main>
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };

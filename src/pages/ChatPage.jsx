@@ -142,9 +142,13 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
     if (authLoading) {
       return (
         <div className="chat-page">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          <div className="middle-page-frame">
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          </div>
           <p className="chat-loading">Loading…</p>
-          <SiteFooter />
+          <div className="middle-page-frame">
+            <SiteFooter />
+          </div>
         </div>
       );
     }
@@ -165,9 +169,13 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
   if (loading) {
     return (
       <div className="chat-page">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <div className="middle-page-frame">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </div>
         <p className="chat-loading">Loading conversation…</p>
-        <SiteFooter />
+        <div className="middle-page-frame">
+          <SiteFooter />
+        </div>
       </div>
     );
   }
@@ -175,12 +183,16 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
   if (!booking) {
     return (
       <div className="chat-page">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <div className="middle-page-frame">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </div>
         <main className="chat-main">
           <h1>Conversation not found</h1>
           <Link to="/history?tab=pending" className="btn btn-primary">Back to History</Link>
         </main>
-        <SiteFooter />
+        <div className="middle-page-frame">
+          <SiteFooter />
+        </div>
       </div>
     );
   }
@@ -193,7 +205,9 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
 
   return (
     <div className="chat-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
       <main className="chat-main">
         <div className="chat-back-row">
           <Link to="/history?tab=pending" className="back-link">← Back to History</Link>
@@ -267,7 +281,9 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
           </section>
         </div>
       </main>
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };
