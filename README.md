@@ -1,6 +1,6 @@
 # SharedXP
 
-> **Global C2C sport experience sharing platform.**  
+> **Global C2C/B2C sport experience sharing platform.**  
 > Find locals who share your sport at the places you travel — and do what you love without carrying any equipment.
 
 -----

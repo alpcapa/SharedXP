@@ -199,14 +199,13 @@ export const useBookingRequests = (currentUser) => {
     return true;
   }, [currentUser?.email, fetchRequests]);
 
-  // Compute invoice amounts (simulated)
-  const computeInvoice = (price, currency) => {
+  const computeInvoice = useCallback((price, currency) => {
     const gross = Number(price) || 0;
     const commission = Math.round(gross * COMMISSION_RATE * 100) / 100;
     const tax = Math.round(gross * TAX_RATE * 100) / 100;
     const net = Math.round((gross - commission - tax) * 100) / 100;
     return { gross_amount: gross, platform_commission: commission, tax, net_amount: net, currency };
-  };
+  }, []);
 
   return {
     requests,
