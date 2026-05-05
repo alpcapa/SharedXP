@@ -107,7 +107,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
       <div className="home-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero">
-            <SiteHeader />
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
           <main className="middle-section simple-page">
             <h1>Please log in</h1>
@@ -116,6 +116,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
               Go to Login
             </Link>
           </main>
+          <SiteFooter />
         </div>
       </div>
     );

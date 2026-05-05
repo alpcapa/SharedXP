@@ -80,12 +80,13 @@ const DisputeResponsePage = ({ currentUser, onLogout }) => {
     return (
       <div className="home-page">
         <div className="middle-page-frame">
-          <section className="hero auth-hero"><SiteHeader /></section>
+          <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
             <h1>Please log in</h1>
             <p>You need to log in to submit your dispute response.</p>
             <Link to="/login" className="btn btn-primary">Log in</Link>
           </main>
+          <SiteFooter />
         </div>
       </div>
     );

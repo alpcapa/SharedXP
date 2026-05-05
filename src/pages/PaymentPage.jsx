@@ -56,7 +56,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
     if (authLoading) {
       return (
         <div className="payment-page">
-          <SiteHeader />
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           <p className="payment-loading">Loading…</p>
           <SiteFooter />
         </div>
@@ -65,11 +65,12 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
     return (
       <div className="home-page">
         <div className="middle-page-frame">
-          <section className="hero auth-hero"><SiteHeader /></section>
+          <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
             <h1>Please log in</h1>
             <Link to="/login" className="btn btn-primary">Go to Login</Link>
           </main>
+          <SiteFooter />
         </div>
       </div>
     );
