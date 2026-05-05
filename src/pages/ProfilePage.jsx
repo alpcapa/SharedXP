@@ -512,14 +512,14 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   // ── Guards (after all hooks) ─────────────────────────────────────────────
   if (!buddy && supabaseLoading) {
     return (
-      <div className="profile-page">
+      <div className="home-page">
         <div className="middle-page-frame">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-        </div>
-        <p style={{ padding: "40px 20px", textAlign: "center", color: "#6b7280" }}>
-          Loading host profile…
-        </p>
-        <div className="middle-page-frame">
+          <section className="hero auth-hero">
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          </section>
+          <p style={{ padding: "40px 20px", textAlign: "center", color: "#6b7280" }}>
+            Loading host profile…
+          </p>
           <SiteFooter />
         </div>
       </div>
@@ -528,15 +528,15 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
   if (!buddy) {
     return (
-      <div className="profile-page">
+      <div className="home-page">
         <div className="middle-page-frame">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-        </div>
-        <main style={{ padding: "40px 20px", textAlign: "center" }}>
-          <p>Host not found.</p>
-          <Link to="/">Back to home</Link>
-        </main>
-        <div className="middle-page-frame">
+          <section className="hero auth-hero">
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          </section>
+          <main style={{ padding: "40px 20px", textAlign: "center" }}>
+            <p>Host not found.</p>
+            <Link to="/">Back to home</Link>
+          </main>
           <SiteFooter />
         </div>
       </div>
@@ -654,11 +654,12 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   };
 
   return (
-    <div className="profile-page">
+    <div className="home-page">
       <div className="middle-page-frame">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-      </div>
-      <div className="profile-back-wrap">
+        <section className="hero auth-hero">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </section>
+        <div className="profile-back-wrap">
         {location.state?.from === "explore" ? (
           <Link to="/locals" className="back-link">
             ← Back to Explore
@@ -989,8 +990,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         </div>
       </section>
 
-      <div className="middle-page-frame">
-        <SiteFooter />
+      <SiteFooter />
       </div>
 
       {isConfirmationOpen && (

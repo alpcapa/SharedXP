@@ -1037,10 +1037,6 @@ body {
   border-radius: 2px;
 }
 
-.profile-page {
-  padding-bottom: 30px;
-}
-
 .auth-hero {
   min-height: auto !important;
   background-image: none !important;
@@ -2220,10 +2216,6 @@ body {
 .profile-form-grid input:disabled {
   background: #f3f4f6;
   color: #6b7280;
-}
-
-.profile-page .site-header {
-  margin: 0;
 }
 
 .profile-back-wrap {
