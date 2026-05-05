@@ -4699,13 +4699,6 @@ body {
    CHAT PAGE
    ════════════════════════════════════════════════════ */
 
-.chat-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f5f5f2;
-}
-
 .chat-loading {
   text-align: center;
   padding: 60px 20px;
@@ -4713,7 +4706,6 @@ body {
 }
 
 .chat-main {
-  flex: 1;
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px 20px 40px;

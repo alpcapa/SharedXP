@@ -361,8 +361,8 @@ const HistoryPage = ({
             <main className="middle-section simple-page">
               <p>Loading…</p>
             </main>
+            <SiteFooter />
           </div>
-          <SiteFooter />
         </div>
       );
     }
