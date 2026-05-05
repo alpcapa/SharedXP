@@ -101,7 +101,7 @@ body {
 .local-card-link {
   color: inherit;
   text-decoration: none;
-  display: flex;
+  display: block;
 }
 
 .local-card {
@@ -264,13 +264,19 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.field-home-section .field-card {
+.field-home-section .field-card,
+.locals-section .field-card {
   padding: 12px;
 }
 
-.field-home-section .field-host-avatar {
+.field-home-section .field-host-avatar,
+.locals-section .field-host-avatar {
   width: 32px;
   height: 32px;
+}
+
+.locals-section .field-card {
+  min-height: 370px;
 }
 
 .field-home-section .field-caption {
