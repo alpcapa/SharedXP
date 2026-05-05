@@ -141,12 +141,14 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
   if (!currentUser) {
     if (authLoading) {
       return (
-        <div className="chat-page">
+        <div className="home-page">
           <div className="middle-page-frame">
-            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-          </div>
-          <p className="chat-loading">Loading…</p>
-          <div className="middle-page-frame">
+            <section className="hero auth-hero">
+              <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+            </section>
+            <main className="middle-section simple-page">
+              <p>Loading…</p>
+            </main>
             <SiteFooter />
           </div>
         </div>
@@ -155,7 +157,9 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
     return (
       <div className="home-page">
         <div className="middle-page-frame">
-          <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
+          <section className="hero auth-hero">
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          </section>
           <main className="middle-section simple-page">
             <h1>Please log in</h1>
             <Link to="/login" className="btn btn-primary">Go to Login</Link>
@@ -168,12 +172,14 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
 
   if (loading) {
     return (
-      <div className="chat-page">
+      <div className="home-page">
         <div className="middle-page-frame">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-        </div>
-        <p className="chat-loading">Loading conversation…</p>
-        <div className="middle-page-frame">
+          <section className="hero auth-hero">
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          </section>
+          <main className="middle-section simple-page">
+            <p className="chat-loading">Loading conversation…</p>
+          </main>
           <SiteFooter />
         </div>
       </div>
@@ -182,15 +188,15 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
 
   if (!booking) {
     return (
-      <div className="chat-page">
+      <div className="home-page">
         <div className="middle-page-frame">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-        </div>
-        <main className="chat-main">
-          <h1>Conversation not found</h1>
-          <Link to="/history?tab=pending" className="btn btn-primary">Back to History</Link>
-        </main>
-        <div className="middle-page-frame">
+          <section className="hero auth-hero">
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+          </section>
+          <main className="chat-main">
+            <h1>Conversation not found</h1>
+            <Link to="/history?tab=pending" className="btn btn-primary">Back to History</Link>
+          </main>
           <SiteFooter />
         </div>
       </div>
@@ -204,11 +210,12 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
   const myName = currentUser.fullName || currentUser.firstName || "You";
 
   return (
-    <div className="chat-page">
+    <div className="home-page">
       <div className="middle-page-frame">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-      </div>
-      <main className="chat-main">
+        <section className="hero auth-hero">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </section>
+        <main className="chat-main">
         <div className="chat-back-row">
           <Link to="/history?tab=pending" className="back-link">← Back to History</Link>
         </div>
@@ -280,8 +287,7 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
             </div>
           </section>
         </div>
-      </main>
-      <div className="middle-page-frame">
+        </main>
         <SiteFooter />
       </div>
     </div>

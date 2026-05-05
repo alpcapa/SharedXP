@@ -142,15 +142,16 @@ const FieldPage = ({ currentUser, onLogout }) => {
   );
 
   return (
-    <div className="field-page">
+    <div className="home-page">
       <div className="middle-page-frame">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-      </div>
-      <section className="field-hero">
-        <h1>The Field</h1>
-        <p>See what’s happening on the ground. Real sessions. Real people.</p>
-      </section>
-      <main className="field-main">
+        <section className="hero auth-hero">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </section>
+        <section className="field-hero">
+          <h1>The Field</h1>
+          <p>See what’s happening on the ground. Real sessions. Real people.</p>
+        </section>
+        <main className="field-main">
         <section className="explore-filters">
           <div className="explore-filter-dropdowns">
             <div className="explore-filter-group">
@@ -296,8 +297,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
             ))}
           </div>
         )}
-      </main>
-      <div className="middle-page-frame">
+        </main>
         <SiteFooter />
       </div>
     </div>

@@ -177,8 +177,10 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   return (
     <div className="home-page">
       <div className="middle-page-frame">
-        <section className="explore-hero">
+        <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </section>
+        <section className="explore-hero">
           <div className="explore-hero-content">
             <h1>
               Find your Host<span className="accent">.</span> Anywhere<span className="accent">.</span>

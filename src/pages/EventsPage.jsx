@@ -70,18 +70,19 @@ const EventsPage = ({ currentUser, onLogout }) => {
   }, [events, selectedSport, selectedCountry, selectedMonth]);
 
   return (
-    <div className="events-page">
+    <div className="home-page">
       <div className="middle-page-frame">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-      </div>
-      <section className="events-hero">
-        <h1>Major Events</h1>
-        <p>
-          Marathons, Grand Slams, cycling Monuments, Grand Prix and more — the world's
-          biggest sports events, all in one place.
-        </p>
-      </section>
-      <main className="events-main">
+        <section className="hero auth-hero">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </section>
+        <section className="events-hero">
+          <h1>Major Events</h1>
+          <p>
+            Marathons, Grand Slams, cycling Monuments, Grand Prix and more — the world's
+            biggest sports events, all in one place.
+          </p>
+        </section>
+        <main className="events-main">
         <div className="events-filter-row">
           <label className="events-filter-field">
             <span>Sport</span>
@@ -156,8 +157,7 @@ const EventsPage = ({ currentUser, onLogout }) => {
         <p className="events-attribution">
           Event data from TheSportsDB, OpenF1 and Wikidata.
         </p>
-      </main>
-      <div className="middle-page-frame">
+        </main>
         <SiteFooter />
       </div>
     </div>

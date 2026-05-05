@@ -1037,10 +1037,6 @@ body {
   border-radius: 2px;
 }
 
-.profile-page {
-  padding-bottom: 30px;
-}
-
 .auth-hero {
   min-height: auto !important;
   background-image: none !important;
@@ -2222,10 +2218,6 @@ body {
   color: #6b7280;
 }
 
-.profile-page .site-header {
-  margin: 0;
-}
-
 .profile-back-wrap {
   margin: 20px;
 }
@@ -3241,16 +3233,6 @@ body {
 }
 
 /* ── The Field page ───────────────────────── */
-.field-page {
-  min-height: 100vh;
-  background: #f5f5f2;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-}
-
-.field-page .site-header {
-  margin: 0;
-}
-
 .field-hero {
   max-width: 1080px;
   margin: 6px auto 0;
@@ -3378,16 +3360,6 @@ body {
 }
 
 /* ── Events page ──────────────────────────── */
-.events-page {
-  min-height: 100vh;
-  background: #f5f5f2;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-}
-
-.events-page .site-header {
-  margin: 0;
-}
-
 .events-hero {
   max-width: 1080px;
   margin: 6px auto 0;
@@ -4699,13 +4671,6 @@ body {
    CHAT PAGE
    ════════════════════════════════════════════════════ */
 
-.chat-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f5f5f2;
-}
-
 .chat-loading {
   text-align: center;
   padding: 60px 20px;
@@ -4713,7 +4678,6 @@ body {
 }
 
 .chat-main {
-  flex: 1;
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px 20px 40px;
