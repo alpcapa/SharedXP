@@ -9,7 +9,7 @@ const fmtDate = (iso) =>
   iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" })
           .format(new Date(iso)) : "—";
 
-const AdminDisputesPage = ({ currentUser, onLogout }) => {
+const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
@@ -46,6 +46,18 @@ const AdminDisputesPage = ({ currentUser, onLogout }) => {
   };
 
   if (!currentUser) {
+    if (authLoading) {
+      return (
+        <div className="home-page">
+          <div className="middle-page-frame">
+            <section className="hero auth-hero"><SiteHeader /></section>
+            <main className="middle-section simple-page">
+              <p>Loading…</p>
+            </main>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="home-page">
         <div className="middle-page-frame">

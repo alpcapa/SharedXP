@@ -47,6 +47,7 @@ const buildFieldPost = (item, currentUser, caption) => {
 
 const HistoryPage = ({
   currentUser,
+  authLoading,
   onLogout,
   onSaveHistory,
   onSaveHostHistory,
@@ -352,6 +353,18 @@ const HistoryPage = ({
   );
 
   if (!currentUser) {
+    if (authLoading) {
+      return (
+        <div className="home-page">
+          <div className="middle-page-frame">
+            <section className="hero auth-hero"><SiteHeader /></section>
+            <main className="middle-section simple-page">
+              <p>Loading…</p>
+            </main>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="home-page">
         <div className="middle-page-frame">

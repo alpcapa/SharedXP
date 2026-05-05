@@ -37,7 +37,11 @@ function App() {
   // After OAuth login the browser lands on "/" with postAuthRedirect in
   // sessionStorage. Consume it once to send the user to their intended page.
   useEffect(() => {
-    if (!authActions.currentUser || didRedirect.current) return;
+    if (!authActions.currentUser) {
+      didRedirect.current = false;
+      return;
+    }
+    if (didRedirect.current) return;
     const redirect = sessionStorage.getItem("postAuthRedirect");
     if (redirect) {
       didRedirect.current = true;

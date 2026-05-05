@@ -68,7 +68,7 @@ const getHistoryGalleryPhotos = (historyItems) => {
   );
 };
 
-const UserProfilePage = ({ currentUser, onLogout }) => {
+const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
   const [recommendationsPage, setRecommendationsPage] = useState(0);
   const sportsSelection = (Array.isArray(currentUser?.sports) ? currentUser.sports : [])
     .map((sport) => String(sport ?? "").trim())
@@ -108,6 +108,18 @@ const UserProfilePage = ({ currentUser, onLogout }) => {
   }, [totalRecommendationPages]);
 
   if (!currentUser) {
+    if (authLoading) {
+      return (
+        <div className="home-page">
+          <div className="middle-page-frame">
+            <section className="hero auth-hero"><SiteHeader /></section>
+            <main className="middle-section simple-page">
+              <p>Loading…</p>
+            </main>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="home-page">
         <div className="middle-page-frame">
