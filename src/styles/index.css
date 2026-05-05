@@ -275,9 +275,8 @@ body {
   height: 32px;
 }
 
-.locals-section .field-post-photo,
-.locals-section .field-post-photo-placeholder {
-  aspect-ratio: 4 / 3;
+.locals-section .field-card {
+  min-height: 370px;
 }
 
 .field-home-section .field-caption {
