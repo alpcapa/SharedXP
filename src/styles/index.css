@@ -275,6 +275,11 @@ body {
   height: 32px;
 }
 
+.locals-section .field-post-photo,
+.locals-section .field-post-photo-placeholder {
+  aspect-ratio: 4 / 3;
+}
+
 .field-home-section .field-caption {
   font-size: 13px;
   display: -webkit-box;
