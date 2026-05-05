@@ -48,7 +48,9 @@ const testimonials = [
 const AboutPage = ({ currentUser, onLogout }) => {
   return (
     <div className="about-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
 
       <main>
         <section className="about-hero">
@@ -219,7 +221,9 @@ const AboutPage = ({ currentUser, onLogout }) => {
         </section>
       </main>
 
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };

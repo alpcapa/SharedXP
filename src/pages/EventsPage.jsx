@@ -71,7 +71,9 @@ const EventsPage = ({ currentUser, onLogout }) => {
 
   return (
     <div className="events-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
       <section className="events-hero">
         <h1>Major Events</h1>
         <p>
@@ -155,7 +157,9 @@ const EventsPage = ({ currentUser, onLogout }) => {
           Event data from TheSportsDB, OpenF1 and Wikidata.
         </p>
       </main>
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };

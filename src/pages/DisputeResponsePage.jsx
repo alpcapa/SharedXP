@@ -80,12 +80,13 @@ const DisputeResponsePage = ({ currentUser, onLogout }) => {
     return (
       <div className="home-page">
         <div className="middle-page-frame">
-          <section className="hero auth-hero"><SiteHeader /></section>
+          <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
             <h1>Please log in</h1>
             <p>You need to log in to submit your dispute response.</p>
             <Link to="/login" className="btn btn-primary">Log in</Link>
           </main>
+          <SiteFooter />
         </div>
       </div>
     );
@@ -94,9 +95,13 @@ const DisputeResponsePage = ({ currentUser, onLogout }) => {
   if (loading) {
     return (
       <div className="dispute-response-page">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <div className="middle-page-frame">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </div>
         <p style={{ padding: "40px 20px", textAlign: "center", color: "#6b7280" }}>Loading…</p>
-        <SiteFooter />
+        <div className="middle-page-frame">
+          <SiteFooter />
+        </div>
       </div>
     );
   }
@@ -104,13 +109,17 @@ const DisputeResponsePage = ({ currentUser, onLogout }) => {
   if (!dispute || !booking) {
     return (
       <div className="dispute-response-page">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        <div className="middle-page-frame">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </div>
         <main className="dispute-main">
           <h1>Dispute not found</h1>
           <p>This dispute may not exist or you may not have permission to respond to it.</p>
           <Link to="/history?tab=pending" className="btn btn-primary">Back to History</Link>
         </main>
-        <SiteFooter />
+        <div className="middle-page-frame">
+          <SiteFooter />
+        </div>
       </div>
     );
   }
@@ -121,7 +130,9 @@ const DisputeResponsePage = ({ currentUser, onLogout }) => {
 
   return (
     <div className="dispute-response-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
       <main className="dispute-main">
         <h1 className="dispute-title">Respond to dispute</h1>
 
@@ -174,7 +185,9 @@ const DisputeResponsePage = ({ currentUser, onLogout }) => {
           </div>
         )}
       </main>
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };

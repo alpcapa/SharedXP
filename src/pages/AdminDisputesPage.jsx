@@ -50,22 +50,24 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
       return (
         <div className="home-page">
           <div className="middle-page-frame">
-            <section className="hero auth-hero"><SiteHeader /></section>
+            <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
             <main className="middle-section simple-page">
               <p>Loading…</p>
             </main>
           </div>
+          <SiteFooter />
         </div>
       );
     }
     return (
       <div className="home-page">
         <div className="middle-page-frame">
-          <section className="hero auth-hero"><SiteHeader /></section>
+          <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
             <h1>Please log in</h1>
             <Link to="/login" className="btn btn-primary">Log in</Link>
           </main>
+          <SiteFooter />
         </div>
       </div>
     );
@@ -83,6 +85,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
             <p>You don't have permission to view this page.</p>
             <Link to="/" className="btn btn-primary">Go home</Link>
           </main>
+          <SiteFooter />
         </div>
       </div>
     );
@@ -95,7 +98,9 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
 
   return (
     <div className="admin-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
       <main className="admin-main">
         <h1 className="admin-title">Dispute Dashboard</h1>
         <p className="admin-subtitle">Customer service view — all open and resolved disputes.</p>
@@ -188,7 +193,9 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
           </div>
         )}
       </main>
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };

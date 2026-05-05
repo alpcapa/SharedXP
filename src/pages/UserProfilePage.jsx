@@ -112,10 +112,11 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
       return (
         <div className="home-page">
           <div className="middle-page-frame">
-            <section className="hero auth-hero"><SiteHeader /></section>
+            <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
             <main className="middle-section simple-page">
               <p>Loading…</p>
             </main>
+            <SiteFooter />
           </div>
         </div>
       );
@@ -124,7 +125,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
       <div className="home-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero">
-            <SiteHeader />
+            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
           <main className="middle-section simple-page">
             <h1>Please log in</h1>
@@ -133,6 +134,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
               Go to Login
             </Link>
           </main>
+          <SiteFooter />
         </div>
       </div>
     );
@@ -140,7 +142,9 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
 
   return (
     <div className="profile-page">
-      <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      <div className="middle-page-frame">
+        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+      </div>
 
       <section className="profile-summary">
         <div className="profile-summary-header">
@@ -250,7 +254,9 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
         )}
       </section>
 
-      <SiteFooter />
+      <div className="middle-page-frame">
+        <SiteFooter />
+      </div>
     </div>
   );
 };
