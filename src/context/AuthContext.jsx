@@ -334,6 +334,13 @@ if (langResult?.error) console.error("[auth] insert languages:", langResult.erro
 if (sportResult?.error) console.error("[auth] insert sports:", sportResult.error);
 };
 
+// When userId is provided (authenticated profile update) the file is stored in
+// a {userId}/ subfolder, which matches the storage SELECT policy so the owner
+// can list their own uploads via the API.  When userId is null (pre-auth
+// sign-up upload) the file lands in the bucket root; the public URL is stored
+// immediately in the profile so the app never needs to list the bucket to find
+// it, and the storage SELECT policy intentionally does not cover root-level
+// paths, preventing enumeration of sign-up avatars.
 const uploadAvatarFromDataUrl = async (dataUrl, userEmail, userId = null) => {
 try {
 const res = await fetch(dataUrl);

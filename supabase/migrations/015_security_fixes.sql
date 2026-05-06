@@ -95,6 +95,13 @@ REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC;
 -- Replace both with a single policy: host profiles are publicly readable
 -- (required for browsing by unauthenticated visitors); non-host profiles are
 -- readable only by the owning user.
+--
+-- NOTE: host profiles deliberately expose all columns (including phone,
+-- address, birthday) to unauthenticated visitors because hosts must be
+-- discoverable to guests who haven't signed in. This matches the prior
+-- profiles_select_open behaviour. If field-level privacy is required in
+-- future, consider a SECURITY DEFINER view that projects only the fields
+-- appropriate for public display.
 
 DROP POLICY IF EXISTS "profiles_own_read"    ON public.profiles;
 DROP POLICY IF EXISTS "profiles_host_read"   ON public.profiles;
