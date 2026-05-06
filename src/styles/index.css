@@ -2651,9 +2651,14 @@ body {
 }
 
 .site-footer {
-  max-width: 1480px;
+  max-width: 1320px;
   margin: 34px auto 26px;
   padding: 0;
+}
+
+.home-page .site-footer {
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .footer-promo {
