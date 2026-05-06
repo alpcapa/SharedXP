@@ -334,13 +334,14 @@ if (langResult?.error) console.error("[auth] insert languages:", langResult.erro
 if (sportResult?.error) console.error("[auth] insert sports:", sportResult.error);
 };
 
-const uploadAvatarFromDataUrl = async (dataUrl, userEmail) => {
+const uploadAvatarFromDataUrl = async (dataUrl, userEmail, userId = null) => {
 try {
 const res = await fetch(dataUrl);
 const blob = await res.blob();
 const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
 const safeName = userEmail.replace(/[^a-zA-Z0-9]/g, "_");
-const fileName = `${safeName}_${Date.now()}.${ext}`;
+const baseName = `${safeName}_${Date.now()}.${ext}`;
+const fileName = userId ? `${userId}/${baseName}` : baseName;
 
 const { data: uploadData, error: uploadError } = await supabase.storage
   .from("Avatars")
@@ -627,7 +628,7 @@ if (hostProfile.sports?.length > 0) {
           const res = await fetch(src);
           const blob = await res.blob();
           const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
-          const fileName = `${currentUser.id}_${Date.now()}_${i}.${ext}`;
+          const fileName = `${currentUser.id}/${Date.now()}_${i}.${ext}`;
           const { data: uploadData, error: uploadError } =
             await supabase.storage
               .from("host-sport-images")
@@ -758,7 +759,7 @@ const normalizedCity =
 
 let resolvedPhotoUrl = profileUpdates.photo ?? currentUser.photo ?? "";
 if (resolvedPhotoUrl.startsWith("data:")) {
-  const uploaded = await uploadAvatarFromDataUrl(resolvedPhotoUrl, nextEmail);
+  const uploaded = await uploadAvatarFromDataUrl(resolvedPhotoUrl, nextEmail, currentUser.id);
   if (uploaded) resolvedPhotoUrl = uploaded;
 }
 
