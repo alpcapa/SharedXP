@@ -57,6 +57,10 @@ body {
   padding: 28px 10px 0;
 }
 
+.auth-hero + .middle-section {
+  padding-top: 0;
+}
+
 /* ── Shared section typography ─────────────────── */
 .section-title {
   margin: 0;
