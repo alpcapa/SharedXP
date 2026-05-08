@@ -793,9 +793,6 @@ body {
 }
 
 .explore-page-content {
-  padding-top: 20px;
-  padding-left: 10px;
-  padding-right: 10px;
 }
 
 .explore-page-content .locals-grid {
@@ -2266,7 +2263,10 @@ body {
 .booking-engine-section,
 .recommendations,
 .host-settings-page,
-.edit-profile-page {
+.edit-profile-page,
+.explore-page-content,
+.field-main,
+.events-main {
   background: white;
   margin: 20px;
   padding: 20px;
@@ -3299,8 +3299,6 @@ body {
 }
 
 .field-main {
-  margin: 0 10px;
-  padding: 10px 0 26px;
 }
 
 .field-city-filter {
@@ -3425,8 +3423,6 @@ body {
 }
 
 .events-main {
-  margin: 0 10px;
-  padding: 10px 0 26px;
 }
 
 .events-filter-row {
