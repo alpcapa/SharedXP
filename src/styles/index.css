@@ -2278,14 +2278,9 @@ body {
 .field-main,
 .events-main {
   background: white;
-  margin: 20px;
+  margin: 20px 10px;
   padding: 20px;
   border-radius: 10px;
-}
-
-.explore-page-content {
-  margin-left: 10px;
-  margin-right: 10px;
 }
 
 .profile-summary {
