@@ -109,7 +109,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
           <section className="hero auth-hero">
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
-          <main className="middle-section simple-page">
+          <main className="middle-section">
             <h1>Please log in</h1>
             <p>You need to log in before becoming a host.</p>
             <Link to="/login" className="btn btn-primary">
@@ -207,7 +207,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
             hostingPausedOverride={isHostingPaused}
           />
         </section>
-        <main className="middle-section simple-page host-settings-page">
+        <main className="middle-section host-settings-page">
           <div className="host-settings-top-bar">
             <div>
               <h1

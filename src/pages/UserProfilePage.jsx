@@ -113,7 +113,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
         <div className="home-page">
           <div className="middle-page-frame">
             <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
-            <main className="middle-section simple-page">
+            <main className="middle-section">
               <p>Loading…</p>
             </main>
             <SiteFooter />

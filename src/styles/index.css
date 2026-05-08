@@ -1066,8 +1066,6 @@ body {
 }
 
 .auth-page {
-  display: grid;
-  place-items: center;
 }
 
 .auth-card {
@@ -1083,6 +1081,18 @@ body {
 }
 
 .auth-card > p {
+  margin-top: 10px;
+  color: #4b5563;
+}
+
+.auth-content {
+}
+
+.auth-content h1 {
+  margin: 0;
+}
+
+.auth-content > p {
   margin-top: 10px;
   color: #4b5563;
 }
@@ -1446,7 +1456,6 @@ body {
 }
 
 .host-settings-page {
-  width: min(920px, 100%);
 }
 
 .host-settings-top-bar {

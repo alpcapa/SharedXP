@@ -330,7 +330,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
         </section>
 
         <main className="middle-section auth-page">
-          <section className="auth-card">
+          <section className="auth-content">
             <h1>Create your account</h1>
             <p>
               Sign up with Google, Apple, or email. Phone is required for all
