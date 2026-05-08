@@ -62,6 +62,11 @@ body {
   margin-top: 0;
 }
 
+.auth-hero + .middle-section.host-settings-page,
+.auth-hero + .middle-section.edit-profile-page {
+  padding-top: 20px;
+}
+
 .auth-hero + .middle-section > *:first-child,
 .auth-hero + .profile-summary,
 .events-hero + .events-main,
