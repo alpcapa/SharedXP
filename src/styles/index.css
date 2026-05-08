@@ -1335,7 +1335,7 @@ body {
 }
 
 .legal-page {
-  width: min(920px, 100%);
+  width: 100%;
 }
 
 .legal-page h1 {
