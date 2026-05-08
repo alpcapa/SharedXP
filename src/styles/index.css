@@ -2283,6 +2283,11 @@ body {
   border-radius: 10px;
 }
 
+.explore-page-content {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
 .profile-summary {
   display: grid;
   gap: 16px;
