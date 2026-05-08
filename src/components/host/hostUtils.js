@@ -70,6 +70,7 @@ export const getInitialHostProfile = (user) => {
     country: existing.country ?? user?.country ?? "",
     city:
       existing.city ?? user?.city ?? inferCityFromAddress(user?.address) ?? "",
+    postcode: existing.postcode ?? "",
     stripe: {
       stripeEmail: existing.stripe?.stripeEmail ?? user?.email ?? "",
       accountHolderName:

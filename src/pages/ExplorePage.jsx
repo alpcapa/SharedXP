@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ExploreMap from "../components/ExploreMap";
 import SiteFooter from "../components/SiteFooter";
@@ -22,15 +22,13 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const [selectedEquipment, setSelectedEquipment] = useState("All");
   const [resultsPage, setResultsPage] = useState(1);
 
-  // Geolocation & geocoding state
+  // Geolocation state
   const [userLocation, setUserLocation] = useState(null);
   const [detectedCountry, setDetectedCountry] = useState("");
   const [detectedCity, setDetectedCity] = useState("");
   const [geoStatus, setGeoStatus] = useState("pending"); // pending | granted | denied | unavailable
-  const [geocodedCoords, setGeocodedCoords] = useState({});
-  const geocodedQueueRef = useRef(new Set());
 
-  // Fetch hosts from Supabase
+  // Fetch hosts — coordinates now come from the DB
   useEffect(() => {
     let cancelled = false;
     setHostsLoading(true);
@@ -38,7 +36,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     supabase
       .from("host_profiles")
       .select(
-        `id, country, city, pause_hosting,
+        `id, country, city, postcode, latitude, longitude, pause_hosting,
          profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at),
          host_sports(id, sport, level, equipment_available, paused)`
       )
@@ -65,6 +63,11 @@ const ExplorePage = ({ currentUser, onLogout }) => {
               city: hp.city || "",
               signedUpAt: hp.profile.signed_up_at || "",
               sports: (hp.host_sports || []).filter((hs) => !hs.paused),
+              // Use stored coordinates if present
+              coordinates:
+                hp.latitude != null && hp.longitude != null
+                  ? { lat: hp.latitude, lng: hp.longitude }
+                  : null,
             }));
           setHosts(transformed);
         }
@@ -76,7 +79,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     };
   }, []);
 
-  // Request browser geolocation; reverse-geocode to detect country/city
+  // Request browser geolocation; reverse-geocode to detect country/city for the filters
   useEffect(() => {
     if (!navigator.geolocation) {
       setGeoStatus("unavailable");
@@ -119,55 +122,6 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     };
   }, []);
 
-  // Geocode unique city+country combos for host map pins (Nominatim, 1 req/sec)
-  useEffect(() => {
-    const uniqueKeys = [
-      ...new Set(
-        hosts
-          .filter((h) => h.city || h.country)
-          .map((h) => JSON.stringify({ city: h.city || "", country: h.country || "" }))
-      ),
-    ].filter((key) => !geocodedQueueRef.current.has(key));
-
-    if (uniqueKeys.length === 0) return;
-    uniqueKeys.forEach((k) => geocodedQueueRef.current.add(k));
-
-    let cancelled = false;
-
-    const run = async () => {
-      for (let i = 0; i < uniqueKeys.length; i++) {
-        if (cancelled) return;
-        const key = uniqueKeys[i];
-        const { city, country } = JSON.parse(key);
-        try {
-          const query = [city, country].filter(Boolean).join(", ");
-          const resp = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`
-          );
-          if (cancelled) return;
-          const data = await resp.json();
-          if (data?.[0]) {
-            setGeocodedCoords((prev) => ({
-              ...prev,
-              [key]: { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) },
-            }));
-          }
-        } catch {
-          // Silently skip failed geocode attempts
-        }
-        // Nominatim rate limit: max 1 request/second
-        if (i < uniqueKeys.length - 1) {
-          await new Promise((r) => setTimeout(r, 1100));
-        }
-      }
-    };
-
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [hosts]);
-
   const countryOptions = useMemo(
     () => [
       "My Location",
@@ -178,7 +132,6 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   );
 
   const cityOptions = useMemo(() => {
-    // When "My Location" is selected for country, narrow city list to detected country
     let base = hosts;
     if (selectedCountry !== "All" && selectedCountry !== "My Location") {
       base = hosts.filter((h) => h.country === selectedCountry);
@@ -208,7 +161,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     [hosts]
   );
 
-  // Reset city when it's no longer valid for the current country selection
+  // Reset city when it's no longer valid for the selected country
   useEffect(() => {
     if (
       selectedCity !== "All" &&
@@ -219,7 +172,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     }
   }, [cityOptions, selectedCity]);
 
-  // Apply sport from URL query param
+  // Apply sport filter from URL query param
   useEffect(() => {
     const sportParam = searchParams.get("sport");
     if (!sportParam) return;
@@ -236,7 +189,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
       if (selectedCountry === "All") {
         matchesCountry = true;
       } else if (selectedCountry === "My Location") {
-        // Show all while location is still pending; filter once detected
+        // Show all while location is pending; filter once detected
         matchesCountry = !detectedCountry || host.country === detectedCountry;
       } else {
         matchesCountry = host.country === selectedCountry;
@@ -285,15 +238,6 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     detectedCountry,
     detectedCity,
   ]);
-
-  // Attach geocoded coordinates to visible hosts for the map
-  const hostsWithCoords = useMemo(() => {
-    return visibleHosts.map((host) => {
-      const key = JSON.stringify({ city: host.city || "", country: host.country || "" });
-      const coords = geocodedCoords[key];
-      return coords ? { ...host, coordinates: coords } : host;
-    });
-  }, [visibleHosts, geocodedCoords]);
 
   // Reset to page 1 whenever any filter changes
   useEffect(() => {
@@ -446,7 +390,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                   📍 Location access denied — showing all hosts.
                 </p>
               )}
-              <ExploreMap hosts={hostsWithCoords} userLocation={userLocation} />
+              <ExploreMap hosts={visibleHosts} userLocation={userLocation} />
             </section>
           </div>
         </section>

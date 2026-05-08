@@ -557,6 +557,17 @@ const HostSportTab = ({
               </div>
             )}
           </div>
+
+          <label htmlFor="host-postcode">Postcode</label>
+          <input
+            id="host-postcode"
+            type="text"
+            placeholder="e.g. 1100-001"
+            value={draft.postcode || ""}
+            onChange={(e) =>
+              setDraft((prev) => ({ ...prev, postcode: e.target.value }))
+            }
+          />
         </div>
       </section>
 
