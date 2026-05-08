@@ -425,37 +425,30 @@ const loadUser = async (authUser) => {
   }
 };
 
-let lastLoadedUserId = null;
+supabase.auth
+  .getSession()
+  .then(({ data: { session } }) => {
+    if (!mounted) return;
+    if (session?.user) {
+      loadUser(session.user).finally(() => {
+        if (mounted) setAuthLoading(false);
+      });
+    } else {
+      setAuthLoading(false);
+    }
+  })
+  .catch((e) => {
+    if (!mounted) return;
+    console.error("[auth] getSession failed:", e);
+    setAuthLoading(false);
+  });
 
 const {
   data: { subscription },
-} = supabase.auth.onAuthStateChange((event, session) => {
+} = supabase.auth.onAuthStateChange((_event, session) => {
   if (!mounted) return;
-  if (event === "TOKEN_REFRESHED") return;
-
-  if (!session?.user) {
-    lastLoadedUserId = null;
-    setCurrentUser(null);
-    if (event === "INITIAL_SESSION") setAuthLoading(false);
-    return;
-  }
-
-  const userId = session.user.id;
-
-  if (event === "INITIAL_SESSION") {
-    lastLoadedUserId = userId;
-    loadUser(session.user).finally(() => {
-      if (mounted) setAuthLoading(false);
-    });
-    return;
-  }
-
-  // Skip SIGNED_IN when it fires for the same user right after INITIAL_SESSION
-  // (Supabase fires both on session restoration in some versions).
-  if (event === "SIGNED_IN" && userId === lastLoadedUserId) return;
-
-  lastLoadedUserId = userId;
-  loadUser(session.user);
+  if (session?.user) loadUser(session.user);
+  else setCurrentUser(null);
 });
 
 return () => {
