@@ -208,12 +208,6 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
           />
         </section>
         <main className="middle-section simple-page host-settings-page">
-          <div className="profile-back-wrap">
-            <Link to="/user-profile" className="back-link">
-              ← Back to My Profile
-            </Link>
-          </div>
-
           <div className="host-settings-top-bar">
             <div>
               <h1
@@ -227,7 +221,11 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                   : "Manage your sport offerings and payment details."}
               </p>
             </div>
-            <div className="pause-hosting-group">
+            <div className="host-settings-top-actions">
+              <Link to="/user-profile" className="btn btn-light">
+                My Profile
+              </Link>
+              <div className="pause-hosting-group">
               <label className="hosting-pause-toggle" htmlFor="pauseHosting">
                 <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
                 <input
@@ -269,6 +267,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                   </button>
                 </div>
               )}
+              </div>
             </div>
           </div>
 

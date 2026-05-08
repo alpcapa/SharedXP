@@ -659,18 +659,6 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
-        <div className="profile-back-wrap">
-        {location.state?.from === "explore" ? (
-          <Link to="/locals" className="back-link">
-            ← Back to Explore
-          </Link>
-        ) : (
-          <Link to="/" className="back-link">
-            ← Back to home
-          </Link>
-        )}
-      </div>
-
       <section className="profile-summary">
         <div className="profile-summary-header">
           <div className="profile-summary-top-row">
