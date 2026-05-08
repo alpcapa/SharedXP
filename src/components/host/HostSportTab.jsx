@@ -30,16 +30,45 @@ const HostSportTab = ({
 
   const selectedCountry =
     COUNTRY_OPTIONS.find(
-      (c) => c.name.toLowerCase() === draft.country.trim().toLowerCase()
+      (c) => c.name.toLowerCase() === (draft.country || "").trim().toLowerCase()
     ) ?? null;
 
   const updateSportField = (field, value) => {
-    setDraft((prev) => ({
-      ...prev,
-      sports: prev.sports.map((s, i) =>
+    setDraft((prev) => {
+      const sports = prev.sports.map((s, i) =>
         i === activeSportIndex ? { ...s, [field]: value } : s
-      ),
-    }));
+      );
+      return { ...prev, sports };
+    });
+  };
+
+  const updateAvailabilityTime = (field, value) => {
+    setDraft((prev) => {
+      const sports = prev.sports.map((s, i) =>
+        i === activeSportIndex
+          ? { ...s, availability: { ...s.availability, [field]: value } }
+          : s
+      );
+      return { ...prev, sports };
+    });
+  };
+
+  const toggleAvailabilityDay = (day) => {
+    const days = activeSport.availability.days.includes(day)
+      ? activeSport.availability.days.filter((d) => d !== day)
+      : [...activeSport.availability.days, day];
+    updateAvailabilityTime("days", days);
+  };
+
+  const updateEquipmentAvailability = (value) => {
+    setDraft((prev) => {
+      const sports = prev.sports.map((s, i) =>
+        i === activeSportIndex
+          ? { ...s, equipmentAvailable: value, equipmentDetails: value ? s.equipmentDetails : "" }
+          : s
+      );
+      return { ...prev, sports };
+    });
   };
 
   const updateConsentField = (field, value) => {
@@ -49,107 +78,53 @@ const HostSportTab = ({
     }));
   };
 
-  const updateEquipmentAvailability = (isAvailable) => {
-    setDraft((prev) => ({
-      ...prev,
-      sports: prev.sports.map((s, i) =>
-        i === activeSportIndex ? { ...s, equipmentAvailable: isAvailable } : s
-      ),
-    }));
-  };
-
-  const toggleAvailabilityDay = (day) => {
-    setDraft((prev) => ({
-      ...prev,
-      sports: prev.sports.map((s, i) => {
-        if (i !== activeSportIndex) return s;
-        const days = s.availability.days;
-        const next = days.includes(day)
-          ? days.filter((d) => d !== day)
-          : [...days, day];
-        return { ...s, availability: { ...s.availability, days: next } };
-      }),
-    }));
-  };
-
-  const updateAvailabilityTime = (field, value) => {
-    setDraft((prev) => ({
-      ...prev,
-      sports: prev.sports.map((s, i) =>
-        i === activeSportIndex
-          ? { ...s, availability: { ...s.availability, [field]: value } }
-          : s
-      ),
-    }));
-  };
-
-  const removeSport = (sportIndex) => {
-    if (!window.confirm("Are you sure you want to delete this sport?")) return;
-
-    if (draft.sports.length <= 1) {
-      setDraft((prev) => ({
-        ...prev,
-        sports: [createEmptySportConfig()],
-      }));
-      setActiveSportIndex(0);
-    } else {
-      const next = draft.sports.filter((_, i) => i !== sportIndex);
-      setDraft((prev) => ({ ...prev, sports: next }));
-      setActiveSportIndex((prev) => {
-        if (sportIndex < prev) return prev - 1;
-        if (sportIndex === prev) return Math.min(prev, next.length - 1);
-        return prev;
-      });
-    }
-    setErrorMessage("");
-    setSuccessMessage("");
-  };
-
   const addSport = () => {
     setDraft((prev) => ({
       ...prev,
       sports: [...prev.sports, createEmptySportConfig()],
     }));
     setActiveSportIndex(draft.sports.length);
-    setErrorMessage("");
-    setSuccessMessage("");
   };
 
-  const onSportImageSelect = async (event) => {
-    const files = Array.from(event.target.files ?? []);
-    if (files.length === 0) return;
-    const dataUrls = await Promise.all(
+  const removeSport = (index) => {
+    if (draft.sports.length <= 1) return;
+    setDraft((prev) => ({
+      ...prev,
+      sports: prev.sports.filter((_, i) => i !== index),
+    }));
+    if (activeSportIndex >= index && activeSportIndex > 0) {
+      setActiveSportIndex(activeSportIndex - 1);
+    }
+  };
+
+  const onSportImageSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    Promise.all(
       files.map(
         (file) =>
           new Promise((resolve) => {
             const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result));
+            reader.onload = (ev) => resolve(ev.target.result);
             reader.readAsDataURL(file);
           })
       )
-    );
-    setDraft((prev) => ({
-      ...prev,
-      sports: prev.sports.map((s, i) =>
-        i === activeSportIndex ? { ...s, images: [...s.images, ...dataUrls] } : s
-      ),
-    }));
-    event.target.value = "";
+    ).then((dataUrls) => {
+      updateSportField("images", [...activeSport.images, ...dataUrls]);
+    });
   };
 
   const removeSportImage = (imageIndex) => {
-    setDraft((prev) => ({
-      ...prev,
-      sports: prev.sports.map((s, i) =>
-        i === activeSportIndex
-          ? { ...s, images: s.images.filter((_, idx) => idx !== imageIndex) }
-          : s
-      ),
-    }));
+    updateSportField(
+      "images",
+      activeSport.images.filter((_, i) => i !== imageIndex)
+    );
   };
 
   return (
     <form onSubmit={onSubmit}>
+
+      {/* ── Sport bio ─────────────────────────────────────────────────── */}
       <section className="host-onboarding-card">
         <div className="host-sport-header">
           <h2>Sport Setup</h2>
@@ -230,7 +205,158 @@ const HostSportTab = ({
             value={activeSport.about}
             onChange={(e) => updateSportField("about", e.target.value)}
           />
+        </div>
+      </section>
 
+      {/* ── Hosting location ──────────────────────────────────────────── */}
+      <section className="host-onboarding-card">
+        <h2>Where do you want to host?</h2>
+        <p className="host-form-hint">
+          This is where you'll offer your sessions — not necessarily where you live.
+        </p>
+        <div className="host-form-grid">
+          <label id="host-country-label" htmlFor="host-country-selector">
+            Country
+          </label>
+          <div
+            className="auth-search-dropdown"
+            ref={countryDropdown.containerRef}
+          >
+            <button
+              id="host-country-selector"
+              type="button"
+              className="auth-dropdown-trigger"
+              aria-haspopup="listbox"
+              aria-expanded={countryDropdown.isOpen}
+              aria-controls="host-country-listbox"
+              onClick={() => {
+                countryDropdown.setIsOpen((prev) => !prev);
+                countryDropdown.setSearchValue("");
+              }}
+            >
+              {selectedCountry ? (
+                <>
+                  <span>{getCountryFlag(selectedCountry.code)}</span>
+                  <span>{selectedCountry.name}</span>
+                </>
+              ) : (
+                <span>Select country</span>
+              )}
+            </button>
+            {countryDropdown.isOpen && (
+              <div className="auth-dropdown-panel">
+                <input
+                  type="search"
+                  className="auth-dropdown-search"
+                  placeholder="Search country"
+                  value={countryDropdown.searchValue}
+                  onChange={(e) => countryDropdown.setSearchValue(e.target.value)}
+                />
+                <ul
+                  id="host-country-listbox"
+                  className="auth-dropdown-options"
+                  role="listbox"
+                  aria-labelledby="host-country-label"
+                >
+                  {countryDropdown.filteredOptions.map((option) => (
+                    <li key={option.code}>
+                      <button
+                        type="button"
+                        className="auth-dropdown-option"
+                        role="option"
+                        aria-selected={selectedCountry?.code === option.code}
+                        onClick={() => {
+                          const nextCities =
+                            COUNTRY_CITY_OPTIONS[option.code] ?? [];
+                          setDraft((prev) => ({
+                            ...prev,
+                            country: option.name,
+                            city: nextCities[0] ?? "",
+                          }));
+                          countryDropdown.setIsOpen(false);
+                        }}
+                      >
+                        <span>{getCountryFlag(option.code)}</span>
+                        <span>{option.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <label id="host-city-label" htmlFor="host-city-selector">
+            City
+          </label>
+          <div className="auth-search-dropdown" ref={cityDropdown.containerRef}>
+            <button
+              id="host-city-selector"
+              type="button"
+              className="auth-dropdown-trigger"
+              aria-haspopup="listbox"
+              aria-expanded={cityDropdown.isOpen}
+              aria-controls="host-city-listbox"
+              disabled={!selectedCountry}
+              onClick={() => {
+                cityDropdown.setIsOpen((prev) => !prev);
+                cityDropdown.setSearchValue("");
+              }}
+            >
+              {draft.city || "Select city"}
+            </button>
+            {cityDropdown.isOpen && (
+              <div className="auth-dropdown-panel">
+                <input
+                  type="search"
+                  className="auth-dropdown-search"
+                  placeholder="Search city"
+                  value={cityDropdown.searchValue}
+                  onChange={(e) => cityDropdown.setSearchValue(e.target.value)}
+                />
+                <ul
+                  id="host-city-listbox"
+                  className="auth-dropdown-options"
+                  role="listbox"
+                  aria-labelledby="host-city-label"
+                >
+                  {cityDropdown.filteredOptions.map((option) => (
+                    <li key={option}>
+                      <button
+                        type="button"
+                        className="auth-dropdown-option"
+                        role="option"
+                        aria-selected={draft.city === option}
+                        onClick={() => {
+                          setDraft((prev) => ({ ...prev, city: option }));
+                          cityDropdown.setIsOpen(false);
+                        }}
+                      >
+                        <span>{option}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <label htmlFor="host-postcode">Postcode</label>
+          <input
+            id="host-postcode"
+            type="text"
+            placeholder="e.g. 1100-001"
+            value={draft.postcode || ""}
+            onChange={(e) =>
+              setDraft((prev) => ({ ...prev, postcode: e.target.value }))
+            }
+          />
+        </div>
+      </section>
+
+      {/* ── Session details ───────────────────────────────────────────── */}
+      <section className="host-onboarding-card">
+        <div className="host-form-grid">
           <label htmlFor="sportPricing">
             How much do you charge per session?
           </label>
@@ -429,149 +555,7 @@ const HostSportTab = ({
         </div>
       </section>
 
-      <section className="host-onboarding-card">
-        <h2>Where do you want to host?</h2>
-        <p className="host-form-hint">This is where you'll offer your sessions — not necessarily where you live.</p>
-        <div className="host-form-grid">
-          <label id="host-country-label" htmlFor="host-country-selector">
-            Country
-          </label>
-          <div
-            className="auth-search-dropdown"
-            ref={countryDropdown.containerRef}
-          >
-            <button
-              id="host-country-selector"
-              type="button"
-              className="auth-dropdown-trigger"
-              aria-haspopup="listbox"
-              aria-expanded={countryDropdown.isOpen}
-              aria-controls="host-country-listbox"
-              onClick={() => {
-                countryDropdown.setIsOpen((prev) => !prev);
-                countryDropdown.setSearchValue("");
-              }}
-            >
-              {selectedCountry ? (
-                <>
-                  <span>{getCountryFlag(selectedCountry.code)}</span>
-                  <span>{selectedCountry.name}</span>
-                </>
-              ) : (
-                <span>Select country</span>
-              )}
-            </button>
-            {countryDropdown.isOpen && (
-              <div className="auth-dropdown-panel">
-                <input
-                  type="search"
-                  className="auth-dropdown-search"
-                  placeholder="Search country"
-                  value={countryDropdown.searchValue}
-                  onChange={(e) => countryDropdown.setSearchValue(e.target.value)}
-                />
-                <ul
-                  id="host-country-listbox"
-                  className="auth-dropdown-options"
-                  role="listbox"
-                  aria-labelledby="host-country-label"
-                >
-                  {countryDropdown.filteredOptions.map((option) => (
-                    <li key={option.code}>
-                      <button
-                        type="button"
-                        className="auth-dropdown-option"
-                        role="option"
-                        aria-selected={selectedCountry?.code === option.code}
-                        onClick={() => {
-                          const nextCities =
-                            COUNTRY_CITY_OPTIONS[option.code] ?? [];
-                          setDraft((prev) => ({
-                            ...prev,
-                            country: option.name,
-                            city: nextCities[0] ?? "",
-                          }));
-                          countryDropdown.setIsOpen(false);
-                        }}
-                      >
-                        <span>{getCountryFlag(option.code)}</span>
-                        <span>{option.name}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <label id="host-city-label" htmlFor="host-city-selector">
-            City
-          </label>
-          <div className="auth-search-dropdown" ref={cityDropdown.containerRef}>
-            <button
-              id="host-city-selector"
-              type="button"
-              className="auth-dropdown-trigger"
-              aria-haspopup="listbox"
-              aria-expanded={cityDropdown.isOpen}
-              aria-controls="host-city-listbox"
-              disabled={!selectedCountry}
-              onClick={() => {
-                cityDropdown.setIsOpen((prev) => !prev);
-                cityDropdown.setSearchValue("");
-              }}
-            >
-              {draft.city || "Select city"}
-            </button>
-            {cityDropdown.isOpen && (
-              <div className="auth-dropdown-panel">
-                <input
-                  type="search"
-                  className="auth-dropdown-search"
-                  placeholder="Search city"
-                  value={cityDropdown.searchValue}
-                  onChange={(e) => cityDropdown.setSearchValue(e.target.value)}
-                />
-                <ul
-                  id="host-city-listbox"
-                  className="auth-dropdown-options"
-                  role="listbox"
-                  aria-labelledby="host-city-label"
-                >
-                  {cityDropdown.filteredOptions.map((option) => (
-                    <li key={option}>
-                      <button
-                        type="button"
-                        className="auth-dropdown-option"
-                        role="option"
-                        aria-selected={draft.city === option}
-                        onClick={() => {
-                          setDraft((prev) => ({ ...prev, city: option }));
-                          cityDropdown.setIsOpen(false);
-                        }}
-                      >
-                        <span>{option}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <label htmlFor="host-postcode">Postcode</label>
-          <input
-            id="host-postcode"
-            type="text"
-            placeholder="e.g. 1100-001"
-            value={draft.postcode || ""}
-            onChange={(e) =>
-              setDraft((prev) => ({ ...prev, postcode: e.target.value }))
-            }
-          />
-        </div>
-      </section>
-
+      {/* ── Consents ──────────────────────────────────────────────────── */}
       <section className="host-onboarding-card">
         <h2>Consents</h2>
         <div className="form-consent-group">
