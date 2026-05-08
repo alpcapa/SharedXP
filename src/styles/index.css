@@ -776,7 +776,7 @@ body {
 }
 
 .explore-hero {
-  margin: 10px 0 0;
+  margin: 10px 10px 0;
 }
 
 .explore-hero-content {
@@ -798,6 +798,8 @@ body {
 
 .explore-page-content {
   padding-top: 20px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .explore-page-content .locals-grid {
