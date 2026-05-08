@@ -40,7 +40,7 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
         </section>
 
         <main className="middle-section auth-page">
-          <section className="auth-card">
+          <section className="auth-content">
             <h1>Log in</h1>
             <p>Continue with Google, Apple, or your email account.</p>
 

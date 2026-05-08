@@ -267,7 +267,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
           <section className="hero auth-hero">
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
-          <main className="middle-section simple-page">
+          <main className="middle-section">
             <h1>Please log in</h1>
             <p>You need to log in to see your profile.</p>
             <Link to="/login" className="btn btn-primary">
@@ -447,13 +447,20 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
-        <main className="middle-section simple-page">
-          <div className="profile-back-wrap">
-            <Link to="/user-profile" className="back-link">
-              ← Back to My Profile
-            </Link>
+        <main className="middle-section edit-profile-page">
+          <div className="host-settings-top-bar">
+            <h1>Edit Profile</h1>
+            <div className="profile-summary-actions">
+              <Link to="/user-profile" className="btn btn-primary">
+                My Profile
+              </Link>
+              {currentUser.isHost && (
+                <Link to={`/buddy/${currentUser.id}`} className="btn btn-primary">
+                  My Host Page
+                </Link>
+              )}
+            </div>
           </div>
-          <h1>Edit Profile</h1>
           <div className="profile-name-row">
             <h2>{currentUser.fullName}</h2>
             {currentUser.isHost && (

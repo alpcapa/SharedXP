@@ -772,7 +772,7 @@ body {
 }
 
 .explore-hero {
-  margin: 10px 10px 0;
+  margin: 10px 0 0;
 }
 
 .explore-hero-content {
@@ -792,10 +792,12 @@ body {
   font-size: 18px;
 }
 
-.explore-page-content {
-  padding-top: 20px;
-  padding-left: 10px;
-  padding-right: 10px;
+.explore-page-content,
+.field-main,
+.events-main,
+.host-settings-page,
+.edit-profile-page {
+  margin: 10px 0;
 }
 
 .explore-page-content .locals-grid {
@@ -1066,8 +1068,6 @@ body {
 }
 
 .auth-page {
-  display: grid;
-  place-items: center;
 }
 
 .auth-card {
@@ -1083,6 +1083,18 @@ body {
 }
 
 .auth-card > p {
+  margin-top: 10px;
+  color: #4b5563;
+}
+
+.auth-content {
+}
+
+.auth-content h1 {
+  margin: 0;
+}
+
+.auth-content > p {
   margin-top: 10px;
   color: #4b5563;
 }
@@ -1446,11 +1458,11 @@ body {
 }
 
 .host-settings-page {
-  width: min(920px, 100%);
 }
 
 .host-settings-top-bar {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
 }
@@ -2254,7 +2266,12 @@ body {
 .reviews,
 .gallery,
 .booking-engine-section,
-.recommendations {
+.recommendations,
+.host-settings-page,
+.edit-profile-page,
+.explore-page-content,
+.field-main,
+.events-main {
   background: white;
   margin: 20px;
   padding: 20px;
@@ -3287,8 +3304,6 @@ body {
 }
 
 .field-main {
-  margin: 0 10px;
-  padding: 10px 0 26px;
 }
 
 .field-city-filter {
@@ -3413,8 +3428,6 @@ body {
 }
 
 .events-main {
-  margin: 0 10px;
-  padding: 10px 0 26px;
 }
 
 .events-filter-row {
@@ -4059,10 +4072,32 @@ body {
 }
 
 /* ── Host Settings — tab bar ─────────────── */
+.host-tab-actions-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 720px) {
+  .host-tab-actions-row {
+    flex-direction: column;
+  }
+
+  .host-tab-actions-row .host-tab-bar {
+    flex: unset;
+  }
+}
+
+.host-tab-actions-row .host-tab-bar {
+  margin-bottom: 0;
+  flex: 1;
+}
+
 .host-tab-bar {
   display: flex;
   gap: 0;
-  border-bottom: 2px solid #e8e9e4;
   margin-bottom: 24px;
 }
 

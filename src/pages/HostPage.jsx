@@ -109,7 +109,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
           <section className="hero auth-hero">
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
-          <main className="middle-section simple-page">
+          <main className="middle-section">
             <h1>Please log in</h1>
             <p>You need to log in before becoming a host.</p>
             <Link to="/login" className="btn btn-primary">
@@ -207,13 +207,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
             hostingPausedOverride={isHostingPaused}
           />
         </section>
-        <main className="middle-section simple-page host-settings-page">
-          <div className="profile-back-wrap">
-            <Link to="/user-profile" className="back-link">
-              ← Back to My Profile
-            </Link>
-          </div>
-
+        <main className="middle-section host-settings-page">
           <div className="host-settings-top-bar">
             <div>
               <h1
@@ -227,51 +221,17 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                   : "Manage your sport offerings and payment details."}
               </p>
             </div>
-            <div className="pause-hosting-group">
-              <label className="hosting-pause-toggle" htmlFor="pauseHosting">
-                <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
-                <input
-                  id="pauseHosting"
-                  type="checkbox"
-                  role="switch"
-                  aria-checked={isHostingPaused}
-                  checked={isHostingPaused}
-                  onChange={async (event) => {
-                    const newPaused = event.target.checked;
-                    if (newPaused && currentUser?.id) {
-                      const { data } = await supabase
-                        .from("booking_requests")
-                        .select("id")
-                        .eq("host_id", currentUser.id)
-                        .eq("status", "in_progress")
-                        .limit(1);
-                      if (data?.length > 0) {
-                        setPauseWarning("You have an experience in progress. You can pause once it's completed.");
-                        return;
-                      }
-                    }
-                    setPauseWarning("");
-                    setHostProfileDraft((prev) => ({ ...prev, pauseHosting: newPaused }));
-                    onTogglePauseHosting?.(newPaused);
-                  }}
-                />
-                <span className="hosting-pause-switch" aria-hidden="true" />
-              </label>
-              {pauseWarning && (
-                <div className="pause-warning" role="alert">
-                  <p className="pause-warning-text">{pauseWarning}</p>
-                  <button
-                    type="button"
-                    className="pause-warning-ok"
-                    onClick={() => setPauseWarning("")}
-                  >
-                    OK
-                  </button>
-                </div>
-              )}
+            <div className="profile-summary-actions">
+              <Link to="/user-profile" className="btn btn-primary">
+                My Profile
+              </Link>
+              <Link to={`/buddy/${currentUser.id}`} className="btn btn-primary">
+                My Host Page
+              </Link>
             </div>
           </div>
 
+          <div className="host-tab-actions-row">
           <div
             className="host-tab-bar"
             role="tablist"
@@ -337,6 +297,50 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                 </span>
               )}
             </button>
+          </div>
+          <div className="pause-hosting-group">
+              <label className="hosting-pause-toggle" htmlFor="pauseHosting">
+                <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
+                <input
+                  id="pauseHosting"
+                  type="checkbox"
+                  role="switch"
+                  aria-checked={isHostingPaused}
+                  checked={isHostingPaused}
+                  onChange={async (event) => {
+                    const newPaused = event.target.checked;
+                    if (newPaused && currentUser?.id) {
+                      const { data } = await supabase
+                        .from("booking_requests")
+                        .select("id")
+                        .eq("host_id", currentUser.id)
+                        .eq("status", "in_progress")
+                        .limit(1);
+                      if (data?.length > 0) {
+                        setPauseWarning("You have an experience in progress. You can pause once it's completed.");
+                        return;
+                      }
+                    }
+                    setPauseWarning("");
+                    setHostProfileDraft((prev) => ({ ...prev, pauseHosting: newPaused }));
+                    onTogglePauseHosting?.(newPaused);
+                  }}
+                />
+                <span className="hosting-pause-switch" aria-hidden="true" />
+              </label>
+              {pauseWarning && (
+                <div className="pause-warning" role="alert">
+                  <p className="pause-warning-text">{pauseWarning}</p>
+                  <button
+                    type="button"
+                    className="pause-warning-ok"
+                    onClick={() => setPauseWarning("")}
+                  >
+                    OK
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {activeTab === "sports" && (
