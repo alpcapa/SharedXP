@@ -69,6 +69,9 @@ body {
 
 .auth-hero + .middle-section > *:first-child,
 .auth-hero + .profile-summary,
+.auth-hero + .explore-hero,
+.auth-hero + .events-hero,
+.auth-hero + .field-hero,
 .events-hero + .events-main,
 .field-hero + .field-main,
 .explore-hero + .middle-section {
