@@ -447,7 +447,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
-        <main className="middle-section">
+        <main className="middle-section edit-profile-page">
           <div className="host-settings-top-bar">
             <h1>Edit Profile</h1>
             <div className="profile-summary-actions">
