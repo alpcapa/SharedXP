@@ -3271,7 +3271,7 @@ body {
 /* ── The Field page ───────────────────────── */
 .field-hero {
   max-width: 1080px;
-  margin: 6px auto 0;
+  margin: 6px 10px 0;
   padding: 18px 20px 10px;
 }
 
@@ -3289,7 +3289,7 @@ body {
 
 .field-main {
   max-width: 1080px;
-  margin: 0 auto;
+  margin: 0 10px;
   padding: 10px 20px 26px;
 }
 
@@ -3398,7 +3398,7 @@ body {
 /* ── Events page ──────────────────────────── */
 .events-hero {
   max-width: 1080px;
-  margin: 6px auto 0;
+  margin: 6px 10px 0;
   padding: 18px 20px 10px;
 }
 
@@ -3417,7 +3417,7 @@ body {
 
 .events-main {
   max-width: 1080px;
-  margin: 0 auto;
+  margin: 0 10px;
   padding: 10px 20px 26px;
 }
 
