@@ -57,6 +57,35 @@ body {
   padding: 28px 10px 0;
 }
 
+.auth-hero + .middle-section {
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.auth-hero + .middle-section.host-settings-page,
+.auth-hero + .middle-section.edit-profile-page {
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
+.auth-hero + .profile-summary {
+  margin-top: 10px;
+}
+
+.auth-hero + .middle-section > *:first-child,
+.auth-hero + .explore-hero,
+.auth-hero + .events-hero,
+.auth-hero + .field-hero,
+.events-hero + .events-main,
+.field-hero + .field-main,
+.explore-hero + .middle-section {
+  margin-top: 0;
+}
+
+.explore-hero + .middle-section {
+  padding-top: 0;
+}
+
 /* ── Shared section typography ─────────────────── */
 .section-title {
   margin: 0;
@@ -773,11 +802,12 @@ body {
 
 .explore-hero {
   margin: 10px 0 0;
+  padding: 0 10px;
 }
 
 .explore-hero-content {
-  margin: 6px 0 0;
-  padding: 18px 0 10px;
+  margin: 0;
+  padding: 16px 0 10px;
 }
 
 .explore-hero-content h1 {
@@ -1067,6 +1097,11 @@ body {
   margin-bottom: 0;
 }
 
+.home-page .hero.auth-hero {
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
 .auth-page {
 }
 
@@ -1335,7 +1370,7 @@ body {
 }
 
 .legal-page {
-  width: min(920px, 100%);
+  width: 100%;
 }
 
 .legal-page h1 {
@@ -2273,7 +2308,7 @@ body {
 .field-main,
 .events-main {
   background: white;
-  margin: 20px;
+  margin: 20px 10px;
   padding: 20px;
   border-radius: 10px;
 }
