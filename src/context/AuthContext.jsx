@@ -425,31 +425,19 @@ const loadUser = async (authUser) => {
   }
 };
 
-supabase.auth
-  .getSession()
-  .then(({ data: { session } }) => {
-    if (!mounted) return;
-    if (session?.user) {
-      loadUser(session.user).finally(() => {
-        if (mounted) setAuthLoading(false);
-      });
-    } else {
-      setAuthLoading(false);
-    }
-  })
-  .catch((e) => {
-    if (!mounted) return;
-    console.error("[auth] getSession failed:", e);
-    setAuthLoading(false);
-  });
-
 const {
   data: { subscription },
 } = supabase.auth.onAuthStateChange((event, session) => {
   if (!mounted) return;
   if (event === "TOKEN_REFRESHED") return;
-  if (session?.user) loadUser(session.user);
-  else setCurrentUser(null);
+  if (session?.user) {
+    loadUser(session.user).finally(() => {
+      if (mounted && event === "INITIAL_SESSION") setAuthLoading(false);
+    });
+  } else {
+    setCurrentUser(null);
+    if (event === "INITIAL_SESSION") setAuthLoading(false);
+  }
 });
 
 return () => {
