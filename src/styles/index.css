@@ -794,7 +794,9 @@ body {
 
 .explore-page-content,
 .field-main,
-.events-main {
+.events-main,
+.host-settings-page,
+.edit-profile-page {
   margin: 10px 0;
 }
 
@@ -4076,6 +4078,16 @@ body {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+@media (max-width: 720px) {
+  .host-tab-actions-row {
+    flex-direction: column;
+  }
+
+  .host-tab-actions-row .host-tab-bar {
+    flex: unset;
+  }
 }
 
 .host-tab-actions-row .host-tab-bar {
