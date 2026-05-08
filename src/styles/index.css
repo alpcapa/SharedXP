@@ -4059,6 +4059,19 @@ body {
 }
 
 /* ── Host Settings — tab bar ─────────────── */
+.host-tab-actions-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.host-tab-actions-row .host-tab-bar {
+  margin-bottom: 0;
+  flex: 1;
+}
+
 .host-tab-bar {
   display: flex;
   gap: 0;
