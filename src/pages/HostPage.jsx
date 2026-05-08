@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import HostSportTab from "../components/host/HostSportTab";
@@ -14,9 +14,6 @@ import {
 } from "../components/host/hostUtils";
 
 const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosting }) => {
-  const location = useLocation();
-  const isHostSettingsRoute = location.pathname === "/host-settings";
-
   const initialProfile = useMemo(
     () => getInitialHostProfile(currentUser),
     [currentUser]
@@ -120,10 +117,6 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
         </div>
       </div>
     );
-  }
-
-  if (!isHostSettingsRoute) {
-    return <Navigate to="/host-settings" replace />;
   }
 
   const isHostingPaused = Boolean(hostProfileDraft.pauseHosting);
