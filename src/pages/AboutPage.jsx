@@ -52,7 +52,7 @@ const AboutPage = ({ currentUser, onLogout }) => {
         <SiteHeader currentUser={currentUser} onLogout={onLogout} />
       </div>
 
-      <main>
+      <main className="about-main">
         <section className="about-hero">
           <h1>Sport doesn't stop when you travel. Neither should you.</h1>
           <p className="about-hero-sub">

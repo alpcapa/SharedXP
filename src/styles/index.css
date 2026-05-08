@@ -54,7 +54,7 @@ body {
 
 .middle-section {
   background: transparent;
-  padding: 28px 0 0;
+  padding: 28px 10px 0;
 }
 
 /* ── Shared section typography ─────────────────── */
@@ -2860,7 +2860,7 @@ body {
 
 @media (max-width: 900px) {
   .middle-section {
-    padding: 20px 0 0;
+    padding: 20px 10px 0;
   }
 
   .locals-section .section-head {
@@ -3006,11 +3006,16 @@ body {
   font-family: Inter, "Segoe UI", Arial, sans-serif;
 }
 
+.about-main {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
 /* Hero */
 .about-hero {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 40px 20px 0;
+  margin: 0;
+  padding: 40px 0 0;
 }
 
 .about-hero h1 {
@@ -3102,9 +3107,8 @@ body {
 
 /* For travelers / hosts split */
 .about-split {
-  max-width: 1080px;
-  margin: 72px auto 0;
-  padding: 0 20px;
+  margin: 72px 0 0;
+  padding: 0;
 }
 
 .about-split > h2 {
