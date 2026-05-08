@@ -1574,6 +1574,12 @@ body {
   font-size: 20px;
 }
 
+.host-form-hint {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
 .host-form-grid {
   display: grid;
   gap: 8px;

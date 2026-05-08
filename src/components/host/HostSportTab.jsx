@@ -430,7 +430,8 @@ const HostSportTab = ({
       </section>
 
       <section className="host-onboarding-card">
-        <h2>Your Location</h2>
+        <h2>Where do you want to host?</h2>
+        <p className="host-form-hint">This is where you'll offer your sessions — not necessarily where you live.</p>
         <div className="host-form-grid">
           <label id="host-country-label" htmlFor="host-country-selector">
             Country
