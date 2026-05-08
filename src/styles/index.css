@@ -1093,6 +1093,11 @@ body {
   margin-bottom: 0;
 }
 
+.home-page .hero.auth-hero {
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
 .auth-page {
 }
 
