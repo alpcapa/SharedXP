@@ -4087,7 +4087,6 @@ body {
 .host-tab-bar {
   display: flex;
   gap: 0;
-  border-bottom: 2px solid #e8e9e4;
   margin-bottom: 24px;
 }
 
