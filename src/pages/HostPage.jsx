@@ -31,6 +31,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
   const [isSaving, setIsSaving] = useState(false);
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
+  const prevProfileJsonRef = useRef(null);
 
   const selectedCountry = useMemo(
     () =>
@@ -65,11 +66,20 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
     return availableCities.filter((c) => c.toLowerCase().includes(search));
   }, [availableCities, citySearchValue]);
 
+  // Reset navigation state on every fresh mount
   useEffect(() => {
-    setHostProfileDraft(initialProfile);
     setActiveSportIndex(0);
     setErrorMessage("");
     setSuccessMessage("");
+  }, []);
+
+  // Sync draft only when the profile data actually changes, not on every
+  // currentUser reference change (avoids resetting the form on auth re-renders)
+  useEffect(() => {
+    const json = JSON.stringify(initialProfile);
+    if (json === prevProfileJsonRef.current) return;
+    prevProfileJsonRef.current = json;
+    setHostProfileDraft(initialProfile);
   }, [initialProfile]);
 
   useEffect(() => {
