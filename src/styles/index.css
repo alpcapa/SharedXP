@@ -54,7 +54,7 @@ body {
 
 .middle-section {
   background: transparent;
-  padding: 28px 0 0;
+  padding: 28px 10px 0;
 }
 
 /* ── Shared section typography ─────────────────── */
@@ -258,10 +258,6 @@ body {
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 16px;
-}
-
-.field-home-section .field-feed {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .field-home-section .field-card,
@@ -776,7 +772,7 @@ body {
 }
 
 .explore-hero {
-  margin: 10px 0 0;
+  margin: 10px 10px 0;
 }
 
 .explore-hero-content {
@@ -798,6 +794,8 @@ body {
 
 .explore-page-content {
   padding-top: 20px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .explore-page-content .locals-grid {
@@ -2858,7 +2856,7 @@ body {
 
 @media (max-width: 900px) {
   .middle-section {
-    padding: 20px 0 0;
+    padding: 20px 10px 0;
   }
 
   .locals-section .section-head {
@@ -3004,11 +3002,16 @@ body {
   font-family: Inter, "Segoe UI", Arial, sans-serif;
 }
 
+.about-main {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
 /* Hero */
 .about-hero {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 40px 20px 0;
+  margin: 0;
+  padding: 40px 0 0;
 }
 
 .about-hero h1 {
@@ -3100,9 +3103,8 @@ body {
 
 /* For travelers / hosts split */
 .about-split {
-  max-width: 1080px;
-  margin: 72px auto 0;
-  padding: 0 20px;
+  margin: 72px 0 0;
+  padding: 0;
 }
 
 .about-split > h2 {
@@ -3268,9 +3270,8 @@ body {
 
 /* ── The Field page ───────────────────────── */
 .field-hero {
-  max-width: 1080px;
-  margin: 6px auto 0;
-  padding: 18px 20px 10px;
+  margin: 6px 10px 0;
+  padding: 18px 0 10px;
 }
 
 .field-hero h1 {
@@ -3286,9 +3287,8 @@ body {
 }
 
 .field-main {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 10px 20px 26px;
+  margin: 0 10px;
+  padding: 10px 0 26px;
 }
 
 .field-city-filter {
@@ -3321,7 +3321,7 @@ body {
 
 .field-feed {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -3395,9 +3395,8 @@ body {
 
 /* ── Events page ──────────────────────────── */
 .events-hero {
-  max-width: 1080px;
-  margin: 6px auto 0;
-  padding: 18px 20px 10px;
+  margin: 6px 10px 0;
+  padding: 18px 0 10px;
 }
 
 .events-hero h1 {
@@ -3414,9 +3413,8 @@ body {
 }
 
 .events-main {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 10px 20px 26px;
+  margin: 0 10px;
+  padding: 10px 0 26px;
 }
 
 .events-filter-row {
@@ -3472,7 +3470,7 @@ body {
 
 .events-feed {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -3577,7 +3575,13 @@ body {
   font-size: 16px;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 767px) {
+  .events-feed {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
   .events-feed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3629,7 +3633,13 @@ body {
   color: #596164;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 767px) {
+  .field-feed {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
   .field-feed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
