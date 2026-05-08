@@ -278,7 +278,11 @@ const ExplorePage = ({ currentUser, onLogout }) => {
               <span className="accent">.</span>
             </h1>
             <p>Search and filter hosts by location, sport, gender, level, and equipment.</p>
-            <section className="explore-filters">
+          </div>
+        </section>
+
+        <main className="middle-section explore-page-content">
+          <section className="explore-filters">
               <div className="explore-filter-search">
                 <label htmlFor="explore-search">Search</label>
                 <input
@@ -392,10 +396,6 @@ const ExplorePage = ({ currentUser, onLogout }) => {
               )}
               <ExploreMap hosts={visibleHosts} userLocation={userLocation} />
             </section>
-          </div>
-        </section>
-
-        <main className="middle-section explore-page-content">
           <section className="locals-section">
             <div className="section-head">
               <div>

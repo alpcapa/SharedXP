@@ -772,7 +772,7 @@ body {
 }
 
 .explore-hero {
-  margin: 10px 10px 0;
+  margin: 10px 0 0;
 }
 
 .explore-hero-content {
@@ -792,7 +792,10 @@ body {
   font-size: 18px;
 }
 
-.explore-page-content {
+.explore-page-content,
+.field-main,
+.events-main {
+  margin: 10px 0;
 }
 
 .explore-page-content .locals-grid {
