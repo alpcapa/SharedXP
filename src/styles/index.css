@@ -260,10 +260,6 @@ body {
   margin-bottom: 16px;
 }
 
-.field-home-section .field-feed {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
 .field-home-section .field-card,
 .locals-section .field-card {
   padding: 12px;
@@ -3275,7 +3271,7 @@ body {
 /* ── The Field page ───────────────────────── */
 .field-hero {
   margin: 6px 10px 0;
-  padding: 18px 20px 10px;
+  padding: 18px 0 10px;
 }
 
 .field-hero h1 {
@@ -3292,7 +3288,7 @@ body {
 
 .field-main {
   margin: 0 10px;
-  padding: 10px 20px 26px;
+  padding: 10px 0 26px;
 }
 
 .field-city-filter {
@@ -3325,7 +3321,7 @@ body {
 
 .field-feed {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -3400,7 +3396,7 @@ body {
 /* ── Events page ──────────────────────────── */
 .events-hero {
   margin: 6px 10px 0;
-  padding: 18px 20px 10px;
+  padding: 18px 0 10px;
 }
 
 .events-hero h1 {
@@ -3418,7 +3414,7 @@ body {
 
 .events-main {
   margin: 0 10px;
-  padding: 10px 20px 26px;
+  padding: 10px 0 26px;
 }
 
 .events-filter-row {
@@ -3474,7 +3470,7 @@ body {
 
 .events-feed {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -3579,7 +3575,13 @@ body {
   font-size: 16px;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 767px) {
+  .events-feed {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
   .events-feed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3631,7 +3633,13 @@ body {
   color: #596164;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 767px) {
+  .field-feed {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
   .field-feed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
