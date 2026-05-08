@@ -14,11 +14,34 @@ const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
 return parts.length >= 2 ? parts[1] : parts[0] ?? "";
 };
 
+const geocodeHostLocation = async (city, postcode, country) => {
+  try {
+    const query = [postcode, city, country].filter(Boolean).join(", ");
+    if (!query) return { latitude: null, longitude: null };
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`
+    );
+    const data = await resp.json();
+    if (data?.[0]) {
+      return {
+        latitude: parseFloat(data[0].lat),
+        longitude: parseFloat(data[0].lon),
+      };
+    }
+  } catch {
+    // Geocoding failed — store null coordinates
+  }
+  return { latitude: null, longitude: null };
+};
+
 const buildHostProfileObject = (hostProfile, hostSports) => {
 if (!hostProfile) return null;
 return {
 country: hostProfile.country || "",
 city: hostProfile.city || "",
+postcode: hostProfile.postcode || "",
+latitude: hostProfile.latitude ?? null,
+longitude: hostProfile.longitude ?? null,
 pauseHosting: hostProfile.pause_hosting || false,
 bankDetailsComplete: hostProfile.bank_details_complete || false,
 sports: (hostSports || []).map((hs) => ({
@@ -582,13 +605,21 @@ if (authUser) setCurrentUser(await fetchUserProfile(authUser));
 onSaveHostProfile: async (hostProfile) => {
 if (!currentUser) return { success: false, message: "Not logged in." };
 
+const city = hostProfile.city || currentUser.city || "";
+const postcode = hostProfile.postcode || "";
+const country = hostProfile.country || currentUser.country || "";
+const { latitude, longitude } = await geocodeHostLocation(city, postcode, country);
+
 const { data: savedHostProfile, error: hpError } = await supabase
   .from("host_profiles")
   .upsert(
     {
       user_id: currentUser.id,
-      country: hostProfile.country || currentUser.country || "",
-      city: hostProfile.city || currentUser.city || "",
+      country,
+      city,
+      postcode,
+      latitude,
+      longitude,
       pause_hosting: hostProfile.pauseHosting || false,
       bank_details_complete: hostProfile.bankDetailsComplete || false,
       stripe_email: hostProfile.stripe?.stripeEmail || currentUser.email,

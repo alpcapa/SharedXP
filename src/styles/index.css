@@ -904,24 +904,47 @@ body {
 
 .explore-map {
   position: relative;
-  min-height: 360px;
+  height: 420px;
   border: 1px solid #e6ebe2;
   border-radius: 18px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 18% 22%, rgba(149, 200, 75, 0.2) 0, transparent 26%),
-    radial-gradient(circle at 72% 68%, rgba(88, 124, 37, 0.17) 0, transparent 30%),
-    linear-gradient(180deg, #eef4e3 0%, #f7f8f2 100%);
 }
 
 .explore-map::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(140, 157, 120, 0.16) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(140, 157, 120, 0.16) 1px, transparent 1px);
-  background-size: 56px 56px;
+  display: none;
+}
+
+/* Leaflet overrides scoped to the explore map */
+.explore-map .leaflet-tooltip {
+  font-family: inherit;
+  font-size: 13px;
+  border: 1px solid #e6ebe2;
+  border-radius: 8px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  color: #111827;
+}
+
+.explore-map .leaflet-tooltip-top::before {
+  border-top-color: #e6ebe2;
+}
+
+.explore-map .leaflet-control-attribution {
+  font-size: 10px;
+  opacity: 0.75;
+  border-radius: 8px 0 0 0;
+}
+
+.explore-map .leaflet-control-zoom {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.explore-map .leaflet-control-zoom a {
+  border-radius: 8px;
+  border: 1px solid #e6ebe2;
+  color: #374151;
+  font-size: 16px;
 }
 
 .explore-map-pin,
@@ -1549,6 +1572,12 @@ body {
 .host-onboarding-card h2 {
   margin: 0;
   font-size: 20px;
+}
+
+.host-form-hint {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #6b7280;
 }
 
 .host-form-grid {
@@ -2897,7 +2926,7 @@ body {
   }
 
   .explore-map {
-    min-height: 300px;
+    height: 280px;
   }
 
   .profile-summary-body {

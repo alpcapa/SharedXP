@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import ExploreMap from "../components/ExploreMap";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
@@ -13,14 +14,21 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const [hosts, setHosts] = useState([]);
   const [hostsLoading, setHostsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState("All");
-  const [selectedCity, setSelectedCity] = useState("All");
+  const [selectedCountry, setSelectedCountry] = useState("My Location");
+  const [selectedCity, setSelectedCity] = useState("My Location");
   const [selectedSport, setSelectedSport] = useState("All");
   const [selectedGender, setSelectedGender] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All");
   const [selectedEquipment, setSelectedEquipment] = useState("All");
   const [resultsPage, setResultsPage] = useState(1);
 
+  // Geolocation state
+  const [userLocation, setUserLocation] = useState(null);
+  const [detectedCountry, setDetectedCountry] = useState("");
+  const [detectedCity, setDetectedCity] = useState("");
+  const [geoStatus, setGeoStatus] = useState("pending"); // pending | granted | denied | unavailable
+
+  // Fetch hosts — coordinates now come from the DB
   useEffect(() => {
     let cancelled = false;
     setHostsLoading(true);
@@ -28,7 +36,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     supabase
       .from("host_profiles")
       .select(
-        `id, country, city, pause_hosting,
+        `id, country, city, postcode, latitude, longitude, pause_hosting,
          profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at),
          host_sports(id, sport, level, equipment_available, paused)`
       )
@@ -54,7 +62,12 @@ const ExplorePage = ({ currentUser, onLogout }) => {
               country: hp.country || "",
               city: hp.city || "",
               signedUpAt: hp.profile.signed_up_at || "",
-              sports: (hp.host_sports || []).filter((hs) => !hs.paused)
+              sports: (hp.host_sports || []).filter((hs) => !hs.paused),
+              // Use stored coordinates if present
+              coordinates:
+                hp.latitude != null && hp.longitude != null
+                  ? { lat: hp.latitude, lng: hp.longitude }
+                  : null,
             }));
           setHosts(transformed);
         }
@@ -66,21 +79,76 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     };
   }, []);
 
+  // Request browser geolocation; reverse-geocode to detect country/city for the filters
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setGeoStatus("unavailable");
+      return;
+    }
+
+    let cancelled = false;
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        if (cancelled) return;
+        const { latitude: lat, longitude: lng } = pos.coords;
+        setUserLocation({ lat, lng });
+        setGeoStatus("granted");
+        try {
+          const resp = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`
+          );
+          if (cancelled) return;
+          const data = await resp.json();
+          setDetectedCountry(data.address?.country || "");
+          setDetectedCity(
+            data.address?.city ||
+              data.address?.town ||
+              data.address?.village ||
+              ""
+          );
+        } catch {
+          // Reverse geocode failed — filters stay in "show all" mode
+        }
+      },
+      () => {
+        if (!cancelled) setGeoStatus("denied");
+      },
+      { timeout: 10000 }
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const countryOptions = useMemo(
-    () => ["All", ...[...new Set(hosts.map((h) => h.country).filter(Boolean))].sort()],
+    () => [
+      "My Location",
+      "All",
+      ...[...new Set(hosts.map((h) => h.country).filter(Boolean))].sort(),
+    ],
     [hosts]
   );
 
   const cityOptions = useMemo(() => {
-    const hostsForCountry =
-      selectedCountry === "All" ? hosts : hosts.filter((h) => h.country === selectedCountry);
-    return ["All", ...[...new Set(hostsForCountry.map((h) => h.city).filter(Boolean))].sort()];
-  }, [hosts, selectedCountry]);
+    let base = hosts;
+    if (selectedCountry !== "All" && selectedCountry !== "My Location") {
+      base = hosts.filter((h) => h.country === selectedCountry);
+    } else if (selectedCountry === "My Location" && detectedCountry) {
+      base = hosts.filter((h) => h.country === detectedCountry);
+    }
+    return [
+      "My Location",
+      "All",
+      ...[...new Set(base.map((h) => h.city).filter(Boolean))].sort(),
+    ];
+  }, [hosts, selectedCountry, detectedCountry]);
 
   const sportOptions = useMemo(
     () => [
       "All",
-      ...[...new Set(hosts.flatMap((h) => h.sports.map((s) => s.sport)).filter(Boolean))].sort()
+      ...[...new Set(hosts.flatMap((h) => h.sports.map((s) => s.sport)).filter(Boolean))].sort(),
     ],
     [hosts]
   );
@@ -88,17 +156,23 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const levelOptions = useMemo(
     () => [
       "All",
-      ...[...new Set(hosts.flatMap((h) => h.sports.map((s) => s.level)).filter(Boolean))].sort()
+      ...[...new Set(hosts.flatMap((h) => h.sports.map((s) => s.level)).filter(Boolean))].sort(),
     ],
     [hosts]
   );
 
+  // Reset city when it's no longer valid for the selected country
   useEffect(() => {
-    if (selectedCity !== "All" && !cityOptions.includes(selectedCity)) {
-      setSelectedCity("All");
+    if (
+      selectedCity !== "All" &&
+      selectedCity !== "My Location" &&
+      !cityOptions.includes(selectedCity)
+    ) {
+      setSelectedCity("My Location");
     }
   }, [cityOptions, selectedCity]);
 
+  // Apply sport filter from URL query param
   useEffect(() => {
     const sportParam = searchParams.get("sport");
     if (!sportParam) return;
@@ -110,16 +184,30 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     const query = searchQuery.trim().toLowerCase();
     return hosts.filter((host) => {
       const matchesName = !query || host.name.toLowerCase().includes(query);
-      const matchesCountry = selectedCountry === "All" || host.country === selectedCountry;
-      const matchesCity = selectedCity === "All" || host.city === selectedCity;
+
+      let matchesCountry;
+      if (selectedCountry === "All") {
+        matchesCountry = true;
+      } else if (selectedCountry === "My Location") {
+        // Show all while location is pending; filter once detected
+        matchesCountry = !detectedCountry || host.country === detectedCountry;
+      } else {
+        matchesCountry = host.country === selectedCountry;
+      }
+
+      let matchesCity;
+      if (selectedCity === "All") {
+        matchesCity = true;
+      } else if (selectedCity === "My Location") {
+        matchesCity = !detectedCity || host.city === detectedCity;
+      } else {
+        matchesCity = host.city === selectedCity;
+      }
+
       const matchesSport =
         selectedSport === "All" || host.sports.some((s) => s.sport === selectedSport);
       const genderValue =
-        selectedGender === "Male"
-          ? "Male"
-          : selectedGender === "Female"
-            ? "Female"
-            : null;
+        selectedGender === "Male" ? "Male" : selectedGender === "Female" ? "Female" : null;
       const matchesGender = !genderValue || host.gender === genderValue;
       const matchesLevel =
         selectedLevel === "All" || host.sports.some((s) => s.level === selectedLevel);
@@ -146,9 +234,12 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     selectedSport,
     selectedGender,
     selectedLevel,
-    selectedEquipment
+    selectedEquipment,
+    detectedCountry,
+    detectedCity,
   ]);
 
+  // Reset to page 1 whenever any filter changes
   useEffect(() => {
     setResultsPage(1);
   }, [
@@ -158,7 +249,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     selectedSport,
     selectedGender,
     selectedLevel,
-    selectedEquipment
+    selectedEquipment,
   ]);
 
   const totalResultsPages = Math.max(1, Math.ceil(visibleHosts.length / EXPLORE_HOSTS_PER_PAGE));
@@ -183,7 +274,8 @@ const ExplorePage = ({ currentUser, onLogout }) => {
         <section className="explore-hero">
           <div className="explore-hero-content">
             <h1>
-              Find your Host<span className="accent">.</span> Anywhere<span className="accent">.</span>
+              Find your Host<span className="accent">.</span> Anywhere
+              <span className="accent">.</span>
             </h1>
             <p>Search and filter hosts by location, sport, gender, level, and equipment.</p>
             <section className="explore-filters">
@@ -207,7 +299,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                     value={selectedCountry}
                     onChange={(event) => {
                       setSelectedCountry(event.target.value);
-                      setSelectedCity("All");
+                      setSelectedCity("My Location");
                     }}
                   >
                     {countryOptions.map((c) => (
@@ -223,7 +315,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                     id="filter-city"
                     value={selectedCity}
                     onChange={(event) => setSelectedCity(event.target.value)}
-                    disabled={cityOptions.length <= 1}
+                    disabled={cityOptions.length <= 2}
                   >
                     {cityOptions.map((c) => (
                       <option key={c} value={c}>
@@ -288,6 +380,18 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                 </div>
               </div>
             </section>
+
+            <section className="explore-map-section">
+              {geoStatus === "pending" && (
+                <p className="explore-geo-notice">📍 Requesting your location…</p>
+              )}
+              {geoStatus === "denied" && (
+                <p className="explore-geo-notice">
+                  📍 Location access denied — showing all hosts.
+                </p>
+              )}
+              <ExploreMap hosts={visibleHosts} userLocation={userLocation} />
+            </section>
           </div>
         </section>
 
@@ -310,41 +414,69 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                 {pagedHosts.map((host) => {
                   const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                   const hasEquipment = host.sports.some((s) => s.equipment_available);
-                  const levels = [...new Set(host.sports.map((s) => s.level).filter(Boolean))];
+                  const levels = [
+                    ...new Set(host.sports.map((s) => s.level).filter(Boolean)),
+                  ];
                   return (
-                    <Link to={`/buddy/${host.userId}`} state={{ from: "explore" }} key={host.id} className="local-card-link">
+                    <Link
+                      to={`/buddy/${host.userId}`}
+                      state={{ from: "explore" }}
+                      key={host.id}
+                      className="local-card-link"
+                    >
                       <article className="field-card">
                         <div className="field-host-row">
                           {host.photo ? (
-                            <img src={host.photo} alt={host.name} className="field-host-avatar" />
+                            <img
+                              src={host.photo}
+                              alt={host.name}
+                              className="field-host-avatar"
+                            />
                           ) : (
                             <div className="field-host-avatar field-host-avatar-fallback">
-                              {String(host.name ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
+                              {String(host.name ?? "?")
+                                .trim()
+                                .split(" ")
+                                .filter(Boolean)
+                                .slice(0, 2)
+                                .map((w) => w[0].toUpperCase())
+                                .join("") || "?"}
                             </div>
                           )}
                           <div>
                             <p>
                               <span className="field-host-name">{host.name}</span>
-                              {locationLine && <span className="field-host-city"> · {locationLine}</span>}
+                              {locationLine && (
+                                <span className="field-host-city"> · {locationLine}</span>
+                              )}
                             </p>
                             <div className="local-sport-pills">
                               {host.sports.slice(0, 3).map((s) => (
-                                <span key={s.id} className="sport-pill">{s.sport}</span>
+                                <span key={s.id} className="sport-pill">
+                                  {s.sport}
+                                </span>
                               ))}
                             </div>
                           </div>
                         </div>
                         {host.photo ? (
-                          <img src={host.photo} alt={host.name} className="field-post-photo" />
+                          <img
+                            src={host.photo}
+                            alt={host.name}
+                            className="field-post-photo"
+                          />
                         ) : (
                           <div className="field-post-photo-placeholder" />
                         )}
                         <p className="field-meta">
                           {[
-                            (host.gender || getAgeFromBirthday(host.birthday)) && `👤 ${[host.gender, getAgeFromBirthday(host.birthday)].filter(Boolean).join(", ")}`,
+                            (host.gender || getAgeFromBirthday(host.birthday)) &&
+                              `👤 ${[host.gender, getAgeFromBirthday(host.birthday)].filter(Boolean).join(", ")}`,
                             levels.length > 0 && `🏅 ${levels.join(", ")}`,
                             `🎒 ${hasEquipment ? "Yes" : "No"}`,
-                          ].filter(Boolean).join(" · ")}
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </p>
                       </article>
                     </Link>
