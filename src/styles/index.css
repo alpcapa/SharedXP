@@ -1451,6 +1451,7 @@ body {
 
 .host-settings-top-bar {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
 }
