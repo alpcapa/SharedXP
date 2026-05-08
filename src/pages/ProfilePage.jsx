@@ -676,6 +676,9 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             </h1>
             {isOwnProfile && (
               <div className="profile-summary-actions">
+                <Link to="/user-profile" className="btn btn-primary">
+                  My Profile
+                </Link>
                 <Link to="/host-settings" className="btn btn-primary">
                   Host Settings
                 </Link>

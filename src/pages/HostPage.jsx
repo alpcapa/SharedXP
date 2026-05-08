@@ -221,11 +221,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                   : "Manage your sport offerings and payment details."}
               </p>
             </div>
-            <div className="host-settings-top-actions">
-              <Link to="/user-profile" className="btn btn-light">
-                My Profile
-              </Link>
-              <div className="pause-hosting-group">
+            <div className="pause-hosting-group">
               <label className="hosting-pause-toggle" htmlFor="pauseHosting">
                 <span>{isHostingPaused ? "Resume Hosting" : "Pause Hosting"}</span>
                 <input
@@ -267,7 +263,6 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
                   </button>
                 </div>
               )}
-              </div>
             </div>
           </div>
 
