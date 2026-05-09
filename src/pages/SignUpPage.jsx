@@ -333,46 +333,8 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
           <section className="auth-content">
             <h1>Create your account</h1>
             <p>
-              Sign up with Google, Apple, or email. Phone is required for all
-              verified accounts.
+              Sign up with your email. Phone is required for all verified accounts.
             </p>
-
-            <div className="auth-social-grid">
-              <button
-                type="button"
-                className="btn btn-light social-btn"
-                onClick={() => {
-                  const redirect =
-                    sessionStorage.getItem("postAuthRedirect") ||
-                    location.state?.from?.pathname ||
-                    "/";
-                  sessionStorage.removeItem("postAuthRedirect");
-                  onSocialLogin?.("google");
-                  navigate(redirect);
-                }}
-              >
-                Continue with Google
-              </button>
-              <button
-                type="button"
-                className="btn btn-light social-btn"
-                onClick={() => {
-                  const redirect =
-                    sessionStorage.getItem("postAuthRedirect") ||
-                    location.state?.from?.pathname ||
-                    "/";
-                  sessionStorage.removeItem("postAuthRedirect");
-                  onSocialLogin?.("apple");
-                  navigate(redirect);
-                }}
-              >
-                Continue with Apple
-              </button>
-            </div>
-
-            <div className="auth-divider">
-              <span>or sign up with email</span>
-            </div>
 
             {!pendingVerification ? (
               <SignUpForm

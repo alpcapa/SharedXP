@@ -285,15 +285,33 @@ let profile = profileResult.data?.[0] ?? null;
 
 if (!profile) {
   const meta = authUser.user_metadata?.sharedxp_pending_profile;
-  profile = meta
-    ? metaToProfileShape(meta, authUser)
-    : { email: authUser.email };
+  if (meta) {
+    profile = metaToProfileShape(meta, authUser);
+  } else {
+    // OAuth sign-in (Google / Apple) — seed profile from provider metadata
+    const om = authUser.user_metadata || {};
+    const fullName = om.full_name || om.name || "";
+    const [firstName = "", ...rest] = fullName.split(" ");
+    profile = {
+      email: authUser.email,
+      full_name: fullName,
+      first_name: firstName,
+      last_name: rest.join(" "),
+      photo_url: om.avatar_url || om.picture || "",
+      is_host: false,
+      signed_up_at: authUser.created_at || new Date().toISOString(),
+    };
+  }
   await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
 }
 
 if (!profile.photo_url) {
+  const om = authUser.user_metadata || {};
   const metaPhotoUrl =
-    authUser.user_metadata?.sharedxp_pending_profile?.photoUrl || "";
+    om.sharedxp_pending_profile?.photoUrl ||
+    om.avatar_url ||
+    om.picture ||
+    "";
   if (metaPhotoUrl) {
     profile = { ...profile, photo_url: metaPhotoUrl };
     await supabase

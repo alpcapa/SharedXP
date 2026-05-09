@@ -42,38 +42,7 @@ const LoginPage = ({ currentUser, onLogout, onEmailLogin, onSocialLogin }) => {
         <main className="middle-section auth-page">
           <section className="auth-content">
             <h1>Log in</h1>
-            <p>Continue with Google, Apple, or your email account.</p>
-
-            <div className="auth-social-grid">
-              <button
-                type="button"
-                className="btn btn-light social-btn"
-                onClick={() => {
-                  if (destination && destination !== "/") {
-                    sessionStorage.setItem("postAuthRedirect", destination);
-                  }
-                  onSocialLogin?.("google");
-                }}
-              >
-                Continue with Google
-              </button>
-              <button
-                type="button"
-                className="btn btn-light social-btn"
-                onClick={() => {
-                  if (destination && destination !== "/") {
-                    sessionStorage.setItem("postAuthRedirect", destination);
-                  }
-                  onSocialLogin?.("apple");
-                }}
-              >
-                Continue with Apple
-              </button>
-            </div>
-
-            <div className="auth-divider">
-              <span>or continue with email</span>
-            </div>
+            <p>Log in with your email account.</p>
 
             <form className="auth-form" onSubmit={onSubmit}>
               <label htmlFor="login-email">Email</label>
