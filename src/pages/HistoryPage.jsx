@@ -67,6 +67,7 @@ const HistoryPage = ({
   const {
     requests: bookingRequests,
     loading: requestsLoading,
+    fetchError: bookingFetchError,
     unreadCounts,
     acceptRequest,
     declineRequest,
@@ -452,6 +453,10 @@ const HistoryPage = ({
           {selectedRole === "pending" ? (
             requestsLoading ? (
               <p className="history-loading">Loading…</p>
+            ) : bookingFetchError ? (
+              <p style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:8,padding:"12px 16px",fontSize:13,color:"#7f1d1d",marginTop:12}}>
+                Debug: {bookingFetchError}
+              </p>
             ) : bookingRequests.length ? (
               <div className="history-list">
                 {bookingRequests.map((req) => (

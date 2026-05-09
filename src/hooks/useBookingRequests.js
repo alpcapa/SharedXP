@@ -7,6 +7,7 @@ export const useBookingRequests = (currentUser) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [fetchError, setFetchError] = useState(null);
 
   const fetchRequests = useCallback(async () => {
     if (!currentUser?.id) return;
@@ -20,11 +21,12 @@ export const useBookingRequests = (currentUser) => {
 
     if (error) {
       console.error("[useBookingRequests] booking_requests query failed:", error);
+      setFetchError(`Query error: ${error.message || JSON.stringify(error)}`);
     }
 
     if (!error) {
       const rows = data ?? [];
-      console.log("[useBookingRequests] rows fetched:", rows.length, rows.map(r => ({ id: r.id, status: r.status, host_id: r.host_id, requester_id: r.requester_id })));
+      setFetchError(rows.length === 0 ? `Query OK but 0 rows returned (user id: ${currentUser.id})` : null);
 
       // Fetch profiles separately to avoid PostgREST's INNER JOIN semantics on
       // NOT NULL FKs, which would silently drop booking_request rows whenever
@@ -244,6 +246,7 @@ export const useBookingRequests = (currentUser) => {
   return {
     requests,
     loading,
+    fetchError,
     unreadCounts,
     fetchRequests,
     acceptRequest,
