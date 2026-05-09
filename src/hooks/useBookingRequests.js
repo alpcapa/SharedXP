@@ -7,58 +7,22 @@ export const useBookingRequests = (currentUser) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState({});
-  const [fetchError, setFetchError] = useState(null);
 
   const fetchRequests = useCallback(async () => {
     if (!currentUser?.id) return;
     setLoading(true);
-
     const { data, error } = await supabase
       .from("booking_requests")
-      .select("*")
+      .select(`
+        *,
+        host_profile:profiles!host_id(full_name, first_name, last_name, photo_url, is_host),
+        requester_profile:profiles!requester_id(full_name, first_name, last_name, photo_url, is_host)
+      `)
       .or(`requester_id.eq.${currentUser.id},host_id.eq.${currentUser.id}`)
       .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("[useBookingRequests] booking_requests query failed:", error);
-      setFetchError(`Query error: ${error.message || JSON.stringify(error)}`);
-    }
-
     if (!error) {
       const rows = data ?? [];
-      setFetchError(rows.length === 0 ? `Query OK but 0 rows returned (user id: ${currentUser.id})` : null);
-
-      // Fetch profiles separately to avoid PostgREST's INNER JOIN semantics on
-      // NOT NULL FKs, which would silently drop booking_request rows whenever
-      // a requester's profile is blocked by RLS (non-host profiles are only
-      // readable by their owner after migration 015).
-      const profileIds = [
-        ...new Set(
-          rows.flatMap((r) => [r.host_id, r.requester_id]).filter(Boolean)
-        ),
-      ];
-      const profileMap = {};
-      if (profileIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select("id, full_name, first_name, last_name, photo_url, is_host")
-          .in("id", profileIds);
-        if (profilesError) {
-          console.error("[useBookingRequests] profiles query failed:", profilesError);
-        }
-        for (const p of profiles ?? []) {
-          profileMap[p.id] = p;
-        }
-      }
-
-      const enrichedRows = rows.map((r) => ({
-        ...r,
-        host_profile: profileMap[r.host_id] ?? null,
-        requester_profile: profileMap[r.requester_id] ?? null,
-      }));
-
-      setRequests(enrichedRows);
-
+      setRequests(rows);
       const ids = rows.map((r) => r.id);
       if (ids.length > 0) {
         const { data: unread } = await supabase
