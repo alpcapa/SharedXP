@@ -68,6 +68,12 @@ body {
   margin-top: 10px;
 }
 
+.auth-hero + .middle-section.simple-page,
+.auth-hero + .middle-section.auth-page {
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
 .auth-hero + .profile-summary {
   margin-top: 10px;
 }
@@ -1107,6 +1113,7 @@ body {
 }
 
 .auth-page {
+  padding-bottom: 28px;
 }
 
 .auth-card {
@@ -1127,6 +1134,12 @@ body {
 }
 
 .auth-content {
+  width: min(560px, 100%);
+  margin-inline: auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .auth-content h1 {
