@@ -210,7 +210,6 @@ export const useBookingRequests = (currentUser) => {
   return {
     requests,
     loading,
-    fetchError,
     unreadCounts,
     fetchRequests,
     acceptRequest,
