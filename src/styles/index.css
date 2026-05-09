@@ -74,8 +74,8 @@ body {
   margin-top: 10px;
 }
 
-.auth-hero + .middle-section > .simple-page {
-  margin-top: 20px;
+.auth-hero + .middle-section.legal-content {
+  padding-top: 20px;
 }
 
 .auth-hero + .profile-summary {

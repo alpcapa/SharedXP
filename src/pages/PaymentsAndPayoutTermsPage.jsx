@@ -9,7 +9,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section">
+        <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Payments and Payout Terms</h1>
             <p className="legal-last-updated">Last updated: April 19, 2026</p>
