@@ -11,18 +11,41 @@ export const useBookingRequests = (currentUser) => {
   const fetchRequests = useCallback(async () => {
     if (!currentUser?.id) return;
     setLoading(true);
+
     const { data, error } = await supabase
       .from("booking_requests")
-      .select(`
-        *,
-        host_profile:profiles!host_id(full_name, first_name, last_name, photo_url, is_host),
-        requester_profile:profiles!requester_id(full_name, first_name, last_name, photo_url, is_host)
-      `)
+      .select("*")
       .or(`requester_id.eq.${currentUser.id},host_id.eq.${currentUser.id}`)
       .order("created_at", { ascending: false });
+
     if (!error) {
       const rows = data ?? [];
-      setRequests(rows);
+
+      // Fetch profiles separately to avoid RLS recursion.
+      // The profiles_booking_read policy queries booking_requests; using an
+      // inline PostgREST join would evaluate that policy inside a
+      // booking_requests query context, causing a recursive RLS loop.
+      const profileIds = [
+        ...new Set(
+          rows.flatMap((r) => [r.host_id, r.requester_id]).filter(Boolean),
+        ),
+      ];
+      let profileMap = {};
+      if (profileIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, first_name, last_name, photo_url, is_host")
+          .in("id", profileIds);
+        for (const p of profiles ?? []) profileMap[p.id] = p;
+      }
+
+      const enrichedRows = rows.map((r) => ({
+        ...r,
+        host_profile: profileMap[r.host_id] ?? null,
+        requester_profile: profileMap[r.requester_id] ?? null,
+      }));
+
+      setRequests(enrichedRows);
       const ids = rows.map((r) => r.id);
       if (ids.length > 0) {
         const { data: unread } = await supabase
