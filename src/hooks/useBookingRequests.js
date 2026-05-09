@@ -18,8 +18,13 @@ export const useBookingRequests = (currentUser) => {
       .or(`requester_id.eq.${currentUser.id},host_id.eq.${currentUser.id}`)
       .order("created_at", { ascending: false });
 
+    if (error) {
+      console.error("[useBookingRequests] booking_requests query failed:", error);
+    }
+
     if (!error) {
       const rows = data ?? [];
+      console.log("[useBookingRequests] rows fetched:", rows.length, rows.map(r => ({ id: r.id, status: r.status, host_id: r.host_id, requester_id: r.requester_id })));
 
       // Fetch profiles separately to avoid PostgREST's INNER JOIN semantics on
       // NOT NULL FKs, which would silently drop booking_request rows whenever
@@ -32,10 +37,13 @@ export const useBookingRequests = (currentUser) => {
       ];
       const profileMap = {};
       if (profileIds.length > 0) {
-        const { data: profiles } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select("id, full_name, first_name, last_name, photo_url, is_host")
           .in("id", profileIds);
+        if (profilesError) {
+          console.error("[useBookingRequests] profiles query failed:", profilesError);
+        }
         for (const p of profiles ?? []) {
           profileMap[p.id] = p;
         }
