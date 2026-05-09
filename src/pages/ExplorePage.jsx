@@ -111,10 +111,11 @@ const ExplorePage = ({ currentUser, onLogout }) => {
           // Reverse geocode failed — filters stay in "show all" mode
         }
       },
-      () => {
-        if (!cancelled) setGeoStatus("denied");
+      (err) => {
+        if (!cancelled)
+          setGeoStatus(err.code === 1 ? "denied" : "unavailable");
       },
-      { timeout: 10000 }
+      { timeout: 15000, enableHighAccuracy: false }
     );
 
     return () => {
@@ -392,6 +393,11 @@ const ExplorePage = ({ currentUser, onLogout }) => {
               {geoStatus === "denied" && (
                 <p className="explore-geo-notice">
                   📍 Location access denied — showing all hosts.
+                </p>
+              )}
+              {geoStatus === "unavailable" && (
+                <p className="explore-geo-notice">
+                  📍 Could not determine your location — showing all hosts.
                 </p>
               )}
               <ExploreMap hosts={visibleHosts} userLocation={userLocation} />
