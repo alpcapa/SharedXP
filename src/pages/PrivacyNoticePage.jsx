@@ -12,7 +12,7 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Privacy Notice</h1>
-            <p className="legal-last-updated">Last updated: April 19, 2026</p>
+            <p className="legal-last-updated">Last updated: May 10, 2026</p>
             <p>
               This Privacy Notice explains how SharedXP collects and uses personal data for account access, host
               onboarding, booking workflows, support, and platform security. It is drafted using GDPR transparency
@@ -36,6 +36,11 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
                 <li>Host operations data (offer details, schedule information, payout setup metadata).</li>
                 <li>Technical and security data (device/browser logs, authentication events, anti-abuse signals).</li>
                 <li>Communications data (messages submitted via support or legal contact channels).</li>
+                <li>
+                  <strong>Loyalty program data:</strong> XP (Experience Points) balances derived from payment
+                  amounts, earning history linked to your invoices, and usage of the Payment History feature.
+                  This data is used to operate and display the SharedXP Loyalty Program.
+                </li>
               </ul>
             </section>
 
@@ -52,12 +57,12 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
               <h2>4. Purposes and Legal Bases</h2>
               <ul>
                 <li>
-                  <strong>Contract performance:</strong> account management, booking flow, and host/participant
-                  coordination.
+                  <strong>Contract performance:</strong> account management, booking flow, host/participant
+                  coordination, and loyalty program operation (XP calculation and display).
                 </li>
                 <li>
-                  <strong>Legitimate interests:</strong> service reliability, platform safety, anti-fraud checks, and
-                  product quality improvements.
+                  <strong>Legitimate interests:</strong> service reliability, platform safety, anti-fraud checks,
+                  product quality improvements, and loyalty program integrity.
                 </li>
                 <li>
                   <strong>Legal obligations:</strong> tax, anti-money-laundering, legal notices, and lawful authority

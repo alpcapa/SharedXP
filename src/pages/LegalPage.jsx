@@ -13,7 +13,7 @@ const LegalPage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Legal Center</h1>
-            <p className="legal-last-updated">Last updated: April 19, 2026</p>
+            <p className="legal-last-updated">Last updated: May 10, 2026</p>
             <section className="legal-section">
               <h2>1. Scope of this Legal Center</h2>
               <p>
@@ -27,15 +27,16 @@ const LegalPage = ({ currentUser, onLogout }) => {
               <ul>
                 <li>
                   <strong>Terms &amp; Conditions</strong> (available at <Link to="/terms-and-conditions">/terms-and-conditions</Link>):
-                  governs account use, bookings, conduct rules, and platform limitations.
+                  governs account use, bookings, conduct rules, platform limitations, and the XP Loyalty Program.
                 </li>
                 <li>
-                  <strong>Privacy Notice</strong>: explains what account, booking, and usage data is collected, how it is
-                  processed, and user rights by jurisdiction. Read at <Link to="/privacy-notice">/privacy-notice</Link>.
+                  <strong>Privacy Notice</strong>: explains what account, booking, loyalty, and usage data is collected,
+                  how it is processed, and user rights by jurisdiction. Read at{" "}
+                  <Link to="/privacy-notice">/privacy-notice</Link>.
                 </li>
                 <li>
                   <strong>Payments and Payout Terms</strong>: defines payment processor roles, fee logic, payout timing,
-                  verification checks, reserves, and reversals. Read at{" "}
+                  verification checks, reserves, reversals, and XP earning rules. Read at{" "}
                   <Link to="/payments-and-payout-terms">/payments-and-payout-terms</Link>.
                 </li>
                 <li>
@@ -53,6 +54,21 @@ const LegalPage = ({ currentUser, onLogout }) => {
                   disclaimers. Read at <Link to="/disclaimers">/disclaimers</Link>.
                 </li>
               </ul>
+            </section>
+
+            <section className="legal-section">
+              <h2>2a. SharedXP Loyalty Program (XP)</h2>
+              <p>
+                SharedXP operates a loyalty reward system called <strong>XP (Experience Points)</strong>. Participants
+                earn 1 XP for every whole currency unit spent on a paid experience, regardless of currency. XP has no
+                monetary value and is subject to the rules set out in the Terms &amp; Conditions (Section 5) and
+                Payments and Payout Terms (Section 11).
+              </p>
+              <p>
+                XP balances and invoice history are accessible from the{" "}
+                <strong>Payment History</strong> page (profile menu → Payment History when logged in). The loyalty
+                program is in its foundation phase; additional benefits will be communicated when introduced.
+              </p>
             </section>
 
             <section className="legal-section">

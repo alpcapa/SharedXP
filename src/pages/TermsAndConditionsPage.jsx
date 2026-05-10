@@ -13,7 +13,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Terms &amp; Conditions</h1>
-            <p className="legal-last-updated">Last updated: April 19, 2026</p>
+            <p className="legal-last-updated">Last updated: May 10, 2026</p>
             <p>
               These Terms &amp; Conditions (&quot;Terms&quot;) govern your access to and use of the SharedXP platform
               (the &quot;Platform&quot;), including the website, product features, and related services. By using
@@ -74,7 +74,46 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>5. Pricing, Payments, and Payouts</h2>
+              <h2>5. XP Loyalty Program</h2>
+              <p>
+                SharedXP operates a loyalty reward system called <strong>XP (Experience Points)</strong>.
+                XP is a non-monetary benefit awarded to participants for activity on the Platform.
+              </p>
+              <ul>
+                <li>
+                  Every whole currency unit spent on a completed, paid experience earns the participant{" "}
+                  <strong>1 XP Point</strong>, regardless of which currency is used. Fractional units
+                  are rounded down (e.g. €45.90 earns 45 XP).
+                </li>
+                <li>
+                  XP is awarded at the time of payment and is displayed in your Payment History.
+                </li>
+                <li>
+                  XP Points have <strong>no monetary value</strong> and cannot be exchanged for cash,
+                  credit, or transferred to another account.
+                </li>
+                <li>
+                  SharedXP reserves the right to modify, suspend, or discontinue the XP program at any
+                  time, including adjusting earning rates, redemption rules, or expiry conditions, with
+                  reasonable notice where practicable.
+                </li>
+                <li>
+                  XP earned through fraudulent, reversed, or disputed transactions that result in a
+                  refund may be reclaimed by SharedXP.
+                </li>
+                <li>
+                  The XP program is in its foundation phase. Additional benefits, tiers, and redemption
+                  mechanisms will be communicated when introduced.
+                </li>
+              </ul>
+              <p>
+                Full details on how XP is calculated and displayed are available in your{" "}
+                <Link to="/payment-history">Payment History</Link>.
+              </p>
+            </section>
+
+            <section className="legal-section">
+              <h2>6. Pricing, Payments, and Payouts</h2>
               <p>
                 Detailed payment and payout processing terms are available at{" "}
                 <Link to="/payments-and-payout-terms">/payments-and-payout-terms</Link>.
@@ -96,7 +135,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>6. Host Responsibilities</h2>
+              <h2>7. Host Responsibilities</h2>
               <ul>
                 <li>Provide truthful information about identity, sport expertise, availability, and equipment.</li>
                 <li>Maintain safe and suitable conditions for hosted experiences.</li>
@@ -106,7 +145,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>7. Participant Responsibilities</h2>
+              <h2>8. Participant Responsibilities</h2>
               <ul>
                 <li>Provide accurate booking and profile information.</li>
                 <li>Assess your physical readiness and medical suitability before participating in activities.</li>
@@ -116,7 +155,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>8. Safety, Risk Assumption, and Conduct</h2>
+              <h2>9. Safety, Risk Assumption, and Conduct</h2>
               <p>
                 Sports and outdoor activities can involve physical risk. By participating in any experience, you
                 understand and accept those risks. SharedXP is not an insurer, coach, medical provider, or event
@@ -130,7 +169,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>9. User Content, Reviews, and Media</h2>
+              <h2>10. User Content, Reviews, and Media</h2>
               <p>
                 Content rights and infringement process details are available at{" "}
                 <Link to="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</Link>.
@@ -146,7 +185,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>10. Prohibited Activities</h2>
+              <h2>11. Prohibited Activities</h2>
               <ul>
                 <li>Impersonation, identity fraud, or false profile information.</li>
                 <li>Harassment, hate speech, threats, or violent behavior.</li>
@@ -156,7 +195,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>11. Suspension and Termination</h2>
+              <h2>12. Suspension and Termination</h2>
               <p>
                 SharedXP may suspend or terminate access to the Platform for violations of these Terms, suspected
                 fraud, safety concerns, legal requirements, or operational reasons. You may stop using the Platform at
@@ -165,7 +204,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>12. Data and Privacy</h2>
+              <h2>13. Data and Privacy</h2>
               <p>
                 SharedXP processes account and usage data to provide platform functionality. Some features in this
                 product store data locally in your browser environment. By using the Platform, you agree to such
@@ -177,7 +216,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>13. Disclaimers</h2>
+              <h2>14. Disclaimers</h2>
               <p>
                 The Platform is provided on an &quot;as is&quot; and &quot;as available&quot; basis, without warranties of any
                 kind to the maximum extent permitted by law. SharedXP does not guarantee uninterrupted availability,
@@ -189,7 +228,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>14. Limitation of Liability</h2>
+              <h2>15. Limitation of Liability</h2>
               <p>
                 To the maximum extent permitted by law, SharedXP will not be liable for indirect, incidental,
                 special, consequential, or punitive damages, including lost profits, lost data, personal injury, or
@@ -198,7 +237,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>15. Indemnification</h2>
+              <h2>16. Indemnification</h2>
               <p>
                 You agree to indemnify and hold harmless SharedXP and its affiliates, officers, and personnel from
                 claims, losses, liabilities, and expenses arising from your use of the Platform, your content, your
@@ -207,7 +246,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>16. Changes to These Terms</h2>
+              <h2>17. Changes to These Terms</h2>
               <p>
                 SharedXP may update these Terms from time to time. Continued use of the Platform after updates become
                 effective constitutes acceptance of the revised Terms.
@@ -215,7 +254,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>17. Contact</h2>
+              <h2>18. Contact</h2>
               <p>
                 If you have questions about these Terms, please contact SharedXP through the official support or
                 communication channels made available on the Platform.

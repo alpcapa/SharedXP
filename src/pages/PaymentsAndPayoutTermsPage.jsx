@@ -12,7 +12,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Payments and Payout Terms</h1>
-            <p className="legal-last-updated">Last updated: April 19, 2026</p>
+            <p className="legal-last-updated">Last updated: May 10, 2026</p>
             <p>
               These terms explain how SharedXP handles participant payments, host payouts, fee disclosures, and payment
               risk controls. They reflect common EU marketplace practices and should be read together with the Terms
@@ -107,7 +107,48 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>11. Changes and Contact</h2>
+              <h2>11. XP Loyalty Points and Payment History</h2>
+              <p>
+                SharedXP awards <strong>XP (Experience Points)</strong> to participants based on amounts paid for
+                experiences. The following rules apply to XP earned through payments:
+              </p>
+              <ul>
+                <li>
+                  <strong>Earning rate:</strong> 1 XP Point is awarded for every whole currency unit of the
+                  gross payment amount (the total charged to the participant). Fractional units are rounded
+                  down. For example, a payment of €45.90 earns 45 XP.
+                </li>
+                <li>
+                  <strong>Currency independence:</strong> XP is awarded based on the face value of the payment
+                  amount, regardless of the currency used. No cross-currency normalization is applied.
+                </li>
+                <li>
+                  <strong>Timing:</strong> XP is credited at the time of successful payment and is visible in
+                  the participant's Payment History.
+                </li>
+                <li>
+                  <strong>No monetary value:</strong> XP Points are non-monetary and cannot be exchanged for
+                  cash, refunds, or discounts unless explicitly stated in a future program update.
+                </li>
+                <li>
+                  <strong>Reversals and refunds:</strong> XP earned on a transaction that is subsequently
+                  reversed, refunded, or resolved in favour of the participant (via dispute) may be reclaimed
+                  by SharedXP. Chargebacks that succeed will result in XP reversal for the associated payment.
+                </li>
+                <li>
+                  <strong>Program changes:</strong> SharedXP reserves the right to modify XP earning rates,
+                  introduce caps, or adjust program terms with reasonable notice.
+                </li>
+              </ul>
+              <p>
+                Participants can view their full payment and invoice history, including XP earned per
+                transaction, at <strong>Payment History</strong> (accessible from the profile menu when
+                logged in).
+              </p>
+            </section>
+
+            <section className="legal-section">
+              <h2>12. Changes and Contact</h2>
               <p>
                 SharedXP may update these terms to reflect legal or operational changes. Questions can be submitted
                 through official support/legal channels on the platform.

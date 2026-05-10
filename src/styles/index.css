@@ -5435,3 +5435,550 @@ body {
   }
 }
 
+/* ── Payment History page ─────────────────────────── */
+.payment-history-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 40px;
+}
+
+.payment-history-header {
+  background: #fff;
+  border: 1px solid #e6e7e2;
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.payment-history-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.payment-history-title {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #141a1f;
+}
+
+.payment-history-subtitle {
+  margin: 8px 0 0;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ── XP badge ─────────────────────────────────────── */
+.payment-history-xp-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #96c93d 0%, #6ca43b 100%);
+  border-radius: 32px;
+  padding: 8px 16px;
+  flex-shrink: 0;
+}
+
+.xp-badge-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.xp-badge-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.xp-info-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  background: transparent;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: background 0.15s;
+}
+
+.xp-info-trigger:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.xp-info-trigger--sm {
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  border-color: #6ca43b;
+  color: #6ca43b;
+  border-width: 1.5px;
+}
+
+.xp-info-trigger--sm:hover {
+  background: rgba(108, 164, 59, 0.1);
+}
+
+.xp-inline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #6ca43b;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.xp-inline-link:hover {
+  color: #4e8a2b;
+}
+
+/* ── XP info popup ────────────────────────────────── */
+.xp-info-box {
+  max-width: 420px;
+}
+
+/* ── Payment history filters ──────────────────────── */
+.payment-history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  background: #fff;
+  border: 1px solid #e6e7e2;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.payment-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.payment-filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #596164;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.payment-filter-group select,
+.payment-filter-group input[type="date"] {
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #d1d8cd;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #141a1f;
+  background: #fafaf8;
+  cursor: pointer;
+  min-width: 130px;
+}
+
+.payment-filter-group select:focus,
+.payment-filter-group input[type="date"]:focus {
+  outline: none;
+  border-color: #6ca43b;
+}
+
+.payment-filter-reset {
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #d1d8cd;
+  border-radius: 8px;
+  background: #fff;
+  color: #596164;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  align-self: flex-end;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.payment-filter-reset:hover {
+  border-color: #96c93d;
+  color: #3a5a1a;
+}
+
+/* ── Invoice list ─────────────────────────────────── */
+.payment-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payment-invoice-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid #e6e7e2;
+  border-radius: 14px;
+  padding: 18px 22px;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+}
+
+.payment-invoice-card:hover {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
+  border-color: #c8d9bb;
+}
+
+.invoice-card-chevron {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 22px;
+  color: #c4cac7;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.invoice-card-chevron-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  line-height: 1;
+}
+
+.payment-invoice-card:hover .invoice-card-chevron {
+  color: #6ca43b;
+}
+
+.invoice-card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.invoice-sport {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #141a1f;
+  text-transform: capitalize;
+}
+
+.invoice-host {
+  margin: 0;
+  font-size: 13px;
+  color: #596164;
+}
+
+.invoice-date {
+  margin: 0;
+  font-size: 13px;
+  color: #374151;
+}
+
+.invoice-paid-on {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.invoice-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.invoice-amount {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #141a1f;
+}
+
+.invoice-currency {
+  font-size: 12px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.invoice-xp {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6ca43b;
+}
+
+.invoice-status {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.invoice-status--released {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.invoice-status--paid {
+  background: #fef9c3;
+  color: #92400e;
+}
+
+/* ── Summary row ──────────────────────────────────── */
+.payment-history-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 22px;
+  background: #f9faf7;
+  border: 1px solid #e6e7e2;
+  border-radius: 12px;
+  margin-top: 4px;
+}
+
+.payment-summary-count {
+  font-size: 14px;
+  color: #596164;
+}
+
+.payment-summary-total {
+  color: #141a1f;
+}
+
+.payment-summary-xp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* ── Empty state ──────────────────────────────────── */
+.payment-history-empty {
+  background: #fff;
+  border: 1px solid #e6e7e2;
+  border-radius: 14px;
+  padding: 48px 28px;
+  text-align: center;
+}
+
+.payment-history-empty-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #141a1f;
+}
+
+.payment-history-empty-sub {
+  margin: 0;
+  color: #596164;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.payment-history-empty-sub a {
+  color: #6ca43b;
+  font-weight: 600;
+}
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 600px) {
+  .payment-history-header {
+    padding: 18px 16px;
+  }
+
+  .payment-history-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .payment-invoice-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .invoice-card-right {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .payment-history-filters {
+    padding: 14px;
+  }
+
+  .payment-filter-group select,
+  .payment-filter-group input[type="date"] {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* ── XP popup footer (link + OK button row) ───────── */
+.xp-popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.xp-loyalty-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6ca43b;
+  text-decoration: none;
+}
+
+.xp-loyalty-link:hover {
+  text-decoration: underline;
+  color: #4e8a2b;
+}
+
+/* ── Invoice detail modal ─────────────────────────── */
+.invoice-detail-box {
+  max-width: 460px;
+  width: 100%;
+}
+
+.invoice-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.invoice-detail-sport {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #141a1f;
+  text-transform: capitalize;
+}
+
+.invoice-detail-host {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #596164;
+}
+
+.invoice-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.invoice-detail-row--sub {
+  padding: 3px 0;
+}
+
+.invoice-detail-row--net {
+  padding: 6px 0 4px;
+  font-weight: 600;
+}
+
+.invoice-detail-label {
+  font-size: 14px;
+  color: #596164;
+}
+
+.invoice-detail-row--sub .invoice-detail-label {
+  font-size: 13px;
+  padding-left: 12px;
+}
+
+.invoice-detail-value {
+  font-size: 14px;
+  color: #141a1f;
+  font-weight: 500;
+  text-align: right;
+}
+
+.invoice-detail-total {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.invoice-detail-deduct {
+  color: #596164;
+  font-weight: 400;
+}
+
+.invoice-detail-section-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+}
+
+.invoice-detail-divider {
+  height: 1px;
+  background: #e6e7e2;
+  margin: 14px 0;
+}
+
+.invoice-detail-xp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0 10px;
+}
+
+.invoice-detail-xp-label {
+  font-size: 14px;
+  color: #596164;
+}
+
+.invoice-detail-xp-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #6ca43b;
+}
+
+.invoice-detail-ref {
+  font-size: 11px;
+  color: #9ca3af;
+  word-break: break-all;
+  margin-bottom: 4px;
+}
+
+.invoice-detail-ref span {
+  font-family: monospace;
+}
+
