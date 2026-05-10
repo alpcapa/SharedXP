@@ -5637,11 +5637,28 @@ body {
   border: 1px solid #e6e7e2;
   border-radius: 14px;
   padding: 18px 22px;
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
 }
 
 .payment-invoice-card:hover {
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
+  border-color: #c8d9bb;
+}
+
+.invoice-card-chevron {
+  font-size: 22px;
+  color: #c4cac7;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.payment-invoice-card:hover .invoice-card-chevron {
+  color: #6ca43b;
 }
 
 .invoice-card-left {
@@ -5815,5 +5832,143 @@ body {
     min-width: 0;
     width: 100%;
   }
+}
+
+/* ── XP popup footer (link + OK button row) ───────── */
+.xp-popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.xp-loyalty-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6ca43b;
+  text-decoration: none;
+}
+
+.xp-loyalty-link:hover {
+  text-decoration: underline;
+  color: #4e8a2b;
+}
+
+/* ── Invoice detail modal ─────────────────────────── */
+.invoice-detail-box {
+  max-width: 460px;
+  width: 100%;
+}
+
+.invoice-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.invoice-detail-sport {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #141a1f;
+  text-transform: capitalize;
+}
+
+.invoice-detail-host {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #596164;
+}
+
+.invoice-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.invoice-detail-row--sub {
+  padding: 3px 0;
+}
+
+.invoice-detail-row--net {
+  padding: 6px 0 4px;
+  font-weight: 600;
+}
+
+.invoice-detail-label {
+  font-size: 14px;
+  color: #596164;
+}
+
+.invoice-detail-row--sub .invoice-detail-label {
+  font-size: 13px;
+  padding-left: 12px;
+}
+
+.invoice-detail-value {
+  font-size: 14px;
+  color: #141a1f;
+  font-weight: 500;
+  text-align: right;
+}
+
+.invoice-detail-total {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.invoice-detail-deduct {
+  color: #596164;
+  font-weight: 400;
+}
+
+.invoice-detail-section-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+}
+
+.invoice-detail-divider {
+  height: 1px;
+  background: #e6e7e2;
+  margin: 14px 0;
+}
+
+.invoice-detail-xp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0 10px;
+}
+
+.invoice-detail-xp-label {
+  font-size: 14px;
+  color: #596164;
+}
+
+.invoice-detail-xp-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #6ca43b;
+}
+
+.invoice-detail-ref {
+  font-size: 11px;
+  color: #9ca3af;
+  word-break: break-all;
+  margin-bottom: 4px;
+}
+
+.invoice-detail-ref span {
+  font-family: monospace;
 }
 

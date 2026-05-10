@@ -29,6 +29,7 @@ import EventsPage from "./pages/EventsPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import GuestProfilePage from "./pages/GuestProfilePage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
+import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 
 function App() {
   const authActions = useAuth();
@@ -66,6 +67,7 @@ function App() {
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />
       <Route path="/payment-history" element={<PaymentHistoryPage {...authActions} />} />
+      <Route path="/loyalty-program" element={<LoyaltyProgramPage {...authActions} />} />
       <Route path="/payment/:bookingRequestId" element={<PaymentPage {...authActions} />} />
       <Route path="/chat/:bookingRequestId" element={<ChatPage {...authActions} />} />
       <Route path="/dispute-response/:disputeId" element={<DisputeResponsePage {...authActions} />} />

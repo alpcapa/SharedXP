@@ -5,6 +5,9 @@ import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
 import { CURRENCY_SYMBOLS } from "../utils/pricing";
 
+const fmt = (sym, cur, amount) =>
+  `${sym ?? cur}${Number(amount || 0).toFixed(2)}`;
+
 const XpInfoPopup = ({ onClose }) => (
   <div className="modal-backdrop" onClick={onClose}>
     <div className="modal-box xp-info-box" onClick={(e) => e.stopPropagation()}>
@@ -22,7 +25,10 @@ const XpInfoPopup = ({ onClose }) => (
         This is the foundation of the <strong>SharedXP Loyalty Program</strong>, with more rewards,
         tiers, and benefits coming soon.
       </p>
-      <div className="modal-actions">
+      <div className="xp-popup-footer">
+        <Link to="/loyalty-program" className="xp-loyalty-link" onClick={onClose}>
+          View Loyalty Program details →
+        </Link>
         <button type="button" className="btn btn-primary" onClick={onClose}>
           OK
         </button>
@@ -30,6 +36,121 @@ const XpInfoPopup = ({ onClose }) => (
     </div>
   </div>
 );
+
+const InvoiceDetailModal = ({ invoice, onClose }) => {
+  const sym = CURRENCY_SYMBOLS[invoice.currency] ?? invoice.currency;
+  const isReleased = Boolean(invoice.released_at);
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box invoice-detail-box" onClick={(e) => e.stopPropagation()}>
+        <div className="invoice-detail-header">
+          <div>
+            <h3 className="invoice-detail-sport">{invoice.sport || "Experience"}</h3>
+            <p className="invoice-detail-host">with {invoice.hostName}</p>
+          </div>
+          <span
+            className={`invoice-status invoice-status--${isReleased ? "released" : "paid"}`}
+          >
+            {isReleased ? "Released" : "Paid"}
+          </span>
+        </div>
+
+        {(invoice.requestedDate || invoice.requestedTime) && (
+          <div className="invoice-detail-row">
+            <span className="invoice-detail-label">Session</span>
+            <span className="invoice-detail-value">
+              {invoice.requestedDate
+                ? new Date(invoice.requestedDate).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "—"}
+              {invoice.requestedTime ? ` · ${invoice.requestedTime}` : ""}
+            </span>
+          </div>
+        )}
+
+        <div className="invoice-detail-row">
+          <span className="invoice-detail-label">Paid on</span>
+          <span className="invoice-detail-value">
+            {invoice.paid_at
+              ? new Date(invoice.paid_at).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "—"}
+          </span>
+        </div>
+
+        {isReleased && (
+          <div className="invoice-detail-row">
+            <span className="invoice-detail-label">Released on</span>
+            <span className="invoice-detail-value">
+              {new Date(invoice.released_at).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+          </div>
+        )}
+
+        <div className="invoice-detail-divider" />
+
+        <p className="invoice-detail-section-title">Payment breakdown</p>
+
+        <div className="invoice-detail-row">
+          <span className="invoice-detail-label">Amount charged</span>
+          <span className="invoice-detail-value invoice-detail-total">
+            {fmt(sym, invoice.currency, invoice.gross_amount)}{" "}
+            <span className="invoice-currency">{invoice.currency}</span>
+          </span>
+        </div>
+
+        <div className="invoice-detail-row invoice-detail-row--sub">
+          <span className="invoice-detail-label">Platform fee (15%)</span>
+          <span className="invoice-detail-value invoice-detail-deduct">
+            −{fmt(sym, invoice.currency, invoice.platform_commission)}
+          </span>
+        </div>
+
+        <div className="invoice-detail-row invoice-detail-row--sub">
+          <span className="invoice-detail-label">Tax (5%)</span>
+          <span className="invoice-detail-value invoice-detail-deduct">
+            −{fmt(sym, invoice.currency, invoice.tax)}
+          </span>
+        </div>
+
+        <div className="invoice-detail-row invoice-detail-row--net">
+          <span className="invoice-detail-label">Net to host</span>
+          <span className="invoice-detail-value">
+            {fmt(sym, invoice.currency, invoice.net_amount)}
+          </span>
+        </div>
+
+        <div className="invoice-detail-divider" />
+
+        <div className="invoice-detail-xp-row">
+          <span className="invoice-detail-xp-label">XP earned</span>
+          <span className="invoice-detail-xp-value">+{invoice.xpEarned} XP</span>
+        </div>
+
+        <div className="invoice-detail-ref">
+          Ref: <span>{invoice.id}</span>
+        </div>
+
+        <div className="modal-actions">
+          <button type="button" className="btn btn-light" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const formatDate = (iso) => {
   if (!iso) return "—";
@@ -45,6 +166,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showXpInfo, setShowXpInfo] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   const [filterSport, setFilterSport] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -172,6 +294,12 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
         </section>
 
         {showXpInfo && <XpInfoPopup onClose={() => setShowXpInfo(false)} />}
+        {selectedInvoice && (
+          <InvoiceDetailModal
+            invoice={selectedInvoice}
+            onClose={() => setSelectedInvoice(null)}
+          />
+        )}
 
         <main className="middle-section payment-history-page">
           <div className="payment-history-header">
@@ -300,7 +428,13 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
           ) : (
             <div className="payment-history-list">
               {filtered.map((inv) => (
-                <div key={inv.id} className="payment-invoice-card">
+                <button
+                  key={inv.id}
+                  type="button"
+                  className="payment-invoice-card"
+                  onClick={() => setSelectedInvoice(inv)}
+                  aria-label={`View invoice for ${inv.sport || "experience"} with ${inv.hostName}`}
+                >
                   <div className="invoice-card-left">
                     <p className="invoice-sport">{inv.sport || "Experience"}</p>
                     <p className="invoice-host">with {inv.hostName}</p>
@@ -310,15 +444,12 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                         : formatDate(inv.paid_at)}
                       {inv.requestedTime ? ` · ${inv.requestedTime}` : ""}
                     </p>
-                    <p className="invoice-paid-on">
-                      Paid: {formatDate(inv.paid_at)}
-                    </p>
+                    <p className="invoice-paid-on">Paid: {formatDate(inv.paid_at)}</p>
                   </div>
                   <div className="invoice-card-right">
                     <p className="invoice-amount">
                       {CURRENCY_SYMBOLS[inv.currency] ?? inv.currency}
-                      {Number(inv.gross_amount || 0).toFixed(2)}
-                      {" "}
+                      {Number(inv.gross_amount || 0).toFixed(2)}{" "}
                       <span className="invoice-currency">{inv.currency}</span>
                     </p>
                     <p className="invoice-xp">+{inv.xpEarned} XP</p>
@@ -328,7 +459,8 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                       {inv.released_at ? "Released" : "Paid"}
                     </span>
                   </div>
-                </div>
+                  <span className="invoice-card-chevron" aria-hidden="true">›</span>
+                </button>
               ))}
 
               <div className="payment-history-summary">
