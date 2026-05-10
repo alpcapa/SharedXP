@@ -459,7 +459,10 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                       {inv.released_at ? "Released" : "Paid"}
                     </span>
                   </div>
-                  <span className="invoice-card-chevron" aria-hidden="true">›</span>
+                  <span className="invoice-card-chevron" aria-hidden="true">
+                    <span className="invoice-card-chevron-label">INVOICE</span>
+                    ›
+                  </span>
                 </button>
               ))}
 
