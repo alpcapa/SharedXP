@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+
+const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
+
+const STATUS_TAGS = {
+  pending:         { label: "Waiting Host", cls: "xp-tag-pending" },
+  accepted:        { label: "Payment Due",  cls: "xp-tag-accepted" },
+  payment_pending: { label: "Processing",   cls: "xp-tag-payment" },
+  in_progress:     { label: "Ongoing",      cls: "xp-tag-inprogress" },
+  disputed:        { label: "Disputed",     cls: "xp-tag-disputed" },
+};
 
 const createInitials = (name) =>
   name
@@ -13,6 +24,7 @@ const sanitizeInitials = (initials) => initials.replace(/[^A-Z0-9]/g, "").slice(
 
 const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeTags, setActiveTags] = useState([]);
   const menuRef = useRef(null);
   const isLoggedIn = Boolean(currentUser);
   const hostRoute = "/host-settings";
@@ -55,6 +67,20 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, []);
+
+  useEffect(() => {
+    if (!currentUser?.id) { setActiveTags([]); return; }
+    supabase
+      .from("booking_requests")
+      .select("status")
+      .or(`requester_id.eq.${currentUser.id},host_id.eq.${currentUser.id}`)
+      .in("status", ACTIVE_STATUSES)
+      .then(({ data }) => {
+        if (!data) return;
+        const seen = new Set(data.map((r) => r.status));
+        setActiveTags(ACTIVE_STATUSES.filter((s) => seen.has(s)));
+      });
+  }, [currentUser?.id]);
 
   return (
     <header className="site-header">
@@ -100,8 +126,17 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
               <Link to="/user-profile" className="user-dropdown-link" role="menuitem">
                 My Profile
               </Link>
-              <Link to="/history" className="user-dropdown-link" role="menuitem">
-                My History
+              <Link to="/history" className="user-dropdown-link user-dropdown-xp-history" role="menuitem">
+                XP History
+                {activeTags.length > 0 && (
+                  <span className="xp-history-tags">
+                    {activeTags.map((status) => (
+                      <span key={status} className={`xp-history-tag ${STATUS_TAGS[status].cls}`}>
+                        {STATUS_TAGS[status].label}
+                      </span>
+                    ))}
+                  </span>
+                )}
               </Link>
               <Link to="/payment-history" className="user-dropdown-link" role="menuitem">
                 Payment History
