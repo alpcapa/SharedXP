@@ -14,12 +14,12 @@ const XpInfoPopup = ({ onClose }) => (
       <h3 className="modal-title">What is XP?</h3>
       <p className="modal-body-text">
         <strong>XP (Experience Points)</strong> is the SharedXP loyalty reward. Every currency unit
-        you spend on experiences earns you <strong>1 XP Point</strong> — regardless of which
-        currency you pay in.
+        involved in an experience earns <strong>1 XP Point</strong> — whether you booked it or
+        hosted it.
       </p>
       <p className="modal-body-text">
-        For example, paying €45 earns you 45 XP. Paying $120 earns you 120 XP. Your XP total grows
-        with every experience you book.
+        For example, booking a €45 session earns you 45 XP. Hosting a $120 session earns you 120
+        XP. Guests and hosts always earn the same XP from every shared experience.
       </p>
       <p className="modal-body-text">
         This is the foundation of the <strong>SharedXP Loyalty Program</strong>, with more rewards,
@@ -40,6 +40,7 @@ const XpInfoPopup = ({ onClose }) => (
 const InvoiceDetailModal = ({ invoice, onClose }) => {
   const sym = CURRENCY_SYMBOLS[invoice.currency] ?? invoice.currency;
   const isReleased = Boolean(invoice.released_at);
+  const isHosted = invoice.role === "hosted";
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -47,13 +48,20 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
         <div className="invoice-detail-header">
           <div>
             <h3 className="invoice-detail-sport">{invoice.sport || "Experience"}</h3>
-            <p className="invoice-detail-host">with {invoice.hostName}</p>
+            <p className="invoice-detail-host">
+              {isHosted ? `guest: ${invoice.guestName}` : `with ${invoice.hostName}`}
+            </p>
           </div>
-          <span
-            className={`invoice-status invoice-status--${isReleased ? "released" : "paid"}`}
-          >
-            {isReleased ? "Released" : "Paid"}
-          </span>
+          <div className="invoice-detail-header-right">
+            <span className={`invoice-role-badge invoice-role-badge--${isHosted ? "hosted" : "booked"}`}>
+              {isHosted ? "Hosted" : "Booked"}
+            </span>
+            <span
+              className={`invoice-status invoice-status--${isReleased ? "released" : "paid"}`}
+            >
+              {isReleased ? "Released" : "Paid"}
+            </span>
+          </div>
         </div>
 
         {(invoice.requestedDate || invoice.requestedTime) && (
@@ -171,6 +179,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const [filterSport, setFilterSport] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCurrency, setFilterCurrency] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
 
@@ -184,23 +193,43 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
     const fetchInvoices = async () => {
       setLoading(true);
 
-      const { data: bookingRequests, error: brError } = await supabase
-        .from("booking_requests")
-        .select("id, sport, requested_date, requested_time, status, host_id")
-        .eq("requester_id", currentUser.id);
+      // Fetch both guest bookings (as requester) and host bookings (as host) in parallel
+      const [guestResult, hostResult] = await Promise.all([
+        supabase
+          .from("booking_requests")
+          .select("id, sport, requested_date, requested_time, status, host_id")
+          .eq("requester_id", currentUser.id),
+        supabase
+          .from("booking_requests")
+          .select("id, sport, requested_date, requested_time, status, requester_id")
+          .eq("host_id", currentUser.id),
+      ]);
 
-      if (brError || !bookingRequests?.length) {
+      const guestBookingRequests = guestResult.data ?? [];
+      const hostBookingRequests = hostResult.data ?? [];
+
+      const guestBrMap = Object.fromEntries(guestBookingRequests.map((br) => [br.id, br]));
+      const hostBrMap = Object.fromEntries(hostBookingRequests.map((br) => [br.id, br]));
+      const hostBrIds = new Set(hostBookingRequests.map((br) => br.id));
+
+      // Deduplicate booking request IDs (a user cannot be both requester and host)
+      const allBrIds = [
+        ...new Set([
+          ...guestBookingRequests.map((br) => br.id),
+          ...hostBookingRequests.map((br) => br.id),
+        ]),
+      ];
+
+      if (allBrIds.length === 0) {
+        setInvoices([]);
         setLoading(false);
         return;
       }
 
-      const brIds = bookingRequests.map((br) => br.id);
-      const brMap = Object.fromEntries(bookingRequests.map((br) => [br.id, br]));
-
       const { data: invData, error: invError } = await supabase
         .from("invoices")
         .select("*")
-        .in("booking_request_id", brIds)
+        .in("booking_request_id", allBrIds)
         .order("paid_at", { ascending: false });
 
       if (invError) {
@@ -208,27 +237,37 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
         return;
       }
 
+      // Fetch host profiles for guest bookings and requester profiles for host bookings in parallel
       const hostIds = [
-        ...new Set(bookingRequests.map((br) => br.host_id).filter(Boolean)),
+        ...new Set(guestBookingRequests.map((br) => br.host_id).filter(Boolean)),
       ];
-      let hostMap = {};
-      if (hostIds.length > 0) {
+      const requesterIds = [
+        ...new Set(hostBookingRequests.map((br) => br.requester_id).filter(Boolean)),
+      ];
+
+      const profileIds = [...new Set([...hostIds, ...requesterIds])];
+      let profileMap = {};
+      if (profileIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("id, full_name")
-          .in("id", hostIds);
-        for (const p of profiles ?? []) hostMap[p.id] = p;
+          .in("id", profileIds);
+        for (const p of profiles ?? []) profileMap[p.id] = p;
       }
 
       const enriched = (invData ?? []).map((inv) => {
-        const br = brMap[inv.booking_request_id] ?? {};
+        const isHosted = hostBrIds.has(inv.booking_request_id);
+        const br = isHosted ? hostBrMap[inv.booking_request_id] : guestBrMap[inv.booking_request_id];
         return {
           ...inv,
-          sport: br.sport ?? "",
-          requestedDate: br.requested_date ?? "",
-          requestedTime: br.requested_time ?? "",
-          bookingStatus: br.status ?? "",
-          hostName: hostMap[br.host_id]?.full_name ?? "Host",
+          sport: br?.sport ?? "",
+          requestedDate: br?.requested_date ?? "",
+          requestedTime: br?.requested_time ?? "",
+          bookingStatus: br?.status ?? "",
+          role: isHosted ? "hosted" : "booked",
+          hostName: isHosted ? null : (profileMap[br?.host_id]?.full_name ?? "Host"),
+          guestName: isHosted ? (profileMap[br?.requester_id]?.full_name ?? "Guest") : null,
+          // Hosts earn the same XP as guests — 1 XP per whole currency unit of the booking value
           xpEarned: Math.floor(Number(inv.gross_amount) || 0),
         };
       });
@@ -243,10 +282,13 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const sports = [...new Set(invoices.map((i) => i.sport).filter(Boolean))].sort();
   const currencies = [...new Set(invoices.map((i) => i.currency).filter(Boolean))].sort();
   const totalXp = invoices.reduce((sum, inv) => sum + inv.xpEarned, 0);
+  const hasHosted = invoices.some((i) => i.role === "hosted");
+  const hasBooked = invoices.some((i) => i.role === "booked");
 
   const filtered = invoices.filter((inv) => {
     if (filterSport && inv.sport !== filterSport) return false;
     if (filterCurrency && inv.currency !== filterCurrency) return false;
+    if (filterRole !== "all" && inv.role !== filterRole) return false;
     if (filterStatus === "released" && !inv.released_at) return false;
     if (filterStatus === "paid" && inv.released_at) return false;
     if (filterFrom && inv.paid_at && inv.paid_at < filterFrom) return false;
@@ -264,12 +306,13 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
     setFilterSport("");
     setFilterStatus("all");
     setFilterCurrency("");
+    setFilterRole("all");
     setFilterFrom("");
     setFilterTo("");
   };
 
   const hasActiveFilters =
-    filterSport || filterStatus !== "all" || filterCurrency || filterFrom || filterTo;
+    filterSport || filterStatus !== "all" || filterCurrency || filterRole !== "all" || filterFrom || filterTo;
 
   if (authLoading) {
     return (
@@ -319,7 +362,8 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
               </div>
             </div>
             <p className="payment-history-subtitle">
-              All your payments and invoices in one place. Every currency unit you spend earns{" "}
+              All your payments and invoices in one place. Every currency unit you spend booking —
+              or earn hosting — gives you{" "}
               <button
                 type="button"
                 className="xp-inline-link"
@@ -327,7 +371,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
               >
                 1 XP Point
               </button>
-              .
+              . Guests and hosts earn equal XP.
             </p>
           </div>
 
@@ -347,6 +391,21 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                 ))}
               </select>
             </div>
+
+            {(hasBooked && hasHosted) && (
+              <div className="payment-filter-group">
+                <label htmlFor="ph-role">Role</label>
+                <select
+                  id="ph-role"
+                  value={filterRole}
+                  onChange={(e) => setFilterRole(e.target.value)}
+                >
+                  <option value="all">All</option>
+                  <option value="booked">Booked</option>
+                  <option value="hosted">Hosted</option>
+                </select>
+              </div>
+            )}
 
             <div className="payment-filter-group">
               <label htmlFor="ph-status">Status</label>
@@ -414,7 +473,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
             <div className="payment-history-empty">
               <p className="payment-history-empty-title">No payments yet</p>
               <p className="payment-history-empty-sub">
-                Once you book and pay for an experience, your invoices will appear here.{" "}
+                Once you book or host a paid experience, your invoices will appear here.{" "}
                 <Link to="/locals">Explore experiences</Link>.
               </p>
             </div>
@@ -433,11 +492,13 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                   type="button"
                   className="payment-invoice-card"
                   onClick={() => setSelectedInvoice(inv)}
-                  aria-label={`View invoice for ${inv.sport || "experience"} with ${inv.hostName}`}
+                  aria-label={`View invoice for ${inv.sport || "experience"} — ${inv.role === "hosted" ? `guest: ${inv.guestName}` : `with ${inv.hostName}`}`}
                 >
                   <div className="invoice-card-left">
                     <p className="invoice-sport">{inv.sport || "Experience"}</p>
-                    <p className="invoice-host">with {inv.hostName}</p>
+                    <p className="invoice-host">
+                      {inv.role === "hosted" ? `guest: ${inv.guestName}` : `with ${inv.hostName}`}
+                    </p>
                     <p className="invoice-date">
                       {inv.requestedDate
                         ? formatDate(inv.requestedDate)
@@ -453,6 +514,9 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                       <span className="invoice-currency">{inv.currency}</span>
                     </p>
                     <p className="invoice-xp">+{inv.xpEarned} XP</p>
+                    <span className={`invoice-role-badge invoice-role-badge--${inv.role}`}>
+                      {inv.role === "hosted" ? "Hosted" : "Booked"}
+                    </span>
                     <span
                       className={`invoice-status invoice-status--${inv.released_at ? "released" : "paid"}`}
                     >

@@ -37,9 +37,10 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
                 <li>Technical and security data (device/browser logs, authentication events, anti-abuse signals).</li>
                 <li>Communications data (messages submitted via support or legal contact channels).</li>
                 <li>
-                  <strong>Loyalty program data:</strong> XP (Experience Points) balances derived from payment
-                  amounts, earning history linked to your invoices, and usage of the Payment History feature.
-                  This data is used to operate and display the SharedXP Loyalty Program.
+                  <strong>Loyalty program data:</strong> XP (Experience Points) balances derived from booking
+                  amounts (earned both as a guest paying for experiences and as a host delivering them), earning
+                  history linked to your invoices, and usage of the Payment History feature. This data is used
+                  to operate and display the SharedXP Loyalty Program.
                 </li>
               </ul>
             </section>
