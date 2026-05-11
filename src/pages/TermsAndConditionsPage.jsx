@@ -82,11 +82,11 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
               </p>
               <ul>
                 <li>
-                  Every whole currency unit of the gross booking amount earns both the guest (the paying
-                  participant) and the host <strong>1 XP Point each</strong>, regardless of which
-                  currency is used. Fractional units are rounded down (e.g. a €45.90 booking earns 45 XP
-                  for the guest and 45 XP for the host). Hosts and guests always earn equal XP on every
-                  shared experience.
+                  XP is earned in <strong>Normalized Spending Units (NSU)</strong>: each NSU of the
+                  gross booking amount earns both the guest (the paying participant) and the host{" "}
+                  <strong>1 XP Point each</strong>. The conversion rates are: $1 USD = 1 XP, €1 EUR
+                  = 1 XP, ¥100 JPY = 1 XP, ₺40 TRY = 1 XP, ₩1,000 KRW = 1 XP. Fractional NSU are
+                  rounded down. Hosts and guests always earn equal XP on every shared experience.
                 </li>
                 <li>
                   XP is awarded at the time of payment and is displayed in each user's Payment History

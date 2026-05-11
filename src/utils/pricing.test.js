@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COMMISSION_RATE, TAX_RATE, CURRENCY_SYMBOLS, formatCurrency } from "./pricing";
+import { COMMISSION_RATE, TAX_RATE, CURRENCY_SYMBOLS, formatCurrency, toNSU } from "./pricing";
 
 describe("constants", () => {
   it("COMMISSION_RATE is 15%", () => {
@@ -14,6 +14,51 @@ describe("constants", () => {
     expect(CURRENCY_SYMBOLS.EUR).toBe("€");
     expect(CURRENCY_SYMBOLS.USD).toBe("$");
     expect(CURRENCY_SYMBOLS.GBP).toBe("£");
+  });
+});
+
+describe("toNSU", () => {
+  it("1 USD = 1 XP", () => {
+    expect(toNSU(1, "USD")).toBe(1);
+    expect(toNSU(120, "USD")).toBe(120);
+  });
+
+  it("1 EUR = 1 XP", () => {
+    expect(toNSU(45, "EUR")).toBe(45);
+    expect(toNSU(45.9, "EUR")).toBe(45);
+  });
+
+  it("100 JPY = 1 XP", () => {
+    expect(toNSU(100, "JPY")).toBe(1);
+    expect(toNSU(4500, "JPY")).toBe(45);
+    expect(toNSU(4599, "JPY")).toBe(45);
+  });
+
+  it("40 TRY = 1 XP", () => {
+    expect(toNSU(40, "TRY")).toBe(1);
+    expect(toNSU(200, "TRY")).toBe(5);
+    expect(toNSU(39, "TRY")).toBe(0);
+  });
+
+  it("1000 KRW = 1 XP", () => {
+    expect(toNSU(1000, "KRW")).toBe(1);
+    expect(toNSU(45000, "KRW")).toBe(45);
+    expect(toNSU(999, "KRW")).toBe(0);
+  });
+
+  it("unknown currency defaults to divisor 1", () => {
+    expect(toNSU(80, "GBP")).toBe(80);
+    expect(toNSU(50, "XYZ")).toBe(50);
+  });
+
+  it("handles zero and falsy amounts", () => {
+    expect(toNSU(0, "USD")).toBe(0);
+    expect(toNSU(null, "EUR")).toBe(0);
+  });
+
+  it("is case-insensitive for currency code", () => {
+    expect(toNSU(100, "jpy")).toBe(1);
+    expect(toNSU(100, "JPY")).toBe(1);
   });
 });
 
