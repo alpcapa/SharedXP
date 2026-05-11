@@ -63,7 +63,8 @@ body {
 }
 
 .auth-hero + .middle-section.host-settings-page,
-.auth-hero + .middle-section.edit-profile-page {
+.auth-hero + .middle-section.edit-profile-page,
+.auth-hero + .middle-section.payment-history-page {
   padding-top: 20px;
   margin-top: 10px;
 }
@@ -5467,7 +5468,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-top: 24px;
   padding-bottom: 40px;
 }
 
