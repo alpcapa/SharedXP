@@ -35,14 +35,16 @@ SharedXP connects sports-loving travelers with local people who are eager to sha
 - **Interactive map** — see nearby hosts plotted with distance sorting
 - **Host profiles** — gallery, availability calendar, 6-dimension reviews, and pricing
 - **Book a session** — pick a date and time, request a booking in a few taps
-- **Session history** — view completed experiences, upload photos, leave reviews
+- **XP History** — view completed experiences, upload photos, leave reviews
 - **Share to The Field** — post your session photos and caption to the community feed
+- **Payment History** — full invoice log with per-transaction XP earned
+- **XP Loyalty Program** — earn XP on every booking via Normalized Spending Units (NSU)
 
 ### For Hosts
 
 - **Host onboarding** — list one or more sports with availability, pricing, and equipment details
 - **Host settings** — pause hosting, update profile, manage payout info
-- **Host history** — view completed sessions and participants
+- **Host history** — view completed sessions and participants; earn equal XP as guests
 
 ### The Field
 
@@ -168,8 +170,10 @@ supabase/
 |`/user/:userId`                   |Another user's public profile                          |
 |`/become-a-host`                  |Host onboarding                                        |
 |`/host-settings`                  |Manage host profile                                    |
-|`/history`                        |Booking history, photo upload, reviews, share to Field |
-|`/payment/:bookingRequestId`      |Payment page for an accepted booking                   |
+|`/history`                        |XP History — booking history, photo upload, reviews, share to Field|
+|`/payment-history`                |Payment History — invoice log with XP earned per transaction       |
+|`/loyalty-program`                |XP Loyalty Program — rules, NSU rates, program terms               |
+|`/payment/:bookingRequestId`      |Payment page for an accepted booking                               |
 |`/chat/:bookingRequestId`         |In-app messaging for a booking                         |
 |`/dispute-response/:disputeId`    |Host dispute response form                             |
 |`/admin/disputes`                 |Admin dispute dashboard (requires `is_admin = true`)   |
