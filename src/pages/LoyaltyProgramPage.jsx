@@ -35,9 +35,12 @@ const LoyaltyProgramPage = ({ currentUser, onLogout }) => {
 
             <section className="legal-section">
               <h2>2. How to Earn XP</h2>
+              <p>XP can be earned in two ways depending on your role on SharedXP.</p>
+
+              <h3>As a Participant</h3>
               <p>
-                XP is earned automatically whenever you pay for an experience on SharedXP. The earning
-                rule is simple:
+                XP is earned automatically whenever you pay for an experience. The earning rule is
+                simple:
               </p>
               <ul>
                 <li>
@@ -51,25 +54,54 @@ const LoyaltyProgramPage = ({ currentUser, onLogout }) => {
                   </ul>
                 </li>
                 <li>
-                  <strong>Currency independent.</strong> XP is awarded based on the face value of
-                  your payment, regardless of which currency you pay in. No conversion or
-                  normalization is applied between currencies.
-                </li>
-                <li>
-                  <strong>Instant credit.</strong> XP is added to your balance as soon as your
-                  payment is processed. You can see XP earned per transaction in your{" "}
-                  <Link to="/payment-history">Payment History</Link>.
+                  <strong>Instant credit.</strong> XP is added as soon as your payment is processed.
                 </li>
               </ul>
+
+              <h3>As a Host</h3>
+              <p>
+                Hosts also earn XP on every session they host, based on their net earnings after the
+                platform fee and tax are deducted:
+              </p>
+              <ul>
+                <li>
+                  <strong>1 XP Point per whole currency unit of net earnings received.</strong> For
+                  example, if a participant pays €50 and your net payout is €37.50, you earn 37 XP.
+                </li>
+                <li>
+                  <strong>Credited on release.</strong> Host XP is credited when the payment is
+                  released to you — not at the moment the participant pays.
+                </li>
+                <li>
+                  <strong>Currency independent.</strong> XP is based on the face value of your net
+                  earnings, with no currency conversion applied.
+                </li>
+              </ul>
+
+              <p>
+                You can see XP earned per transaction (both as participant and host) in your{" "}
+                <Link to="/payment-history">Payment History</Link>.
+              </p>
             </section>
 
             <section className="legal-section">
               <h2>3. Where to See Your XP</h2>
               <p>
-                Your total XP balance is displayed at the top of your{" "}
-                <Link to="/payment-history">Payment History</Link> page (accessible from the profile
-                menu). Each invoice card also shows the XP earned for that individual transaction.
+                Your combined XP balance (participant + host) is displayed at the top of your{" "}
+                <Link to="/payment-history">Payment History</Link> page, accessible from the profile
+                menu. The page has two tabs:
               </p>
+              <ul>
+                <li>
+                  <strong>Bookings</strong> — invoices for experiences you have paid for as a
+                  participant, with XP earned per invoice.
+                </li>
+                <li>
+                  <strong>Hosting</strong> — earnings from sessions you have hosted, with XP credited
+                  when each payment is released.
+                </li>
+              </ul>
+              <p>Each invoice card shows the XP earned for that individual transaction.</p>
             </section>
 
             <section className="legal-section">

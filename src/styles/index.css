@@ -5583,6 +5583,22 @@ body {
   max-width: 420px;
 }
 
+/* ── Payment history tabs ─────────────────────────── */
+.ph-tabs {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 4px;
+}
+
+.ph-tab-xp {
+  font-size: 11px;
+  font-weight: 700;
+  background: #dcfce7;
+  color: #14532d;
+  padding: 2px 6px;
+  border-radius: 99px;
+}
+
 /* ── Payment history filters ──────────────────────── */
 .payment-history-filters {
   display: flex;
