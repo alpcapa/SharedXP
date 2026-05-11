@@ -179,12 +179,14 @@ const formatDate = (iso) => {
 
 const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("bookings");
+  const [activeTab, setActiveTab] = useState(
+    () => (currentUser?.isHost ? "hosting" : "bookings")
+  );
 
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hostInvoices, setHostInvoices] = useState([]);
-  const [hostLoading, setHostLoading] = useState(false);
+  const [hostLoading, setHostLoading] = useState(true);
 
   const [showXpInfo, setShowXpInfo] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -266,10 +268,13 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
     };
 
     fetchInvoices();
-  }, [currentUser, authLoading, navigate]);
+  }, [currentUser?.id, authLoading, navigate]);
 
   useEffect(() => {
-    if (authLoading || !currentUser?.isHost) return;
+    if (authLoading || !currentUser?.isHost) {
+      setHostLoading(false);
+      return;
+    }
 
     const fetchHostInvoices = async () => {
       setHostLoading(true);
@@ -329,7 +334,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
     };
 
     fetchHostInvoices();
-  }, [currentUser, authLoading]);
+  }, [currentUser?.id, currentUser?.isHost, authLoading]);
 
   const isHost = Boolean(currentUser?.isHost);
 
