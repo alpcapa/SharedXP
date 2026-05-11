@@ -59,14 +59,15 @@ const LegalPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>2a. SharedXP Loyalty Program (XP)</h2>
               <p>
-                SharedXP operates a loyalty reward system called <strong>XP (Experience Points)</strong>. Participants
-                earn 1 XP for every whole currency unit spent on a paid experience, regardless of currency. XP has no
+                SharedXP operates a loyalty reward system called <strong>XP (Experience Points)</strong>. Both guests
+                and hosts earn 1 XP for every whole currency unit of the gross booking amount — equal XP for both
+                parties, regardless of currency. Hosting a session earns the same XP as booking one. XP has no
                 monetary value and is subject to the rules set out in the Terms &amp; Conditions (Section 5) and
                 Payments and Payout Terms (Section 11).
               </p>
               <p>
-                XP balances and invoice history are accessible from the{" "}
-                <strong>Payment History</strong> page (profile menu → Payment History when logged in). The loyalty
+                XP balances and invoice history — for both bookings made and sessions hosted — are accessible from
+                the <strong>Payment History</strong> page (profile menu → Payment History when logged in). The loyalty
                 program is in its foundation phase; additional benefits will be communicated when introduced.
               </p>
             </section>

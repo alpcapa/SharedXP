@@ -15,17 +15,17 @@ const LoyaltyProgramPage = ({ currentUser, onLogout }) => {
             <h1>SharedXP Loyalty Program</h1>
             <p className="legal-last-updated">Effective: May 10, 2026</p>
             <p>
-              The SharedXP Loyalty Program rewards you for every experience you book on the platform.
-              This page explains how the program works, how you earn XP, and what to expect as the
-              program grows.
+              The SharedXP Loyalty Program rewards every participant in a shared experience — whether
+              you booked it or hosted it. This page explains how the program works, how you earn XP,
+              and what to expect as the program grows.
             </p>
 
             <section className="legal-section">
               <h2>1. What is XP?</h2>
               <p>
                 <strong>XP (Experience Points)</strong> is the SharedXP loyalty currency. It reflects
-                how much you have invested in shared sporting experiences. The more you book and
-                explore, the more XP you accumulate.
+                how deeply you participate in shared sporting experiences — as a guest, as a host, or
+                both. The more you engage with the platform, the more XP you accumulate.
               </p>
               <p>
                 XP is designed to grow with you — it is a record of your journey on SharedXP, and
@@ -36,28 +36,35 @@ const LoyaltyProgramPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>2. How to Earn XP</h2>
               <p>
-                XP is earned automatically whenever you pay for an experience on SharedXP. The earning
-                rule is simple:
+                XP is earned automatically on every completed, paid experience — for both the guest
+                who booked and the host who delivered it. The earning rule is simple and equal:
               </p>
               <ul>
                 <li>
-                  <strong>1 XP Point per whole currency unit paid.</strong> The XP amount equals the
-                  integer part (floor) of your gross payment. For example:
+                  <strong>1 XP Point per whole currency unit of the booking value.</strong> XP is
+                  based on the gross booking amount (the total charged to the guest). Fractional
+                  units are rounded down. For example:
                   <ul>
-                    <li>€45.00 → 45 XP</li>
-                    <li>€45.90 → 45 XP (fractional cents are not counted)</li>
-                    <li>$120.00 → 120 XP</li>
-                    <li>£80.50 → 80 XP</li>
+                    <li>€45.00 booking → 45 XP for the guest and 45 XP for the host</li>
+                    <li>€45.90 booking → 45 XP each (fractional cents are not counted)</li>
+                    <li>$120.00 booking → 120 XP each</li>
+                    <li>£80.50 booking → 80 XP each</li>
                   </ul>
                 </li>
                 <li>
+                  <strong>Equal for guests and hosts.</strong> Both parties earn the same XP from
+                  every experience. Hosting is valued the same as booking — the value created by the
+                  host's service is just as important as the guest's participation.
+                </li>
+                <li>
                   <strong>Currency independent.</strong> XP is awarded based on the face value of
-                  your payment, regardless of which currency you pay in. No conversion or
+                  the booking amount, regardless of which currency is used. No conversion or
                   normalization is applied between currencies.
                 </li>
                 <li>
-                  <strong>Instant credit.</strong> XP is added to your balance as soon as your
-                  payment is processed. You can see XP earned per transaction in your{" "}
+                  <strong>Instant credit.</strong> XP is added to your balance as soon as payment is
+                  processed. You can see XP earned per transaction — both from bookings you made and
+                  sessions you hosted — in your{" "}
                   <Link to="/payment-history">Payment History</Link>.
                 </li>
               </ul>
@@ -66,9 +73,11 @@ const LoyaltyProgramPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>3. Where to See Your XP</h2>
               <p>
-                Your total XP balance is displayed at the top of your{" "}
+                Your total XP balance — combining XP from both bookings and hosted sessions — is
+                displayed at the top of your{" "}
                 <Link to="/payment-history">Payment History</Link> page (accessible from the profile
-                menu). Each invoice card also shows the XP earned for that individual transaction.
+                menu). Each invoice card shows the XP earned for that individual transaction, along
+                with a "Booked" or "Hosted" label so you can see where each batch of XP came from.
               </p>
             </section>
 
@@ -84,7 +93,7 @@ const LoyaltyProgramPage = ({ currentUser, onLogout }) => {
                 <li>XP cannot be purchased or topped up directly.</li>
                 <li>
                   XP earned on a payment that is subsequently reversed, refunded, or resolved in
-                  favour of the participant via a dispute may be reclaimed by SharedXP.
+                  favour of either party via a dispute may be reclaimed by SharedXP.
                 </li>
               </ul>
             </section>

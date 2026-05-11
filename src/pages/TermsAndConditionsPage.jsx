@@ -77,16 +77,20 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
               <h2>5. XP Loyalty Program</h2>
               <p>
                 SharedXP operates a loyalty reward system called <strong>XP (Experience Points)</strong>.
-                XP is a non-monetary benefit awarded to participants for activity on the Platform.
+                XP is a non-monetary benefit awarded to all platform participants — both guests and
+                hosts — for activity on the Platform.
               </p>
               <ul>
                 <li>
-                  Every whole currency unit spent on a completed, paid experience earns the participant{" "}
-                  <strong>1 XP Point</strong>, regardless of which currency is used. Fractional units
-                  are rounded down (e.g. €45.90 earns 45 XP).
+                  Every whole currency unit of the gross booking amount earns both the guest (the paying
+                  participant) and the host <strong>1 XP Point each</strong>, regardless of which
+                  currency is used. Fractional units are rounded down (e.g. a €45.90 booking earns 45 XP
+                  for the guest and 45 XP for the host). Hosts and guests always earn equal XP on every
+                  shared experience.
                 </li>
                 <li>
-                  XP is awarded at the time of payment and is displayed in your Payment History.
+                  XP is awarded at the time of payment and is displayed in each user's Payment History
+                  (for both bookings made and sessions hosted).
                 </li>
                 <li>
                   XP Points have <strong>no monetary value</strong> and cannot be exchanged for cash,
@@ -99,7 +103,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                 </li>
                 <li>
                   XP earned through fraudulent, reversed, or disputed transactions that result in a
-                  refund may be reclaimed by SharedXP.
+                  refund may be reclaimed by SharedXP from both the guest and host accounts involved.
                 </li>
                 <li>
                   The XP program is in its foundation phase. Additional benefits, tiers, and redemption

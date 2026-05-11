@@ -109,22 +109,30 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>11. XP Loyalty Points and Payment History</h2>
               <p>
-                SharedXP awards <strong>XP (Experience Points)</strong> to participants based on amounts paid for
-                experiences. The following rules apply to XP earned through payments:
+                SharedXP awards <strong>XP (Experience Points)</strong> to both guests and hosts on every
+                completed, paid experience. Guests and hosts earn equal XP — hosting a session is valued
+                the same as booking one. The following rules apply:
               </p>
               <ul>
                 <li>
-                  <strong>Earning rate:</strong> 1 XP Point is awarded for every whole currency unit of the
-                  gross payment amount (the total charged to the participant). Fractional units are rounded
-                  down. For example, a payment of €45.90 earns 45 XP.
+                  <strong>Earning rate:</strong> 1 XP Point is awarded to each party for every whole currency
+                  unit of the gross booking amount (the total charged to the guest). Fractional units are
+                  rounded down. For example, a booking of €45.90 earns 45 XP for the guest and 45 XP for
+                  the host.
                 </li>
                 <li>
-                  <strong>Currency independence:</strong> XP is awarded based on the face value of the payment
+                  <strong>Equal participation:</strong> Both the guest and the host earn the same XP on every
+                  shared experience, regardless of how the platform fee and payout are distributed. XP is
+                  based on the gross booking value, not the net payout.
+                </li>
+                <li>
+                  <strong>Currency independence:</strong> XP is awarded based on the face value of the booking
                   amount, regardless of the currency used. No cross-currency normalization is applied.
                 </li>
                 <li>
                   <strong>Timing:</strong> XP is credited at the time of successful payment and is visible in
-                  the participant's Payment History.
+                  both the guest's and the host's Payment History, labelled "Booked" or "Hosted"
+                  accordingly.
                 </li>
                 <li>
                   <strong>No monetary value:</strong> XP Points are non-monetary and cannot be exchanged for
@@ -132,8 +140,9 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
                 </li>
                 <li>
                   <strong>Reversals and refunds:</strong> XP earned on a transaction that is subsequently
-                  reversed, refunded, or resolved in favour of the participant (via dispute) may be reclaimed
-                  by SharedXP. Chargebacks that succeed will result in XP reversal for the associated payment.
+                  reversed, refunded, or resolved via dispute may be reclaimed by SharedXP from both the
+                  guest and host accounts involved. Successful chargebacks will result in XP reversal for
+                  both parties.
                 </li>
                 <li>
                   <strong>Program changes:</strong> SharedXP reserves the right to modify XP earning rates,
@@ -141,7 +150,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
                 </li>
               </ul>
               <p>
-                Participants can view their full payment and invoice history, including XP earned per
+                Both guests and hosts can view their full invoice history, including XP earned per
                 transaction, at <strong>Payment History</strong> (accessible from the profile menu when
                 logged in).
               </p>
