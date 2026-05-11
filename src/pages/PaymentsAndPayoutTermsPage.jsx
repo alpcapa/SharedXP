@@ -115,19 +115,17 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
               </p>
               <ul>
                 <li>
-                  <strong>Earning rate:</strong> 1 XP Point is awarded to each party for every whole currency
-                  unit of the gross booking amount (the total charged to the guest). Fractional units are
-                  rounded down. For example, a booking of €45.90 earns 45 XP for the guest and 45 XP for
-                  the host.
+                  <strong>Earning rate:</strong> 1 XP Point is awarded to each party per Normalized
+                  Spending Unit (NSU) of the gross booking amount (the total charged to the guest).
+                  NSU normalizes spending across currencies so that 1 XP represents roughly equal
+                  value regardless of which currency is used. Fractional NSU are rounded up. The
+                  conversion rates are: $1 USD = 1 XP, €1 EUR = 1 XP, ¥100 JPY = 1 XP, ₺40 TRY =
+                  1 XP, ₩1,000 KRW = 1 XP.
                 </li>
                 <li>
                   <strong>Equal participation:</strong> Both the guest and the host earn the same XP on every
                   shared experience, regardless of how the platform fee and payout are distributed. XP is
                   based on the gross booking value, not the net payout.
-                </li>
-                <li>
-                  <strong>Currency independence:</strong> XP is awarded based on the face value of the booking
-                  amount, regardless of the currency used. No cross-currency normalization is applied.
                 </li>
                 <li>
                   <strong>Timing:</strong> XP is credited at the time of successful payment and is visible in

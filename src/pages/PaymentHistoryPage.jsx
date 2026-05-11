@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
-import { CURRENCY_SYMBOLS } from "../utils/pricing";
+import { CURRENCY_SYMBOLS, toNSU } from "../utils/pricing";
 
 const fmt = (sym, cur, amount) =>
   `${sym ?? cur}${Number(amount || 0).toFixed(2)}`;
@@ -13,13 +13,15 @@ const XpInfoPopup = ({ onClose }) => (
     <div className="modal-box xp-info-box" onClick={(e) => e.stopPropagation()}>
       <h3 className="modal-title">What is XP?</h3>
       <p className="modal-body-text">
-        <strong>XP (Experience Points)</strong> is the SharedXP loyalty reward. Every currency unit
-        involved in an experience earns <strong>1 XP Point</strong> — whether you booked it or
-        hosted it.
+        <strong>XP (Experience Points)</strong> is the SharedXP loyalty reward. XP is earned in{" "}
+        <strong>Normalized Spending Units (NSU)</strong> — so that 1 XP represents roughly the
+        same spending power regardless of currency. Whether you booked or hosted, you both earn
+        equal XP.
       </p>
       <p className="modal-body-text">
-        For example, booking a €45 session earns you 45 XP. Hosting a $120 session earns you 120
-        XP. Guests and hosts always earn the same XP from every shared experience.
+        XP rates: <strong>$1 USD = 1 XP · €1 EUR = 1 XP · ¥100 JPY = 1 XP · ₺40 TRY = 1 XP ·
+        ₩1,000 KRW = 1 XP</strong>. For example, a ¥4,500 session earns 45 XP each; a $120
+        session earns 120 XP each.
       </p>
       <p className="modal-body-text">
         This is the foundation of the <strong>SharedXP Loyalty Program</strong>, with more rewards,
@@ -267,8 +269,8 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
           role: isHosted ? "hosted" : "booked",
           hostName: isHosted ? null : (profileMap[br?.host_id]?.full_name ?? "Host"),
           guestName: isHosted ? (profileMap[br?.requester_id]?.full_name ?? "Guest") : null,
-          // Hosts earn the same XP as guests — 1 XP per whole currency unit of the booking value
-          xpEarned: Math.floor(Number(inv.gross_amount) || 0),
+          // Hosts earn the same XP as guests — 1 XP per Normalized Spending Unit
+          xpEarned: toNSU(inv.gross_amount, inv.currency),
         };
       });
 
@@ -362,16 +364,15 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
               </div>
             </div>
             <p className="payment-history-subtitle">
-              All your payments and invoices in one place. Every currency unit you spend booking —
-              or earn hosting — gives you{" "}
+              All your payments and invoices in one place. Every{" "}
               <button
                 type="button"
                 className="xp-inline-link"
                 onClick={() => setShowXpInfo(true)}
               >
-                1 XP Point
-              </button>
-              . Guests and hosts earn equal XP.
+                Normalized Spending Unit (NSU)
+              </button>{" "}
+              you spend booking — or earn hosting — gives you 1 XP. Guests and hosts earn equal XP.
             </p>
           </div>
 

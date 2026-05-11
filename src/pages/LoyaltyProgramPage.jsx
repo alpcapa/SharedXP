@@ -41,25 +41,24 @@ const LoyaltyProgramPage = ({ currentUser, onLogout }) => {
               </p>
               <ul>
                 <li>
-                  <strong>1 XP Point per whole currency unit of the booking value.</strong> XP is
-                  based on the gross booking amount (the total charged to the guest). Fractional
-                  units are rounded down. For example:
+                  <strong>1 XP Point per Normalized Spending Unit (NSU).</strong> XP is based on
+                  the gross booking amount converted to NSU, which normalizes spending across
+                  currencies so that 1 XP represents roughly equal value regardless of which
+                  currency was used. Fractional NSU are rounded up. The conversion rates are:
                   <ul>
-                    <li>€45.00 booking → 45 XP for the guest and 45 XP for the host</li>
-                    <li>€45.90 booking → 45 XP each (fractional cents are not counted)</li>
-                    <li>$120.00 booking → 120 XP each</li>
-                    <li>£80.50 booking → 80 XP each</li>
+                    <li>$1 USD → 1 XP</li>
+                    <li>€1 EUR → 1 XP</li>
+                    <li>¥100 JPY → 1 XP</li>
+                    <li>₺40 TRY → 1 XP</li>
+                    <li>₩1,000 KRW → 1 XP</li>
                   </ul>
+                  For example: a €45.00 booking earns 45 XP each; a ¥4,500 booking earns 45 XP
+                  each; a ₺200 booking earns 5 XP each.
                 </li>
                 <li>
                   <strong>Equal for guests and hosts.</strong> Both parties earn the same XP from
                   every experience. Hosting is valued the same as booking — the value created by the
                   host's service is just as important as the guest's participation.
-                </li>
-                <li>
-                  <strong>Currency independent.</strong> XP is awarded based on the face value of
-                  the booking amount, regardless of which currency is used. No conversion or
-                  normalization is applied between currencies.
                 </li>
                 <li>
                   <strong>Instant credit.</strong> XP is added to your balance as soon as payment is
