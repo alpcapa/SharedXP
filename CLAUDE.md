@@ -60,6 +60,12 @@ Storage buckets: `Avatars` (user photos) and `host-sport-images` (host sport gal
 - Platform fee is 15% + 5% tax, computed in `computeInvoice()`.
 - Notifications are sent by calling `supabase.functions.invoke('booking-notify', …)` via `src/utils/sendNotification.js`.
 
+### XP Loyalty Program
+
+`src/utils/pricing.js` exports `toNSU(amount, currency)` — the canonical XP calculation. XP earned = `Math.ceil(amount / NSU_DIVISOR)` where `NSU_DIVISORS` maps ~178 currencies to their divisor (e.g. USD→1, EUR→1, JPY→100, TRY→40, KRW→1000). Unlisted currencies default to 1:1. XP is computed on the **gross booking amount** and both hosts and guests earn the same amount from a single booking. The program is currently in Foundation Phase (earn and display only; no redemption yet).
+
+New pages: `/payment-history` (`PaymentHistoryPage`) shows invoices with per-transaction XP; `/loyalty-program` (`LoyaltyProgramPage`) documents program rules and NSU rates.
+
 ### Edge Functions (Deno / TypeScript)
 
 `supabase/functions/booking-notify/index.ts` — transactional email dispatcher. Uses the **service role key** to read across RLS. Dispatches emails via Resend for all booking lifecycle events. Add new email types here and in `sendNotification.js`.
