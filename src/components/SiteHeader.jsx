@@ -8,7 +8,7 @@ const STATUS_TAGS = {
   pending:         { label: "Waiting Host", cls: "xp-tag-pending" },
   accepted:        { label: "Payment Due",  cls: "xp-tag-accepted" },
   payment_pending: { label: "Processing",   cls: "xp-tag-payment" },
-  in_progress:     { label: "Ongoing",      cls: "xp-tag-inprogress" },
+  in_progress:     { label: "In progress",  cls: "xp-tag-inprogress" },
   disputed:        { label: "Disputed",     cls: "xp-tag-disputed" },
 };
 
