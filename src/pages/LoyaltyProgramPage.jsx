@@ -44,7 +44,7 @@ const LoyaltyProgramPage = ({ currentUser, onLogout }) => {
                   <strong>1 XP Point per Normalized Spending Unit (NSU).</strong> XP is based on
                   the gross booking amount converted to NSU, which normalizes spending across
                   currencies so that 1 XP represents roughly equal value regardless of which
-                  currency was used. Fractional NSU are rounded down. The conversion rates are:
+                  currency was used. Fractional NSU are rounded up. The conversion rates are:
                   <ul>
                     <li>$1 USD → 1 XP</li>
                     <li>€1 EUR → 1 XP</li>

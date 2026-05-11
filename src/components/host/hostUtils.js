@@ -3,7 +3,33 @@
 
 export const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced", "I'm Flexible"];
 export const AVAILABILITY_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-export const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR", "BRL"];
+export const CURRENCY_OPTIONS = [
+  // Americas
+  "USD", "CAD", "MXN", "GTQ", "BZD", "HNL", "NIO", "CRC", "CUP", "JMD",
+  "TTD", "DOP", "HTG", "ARS", "CLP", "UYU", "PYG", "BOB", "PEN", "COP",
+  "VES", "BRL", "GYD", "SRD",
+  // Europe
+  "EUR", "GBP", "CHF", "NOK", "SEK", "DKK", "ISK", "CZK", "PLN", "HUF",
+  "RON", "BGN", "RSD", "BAM", "MKD", "ALL", "MDL", "UAH", "BYN", "RUB",
+  "GEL", "TRY",
+  // East Asia
+  "JPY", "CNY", "KRW", "KPW", "TWD", "HKD", "MOP", "MNT",
+  // South & Southeast Asia
+  "INR", "PKR", "BDT", "LKR", "NPR", "BTN", "MVR", "BND", "MYR", "SGD",
+  "IDR", "PHP", "THB", "VND", "KHR", "LAK", "MMK",
+  // Central Asia
+  "KZT", "UZS", "KGS", "TJS", "TMT", "AZN", "AMD",
+  // Middle East
+  "AED", "SAR", "QAR", "KWD", "BHD", "OMR", "JOD", "ILS", "LBP", "SYP",
+  "IQD", "IRR", "YER",
+  // Oceania
+  "AUD", "NZD", "FJD", "PGK",
+  // Africa
+  "ZAR", "NGN", "KES", "GHS", "EGP", "MAD", "DZD", "TND", "LYD", "ETB",
+  "UGX", "TZS", "RWF", "BIF", "XOF", "XAF", "AOA", "ZMW", "MWK", "MZN",
+  "NAD", "BWP", "SDG", "SSP", "ERN", "SZL", "LSL", "LRD", "SOS", "GMD",
+  "GNF", "MRU", "MUR", "CVE", "SLE", "DJF", "KMF", "CDF", "MGA", "AFN",
+];
 
 export const TIME_OPTIONS = Array.from({ length: 24 }, (_, index) => {
   const hours = String(index).padStart(2, "0");

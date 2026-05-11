@@ -118,7 +118,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
                   <strong>Earning rate:</strong> 1 XP Point is awarded to each party per Normalized
                   Spending Unit (NSU) of the gross booking amount (the total charged to the guest).
                   NSU normalizes spending across currencies so that 1 XP represents roughly equal
-                  value regardless of which currency is used. Fractional NSU are rounded down. The
+                  value regardless of which currency is used. Fractional NSU are rounded up. The
                   conversion rates are: $1 USD = 1 XP, €1 EUR = 1 XP, ¥100 JPY = 1 XP, ₺40 TRY =
                   1 XP, ₩1,000 KRW = 1 XP.
                 </li>
