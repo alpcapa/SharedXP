@@ -283,29 +283,28 @@ const FieldPage = ({ currentUser, onLogout }) => {
                     🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
                   </p>
                   <div className="field-post-actions">
+                    {isOwner && post.sourceRequestId && (
+                      <Link
+                        to={`/history?editRating=${post.sourceRequestId}`}
+                        className="field-post-action-link"
+                      >
+                        ✏ Edit post
+                      </Link>
+                    )}
                     {isOwner && (
-                      post.sourceRequestId ? (
-                        <Link
-                          to={`/history?editRating=${post.sourceRequestId}`}
-                          className="field-edit-post-btn"
-                        >
-                          ✏ Edit post
-                        </Link>
-                      ) : (
-                        <button
-                          type="button"
-                          className="field-delete-post-btn"
-                          aria-label="Delete this post"
-                          onClick={() => handleDeletePost(post.id)}
-                        >
-                          Remove post
-                        </button>
-                      )
+                      <button
+                        type="button"
+                        className="field-post-action-link"
+                        aria-label="Delete this post"
+                        onClick={() => handleDeletePost(post.id)}
+                      >
+                        Delete post
+                      </button>
                     )}
                     {!isOwner && (
                       <button
                         type="button"
-                        className="field-report-btn"
+                        className="field-post-action-link"
                         onClick={() => {
                           if (window.confirm("Report this post as inappropriate?\n\nWe will review it and take action if needed.")) {
                             window.alert("Thank you — your report has been received.");

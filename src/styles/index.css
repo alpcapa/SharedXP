@@ -4187,8 +4187,8 @@ body {
   margin-top: 10px;
 }
 
-/* ── The Field — report link ─── */
-.field-report-btn {
+/* ── The Field — post action links (edit / delete / report) ─── */
+.field-post-action-link {
   padding: 0;
   border: none;
   background: none;
@@ -4200,7 +4200,7 @@ body {
   text-underline-offset: 2px;
 }
 
-.field-report-btn:hover {
+.field-post-action-link:hover {
   color: #6b7280;
 }
 
