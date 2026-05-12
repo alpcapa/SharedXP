@@ -235,7 +235,6 @@ export const useBookingRequests = (currentUser) => {
       ? {
           host_rating: ratingData.rating ?? 0,
           host_review: ratingData.review ?? "",
-          host_photos: photoUrls,
           host_rated_at: now,
           updated_at: now,
         }
@@ -247,10 +246,29 @@ export const useBookingRequests = (currentUser) => {
           guest_rated_at: now,
           updated_at: now,
         };
-    const { error } = await supabase
+
+    // Try to save the rating. If host_photos column is present (migration 020
+    // applied), include it; otherwise fall back to saving without it so that
+    // the core rating (host_rating, host_review) is never blocked by the
+    // optional column.
+    const shouldIncludeHostPhotos = isHost && photoUrls.length > 0;
+    let { error } = await supabase
       .from("booking_requests")
-      .update(updates)
+      .update(shouldIncludeHostPhotos ? { ...updates, host_photos: photoUrls } : updates)
       .eq("id", requestId);
+
+    // Retry without host_photos if the update failed (column may not exist yet)
+    if (error && shouldIncludeHostPhotos) {
+      const retry = await supabase
+        .from("booking_requests")
+        .update(updates)
+        .eq("id", requestId);
+      error = retry.error;
+      if (!error) {
+        console.info("[submitRating] host_photos column unavailable — photos not saved, rating saved successfully.");
+      }
+    }
+
     if (!error) fetchRequests();
     return !error;
   }, [fetchRequests, currentUser]);

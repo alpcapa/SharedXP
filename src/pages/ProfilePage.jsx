@@ -364,13 +364,29 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         .eq("role", "hosted")
         .gt("attendee_rating", 0)
         .order("completed_at", { ascending: false }),
+      // Try to fetch booking_request reviews including host_photos (added in
+      // migration 020). If the column does not exist yet, fall back to a query
+      // without it so that guest reviews still show.
       supabase
         .from("booking_requests")
         .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
         .eq("host_id", buddyId)
         .eq("status", "completed")
         .gt("guest_rating", 0)
-        .order("guest_rated_at", { ascending: false }),
+        .order("guest_rated_at", { ascending: false })
+        .then(async (res) => {
+          if (res.error) {
+            // Column may not exist; retry without host_photos
+            return supabase
+              .from("booking_requests")
+              .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, sport, guest_rated_at")
+              .eq("host_id", buddyId)
+              .eq("status", "completed")
+              .gt("guest_rating", 0)
+              .order("guest_rated_at", { ascending: false });
+          }
+          return res;
+        }),
     ]).then(([hostResult, reviewsResult, brReviewsResult]) => {
       if (cancelled) return;
       if (!hostResult.error && hostResult.data?.profile) {
@@ -596,14 +612,15 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const equipmentDetails = activeSport.equipmentDetails ?? "";
   const selectedSportGallery = Array.isArray(activeSport.images) ? activeSport.images.filter(Boolean) : [];
   const fallbackGallery = Array.isArray(buddy.gallery) ? buddy.gallery.filter(Boolean) : [];
-  // Guest-uploaded photos from booking_requests ratings for this sport
-  const guestRatingPhotos = useMemo(() => {
-    const sportName = activeSport?.sport ?? "";
-    const reviews = Array.isArray(buddy?.reviews) ? buddy.reviews : [];
-    return reviews
-      .filter((r) => r.sport === sportName && Array.isArray(r.photos) && r.photos.length > 0)
-      .flatMap((r) => r.photos.filter(Boolean));
-  }, [buddy, activeSport]);
+  // Guest-uploaded photos from booking_requests ratings for this sport.
+  // Computed as a plain const (not useMemo) because this code runs after the
+  // guard returns above — a useMemo here would violate React's Rules of Hooks.
+  const currentSportName = activeSport?.sport ?? "";
+  const guestRatingPhotos = Array.isArray(buddy.reviews)
+    ? buddy.reviews
+        .filter((r) => r.sport === currentSportName && Array.isArray(r.photos) && r.photos.length > 0)
+        .flatMap((r) => r.photos.filter(Boolean))
+    : [];
   const baseGallery =
     selectedSportGallery.length > 0
       ? selectedSportGallery
