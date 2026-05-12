@@ -8,7 +8,6 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM_EMAIL =
   Deno.env.get("RESEND_FROM_EMAIL") ?? "noreply@sharedxp.com";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 // APP_URL must match the production origin listed in Supabase Dashboard →
 // Authentication → URL Configuration → Redirect URLs (and Site URL).
 // Set it as an Edge Function secret:
@@ -16,8 +15,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://project-gq4ge.vercel.app";
 
 interface EmailData {
-  token: string;
-  token_hash: string;
+  token?: string;
+  token_hash?: string;
   redirect_to: string;
   email_action_type: string;
   site_url: string;
@@ -33,15 +32,12 @@ interface HookPayload {
 function confirmationUrl(
   tokenHash: string,
   actionType: string,
-  redirectTo: string,
 ): string {
-  const base = `${SUPABASE_URL}/auth/v1/verify`;
   const params = new URLSearchParams({
     token_hash: tokenHash,
     type: actionType,
-    redirect_to: redirectTo,
   });
-  return `${base}?${params}`;
+  return `${APP_URL}/auth/confirm?${params}`;
 }
 
 function emailHtml(heading: string, body: string, ctaUrl: string, ctaLabel: string): string {
@@ -175,15 +171,10 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   const { user, email_data } = payload;
-  const {
-    email_action_type,
-    token_hash,
-    redirect_to,
-    site_url,
-  } = email_data;
+  const { email_action_type, token_hash, token } = email_data;
 
-  const redirectTo = redirect_to || site_url || APP_URL;
-  const ctaUrl = confirmationUrl(token_hash, email_action_type, redirectTo);
+  const verificationToken = token_hash || token || "";
+  const ctaUrl = confirmationUrl(verificationToken, email_action_type);
   const { subject, html } = buildEmail(email_action_type, user.email, ctaUrl);
 
   const resendRes = await fetch("https://api.resend.com/emails", {

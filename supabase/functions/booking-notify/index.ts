@@ -313,7 +313,7 @@ function buildNewMessage(
   recipient: Record<string, unknown>,
   senderName: string,
 ): { to: string; subject: string; html: string } {
-  const recipientName = String(recipient.full_name ?? `${recipient.first_name ?? ""} ${recipient.last_name ?? ""}`.trim() || "there");
+  const recipientName = String((recipient.full_name ?? `${recipient.first_name ?? ""} ${recipient.last_name ?? ""}`.trim()) || "there");
   const ctaUrl = `${APP_URL}/chat/${booking.id}`;
   return {
     to: String(recipient.email),
@@ -561,7 +561,7 @@ serve(async (req: Request): Promise<Response> => {
         const isRequesterSender = String(booking.requester_id) === senderId;
         const recipient = isRequesterSender ? host : requester;
         const senderProfile = isRequesterSender ? requester : host;
-        const senderName = String(senderProfile.full_name ?? `${senderProfile.first_name ?? ""} ${senderProfile.last_name ?? ""}`.trim() || "Someone");
+        const senderName = String((senderProfile.full_name ?? `${senderProfile.first_name ?? ""} ${senderProfile.last_name ?? ""}`.trim()) || "Someone");
         const e = buildNewMessage(booking, recipient, senderName);
         await sendEmail(e.to, e.subject, e.html);
         break;

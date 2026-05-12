@@ -1,9 +1,6 @@
 # Supabase local development configuration.
 # See https://supabase.com/docs/guides/local-development for details.
 
-[project]
-project_id = "sharedxp"
-
 [api]
 enabled = true
 port = 54321
@@ -62,7 +59,7 @@ enable_confirmations = true
 #   3. Set Edge Function secrets:
 #      supabase secrets set RESEND_API_KEY=re_... RESEND_FROM_EMAIL=noreply@sharedxp.com APP_URL=https://project-gq4ge.vercel.app
 [auth.hook.send_email]
-enabled = true
+enabled = false
 uri = "http://host.docker.internal:54321/functions/v1/send-email"
 secrets = "env(SEND_EMAIL_HOOK_SECRET)"
 
