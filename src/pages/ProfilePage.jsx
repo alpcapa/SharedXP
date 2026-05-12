@@ -366,7 +366,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         .order("completed_at", { ascending: false }),
       supabase
         .from("booking_requests")
-        .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, sport, guest_rated_at")
+        .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
         .eq("host_id", buddyId)
         .eq("status", "completed")
         .gt("guest_rating", 0)
@@ -398,7 +398,11 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             comment: r.guest_review || null,
             sport: r.sport,
             date: r.guest_rated_at,
-            photos: Array.isArray(r.guest_photos) ? r.guest_photos.filter(Boolean) : [],
+            // Include photos from both parties: guest-uploaded + host-uploaded
+            photos: [
+              ...(Array.isArray(r.guest_photos) ? r.guest_photos : []),
+              ...(Array.isArray(r.host_photos) ? r.host_photos : []),
+            ].filter(Boolean),
           };
         });
         const reviews = [...brReviews, ...legacyReviews];

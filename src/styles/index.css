@@ -5544,6 +5544,14 @@ body {
   flex-wrap: wrap;
 }
 
+.guest-profile-rating-inline {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: normal;
+  color: #374151;
+}
+
 .guest-profile-host-link {
   align-self: flex-start;
   font-size: 13px;

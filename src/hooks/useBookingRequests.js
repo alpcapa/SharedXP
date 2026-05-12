@@ -187,10 +187,55 @@ export const useBookingRequests = (currentUser) => {
 
   const submitRating = useCallback(async (requestId, isHost, ratingData) => {
     const now = new Date().toISOString();
+    const userId = currentUser?.id;
+
+    // Upload each photo to Supabase Storage and collect public URLs.
+    // Storing raw base64 data-URLs directly in the DB would hit request-size
+    // limits and is slow; storage URLs are tiny strings and load from the CDN.
+    const uploadPhotos = async (rawPhotos) => {
+      if (!userId || !rawPhotos?.length) {
+        if (rawPhotos?.length && !userId) {
+          console.warn("[submitRating] No userId — photos cannot be uploaded and will be skipped.");
+        }
+        return [];
+      }
+      const role = isHost ? "host" : "guest";
+      const results = await Promise.all(
+        rawPhotos.map(async (src, i) => {
+          if (!src) return null;
+          if (!src.startsWith("data:")) return src; // already a storage URL
+          try {
+            const res = await fetch(src);
+            const blob = await res.blob();
+            const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+            const fileName = `${userId}/${role}_ratings/${requestId}_${Date.now()}_${i}.${ext}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from("host-sport-images")
+              .upload(fileName, blob, { contentType: blob.type, upsert: true });
+            if (uploadError) {
+              console.error("[submitRating] photo upload:", uploadError);
+              return null;
+            }
+            const { data: { publicUrl } } = supabase.storage
+              .from("host-sport-images")
+              .getPublicUrl(uploadData.path);
+            return publicUrl || null;
+          } catch (e) {
+            console.error("[submitRating] photo upload exception:", e);
+            return null;
+          }
+        })
+      );
+      return results.filter(Boolean);
+    };
+
+    const photoUrls = await uploadPhotos(ratingData.photos ?? []);
+
     const updates = isHost
       ? {
           host_rating: ratingData.rating ?? 0,
           host_review: ratingData.review ?? "",
+          host_photos: photoUrls,
           host_rated_at: now,
           updated_at: now,
         }
@@ -198,7 +243,7 @@ export const useBookingRequests = (currentUser) => {
           guest_rating: ratingData.overall ?? ratingData.rating ?? 0,
           guest_host_ratings: ratingData.hostRatings ?? {},
           guest_review: ratingData.review ?? "",
-          guest_photos: ratingData.photos ?? [],
+          guest_photos: photoUrls,
           guest_rated_at: now,
           updated_at: now,
         };
@@ -208,7 +253,7 @@ export const useBookingRequests = (currentUser) => {
       .eq("id", requestId);
     if (!error) fetchRequests();
     return !error;
-  }, [fetchRequests]);
+  }, [fetchRequests, currentUser]);
 
   const resolveDispute = useCallback(async (disputeId, resolution) => {
     const { data: dispute } = await supabase

@@ -80,6 +80,7 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
       setReviews([...brReviews, ...legacyReviews]);
 
       // Photos: from legacy bookings + from guest_photos in booking_requests
+      // (guest_photos are set when the guest submitted a rating/photos for a host)
       const legacyPhotos = bookings.flatMap((b) => {
         const gallery = Array.isArray(b.photo_gallery) ? b.photo_gallery : [];
         return [b.photo, ...gallery];
@@ -141,6 +142,12 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
                     {getAgeFromBirthday(profile.birthday) != null && (
                       <span className="guest-profile-age"> ({getAgeFromBirthday(profile.birthday)})</span>
                     )}
+                    {avgRating !== null && (
+                      <span className="guest-profile-rating-inline">
+                        ⭐ {avgRating.toFixed(1)}
+                        {reviews.length > 0 && ` (${reviews.length})`}
+                      </span>
+                    )}
                   </h1>
                   {(profile.city || profile.country) && (
                     <p className="guest-profile-location">
@@ -157,21 +164,13 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
                       Member since {fmtDate(profile.signed_up_at)}
                     </p>
                   )}
-                  {avgRating !== null && (
-                    <div className="guest-profile-rating">
-                      <StarRating rating={avgRating} />
-                      <span className="guest-profile-rating-label">
-                        {avgRating.toFixed(1)} · {reviews.length} {reviews.length === 1 ? "review" : "reviews"} as guest
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
 
               <section className="guest-profile-reviews">
-                <h2 className="guest-profile-section-title">Ratings & reviews from hosts</h2>
+                <h2 className="guest-profile-section-title">Reviews</h2>
                 {reviews.length === 0 ? (
-                  <p>No host ratings or reviews yet.</p>
+                  <p>No reviews yet.</p>
                 ) : (
                   reviews.map((r, i) => (
                     <article key={i} className="guest-review-card">
