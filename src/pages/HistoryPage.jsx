@@ -31,6 +31,8 @@ const buildFieldPost = (item, currentUser, caption) => {
       : `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return {
     id,
+    posterId: currentUser?.id ?? null,
+    role: item.role ?? null,
     hostId: null,
     hostName: currentUser?.fullName ?? DEFAULT_FIELD_POST_USER_NAME,
     hostPhoto: currentUser?.photo ?? "",

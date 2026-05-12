@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import RolePill from "../components/RolePill";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { fieldPosts } from "../data/fieldPosts";
 import { deleteFieldPost, getStoredFieldPosts } from "../utils/fieldPosts";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -43,6 +43,8 @@ const sanitizeUserFieldPost = (post) => {
   const photos = rawPhotoList.map(toSafeUserImageUrl).filter(Boolean);
   return {
     id: String(source.id ?? `user-post-${Math.random().toString(36).slice(2)}`),
+    posterId: source.posterId ?? null,
+    role: source.role ?? null,
     hostName: String(source.hostName ?? "SharedXP User"),
     hostPhoto: toSafeUserImageUrl(source.hostPhoto),
     sport: String(source.sport ?? "Other"),
@@ -52,7 +54,8 @@ const sanitizeUserFieldPost = (post) => {
     photos,
     photo: photos[0] ?? "",
     postedAt: String(source.postedAt ?? ""),
-    likes: Number.isFinite(Number(source.likes)) ? Number(source.likes) : 0
+    likes: Number.isFinite(Number(source.likes)) ? Number(source.likes) : 0,
+    sourceRequestId: source.sourceRequestId ?? null,
   };
 };
 
@@ -106,8 +109,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
   }, []);
 
   const allActivePosts = useMemo(() => {
-    const freshUserPosts = getUserFieldPosts().filter((post) => !deletedIds.has(post.id));
-    return [...fieldPosts, ...freshUserPosts];
+    return getUserFieldPosts().filter((post) => !deletedIds.has(post.id));
   }, [deletedIds]);
 
   const countryOptions = useMemo(
@@ -203,107 +205,127 @@ const FieldPage = ({ currentUser, onLogout }) => {
           </p>
         ) : (
           <div className="field-feed">
-            {visiblePosts.map((post) => (
-              <article key={post.id} className="field-card">
-                <div className="field-host-row">
-                  {post.hostPhoto ? (
-                    <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
-                  ) : (
-                    <div
-                      className="field-host-avatar field-host-avatar-fallback"
-                      aria-hidden="true"
-                    >
-                      {String(post.hostName ?? "?")
-                        .trim()
-                        .split(" ")
-                        .filter(Boolean)
-                        .slice(0, 2)
-                        .map((word) => word[0].toUpperCase())
-                        .join("") || "?"}
+            {visiblePosts.map((post) => {
+              const isOwner = post.posterId != null && post.posterId === currentUser?.id;
+              return (
+                <article key={post.id} className="field-card">
+                  <div className="field-host-row">
+                    {post.hostPhoto ? (
+                      <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                    ) : (
+                      <div
+                        className="field-host-avatar field-host-avatar-fallback"
+                        aria-hidden="true"
+                      >
+                        {String(post.hostName ?? "?")
+                          .trim()
+                          .split(" ")
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((word) => word[0].toUpperCase())
+                          .join("") || "?"}
+                      </div>
+                    )}
+                    <div>
+                      <p>
+                        <span className="field-host-name">{post.hostName}</span>
+                        <span className="field-host-city"> · {post.city}</span>
+                      </p>
+                      <div className="field-sport-pill-row">
+                        <span className="sport-pill">{post.sport}</span>
+                        <RolePill role={post.role} />
+                      </div>
                     </div>
-                  )}
-                  <div>
-                    <p>
-                      <span className="field-host-name">{post.hostName}</span>
-                      <span className="field-host-city"> · {post.city}</span>
-                    </p>
-                    <span className="sport-pill">{post.sport}</span>
                   </div>
-                </div>
-                {(() => {
-                  const photos = Array.isArray(post.photos) && post.photos.length > 0
-                    ? post.photos
-                    : post.photo
-                      ? [post.photo]
-                      : [];
-                  if (photos.length === 0) return null;
-                  const idx = getCarouselIndex(post.id);
-                  return (
-                    <div className="field-carousel">
-                      {photos.length > 1 && (
-                        <button
-                          type="button"
-                          className="field-carousel-nav field-carousel-prev"
-                          aria-label="Previous photo"
-                          onClick={() => shiftCarousel(post.id, photos, -1)}
-                        >
-                          ‹
-                        </button>
-                      )}
-                      <img
-                        src={photos[idx]}
-                        alt={post.sport}
-                        className="field-post-photo"
-                      />
-                      {photos.length > 1 && (
-                        <button
-                          type="button"
-                          className="field-carousel-nav field-carousel-next"
-                          aria-label="Next photo"
-                          onClick={() => shiftCarousel(post.id, photos, 1)}
-                        >
-                          ›
-                        </button>
-                      )}
-                      {photos.length > 1 && (
-                        <p className="field-carousel-counter">{idx + 1} / {photos.length}</p>
-                      )}
-                    </div>
-                  );
-                })()}
-                <p className="field-caption">{post.caption}</p>
-                <p className="field-meta">
-                  🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
-                </p>
-                {String(post.id).startsWith("user-") && currentUser && (
-                  post.sourceRequestId ? (
+                  {(() => {
+                    const photos = Array.isArray(post.photos) && post.photos.length > 0
+                      ? post.photos
+                      : post.photo
+                        ? [post.photo]
+                        : [];
+                    if (photos.length === 0) return null;
+                    const idx = getCarouselIndex(post.id);
+                    return (
+                      <div className="field-carousel">
+                        {photos.length > 1 && (
+                          <button
+                            type="button"
+                            className="field-carousel-nav field-carousel-prev"
+                            aria-label="Previous photo"
+                            onClick={() => shiftCarousel(post.id, photos, -1)}
+                          >
+                            ‹
+                          </button>
+                        )}
+                        <img
+                          src={photos[idx]}
+                          alt={post.sport}
+                          className="field-post-photo"
+                        />
+                        {photos.length > 1 && (
+                          <button
+                            type="button"
+                            className="field-carousel-nav field-carousel-next"
+                            aria-label="Next photo"
+                            onClick={() => shiftCarousel(post.id, photos, 1)}
+                          >
+                            ›
+                          </button>
+                        )}
+                        {photos.length > 1 && (
+                          <p className="field-carousel-counter">{idx + 1} / {photos.length}</p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  <p className="field-caption">{post.caption}</p>
+                  <p className="field-meta">
+                    🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
+                  </p>
+                  <div className="field-post-actions">
+                    {isOwner && post.sourceRequestId && (
+                      <Link
+                        to={`/history?editRating=${post.sourceRequestId}`}
+                        className="field-post-action-link"
+                      >
+                        Edit post
+                      </Link>
+                    )}
+                    {isOwner && (
+                      <button
+                        type="button"
+                        className="field-post-action-link"
+                        aria-label="Delete this post"
+                        onClick={() => handleDeletePost(post.id)}
+                      >
+                        Delete post
+                      </button>
+                    )}
+                    {!isOwner && (
+                      <button
+                        type="button"
+                        className="field-post-action-link"
+                        onClick={() => {
+                          if (window.confirm("Report this post as inappropriate?\n\nWe will review it and take action if needed.")) {
+                            window.alert("Thank you — your report has been received.");
+                          }
+                        }}
+                      >
+                        Report
+                      </button>
+                    )}
+                  </div>
+                  {post.hostId != null && String(post.hostId).trim() !== "" && (
                     <Link
-                      to={`/history?editRating=${post.sourceRequestId}`}
-                      className="field-edit-post-btn"
+                      to={`/buddy/${post.hostId}`}
+                      className="field-view-host-link"
                     >
-                      ✏ Edit post
+                      View host profile →
                     </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      className="field-delete-post-btn"
-                      aria-label="Delete this post"
-                      onClick={() => handleDeletePost(post.id)}
-                    >
-                      Remove post
-                    </button>
-                  )
-                )}
-                {post.hostId != null && String(post.hostId).trim() !== "" && (
-                  <Link
-                    to={`/buddy/${post.hostId}`}
-                    className="field-view-host-link"
-                  >
-                    View host profile →
-                  </Link>
-                )}
-              </article>
-            ))}
+                  )}
+                </article>
+              );
+            })}
           </div>
         )}
         </main>

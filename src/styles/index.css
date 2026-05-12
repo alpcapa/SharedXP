@@ -4145,6 +4145,75 @@ body {
   color: #dc2626;
 }
 
+/* ── The Field — sport pill row (pill + role badge) ─── */
+.field-sport-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.field-sport-pill-row .sport-pill {
+  margin-top: 0;
+}
+
+/* ── The Field — Hosted / Attended role pills ─── */
+.field-role-pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.field-role-hosted {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.field-role-attended {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* ── The Field — post action row (remove / report) ─── */
+.field-post-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+/* ── The Field — post action links (edit / delete / report) ─── */
+.field-post-action-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.field-post-action-link:hover {
+  color: #6b7280;
+}
+
+/* ── The Field — share invite link ─── */
+.field-share-invite-link {
+  color: #6ca43b;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.field-share-invite-link:hover {
+  color: #4e7d29;
+}
+
 /* ── The Field — sport filter bar ──────── */
 .field-sport-filter {
   display: flex;

@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import EventCard from "../components/EventCard";
+import RolePill from "../components/RolePill";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { fieldPosts } from "../data/fieldPosts";
 import { loadMajorEvents } from "../lib/events";
 import { supabase } from "../lib/supabase";
+import { deleteFieldPost, getStoredFieldPosts } from "../utils/fieldPosts";
 import { getAgeFromBirthday } from "../utils/profileAge";
 
 const LOCALS_PER_PAGE = 3;
@@ -25,10 +26,6 @@ const getRelativePostedLabel = (postedAt) => {
   if (dayDiff === 1) return "Yesterday";
   return `${dayDiff} days ago`;
 };
-
-const sortedFieldPosts = [...fieldPosts].sort(
-  (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
-);
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -93,6 +90,19 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [selectedYear, setSelectedYear] = useState(DEFAULT_YEAR);
   const [localsPage, setLocalsPage] = useState(0);
   const [fieldPage, setFieldPage] = useState(0);
+  const [fieldPostsList, setFieldPostsList] = useState(() => {
+    const stored = getStoredFieldPosts();
+    return [...stored].sort(
+      (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
+    );
+  });
+  const [fieldDeletedIds, setFieldDeletedIds] = useState(() => new Set());
+
+  const handleDeleteFieldPost = useCallback((postId) => {
+    if (!window.confirm("Remove this post from The Field?")) return;
+    deleteFieldPost(postId);
+    setFieldDeletedIds((prev) => new Set([...prev, postId]));
+  }, []);
   const [majorEventsList, setMajorEventsList] = useState([]);
   const [majorEventsLoading, setMajorEventsLoading] = useState(true);
   const [majorEventsPage, setMajorEventsPage] = useState(0);
@@ -204,11 +214,16 @@ const HomePage = ({ currentUser, onLogout }) => {
     return filteredHosts.slice(startIndex, startIndex + LOCALS_PER_PAGE);
   }, [localsPage, filteredHosts]);
 
-  const totalFieldPages = Math.max(1, Math.ceil(sortedFieldPosts.length / FIELD_PER_PAGE));
+  const activeFieldPosts = useMemo(
+    () => fieldPostsList.filter((p) => !fieldDeletedIds.has(p.id)),
+    [fieldPostsList, fieldDeletedIds]
+  );
+
+  const totalFieldPages = Math.max(1, Math.ceil(activeFieldPosts.length / FIELD_PER_PAGE));
   const visibleFieldPosts = useMemo(() => {
     const start = fieldPage * FIELD_PER_PAGE;
-    return sortedFieldPosts.slice(start, start + FIELD_PER_PAGE);
-  }, [fieldPage]);
+    return activeFieldPosts.slice(start, start + FIELD_PER_PAGE);
+  }, [fieldPage, activeFieldPosts]);
 
   const totalMajorEventsPages = Math.max(
     1,
@@ -447,53 +462,105 @@ const HomePage = ({ currentUser, onLogout }) => {
               </div>
               <Link to="/the-field" className="view-all-link">View all</Link>
             </div>
-            <div className="field-feed">
-              {visibleFieldPosts.map((post) => (
-                <article key={post.id} className="field-card">
-                  <div className="field-host-row">
-                    {post.hostPhoto ? (
-                      <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
-                    ) : (
-                      <div className="field-host-avatar field-host-avatar-fallback" aria-hidden="true">
-                        {String(post.hostName ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
-                      </div>
-                    )}
-                    <div>
-                      <p>
-                        <span className="field-host-name">{post.hostName}</span>
-                        <span className="field-host-city"> · {post.city}</span>
-                      </p>
-                      <span className="sport-pill">{post.sport}</span>
-                    </div>
+            {activeFieldPosts.length === 0 ? (
+              <p className="explore-empty">
+                No sessions shared yet.{" "}
+                <Link to="/history" className="field-share-invite-link">
+                  Complete a booking and share your experience!
+                </Link>
+              </p>
+            ) : (
+              <>
+                <div className="field-feed">
+                  {visibleFieldPosts.map((post) => {
+                    const isOwner = post.posterId != null && post.posterId === currentUser?.id;
+                    return (
+                      <article key={post.id} className="field-card">
+                        <div className="field-host-row">
+                          {post.hostPhoto ? (
+                            <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                          ) : (
+                            <div className="field-host-avatar field-host-avatar-fallback" aria-hidden="true">
+                              {String(post.hostName ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
+                            </div>
+                          )}
+                          <div>
+                            <p>
+                              <span className="field-host-name">{post.hostName}</span>
+                              <span className="field-host-city"> · {post.city}</span>
+                            </p>
+                            <div className="field-sport-pill-row">
+                              <span className="sport-pill">{post.sport}</span>
+                              <RolePill role={post.role} />
+                            </div>
+                          </div>
+                        </div>
+                        {post.photo && (
+                          <img src={post.photo} alt={post.sport} className="field-post-photo" />
+                        )}
+                        <p className="field-caption">{post.caption}</p>
+                        <p className="field-meta">🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}</p>
+                        <div className="field-post-actions">
+                          {isOwner && post.sourceRequestId && (
+                            <Link
+                              to={`/history?editRating=${post.sourceRequestId}`}
+                              className="field-post-action-link"
+                            >
+                              Edit post
+                            </Link>
+                          )}
+                          {isOwner && (
+                            <button
+                              type="button"
+                              className="field-post-action-link"
+                              aria-label="Delete this post"
+                              onClick={() => handleDeleteFieldPost(post.id)}
+                            >
+                              Delete post
+                            </button>
+                          )}
+                          {!isOwner && (
+                            <button
+                              type="button"
+                              className="field-post-action-link"
+                              onClick={() => {
+                                if (window.confirm("Report this post as inappropriate?\n\nWe will review it and take action if needed.")) {
+                                  window.alert("Thank you — your report has been received.");
+                                }
+                              }}
+                            >
+                              Report
+                            </button>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+                {activeFieldPosts.length > FIELD_PER_PAGE && (
+                  <div className="locals-nav-row">
+                    <button
+                      type="button"
+                      className="locals-nav"
+                      aria-label="Show previous field posts"
+                      onClick={() => setFieldPage((p) => Math.max(p - 1, 0))}
+                      disabled={fieldPage === 0}
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      className="locals-nav"
+                      aria-label="Show next field posts"
+                      onClick={() => setFieldPage((p) => Math.min(p + 1, totalFieldPages - 1))}
+                      disabled={fieldPage >= totalFieldPages - 1}
+                    >
+                      ›
+                    </button>
                   </div>
-                  {post.photo && (
-                    <img src={post.photo} alt={post.sport} className="field-post-photo" />
-                  )}
-                  <p className="field-caption">{post.caption}</p>
-                  <p className="field-meta">🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}</p>
-                </article>
-              ))}
-            </div>
-            <div className="locals-nav-row">
-              <button
-                type="button"
-                className="locals-nav"
-                aria-label="Show previous field posts"
-                onClick={() => setFieldPage((p) => Math.max(p - 1, 0))}
-                disabled={fieldPage === 0}
-              >
-                ‹
-              </button>
-              <button
-                type="button"
-                className="locals-nav"
-                aria-label="Show next field posts"
-                onClick={() => setFieldPage((p) => Math.min(p + 1, totalFieldPages - 1))}
-                disabled={fieldPage >= totalFieldPages - 1}
-              >
-                ›
-              </button>
-            </div>
+                )}
+              </>
+            )}
           </section>
 
           {/* ── Major Events ─────────────────────────────────── */}

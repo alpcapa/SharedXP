@@ -137,7 +137,9 @@ const PendingBookingCard = ({
   const [shareCaptionError, setShareCaptionError] = useState(false);
   const [existingFieldPostId, setExistingFieldPostId] = useState(() => {
     try {
-      const match = getStoredFieldPosts().find((p) => p.sourceRequestId === request.id);
+      const match = getStoredFieldPosts().find(
+        (p) => p.sourceRequestId === request.id && p.posterId === currentUserId
+      );
       return match?.id ?? null;
     } catch {
       return null;
@@ -252,6 +254,8 @@ const PendingBookingCard = ({
     saveFieldPost({
       id,
       sourceRequestId: request.id,
+      posterId: currentUserId,
+      role: isHost ? "hosted" : "attended",
       hostId: null,
       hostName: currentUser?.fullName ?? "SharedXP User",
       hostPhoto: currentUser?.photo ?? "",
