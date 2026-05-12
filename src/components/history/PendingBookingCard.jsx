@@ -141,14 +141,21 @@ const PendingBookingCard = ({
     : !!request.guest_rated_at;
 
   const handleRatingPhotoUpload = (e) => {
-    const files = Array.from(e.target.files ?? []);
-    files.slice(0, 5 - ratingPhotos.length).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const url = String(ev.target?.result ?? "");
-        if (url) setRatingPhotos((prev) => [...prev, url]);
-      };
-      reader.readAsDataURL(file);
+    const remaining = 5 - ratingPhotos.length;
+    if (remaining <= 0) return;
+    const files = Array.from(e.target.files ?? []).slice(0, remaining);
+    const promises = files.map(
+      (file) =>
+        new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(String(ev.target?.result ?? ""));
+          reader.onerror = () => resolve("");
+          reader.readAsDataURL(file);
+        })
+    );
+    Promise.all(promises).then((urls) => {
+      const valid = urls.filter(Boolean);
+      if (valid.length) setRatingPhotos((prev) => [...prev, ...valid].slice(0, 5));
     });
     e.target.value = "";
   };
@@ -171,9 +178,8 @@ const PendingBookingCard = ({
           sport: request.sport,
           photoGallery: ratingPhotos,
         });
-      } else {
-        setShowRatingPanel(false);
       }
+      // Keep panel visible so user can close it with the toggle button
     }
   };
 
@@ -390,113 +396,114 @@ const PendingBookingCard = ({
                 name={isHost ? requesterName : hostName}
                 unreadCount={unreadCount}
               />
-              {!alreadyRated && !showRatingPanel && onSubmitRating && (
+              {alreadyRated ? (
+                <span className="pending-rated-badge">✓ Rated</span>
+              ) : onSubmitRating ? (
                 <button
                   type="button"
-                  className="btn btn-primary pending-rate-btn"
-                  onClick={() => setShowRatingPanel(true)}
+                  className={`btn ${showRatingPanel ? "btn-light" : "btn-primary"} pending-rate-btn`}
+                  onClick={() => setShowRatingPanel((prev) => !prev)}
                 >
-                  ⭐ {isHost ? "Rate Guest" : "Rate Host"}
+                  {showRatingPanel ? "✕ Close" : `⭐ ${isHost ? "Rate Guest" : "Rate Host"}`}
                 </button>
-              )}
-              {alreadyRated && (
-                <span className="pending-rated-badge">✓ Rated</span>
-              )}
+              ) : null}
             </div>
 
-            {showRatingPanel && !alreadyRated && (
+            {showRatingPanel && (
               <div className="pending-rating-panel">
                 <h3 className="pending-rating-title">
-                  {isHost ? `Rate ${requesterName}` : `Rate ${hostName}`}
+                  {ratingDone
+                    ? "✓ Rating submitted — thank you!"
+                    : isHost ? `Rate ${requesterName}` : `Rate ${hostName}`}
                 </h3>
 
-                {isHost ? (
-                  <div className="pending-rating-field">
-                    <span className="pending-rating-label">Overall</span>
-                    <StarRating value={guestOverall} onChange={setGuestOverall} />
-                  </div>
-                ) : (
-                  HOST_RATING_FIELDS.map((field) => (
-                    <div key={field.key} className="pending-rating-field">
-                      <span className="pending-rating-label">{field.label}</span>
-                      <StarRating
-                        value={hostRatings[field.key]}
-                        onChange={(v) =>
-                          setHostRatings((prev) => ({
-                            ...prev,
-                            [field.key]: v,
-                          }))
-                        }
-                      />
-                    </div>
-                  ))
-                )}
-
-                <label className="pending-rating-field pending-rating-review">
-                  <span className="pending-rating-label">
-                    {isHost ? "Review guest" : "Review host"}
-                  </span>
-                  <textarea
-                    className="pending-rating-textarea"
-                    rows={3}
-                    placeholder="Share your experience..."
-                    value={ratingReview}
-                    onChange={(e) => setRatingReview(e.target.value)}
-                  />
-                </label>
-
-                <div className="pending-rating-field">
-                  <span className="pending-rating-label">Add Photos</span>
-                  <div className="pending-rating-photos">
-                    {ratingPhotos.map((photo, i) => (
-                      <div key={i} className="pending-rating-photo-wrap">
-                        <img src={photo} alt={`Photo ${i + 1}`} className="pending-rating-thumb" />
-                        <button
-                          type="button"
-                          className="pending-rating-photo-delete"
-                          aria-label={`Remove photo ${i + 1}`}
-                          onClick={() => setRatingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
-                        >×</button>
+                {!ratingDone && (
+                  <>
+                    {isHost ? (
+                      <div className="pending-rating-field">
+                        <span className="pending-rating-label">Overall</span>
+                        <StarRating value={guestOverall} onChange={setGuestOverall} />
                       </div>
-                    ))}
-                    {ratingPhotos.length < 5 && (
-                      <label className="pending-rating-photo-add">
-                        + Add
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="pending-rating-photo-input"
-                          onChange={handleRatingPhotoUpload}
-                        />
-                      </label>
+                    ) : (
+                      HOST_RATING_FIELDS.map((field) => (
+                        <div key={field.key} className="pending-rating-field">
+                          <span className="pending-rating-label">{field.label}</span>
+                          <StarRating
+                            value={hostRatings[field.key]}
+                            onChange={(v) =>
+                              setHostRatings((prev) => ({
+                                ...prev,
+                                [field.key]: v,
+                              }))
+                            }
+                          />
+                        </div>
+                      ))
                     )}
-                  </div>
-                </div>
 
-                <div className="pending-rating-actions">
-                  <button
-                    type="button"
-                    className="btn btn-light"
-                    onClick={() => setShowRatingPanel(false)}
-                    disabled={ratingLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={handleSubmitRating}
-                    disabled={ratingLoading || (isHost ? !guestOverall : !hostRatings.overall)}
-                  >
-                    {ratingLoading ? "Saving…" : "Submit Rating"}
-                  </button>
-                </div>
+                    <label className="pending-rating-field pending-rating-review">
+                      <span className="pending-rating-label">
+                        {isHost ? "Review guest" : "Review host"}
+                      </span>
+                      <textarea
+                        className="pending-rating-textarea"
+                        rows={3}
+                        placeholder="Share your experience..."
+                        value={ratingReview}
+                        onChange={(e) => setRatingReview(e.target.value)}
+                      />
+                    </label>
+
+                    <div className="pending-rating-field">
+                      <span className="pending-rating-label">Add Photos</span>
+                      <div className="pending-rating-photos">
+                        {ratingPhotos.map((photo, i) => (
+                          <div key={i} className="pending-rating-photo-wrap">
+                            <img src={photo} alt={`Photo ${i + 1}`} className="pending-rating-thumb" />
+                            <button
+                              type="button"
+                              className="pending-rating-photo-delete"
+                              aria-label={`Remove photo ${i + 1}`}
+                              onClick={() => setRatingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                            >×</button>
+                          </div>
+                        ))}
+                        {ratingPhotos.length < 5 && (
+                          <label className="pending-rating-photo-add">
+                            + Add
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="pending-rating-photo-input"
+                              onChange={handleRatingPhotoUpload}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pending-rating-actions">
+                      <button
+                        type="button"
+                        className="btn btn-light"
+                        onClick={() => setShowRatingPanel(false)}
+                        disabled={ratingLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleSubmitRating}
+                        disabled={ratingLoading || (isHost ? !guestOverall : !hostRatings.overall)}
+                      >
+                        {ratingLoading ? "Saving…" : "Submit Rating"}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
-            )}
-
-            {ratingDone && !shareItem && (
-              <p className="pending-rating-success">✓ Rating submitted — thank you!</p>
             )}
           </div>
         )}

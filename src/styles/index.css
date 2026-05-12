@@ -3747,6 +3747,22 @@ body {
   color: #596164;
 }
 
+.review-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.review-photo-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+
 @media (max-width: 767px) {
   .field-feed {
     grid-template-columns: 1fr;
@@ -5618,6 +5634,13 @@ body {
   margin: 0;
   font-size: 12px;
   color: #9ca3af;
+}
+
+.guest-review-text {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #374151;
+  font-style: italic;
 }
 
 @media (max-width: 480px) {

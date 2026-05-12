@@ -48,19 +48,47 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
         .eq("user_id", userId)
         .eq("role", "attended")
         .order("completed_at", { ascending: false }),
-    ]).then(([profileResult, bookingsResult]) => {
+      supabase
+        .from("booking_requests")
+        .select("host_rating, host_review, host_rated_at, guest_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)")
+        .eq("requester_id", userId)
+        .eq("status", "completed")
+        .order("host_rated_at", { ascending: false }),
+    ]).then(([profileResult, bookingsResult, brResult]) => {
       if (!profileResult.error && profileResult.data) {
         setProfile(profileResult.data);
       }
 
       const bookings = bookingsResult.data ?? [];
+      const brRows = brResult.data ?? [];
 
-      setReviews(bookings.filter((b) => Number(b.host_rating) > 0));
+      // Reviews: from legacy bookings table + from booking_requests (host_rating)
+      const legacyReviews = bookings.filter((b) => Number(b.host_rating) > 0);
+      const brReviews = brRows.filter((r) => Number(r.host_rating) > 0).map((r) => {
+        const p = r.host_profile;
+        const hostName = p
+          ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Host")
+          : "Host";
+        return {
+          counterparty_name: hostName,
+          host_rating: r.host_rating,
+          host_review: r.host_review,
+          sport: r.sport,
+          completed_at: r.host_rated_at,
+        };
+      });
+      setReviews([...brReviews, ...legacyReviews]);
 
-      const allPhotos = bookings.flatMap((b) => {
+      // Photos: from legacy bookings + from guest_photos in booking_requests
+      const legacyPhotos = bookings.flatMap((b) => {
         const gallery = Array.isArray(b.photo_gallery) ? b.photo_gallery : [];
         return [b.photo, ...gallery];
-      }).map((p) => String(p ?? "").trim())
+      });
+      const brPhotos = brRows.flatMap((r) =>
+        Array.isArray(r.guest_photos) ? r.guest_photos : []
+      );
+      const allPhotos = [...brPhotos, ...legacyPhotos]
+        .map((p) => String(p ?? "").trim())
         .filter((p) => p && p !== FALLBACK_PHOTO);
       setPhotos([...new Set(allPhotos)]);
 
@@ -159,6 +187,9 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
                           )}
                         </div>
                       </div>
+                      {r.host_review && (
+                        <p className="guest-review-text">{r.host_review}</p>
+                      )}
                     </article>
                   ))
                 )}

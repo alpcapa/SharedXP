@@ -366,7 +366,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         .order("completed_at", { ascending: false }),
       supabase
         .from("booking_requests")
-        .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, sport, guest_rated_at")
+        .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, sport, guest_rated_at")
         .eq("host_id", buddyId)
         .eq("status", "completed")
         .gt("guest_rating", 0)
@@ -398,6 +398,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
             comment: r.guest_review || null,
             sport: r.sport,
             date: r.guest_rated_at,
+            photos: Array.isArray(r.guest_photos) ? r.guest_photos.filter(Boolean) : [],
           };
         });
         const reviews = [...brReviews, ...legacyReviews];
@@ -591,12 +592,21 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const equipmentDetails = activeSport.equipmentDetails ?? "";
   const selectedSportGallery = Array.isArray(activeSport.images) ? activeSport.images.filter(Boolean) : [];
   const fallbackGallery = Array.isArray(buddy.gallery) ? buddy.gallery.filter(Boolean) : [];
-  const galleryPhotos =
+  // Guest-uploaded photos from booking_requests ratings for this sport
+  const guestRatingPhotos = useMemo(() => {
+    const sportName = activeSport?.sport ?? "";
+    const reviews = Array.isArray(buddy?.reviews) ? buddy.reviews : [];
+    return reviews
+      .filter((r) => r.sport === sportName && Array.isArray(r.photos) && r.photos.length > 0)
+      .flatMap((r) => r.photos.filter(Boolean));
+  }, [buddy, activeSport]);
+  const baseGallery =
     selectedSportGallery.length > 0
       ? selectedSportGallery
       : fallbackGallery.length > 0
         ? fallbackGallery
         : [];
+  const galleryPhotos = [...new Set([...baseGallery, ...guestRatingPhotos])];
 
   const formatDate = (dateValue) =>
     new Intl.DateTimeFormat("en-GB", {
@@ -944,6 +954,18 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                   </div>
                 )}
                 {review.comment && <p>{review.comment}</p>}
+                {Array.isArray(review.photos) && review.photos.length > 0 && (
+                  <div className="review-photos">
+                    {review.photos.map((photo, pi) => (
+                      <img
+                        key={pi}
+                        src={photo}
+                        alt={`Review photo ${pi + 1}`}
+                        className="review-photo-thumb"
+                      />
+                    ))}
+                  </div>
+                )}
               </article>
               );
             })}
