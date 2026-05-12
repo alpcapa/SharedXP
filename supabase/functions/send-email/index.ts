@@ -175,6 +175,7 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   const { user, email_data } = payload;
+  console.log("[send-email] email_data:", JSON.stringify(email_data));
   const {
     email_action_type,
     token_hash,
