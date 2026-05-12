@@ -314,9 +314,9 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
   const onPhotoSelect = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!/^image\/(png|jpe?g|gif|webp|bmp)$/i.test(file.type)) {
+    if (!/^image\/(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(file.type)) {
       setSuccessMessage("");
-      setErrorMessage("Please upload a PNG, JPG, GIF, WEBP, or BMP image.");
+      setErrorMessage("Please upload a JPG, PNG, HEIC, WEBP, GIF, or BMP image.");
       return;
     }
     if (selectedPhotoPreviewUrl) URL.revokeObjectURL(selectedPhotoPreviewUrl);
