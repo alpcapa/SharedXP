@@ -187,6 +187,7 @@ serve(async (req: Request): Promise<Response> => {
   const redirectTo = APP_URL;
   const verificationToken = token_hash || token || "";
   const ctaUrl = confirmationUrl(verificationToken, email_action_type, redirectTo);
+  console.log("[send-email] ctaUrl:", ctaUrl);
   const { subject, html } = buildEmail(email_action_type, user.email, ctaUrl);
 
   const resendRes = await fetch("https://api.resend.com/emails", {
