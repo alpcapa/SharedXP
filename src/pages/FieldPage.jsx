@@ -288,7 +288,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
                         to={`/history?editRating=${post.sourceRequestId}`}
                         className="field-post-action-link"
                       >
-                        ✏ Edit post
+                        Edit post
                       </Link>
                     )}
                     {isOwner && (
