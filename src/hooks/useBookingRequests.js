@@ -185,6 +185,106 @@ export const useBookingRequests = (currentUser) => {
     return true;
   }, [fetchRequests]);
 
+  const submitRating = useCallback(async (requestId, isHost, ratingData) => {
+    const now = new Date().toISOString();
+    const userId = currentUser?.id;
+
+    // Upload each photo to Supabase Storage and collect public URLs.
+    // Storing raw base64 data-URLs directly in the DB would hit request-size
+    // limits and is slow; storage URLs are tiny strings and load from the CDN.
+    const uploadPhotos = async (rawPhotos) => {
+      if (!userId || !rawPhotos?.length) {
+        if (rawPhotos?.length && !userId) {
+          console.warn("[submitRating] No userId — photos cannot be uploaded and will be skipped.");
+        }
+        return [];
+      }
+      const role = isHost ? "host" : "guest";
+      const results = await Promise.all(
+        rawPhotos.map(async (src, i) => {
+          if (!src) return null;
+          if (!src.startsWith("data:")) return src; // already a storage URL
+          try {
+            // Convert data URL → Blob without fetch() to avoid browser quirks.
+            const [meta, base64] = src.split(",");
+            const mime = meta.match(/:(.*?);/)?.[1] || "image/jpeg";
+            const binary = atob(base64 ?? "");
+            const bytes = new Uint8Array(binary.length);
+            for (let bi = 0; bi < binary.length; bi++) bytes[bi] = binary.charCodeAt(bi);
+            const blob = new Blob([bytes], { type: mime });
+            const rawExt = mime.split("/")[1] ?? "jpg";
+            const ext = rawExt === "jpeg" ? "jpg" : rawExt;
+            const fileName = `${userId}/${role}_ratings/${requestId}_${Date.now()}_${i}.${ext}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from("host-sport-images")
+              .upload(fileName, blob, { contentType: blob.type, upsert: true });
+            if (uploadError) {
+              console.error("[submitRating] photo upload:", uploadError);
+              return null;
+            }
+            const { data: { publicUrl } } = supabase.storage
+              .from("host-sport-images")
+              .getPublicUrl(uploadData.path);
+            return publicUrl || null;
+          } catch (e) {
+            console.error("[submitRating] photo upload exception:", e);
+            return null;
+          }
+        })
+      );
+      return results.filter(Boolean);
+    };
+
+    const photoUrls = await uploadPhotos(ratingData.photos ?? []);
+
+    const updates = isHost
+      ? {
+          host_rating: ratingData.rating ?? 0,
+          host_review: ratingData.review ?? "",
+          host_rated_at: now,
+          updated_at: now,
+        }
+      : {
+          guest_rating: ratingData.overall ?? ratingData.rating ?? 0,
+          guest_host_ratings: ratingData.hostRatings ?? {},
+          guest_review: ratingData.review ?? "",
+          guest_photos: photoUrls,
+          guest_rated_at: now,
+          updated_at: now,
+        };
+
+    // Try to save the rating. If host_photos column is present (migration 020
+    // applied), include it; otherwise fall back to saving without it so that
+    // the core rating (host_rating, host_review) is never blocked by the
+    // optional column.
+    const shouldIncludeHostPhotos = isHost && photoUrls.length > 0;
+    let { error } = await supabase
+      .from("booking_requests")
+      .update(shouldIncludeHostPhotos ? { ...updates, host_photos: photoUrls } : updates)
+      .eq("id", requestId);
+
+    // Retry without host_photos if the update failed (column may not exist yet)
+    if (error && shouldIncludeHostPhotos) {
+      const retry = await supabase
+        .from("booking_requests")
+        .update(updates)
+        .eq("id", requestId);
+      error = retry.error;
+      if (!error) {
+        console.info("[submitRating] host_photos column unavailable — photos not saved, rating saved successfully.");
+      }
+    }
+
+    if (error) {
+      console.error("[submitRating] update failed:", error);
+      // Surface the error message so the UI can show it to the user.
+      return { ok: false, errorMessage: error.message ?? "Could not save your rating. Please try again." };
+    }
+
+    await fetchRequests();
+    return { ok: true, errorMessage: null, photoUrls };
+  }, [fetchRequests, currentUser]);
+
   const resolveDispute = useCallback(async (disputeId, resolution) => {
     const { data: dispute } = await supabase
       .from("disputes")
@@ -241,6 +341,7 @@ export const useBookingRequests = (currentUser) => {
     confirmExperience,
     openDispute,
     resolveDispute,
+    submitRating,
     computeInvoice,
   };
 };

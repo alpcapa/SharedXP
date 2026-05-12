@@ -3747,6 +3747,22 @@ body {
   color: #596164;
 }
 
+.review-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.review-photo-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+
 @media (max-width: 767px) {
   .field-feed {
     grid-template-columns: 1fr;
@@ -4592,6 +4608,191 @@ body {
   padding: 12px 16px;
 }
 
+/* ── Completed block ─────────────────────────────── */
+.pending-card-completed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pending-rate-btn {
+  font-size: 14px;
+}
+
+.pending-rated-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+/* ── Rating panel ────────────────────────────────── */
+.pending-rating-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #f8fdf2;
+  border: 1px solid #c8dba0;
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.pending-rating-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.pending-rating-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pending-rating-review {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pending-rating-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  min-width: 130px;
+}
+
+.pending-rating-review .pending-rating-label {
+  min-width: unset;
+}
+
+.pending-star-row {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.pending-star-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #d1d5db;
+  line-height: 1;
+  transition: color 0.1s;
+}
+
+.pending-star-btn.active,
+.pending-star-btn:hover {
+  color: #f59e0b;
+}
+
+.pending-rating-textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.pending-rating-textarea:focus {
+  outline: none;
+  border-color: #84cc16;
+  box-shadow: 0 0 0 2px rgba(132,204,22,0.2);
+}
+
+.pending-rating-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.pending-rating-photo-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.pending-rating-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.pending-rating-photo-delete {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pending-rating-photo-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border: 2px dashed #84cc16;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4d7c0f;
+  cursor: pointer;
+}
+
+.pending-rating-photo-input {
+  display: none;
+}
+
+.pending-rating-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pending-rating-error {
+  width: 100%;
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #991b1b;
+  background: #fee2e2;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.pending-rating-success {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #166534;
+}
+
+
 /* ════════════════════════════════════════════════════
    PAYMENT PAGE
    ════════════════════════════════════════════════════ */
@@ -5354,6 +5555,14 @@ body {
   flex-wrap: wrap;
 }
 
+.guest-profile-rating-inline {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: normal;
+  color: #374151;
+}
+
 .guest-profile-host-link {
   align-self: flex-start;
   font-size: 13px;
@@ -5444,6 +5653,13 @@ body {
   margin: 0;
   font-size: 12px;
   color: #9ca3af;
+}
+
+.guest-review-text {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #374151;
+  font-style: italic;
 }
 
 @media (max-width: 480px) {

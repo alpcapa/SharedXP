@@ -14,7 +14,7 @@ const isSafeHttpImageUrl = (value) => {
   }
   try {
     const parsed = new URL(text);
-    return (parsed.protocol === "https:" || parsed.protocol === "http:") && /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(parsed.pathname);
+    return (parsed.protocol === "https:" || parsed.protocol === "http:") && /\.(avif|gif|heic|heif|jpe?g|png|svg|webp)$/i.test(parsed.pathname);
   } catch {
     return false;
   }
@@ -276,14 +276,23 @@ const FieldPage = ({ currentUser, onLogout }) => {
                   🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
                 </p>
                 {String(post.id).startsWith("user-") && currentUser && (
-                  <button
-                    type="button"
-                    className="field-delete-post-btn"
-                    aria-label="Delete this post"
-                    onClick={() => handleDeletePost(post.id)}
-                  >
-                    Remove post
-                  </button>
+                  post.sourceRequestId ? (
+                    <Link
+                      to={`/history?editRating=${post.sourceRequestId}`}
+                      className="field-edit-post-btn"
+                    >
+                      ✏ Edit post
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      className="field-delete-post-btn"
+                      aria-label="Delete this post"
+                      onClick={() => handleDeletePost(post.id)}
+                    >
+                      Remove post
+                    </button>
+                  )
                 )}
                 {post.hostId != null && String(post.hostId).trim() !== "" && (
                   <Link
