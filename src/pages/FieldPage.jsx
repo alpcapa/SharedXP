@@ -14,7 +14,7 @@ const isSafeHttpImageUrl = (value) => {
   }
   try {
     const parsed = new URL(text);
-    return (parsed.protocol === "https:" || parsed.protocol === "http:") && /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(parsed.pathname);
+    return (parsed.protocol === "https:" || parsed.protocol === "http:") && /\.(avif|gif|heic|heif|jpe?g|png|svg|webp)$/i.test(parsed.pathname);
   } catch {
     return false;
   }

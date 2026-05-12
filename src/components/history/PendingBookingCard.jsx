@@ -479,7 +479,7 @@ const PendingBookingCard = ({
                   className={`btn btn-light pending-rate-btn pending-edit-rated-btn`}
                   onClick={handleOpenEditPanel}
                 >
-                  {showRatingPanel ? "✕ Close" : "✓ Rated ✏"}
+                  {showRatingPanel ? "✕ Close" : "✏ Edit Rating"}
                 </button>
               ) : onSubmitRating ? (
                 <button
@@ -569,16 +569,6 @@ const PendingBookingCard = ({
                     <div className="pending-rating-actions">
                       {ratingError && (
                         <p className="pending-rating-error" role="alert">{ratingError}</p>
-                      )}
-                      {existingFieldPostId && (
-                        <button
-                          type="button"
-                          className="btn btn-danger pending-delete-post-btn"
-                          onClick={handleDeleteFieldPost}
-                          disabled={ratingLoading}
-                        >
-                          🗑 Delete post
-                        </button>
                       )}
                       <button
                         type="button"

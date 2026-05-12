@@ -205,9 +205,15 @@ export const useBookingRequests = (currentUser) => {
           if (!src) return null;
           if (!src.startsWith("data:")) return src; // already a storage URL
           try {
-            const res = await fetch(src);
-            const blob = await res.blob();
-            const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+            // Convert data URL → Blob without fetch() to avoid browser quirks.
+            const [meta, base64] = src.split(",");
+            const mime = meta.match(/:(.*?);/)?.[1] || "image/jpeg";
+            const binary = atob(base64 ?? "");
+            const bytes = new Uint8Array(binary.length);
+            for (let bi = 0; bi < binary.length; bi++) bytes[bi] = binary.charCodeAt(bi);
+            const blob = new Blob([bytes], { type: mime });
+            const rawExt = mime.split("/")[1] ?? "jpg";
+            const ext = rawExt === "jpeg" ? "jpg" : rawExt;
             const fileName = `${userId}/${role}_ratings/${requestId}_${Date.now()}_${i}.${ext}`;
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from("host-sport-images")
