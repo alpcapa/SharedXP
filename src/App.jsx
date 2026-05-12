@@ -30,6 +30,7 @@ import UserProfilePage from "./pages/UserProfilePage";
 import GuestProfilePage from "./pages/GuestProfilePage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
+import AuthConfirmPage from "./pages/AuthConfirmPage";
 
 function App() {
   const authActions = useAuth();
@@ -91,6 +92,7 @@ function App() {
       <Route path="/disclaimers" element={<DisclaimersPage {...authActions} />} />
       <Route path="/about" element={<AboutPage {...authActions} />} />
       <Route path="/events" element={<EventsPage {...authActions} />} />
+      <Route path="/auth/confirm" element={<AuthConfirmPage />} />
       <Route path="*" element={<NotFoundPage {...authActions} />} />
     </Routes>
   );
