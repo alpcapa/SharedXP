@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import EventCard from "../components/EventCard";
+import RolePill from "../components/RolePill";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { loadMajorEvents } from "../lib/events";
@@ -476,12 +477,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                           </p>
                           <div className="field-sport-pill-row">
                             <span className="sport-pill">{post.sport}</span>
-                            {post.role === "hosted" && (
-                              <span className="field-role-pill field-role-hosted">Hosted</span>
-                            )}
-                            {post.role === "attended" && (
-                              <span className="field-role-pill field-role-attended">Attended</span>
-                            )}
+                            <RolePill role={post.role} />
                           </div>
                         </div>
                       </div>

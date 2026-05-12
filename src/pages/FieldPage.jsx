@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import RolePill from "../components/RolePill";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { deleteFieldPost, getStoredFieldPosts } from "../utils/fieldPosts";
@@ -205,9 +206,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
         ) : (
           <div className="field-feed">
             {visiblePosts.map((post) => {
-              const isOwner = post.posterId
-                ? post.posterId === currentUser?.id
-                : String(post.id).startsWith("user-") && !!currentUser;
+              const isOwner = post.posterId != null && post.posterId === currentUser?.id;
               return (
                 <article key={post.id} className="field-card">
                   <div className="field-host-row">
@@ -234,12 +233,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
                       </p>
                       <div className="field-sport-pill-row">
                         <span className="sport-pill">{post.sport}</span>
-                        {post.role === "hosted" && (
-                          <span className="field-role-pill field-role-hosted">Hosted</span>
-                        )}
-                        {post.role === "attended" && (
-                          <span className="field-role-pill field-role-attended">Attended</span>
-                        )}
+                        <RolePill role={post.role} />
                       </div>
                     </div>
                   </div>
