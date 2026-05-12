@@ -269,8 +269,14 @@ export const useBookingRequests = (currentUser) => {
       }
     }
 
-    if (!error) fetchRequests();
-    return !error;
+    if (error) {
+      console.error("[submitRating] update failed:", error);
+      // Surface the error message so the UI can show it to the user.
+      return { ok: false, errorMessage: error.message ?? "Could not save your rating. Please try again." };
+    }
+
+    await fetchRequests();
+    return { ok: true, errorMessage: null };
   }, [fetchRequests, currentUser]);
 
   const resolveDispute = useCallback(async (disputeId, resolution) => {

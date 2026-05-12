@@ -4774,6 +4774,17 @@ body {
   flex-wrap: wrap;
 }
 
+.pending-rating-error {
+  width: 100%;
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #991b1b;
+  background: #fee2e2;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
 .pending-rating-success {
   margin: 0;
   font-size: 14px;

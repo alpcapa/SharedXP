@@ -129,6 +129,7 @@ const PendingBookingCard = ({
   const [ratingPhotos, setRatingPhotos] = useState([]);
   const [ratingLoading, setRatingLoading] = useState(false);
   const [ratingDone, setRatingDone] = useState(false);
+  const [ratingError, setRatingError] = useState("");
   const [shareItem, setShareItem] = useState(null);
   const [shareCaption, setShareCaption] = useState("");
   const [shareCaptionError, setShareCaptionError] = useState(false);
@@ -164,13 +165,18 @@ const PendingBookingCard = ({
     const overall = isHost ? guestOverall : hostRatings.overall;
     if (!overall) return;
     setRatingLoading(true);
+    setRatingError("");
     const ratingData = isHost
       ? { rating: guestOverall, review: ratingReview, photos: ratingPhotos }
       : { overall: hostRatings.overall, hostRatings, review: ratingReview, photos: ratingPhotos };
-    const ok = await onSubmitRating?.(request.id, isHost, ratingData);
+    const result = await onSubmitRating?.(request.id, isHost, ratingData);
     setRatingLoading(false);
+    // Support both the new { ok, errorMessage } shape and legacy boolean return.
+    const ok = result && typeof result === "object" ? result.ok : Boolean(result);
+    const errMsg = result && typeof result === "object" ? (result.errorMessage ?? "") : "";
     if (ok) {
       setRatingDone(true);
+      setRatingError("");
       if (ratingPhotos.length > 0) {
         setShareItem({
           id: request.id,
@@ -180,6 +186,8 @@ const PendingBookingCard = ({
         });
       }
       // Keep panel visible so user can close it with the toggle button
+    } else {
+      setRatingError(errMsg || "Could not save your rating. Please try again.");
     }
   };
 
@@ -484,6 +492,9 @@ const PendingBookingCard = ({
                     </div>
 
                     <div className="pending-rating-actions">
+                      {ratingError && (
+                        <p className="pending-rating-error" role="alert">{ratingError}</p>
+                      )}
                       <button
                         type="button"
                         className="btn btn-light"
