@@ -2,7 +2,7 @@ name: Deploy Edge Functions
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/add-resend-mailing-nh960]
     paths:
       - 'supabase/functions/**'
   workflow_dispatch:
