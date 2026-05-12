@@ -73,10 +73,14 @@ const HistoryPage = ({
     cancelRequest,
     confirmExperience,
     openDispute,
+    submitRating,
   } = useBookingRequests(currentUser);
 
   const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
   const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status));
+  const completedBookingRequests = bookingRequests.filter((r) => r.status === "completed");
+  const completedHosted = completedBookingRequests.filter((r) => r.host_id === currentUser?.id);
+  const completedAttended = completedBookingRequests.filter((r) => r.requester_id === currentUser?.id);
 
   // Sync tab from URL (e.g. after booking submission redirect)
   useEffect(() => {
@@ -407,9 +411,9 @@ const HistoryPage = ({
           >
             {[
               { value: "all", label: "All" },
-              { value: "pending", label: `Ongoing${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length ? ` (${bookingRequests.filter(r => ["pending","accepted","payment_pending","in_progress","disputed"].includes(r.status)).length})` : ""}` },
-              { value: "hosted", label: "Hosted" },
-              { value: "attended", label: "Attended" },
+              { value: "pending", label: `Ongoing${activeBookingRequests.length ? ` (${activeBookingRequests.length})` : ""}` },
+              { value: "hosted", label: `Hosted${(completedHosted.length + allItems.filter((i) => i.role === "hosted").length) ? ` (${completedHosted.length + allItems.filter((i) => i.role === "hosted").length})` : ""}` },
+              { value: "attended", label: `Attended${(completedAttended.length + allItems.filter((i) => i.role === "attended").length) ? ` (${completedAttended.length + allItems.filter((i) => i.role === "attended").length})` : ""}` },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -452,9 +456,9 @@ const HistoryPage = ({
           {selectedRole === "pending" ? (
             requestsLoading ? (
               <p className="history-loading">Loading…</p>
-            ) : bookingRequests.length ? (
+            ) : activeBookingRequests.length ? (
               <div className="history-list">
-                {bookingRequests.map((req) => (
+                {activeBookingRequests.map((req) => (
                   <PendingBookingCard
                     key={req.id}
                     request={req}
@@ -469,10 +473,11 @@ const HistoryPage = ({
                 ))}
               </div>
             ) : (
-              <p>No booking requests yet. <Link to="/locals">Find a host</Link> to get started.</p>
+              <p>No active bookings. <Link to="/locals">Find a host</Link> to get started.</p>
             )
           ) : (
             <>
+              {/* Active booking requests (only in All tab) */}
               {selectedRole === "all" && activeBookingRequests.length > 0 && (
                 <div className="history-list">
                   {activeBookingRequests.map((req) => (
@@ -486,10 +491,45 @@ const HistoryPage = ({
                       onCancel={cancelRequest}
                       onConfirmExperience={confirmExperience}
                       onOpenDispute={openDispute}
+                      onSubmitRating={submitRating}
+                      currentUser={currentUser}
                     />
                   ))}
                 </div>
               )}
+
+              {/* Completed booking requests — shown in All / Hosted / Attended */}
+              {(() => {
+                const completedForTab =
+                  selectedRole === "all"
+                    ? completedBookingRequests
+                    : selectedRole === "hosted"
+                    ? completedHosted
+                    : selectedRole === "attended"
+                    ? completedAttended
+                    : [];
+                return completedForTab.length > 0 ? (
+                  <div className="history-list">
+                    {completedForTab.map((req) => (
+                      <PendingBookingCard
+                        key={req.id}
+                        request={req}
+                        currentUserId={currentUser.id}
+                        unreadCount={unreadCounts[req.id] ?? 0}
+                        onAccept={acceptRequest}
+                        onDecline={declineRequest}
+                        onCancel={cancelRequest}
+                        onConfirmExperience={confirmExperience}
+                        onOpenDispute={openDispute}
+                        onSubmitRating={submitRating}
+                        currentUser={currentUser}
+                      />
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+
+              {/* Legacy bookings-table history (HistoryCards) */}
               {visibleItems.length > 0 ? (
                 <div className="history-list">
                   {visibleItems.map((item) => (
@@ -507,12 +547,14 @@ const HistoryPage = ({
                     />
                   ))}
                 </div>
-              ) : selectedRole === "all" && activeBookingRequests.length > 0 ? null : (
-                <p>
-                  {allItems.length
-                    ? "No completed experiences for this sport yet."
-                    : "No completed experiences yet."}
-                </p>
+              ) : selectedRole === "all" && (activeBookingRequests.length > 0 || completedBookingRequests.length > 0) ? null : (
+                completedHosted.length === 0 && completedAttended.length === 0 && (
+                  <p>
+                    {allItems.length
+                      ? "No completed experiences for this sport yet."
+                      : "No completed experiences yet."}
+                  </p>
+                )
               )}
             </>
           )}

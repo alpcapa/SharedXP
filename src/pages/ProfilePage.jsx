@@ -364,16 +364,43 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         .eq("role", "hosted")
         .gt("attendee_rating", 0)
         .order("completed_at", { ascending: false }),
-    ]).then(([hostResult, reviewsResult]) => {
+      supabase
+        .from("booking_requests")
+        .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, sport, guest_rated_at")
+        .eq("host_id", buddyId)
+        .eq("status", "completed")
+        .gt("guest_rating", 0)
+        .order("guest_rated_at", { ascending: false }),
+    ]).then(([hostResult, reviewsResult, brReviewsResult]) => {
       if (cancelled) return;
       if (!hostResult.error && hostResult.data?.profile) {
         const shapedHost = shapeSupabaseHost(hostResult.data);
-        const reviews = (reviewsResult.data ?? []).map((r) => ({
+        const legacyReviews = (reviewsResult.data ?? []).map((r) => ({
           author: r.counterparty_name || "Attendee",
           overall: r.attendee_rating,
           sport: r.sport,
           date: r.completed_at,
         }));
+        const brReviews = (brReviewsResult.data ?? []).map((r) => {
+          const p = r.requester_profile;
+          const author = p
+            ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Attendee")
+            : "Attendee";
+          const breakdown = r.guest_host_ratings ?? {};
+          return {
+            author,
+            overall: r.guest_rating,
+            punctuality: breakdown.punctuality ?? null,
+            equipmentQuality: breakdown.equipmentQuality ?? null,
+            localKnowledge: breakdown.localKnowledge ?? null,
+            friendliness: breakdown.friendliness ?? null,
+            value: breakdown.value ?? null,
+            comment: r.guest_review || null,
+            sport: r.sport,
+            date: r.guest_rated_at,
+          };
+        });
+        const reviews = [...brReviews, ...legacyReviews];
         setBuddyFromSupabase({ ...shapedHost, reviews });
       } else {
         setBuddyFromSupabase(null);

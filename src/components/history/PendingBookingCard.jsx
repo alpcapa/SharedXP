@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DeclineModal from "./DeclineModal";
 import DeclineConfirmationModal from "./DeclineConfirmationModal";
+import ShareToFieldModal from "./ShareToFieldModal";
+import { HOST_RATING_FIELDS, clampRating, FALLBACK_EVENT_PHOTO } from "../../utils/historyItem";
+import { saveFieldPost } from "../../utils/fieldPosts";
 
 const CURRENCY_SYMBOLS = {
   USD: "$", EUR: "€", GBP: "£", CAD: "C$",
@@ -86,6 +89,22 @@ const ContactLink = ({ requestId, name, unreadCount }) => (
   </Link>
 );
 
+const StarRating = ({ value, onChange }) => (
+  <span className="pending-star-row">
+    {[1, 2, 3, 4, 5].map((star) => (
+      <button
+        key={star}
+        type="button"
+        className={`pending-star-btn${value >= star ? " active" : ""}`}
+        onClick={() => onChange(value === star ? 0 : star)}
+        aria-label={`${star} star${star !== 1 ? "s" : ""}`}
+      >
+        ★
+      </button>
+    ))}
+  </span>
+);
+
 const PendingBookingCard = ({
   request,
   currentUserId,
@@ -95,13 +114,93 @@ const PendingBookingCard = ({
   onCancel,
   onConfirmExperience,
   onOpenDispute,
+  onSubmitRating,
+  currentUser,
 }) => {
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Rating panel state (for completed bookings)
+  const [showRatingPanel, setShowRatingPanel] = useState(false);
+  const [hostRatings, setHostRatings] = useState({ overall: 0, punctuality: 0, equipmentQuality: 0, localKnowledge: 0, friendliness: 0, value: 0 });
+  const [guestOverall, setGuestOverall] = useState(0);
+  const [ratingReview, setRatingReview] = useState("");
+  const [ratingPhotos, setRatingPhotos] = useState([]);
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [ratingDone, setRatingDone] = useState(false);
+  const [shareItem, setShareItem] = useState(null);
+  const [shareCaption, setShareCaption] = useState("");
+  const [shareCaptionError, setShareCaptionError] = useState(false);
+
   const isHost = request.host_id === currentUserId;
   const isRequester = request.requester_id === currentUserId;
+
+  const alreadyRated = isHost
+    ? !!request.host_rated_at
+    : !!request.guest_rated_at;
+
+  const handleRatingPhotoUpload = (e) => {
+    const files = Array.from(e.target.files ?? []);
+    files.slice(0, 5 - ratingPhotos.length).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const url = String(ev.target?.result ?? "");
+        if (url) setRatingPhotos((prev) => [...prev, url]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  };
+
+  const handleSubmitRating = async () => {
+    const overall = isHost ? guestOverall : hostRatings.overall;
+    if (!overall) return;
+    setRatingLoading(true);
+    const ratingData = isHost
+      ? { rating: guestOverall, review: ratingReview, photos: ratingPhotos }
+      : { overall: hostRatings.overall, hostRatings, review: ratingReview, photos: ratingPhotos };
+    const ok = await onSubmitRating?.(request.id, isHost, ratingData);
+    setRatingLoading(false);
+    if (ok) {
+      setRatingDone(true);
+      if (ratingPhotos.length > 0) {
+        setShareItem({
+          id: request.id,
+          eventName: request.sport,
+          sport: request.sport,
+          photoGallery: ratingPhotos,
+        });
+      } else {
+        setShowRatingPanel(false);
+      }
+    }
+  };
+
+  const handleShare = (item) => {
+    if (!shareCaption.trim()) { setShareCaptionError(true); return; }
+    const id =
+      typeof globalThis.crypto?.randomUUID === "function"
+        ? `user-${globalThis.crypto.randomUUID()}`
+        : `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    saveFieldPost({
+      id,
+      hostId: null,
+      hostName: currentUser?.fullName ?? "SharedXP User",
+      hostPhoto: currentUser?.photo ?? "",
+      sport: item.sport,
+      city: currentUser?.city ?? currentUser?.hostProfile?.city ?? "",
+      country: currentUser?.country ?? currentUser?.hostProfile?.country ?? "",
+      caption: shareCaption.trim(),
+      photos: (item.photoGallery ?? []).filter((p) => p && p !== FALLBACK_EVENT_PHOTO),
+      photo: (item.photoGallery ?? []).find((p) => p && p !== FALLBACK_EVENT_PHOTO) ?? "",
+      postedAt: new Date().toISOString(),
+      likes: 0,
+    });
+    setShareItem(null);
+    setShareCaption("");
+    setShowRatingPanel(false);
+  };
 
   const hostName = getName(request.host_profile) ?? "Host";
   const requesterName = getName(request.requester_profile) ?? "Guest";
@@ -284,12 +383,121 @@ const PendingBookingCard = ({
 
         {/* Completed */}
         {request.status === "completed" && (
-          <div className="pending-card-actions">
-            <ContactLink
-              requestId={request.id}
-              name={isHost ? requesterName : hostName}
-              unreadCount={unreadCount}
-            />
+          <div className="pending-card-completed">
+            <div className="pending-card-actions">
+              <ContactLink
+                requestId={request.id}
+                name={isHost ? requesterName : hostName}
+                unreadCount={unreadCount}
+              />
+              {!alreadyRated && !showRatingPanel && onSubmitRating && (
+                <button
+                  type="button"
+                  className="btn btn-primary pending-rate-btn"
+                  onClick={() => setShowRatingPanel(true)}
+                >
+                  ⭐ {isHost ? "Rate Guest" : "Rate Host"}
+                </button>
+              )}
+              {alreadyRated && (
+                <span className="pending-rated-badge">✓ Rated</span>
+              )}
+            </div>
+
+            {showRatingPanel && !alreadyRated && (
+              <div className="pending-rating-panel">
+                <h3 className="pending-rating-title">
+                  {isHost ? `Rate ${requesterName}` : `Rate ${hostName}`}
+                </h3>
+
+                {isHost ? (
+                  <div className="pending-rating-field">
+                    <span className="pending-rating-label">Overall</span>
+                    <StarRating value={guestOverall} onChange={setGuestOverall} />
+                  </div>
+                ) : (
+                  HOST_RATING_FIELDS.map((field) => (
+                    <div key={field.key} className="pending-rating-field">
+                      <span className="pending-rating-label">{field.label}</span>
+                      <StarRating
+                        value={hostRatings[field.key]}
+                        onChange={(v) =>
+                          setHostRatings((prev) => ({
+                            ...prev,
+                            [field.key]: v,
+                          }))
+                        }
+                      />
+                    </div>
+                  ))
+                )}
+
+                <label className="pending-rating-field pending-rating-review">
+                  <span className="pending-rating-label">
+                    {isHost ? "Review guest" : "Review host"}
+                  </span>
+                  <textarea
+                    className="pending-rating-textarea"
+                    rows={3}
+                    placeholder="Share your experience..."
+                    value={ratingReview}
+                    onChange={(e) => setRatingReview(e.target.value)}
+                  />
+                </label>
+
+                <div className="pending-rating-field">
+                  <span className="pending-rating-label">Add Photos</span>
+                  <div className="pending-rating-photos">
+                    {ratingPhotos.map((photo, i) => (
+                      <div key={i} className="pending-rating-photo-wrap">
+                        <img src={photo} alt={`Photo ${i + 1}`} className="pending-rating-thumb" />
+                        <button
+                          type="button"
+                          className="pending-rating-photo-delete"
+                          aria-label={`Remove photo ${i + 1}`}
+                          onClick={() => setRatingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                        >×</button>
+                      </div>
+                    ))}
+                    {ratingPhotos.length < 5 && (
+                      <label className="pending-rating-photo-add">
+                        + Add
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="pending-rating-photo-input"
+                          onChange={handleRatingPhotoUpload}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pending-rating-actions">
+                  <button
+                    type="button"
+                    className="btn btn-light"
+                    onClick={() => setShowRatingPanel(false)}
+                    disabled={ratingLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleSubmitRating}
+                    disabled={ratingLoading || (isHost ? !guestOverall : !hostRatings.overall)}
+                  >
+                    {ratingLoading ? "Saving…" : "Submit Rating"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {ratingDone && !shareItem && (
+              <p className="pending-rating-success">✓ Rating submitted — thank you!</p>
+            )}
           </div>
         )}
       </article>
@@ -306,6 +514,16 @@ const PendingBookingCard = ({
           onConfirm={handleOpenDispute}
           onCancel={() => setShowDisputeModal(false)}
           loading={actionLoading}
+        />
+      )}
+      {shareItem && (
+        <ShareToFieldModal
+          item={shareItem}
+          caption={shareCaption}
+          captionError={shareCaptionError}
+          onChangeCaption={(v) => { setShareCaption(v); if (v.trim()) setShareCaptionError(false); }}
+          onCancel={() => { setShareItem(null); setShowRatingPanel(false); }}
+          onShare={handleShare}
         />
       )}
     </>

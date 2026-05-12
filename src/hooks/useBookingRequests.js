@@ -185,6 +185,31 @@ export const useBookingRequests = (currentUser) => {
     return true;
   }, [fetchRequests]);
 
+  const submitRating = useCallback(async (requestId, isHost, ratingData) => {
+    const now = new Date().toISOString();
+    const updates = isHost
+      ? {
+          host_rating: ratingData.rating ?? 0,
+          host_review: ratingData.review ?? "",
+          host_rated_at: now,
+          updated_at: now,
+        }
+      : {
+          guest_rating: ratingData.overall ?? ratingData.rating ?? 0,
+          guest_host_ratings: ratingData.hostRatings ?? {},
+          guest_review: ratingData.review ?? "",
+          guest_photos: ratingData.photos ?? [],
+          guest_rated_at: now,
+          updated_at: now,
+        };
+    const { error } = await supabase
+      .from("booking_requests")
+      .update(updates)
+      .eq("id", requestId);
+    if (!error) fetchRequests();
+    return !error;
+  }, [fetchRequests]);
+
   const resolveDispute = useCallback(async (disputeId, resolution) => {
     const { data: dispute } = await supabase
       .from("disputes")
@@ -241,6 +266,7 @@ export const useBookingRequests = (currentUser) => {
     confirmExperience,
     openDispute,
     resolveDispute,
+    submitRating,
     computeInvoice,
   };
 };
