@@ -183,7 +183,7 @@ serve(async (req: Request): Promise<Response> => {
     site_url,
   } = email_data;
 
-  const redirectTo = redirect_to || site_url || APP_URL;
+  const redirectTo = APP_URL;
   const verificationToken = token_hash || token || "";
   const ctaUrl = confirmationUrl(verificationToken, email_action_type, redirectTo);
   const { subject, html } = buildEmail(email_action_type, user.email, ctaUrl);
