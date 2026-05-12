@@ -307,11 +307,20 @@ if (!profile) {
 
 if (!profile.photo_url) {
   const om = authUser.user_metadata || {};
-  const metaPhotoUrl =
+  let metaPhotoUrl =
     om.sharedxp_pending_profile?.photoUrl ||
     om.avatar_url ||
     om.picture ||
     "";
+
+  if (!metaPhotoUrl) {
+    const pendingDataUrl = localStorage.getItem("sharedxp_pending_avatar");
+    if (pendingDataUrl?.startsWith("data:")) {
+      metaPhotoUrl = await uploadAvatarFromDataUrl(pendingDataUrl, authUser.email, authUser.id);
+      localStorage.removeItem("sharedxp_pending_avatar");
+    }
+  }
+
   if (metaPhotoUrl) {
     profile = { ...profile, photo_url: metaPhotoUrl };
     await supabase
@@ -497,9 +506,9 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
     ...profileMeta
   } = newUser;
 
-  let photoUrl = "";
+  // Avatar upload requires authentication; store data URL for post-confirmation upload.
   if (photo && photo.startsWith("data:")) {
-    photoUrl = await uploadAvatarFromDataUrl(photo, normalizedEmail);
+    localStorage.setItem("sharedxp_pending_avatar", photo);
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -511,7 +520,6 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
         sharedxp_pending_profile: {
           ...profileMeta,
           email: normalizedEmail,
-          photoUrl,
         },
       },
     },
