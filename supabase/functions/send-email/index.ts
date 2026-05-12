@@ -16,8 +16,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://project-gq4ge.vercel.app";
 
 interface EmailData {
-  token: string;
-  token_hash: string;
+  token?: string;
+  token_hash?: string;
   redirect_to: string;
   email_action_type: string;
   site_url: string;
@@ -178,12 +178,14 @@ serve(async (req: Request): Promise<Response> => {
   const {
     email_action_type,
     token_hash,
+    token,
     redirect_to,
     site_url,
   } = email_data;
 
   const redirectTo = redirect_to || site_url || APP_URL;
-  const ctaUrl = confirmationUrl(token_hash, email_action_type, redirectTo);
+  const verificationToken = token_hash || token || "";
+  const ctaUrl = confirmationUrl(verificationToken, email_action_type, redirectTo);
   const { subject, html } = buildEmail(email_action_type, user.email, ctaUrl);
 
   const resendRes = await fetch("https://api.resend.com/emails", {
