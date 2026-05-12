@@ -276,14 +276,23 @@ const FieldPage = ({ currentUser, onLogout }) => {
                   🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
                 </p>
                 {String(post.id).startsWith("user-") && currentUser && (
-                  <button
-                    type="button"
-                    className="field-delete-post-btn"
-                    aria-label="Delete this post"
-                    onClick={() => handleDeletePost(post.id)}
-                  >
-                    Remove post
-                  </button>
+                  post.sourceRequestId ? (
+                    <Link
+                      to={`/history?editRating=${post.sourceRequestId}`}
+                      className="field-edit-post-btn"
+                    >
+                      ✏ Edit post
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      className="field-delete-post-btn"
+                      aria-label="Delete this post"
+                      onClick={() => handleDeletePost(post.id)}
+                    >
+                      Remove post
+                    </button>
+                  )
                 )}
                 {post.hostId != null && String(post.hostId).trim() !== "" && (
                   <Link

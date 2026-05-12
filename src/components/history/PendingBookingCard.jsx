@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import DeclineModal from "./DeclineModal";
 import DeclineConfirmationModal from "./DeclineConfirmationModal";
 import ShareToFieldModal from "./ShareToFieldModal";
 import { HOST_RATING_FIELDS, clampRating, FALLBACK_EVENT_PHOTO } from "../../utils/historyItem";
-import { saveFieldPost } from "../../utils/fieldPosts";
+import { deleteFieldPost, getStoredFieldPosts, saveFieldPost } from "../../utils/fieldPosts";
 
 const CURRENCY_SYMBOLS = {
   USD: "$", EUR: "€", GBP: "£", CAD: "C$",
@@ -116,7 +116,9 @@ const PendingBookingCard = ({
   onOpenDispute,
   onSubmitRating,
   currentUser,
+  editRatingRequestId,
 }) => {
+  const cardRef = useRef(null);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -133,6 +135,14 @@ const PendingBookingCard = ({
   const [shareItem, setShareItem] = useState(null);
   const [shareCaption, setShareCaption] = useState("");
   const [shareCaptionError, setShareCaptionError] = useState(false);
+  const [existingFieldPostId, setExistingFieldPostId] = useState(() => {
+    try {
+      const match = getStoredFieldPosts().find((p) => p.sourceRequestId === request.id);
+      return match?.id ?? null;
+    } catch {
+      return null;
+    }
+  });
 
   const isHost = request.host_id === currentUserId;
   const isRequester = request.requester_id === currentUserId;
@@ -140,6 +150,40 @@ const PendingBookingCard = ({
   const alreadyRated = isHost
     ? !!request.host_rated_at
     : !!request.guest_rated_at;
+
+  // Pre-populate form fields from existing request data (for editing or auto-open).
+  const populateFromExistingRating = () => {
+    if (isHost) {
+      setGuestOverall(request.host_rating ?? 0);
+      setRatingReview(request.host_review ?? "");
+      setRatingPhotos(Array.isArray(request.host_photos) ? request.host_photos : []);
+    } else {
+      const breakdown = request.guest_host_ratings ?? {};
+      setHostRatings({
+        overall: request.guest_rating ?? 0,
+        punctuality: breakdown.punctuality ?? 0,
+        equipmentQuality: breakdown.equipmentQuality ?? 0,
+        localKnowledge: breakdown.localKnowledge ?? 0,
+        friendliness: breakdown.friendliness ?? 0,
+        value: breakdown.value ?? 0,
+      });
+      setRatingReview(request.guest_review ?? "");
+      setRatingPhotos(Array.isArray(request.guest_photos) ? request.guest_photos : []);
+    }
+    setRatingDone(false);
+    setRatingError("");
+  };
+
+  // Auto-open and pre-fill the rating panel when navigating here from "Edit post" in The Field.
+  useEffect(() => {
+    if (editRatingRequestId !== request.id || request.status !== "completed") return;
+    populateFromExistingRating();
+    setShowRatingPanel(true);
+    requestAnimationFrame(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editRatingRequestId]);
 
   const handleRatingPhotoUpload = (e) => {
     const remaining = 5 - ratingPhotos.length;
@@ -171,18 +215,22 @@ const PendingBookingCard = ({
       : { overall: hostRatings.overall, hostRatings, review: ratingReview, photos: ratingPhotos };
     const result = await onSubmitRating?.(request.id, isHost, ratingData);
     setRatingLoading(false);
-    // Support both the new { ok, errorMessage } shape and legacy boolean return.
+    // Support both the new { ok, errorMessage, photoUrls } shape and legacy boolean return.
     const ok = result && typeof result === "object" ? result.ok : Boolean(result);
     const errMsg = result && typeof result === "object" ? (result.errorMessage ?? "") : "";
     if (ok) {
       setRatingDone(true);
       setRatingError("");
-      if (ratingPhotos.length > 0) {
+      // Use uploaded storage URLs for the field post so we avoid base64 data-URL
+      // size limits that would cause localStorage.setItem to fail silently.
+      const uploadedUrls = (result && typeof result === "object") ? (result.photoUrls ?? []) : [];
+      const photosForShare = uploadedUrls.length > 0 ? uploadedUrls : ratingPhotos.filter(Boolean);
+      if (photosForShare.length > 0) {
         setShareItem({
           id: request.id,
           eventName: request.sport,
           sport: request.sport,
-          photoGallery: ratingPhotos,
+          photoGallery: photosForShare,
         });
       }
       // Keep panel visible so user can close it with the toggle button
@@ -197,8 +245,13 @@ const PendingBookingCard = ({
       typeof globalThis.crypto?.randomUUID === "function"
         ? `user-${globalThis.crypto.randomUUID()}`
         : `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    // Delete any existing field post for this request before saving the new/updated one.
+    if (existingFieldPostId) {
+      deleteFieldPost(existingFieldPostId);
+    }
     saveFieldPost({
       id,
+      sourceRequestId: request.id,
       hostId: null,
       hostName: currentUser?.fullName ?? "SharedXP User",
       hostPhoto: currentUser?.photo ?? "",
@@ -211,9 +264,25 @@ const PendingBookingCard = ({
       postedAt: new Date().toISOString(),
       likes: 0,
     });
+    setExistingFieldPostId(id);
     setShareItem(null);
     setShareCaption("");
     setShowRatingPanel(false);
+  };
+
+  const handleDeleteFieldPost = () => {
+    if (!existingFieldPostId) return;
+    if (!window.confirm("Delete this post from The Field?")) return;
+    deleteFieldPost(existingFieldPostId);
+    setExistingFieldPostId(null);
+  };
+
+  // Opens/closes the rating panel; pre-populates fields from saved data when opening for editing.
+  const handleOpenEditPanel = () => {
+    if (!showRatingPanel) {
+      populateFromExistingRating();
+    }
+    setShowRatingPanel((prev) => !prev);
   };
 
   const hostName = getName(request.host_profile) ?? "Host";
@@ -264,7 +333,7 @@ const PendingBookingCard = ({
 
   return (
     <>
-      <article className={`pending-card status-${statusInfo.cls}`}>
+      <article ref={cardRef} className={`pending-card status-${statusInfo.cls}`}>
         <div className="pending-card-header">
           <div className="pending-card-title-row">
             <h2 className="pending-card-sport">{request.sport}</h2>
@@ -405,7 +474,13 @@ const PendingBookingCard = ({
                 unreadCount={unreadCount}
               />
               {alreadyRated ? (
-                <span className="pending-rated-badge">✓ Rated</span>
+                <button
+                  type="button"
+                  className={`btn btn-light pending-rate-btn pending-edit-rated-btn`}
+                  onClick={handleOpenEditPanel}
+                >
+                  {showRatingPanel ? "✕ Close" : "✓ Rated ✏"}
+                </button>
               ) : onSubmitRating ? (
                 <button
                   type="button"
@@ -421,7 +496,7 @@ const PendingBookingCard = ({
               <div className="pending-rating-panel">
                 <h3 className="pending-rating-title">
                   {ratingDone
-                    ? "✓ Rating submitted — thank you!"
+                    ? `✓ Rating ${alreadyRated ? "updated" : "submitted"} — thank you!`
                     : isHost ? `Rate ${requesterName}` : `Rate ${hostName}`}
                 </h3>
 
@@ -495,6 +570,16 @@ const PendingBookingCard = ({
                       {ratingError && (
                         <p className="pending-rating-error" role="alert">{ratingError}</p>
                       )}
+                      {existingFieldPostId && (
+                        <button
+                          type="button"
+                          className="btn btn-danger pending-delete-post-btn"
+                          onClick={handleDeleteFieldPost}
+                          disabled={ratingLoading}
+                        >
+                          🗑 Delete post
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="btn btn-light"
@@ -509,7 +594,7 @@ const PendingBookingCard = ({
                         onClick={handleSubmitRating}
                         disabled={ratingLoading || (isHost ? !guestOverall : !hostRatings.overall)}
                       >
-                        {ratingLoading ? "Saving…" : "Submit Rating"}
+                        {ratingLoading ? "Saving…" : alreadyRated ? "Update Rating" : "Submit Rating"}
                       </button>
                     </div>
                   </>

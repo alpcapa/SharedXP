@@ -276,7 +276,7 @@ export const useBookingRequests = (currentUser) => {
     }
 
     await fetchRequests();
-    return { ok: true, errorMessage: null };
+    return { ok: true, errorMessage: null, photoUrls };
   }, [fetchRequests, currentUser]);
 
   const resolveDispute = useCallback(async (disputeId, resolution) => {

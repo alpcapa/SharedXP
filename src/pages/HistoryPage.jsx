@@ -54,6 +54,7 @@ const HistoryPage = ({
 }) => {
   const location = useLocation();
   const queryTab = new URLSearchParams(location.search).get("tab");
+  const queryEditRating = new URLSearchParams(location.search).get("editRating");
 
   const [allItems, setAllItems] = useState(() =>
     mergeAndSort(
@@ -469,6 +470,7 @@ const HistoryPage = ({
                     onCancel={cancelRequest}
                     onConfirmExperience={confirmExperience}
                     onOpenDispute={openDispute}
+                    editRatingRequestId={queryEditRating}
                   />
                 ))}
               </div>
@@ -493,6 +495,7 @@ const HistoryPage = ({
                       onOpenDispute={openDispute}
                       onSubmitRating={submitRating}
                       currentUser={currentUser}
+                      editRatingRequestId={queryEditRating}
                     />
                   ))}
                 </div>
@@ -523,6 +526,7 @@ const HistoryPage = ({
                         onOpenDispute={openDispute}
                         onSubmitRating={submitRating}
                         currentUser={currentUser}
+                        editRatingRequestId={queryEditRating}
                       />
                     ))}
                   </div>
