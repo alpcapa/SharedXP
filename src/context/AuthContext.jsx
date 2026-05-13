@@ -579,8 +579,8 @@ return { success: false, message: "Login failed. Please try again." };
 
 onForgotPassword: async (email) => {
 const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-const fallbackSuccessMessage =
-  "We couldn't send a temporary password right now. A password reset email has been sent instead. Please check your spam folder if not received.";
+const resetLinkSuccessMessage =
+  "Reset link has been sent to your email. Check spam folder if not received";
 
 const tryResetPasswordEmail = async (withRedirect) => {
   try {
@@ -636,19 +636,12 @@ if (error) {
   }
 
   const fallbackError = await sendRecoveryFallback();
-
-  if (!fallbackError) {
-    return {
-      success: true,
-      message: fallbackSuccessMessage,
-    };
+  if (fallbackError) {
+    console.warn("[auth] forgot-password fallback failed after function error:", fallbackError);
   }
-
   return {
-    success: false,
-    message:
-      functionErrorMessage ||
-      "We couldn't process your request right now. Please try again.",
+    success: true,
+    message: resetLinkSuccessMessage,
   };
 }
 
@@ -661,36 +654,30 @@ if (!data?.success) {
   }
 
   const fallbackError = await sendRecoveryFallback();
-  if (!fallbackError) {
-    return {
-      success: true,
-      message: fallbackSuccessMessage,
-    };
+  if (fallbackError) {
+    console.warn("[auth] forgot-password fallback failed after unsuccessful function payload:", fallbackError);
   }
-
   return {
-    success: false,
-    message:
-      data?.error ||
-      "We couldn't process your request right now. Please try again.",
+    success: true,
+    message: resetLinkSuccessMessage,
   };
 }
 
 return {
   success: true,
-  message:
-    "Your temporary password is sent to this email. You can change your password on Edit Profile. Please check your spam folder if not received.",
+  message: resetLinkSuccessMessage,
 };
 } catch (e) {
 console.error("[auth] onForgotPassword:", e);
 if (normalizedEmail) {
   const fallbackError = await sendRecoveryFallback();
-  if (!fallbackError) {
-    return {
-      success: true,
-      message: fallbackSuccessMessage,
-    };
+  if (fallbackError) {
+    console.warn("[auth] forgot-password fallback failed in catch:", fallbackError);
   }
+  return {
+    success: true,
+    message: resetLinkSuccessMessage,
+  };
 }
 return {
   success: false,

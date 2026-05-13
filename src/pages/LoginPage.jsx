@@ -16,6 +16,8 @@ const LoginPage = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [resetMode, setResetMode] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
+  const resetSuccessMessage =
+    "Reset link has been sent to your email. Check spam folder if not received";
 
   const destination = location.state?.from?.pathname ?? "/";
 
@@ -27,8 +29,8 @@ const LoginPage = ({
         resetResult = await onForgotPassword(email);
       } catch (e) {
         console.error("onForgotPassword error:", e);
-        setErrorMessage("We couldn't process your request right now. Please try again.");
-        setResetMessage("");
+        setErrorMessage("");
+        setResetMessage(resetSuccessMessage);
         return;
       }
       if (!resetResult?.success) {
@@ -40,8 +42,7 @@ const LoginPage = ({
       }
       setErrorMessage("");
       setResetMessage(
-        resetResult?.message ??
-          "Your temporary password is sent to this email. You can change your password on Edit Profile. Please check your spam folder if not received."
+        resetResult?.message ?? resetSuccessMessage
       );
       return;
     }
@@ -76,7 +77,7 @@ const LoginPage = ({
             <h1>{resetMode ? "Forgot Password?" : "Log in"}</h1>
             <p>
               {resetMode
-                ? "Enter your email address to receive a temporary password."
+                ? "Enter your email to reset your password"
                 : "Log in with your email account."}
             </p>
 
