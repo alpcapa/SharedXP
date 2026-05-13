@@ -594,8 +594,8 @@ if (error) {
     try {
       const contextPayload = await error.context.clone().json();
       functionErrorMessage = contextPayload?.error || "";
-    } catch {
-      // Ignore unreadable error payload and continue with fallback.
+    } catch (parseError) {
+      console.warn("[auth] forgot-password error payload parse failed:", parseError);
     }
   }
 
