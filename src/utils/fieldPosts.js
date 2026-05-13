@@ -155,9 +155,11 @@ const mergeRemoteAndLocalPosts = (remoteRows) => {
         ...remotePost,
         ...localPost,
         postedAt: remotePost.postedAt ?? localPost.postedAt,
-        rating: remoteRating > 0 && localRating <= 0
+        rating: remoteRating > 0
           ? remotePost.rating
-          : localPost.rating,
+          : localRating > 0
+            ? localPost.rating
+            : 0,
       };
     } else {
       merged.push(localPost);
