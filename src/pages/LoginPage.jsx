@@ -7,7 +7,6 @@ const LoginPage = ({
   currentUser,
   onLogout,
   onEmailLogin,
-  onSocialLogin: _onSocialLogin,
   onForgotPassword,
 }) => {
   const navigate = useNavigate();
@@ -25,7 +24,7 @@ const LoginPage = ({
     if (resetMode) {
       let resetResult;
       try {
-        resetResult = await onForgotPassword?.(email);
+        resetResult = await onForgotPassword(email);
       } catch (e) {
         console.error("onForgotPassword error:", e);
         setErrorMessage("We couldn't process your request right now. Please try again.");

@@ -17,7 +17,7 @@ const TEMP_PASSWORD_LENGTH = 12;
 
 const generateTemporaryPassword = () => {
   // Excludes ambiguous characters (I, l, 1, O, 0) to reduce user confusion.
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!@#$%";
   const randomBytes = crypto.getRandomValues(new Uint8Array(TEMP_PASSWORD_LENGTH * 2));
   const maxUnbiasedByte = 256 - (256 % chars.length);
   let out = "";
