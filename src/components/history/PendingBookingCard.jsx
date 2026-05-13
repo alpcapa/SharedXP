@@ -141,13 +141,18 @@ const PendingBookingCard = ({
   const [existingFieldCaption, setExistingFieldCaption] = useState("");
   const [initialRatingSnapshot, setInitialRatingSnapshot] = useState(null);
 
+  const refreshExistingFieldPost = async () => {
+    if (!currentUserId || !request.id) return null;
+    const post = await lookupFieldPost(request.id, currentUserId);
+    setExistingFieldPostId(post?.id ?? null);
+    setExistingFieldCaption(post?.caption ?? "");
+    return post;
+  };
+
   // Check Supabase for an existing field post tied to this booking request.
   useEffect(() => {
-    if (!currentUserId || !request.id) return;
-    lookupFieldPost(request.id, currentUserId).then((post) => {
-      setExistingFieldPostId(post?.id ?? null);
-      setExistingFieldCaption(post?.caption ?? "");
-    });
+    refreshExistingFieldPost();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request.id, currentUserId]);
 
   const isHost = request.host_id === currentUserId;
@@ -275,10 +280,7 @@ const PendingBookingCard = ({
     if (ok) {
       setRatingDone(true);
       setRatingError("");
-      const existingPost = await lookupFieldPost(request.id, currentUserId);
-      if (existingPost?.id) {
-        setExistingFieldPostId(existingPost.id);
-      }
+      const existingPost = await refreshExistingFieldPost();
       const previousCaption = existingPost?.caption ?? existingFieldCaption;
       // Use uploaded storage URLs for the field post so we avoid base64 data-URL
       // size limits that would cause localStorage.setItem to fail silently.
