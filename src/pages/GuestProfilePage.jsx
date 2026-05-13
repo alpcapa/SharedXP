@@ -239,7 +239,7 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
                     <p>No history photos yet.</p>
                   ) : (
                     <>
-                      <div className="gallery-grid profile-gallery-scroll">
+                      <div className="gallery-grid profile-gallery-scroll" tabIndex={0}>
                         {photos.map((src) => (
                           <img key={src} src={src} alt="Experience photo" />
                         ))}

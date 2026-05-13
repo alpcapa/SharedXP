@@ -940,7 +940,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         <h3>Photo gallery</h3>
         {galleryPhotos.length > 0 ? (
           <>
-            <div className="gallery-grid profile-gallery-scroll">
+            <div className="gallery-grid profile-gallery-scroll" tabIndex={0}>
               {galleryPhotos.map((photo) => (
                 <img key={photo} src={photo} alt={`${buddy.name} gallery`} />
               ))}
