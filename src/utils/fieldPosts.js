@@ -351,6 +351,76 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
 };
 
 /**
+ * Fetch the set of post IDs that the given user has liked.
+ * Returns a Set<string> of post UUIDs.
+ */
+export const fetchLikedPostIds = async (userId) => {
+  if (!userId) return new Set();
+  try {
+    const { data, error } = await supabase
+      .from("field_post_likes")
+      .select("post_id")
+      .eq("user_id", userId);
+    if (error) {
+      console.error("[fieldPosts] fetchLikedPostIds error:", error);
+      return new Set();
+    }
+    return new Set((data ?? []).map((r) => r.post_id));
+  } catch (e) {
+    console.error("[fieldPosts] fetchLikedPostIds exception:", e);
+    return new Set();
+  }
+};
+
+/**
+ * Toggle a like for a field post.
+ * Returns { liked: boolean, likes: number } on success, or null on error.
+ * The DB trigger on field_post_likes keeps field_posts.likes in sync atomically.
+ */
+export const toggleFieldPostLike = async (postId, userId, currentLikeCount) => {
+  if (!postId || !userId) return null;
+  try {
+    const { data: existing, error: checkError } = await supabase
+      .from("field_post_likes")
+      .select("post_id")
+      .eq("post_id", postId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (checkError) {
+      console.error("[fieldPosts] like check error:", checkError);
+      return null;
+    }
+
+    const isLiked = !!existing;
+
+    if (isLiked) {
+      const { error: deleteError } = await supabase
+        .from("field_post_likes")
+        .delete()
+        .eq("post_id", postId)
+        .eq("user_id", userId);
+      if (deleteError) {
+        console.error("[fieldPosts] unlike error:", deleteError);
+        return null;
+      }
+      return { liked: false, likes: Math.max(0, currentLikeCount - 1) };
+    } else {
+      const { error: insertError } = await supabase
+        .from("field_post_likes")
+        .insert({ post_id: postId, user_id: userId });
+      if (insertError) {
+        console.error("[fieldPosts] like error:", insertError);
+        return null;
+      }
+      return { liked: true, likes: currentLikeCount + 1 };
+    }
+  } catch (e) {
+    console.error("[fieldPosts] toggleLike exception:", e);
+    return null;
+  }
+};
+
+/**
  * Find a field post by source booking_request ID and poster ID.
  * Returns the mapped post object (including caption) or null if not found.
  */
