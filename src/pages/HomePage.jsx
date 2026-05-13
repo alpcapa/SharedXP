@@ -6,7 +6,7 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { loadMajorEvents } from "../lib/events";
 import { supabase } from "../lib/supabase";
-import { deleteFieldPost, getStoredFieldPosts } from "../utils/fieldPosts";
+import { deleteFieldPost, fetchFieldPosts } from "../utils/fieldPosts";
 import { getAgeFromBirthday } from "../utils/profileAge";
 
 const LOCALS_PER_PAGE = 3;
@@ -90,12 +90,8 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [selectedYear, setSelectedYear] = useState(DEFAULT_YEAR);
   const [localsPage, setLocalsPage] = useState(0);
   const [fieldPage, setFieldPage] = useState(0);
-  const [fieldPostsList, setFieldPostsList] = useState(() => {
-    const stored = getStoredFieldPosts();
-    return [...stored].sort(
-      (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
-    );
-  });
+  const [fieldPostsList, setFieldPostsList] = useState([]);
+  const [fieldPostsLoading, setFieldPostsLoading] = useState(true);
   const [fieldDeletedIds, setFieldDeletedIds] = useState(() => new Set());
 
   const handleDeleteFieldPost = useCallback((postId) => {
@@ -167,6 +163,13 @@ const HomePage = ({ currentUser, onLogout }) => {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    fetchFieldPosts().then((posts) => {
+      setFieldPostsList(posts);
+      setFieldPostsLoading(false);
+    });
   }, []);
 
   const countryOptions = useMemo(
@@ -462,7 +465,9 @@ const HomePage = ({ currentUser, onLogout }) => {
               </div>
               <Link to="/the-field" className="view-all-link">View all</Link>
             </div>
-            {activeFieldPosts.length === 0 ? (
+            {fieldPostsLoading ? (
+              <p className="explore-loading">Loading…</p>
+            ) : activeFieldPosts.length === 0 ? (
               <p className="explore-empty">
                 No sessions shared yet.{" "}
                 <Link to="/history" className="field-share-invite-link">

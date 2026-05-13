@@ -1,65 +1,11 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import RolePill from "../components/RolePill";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { deleteFieldPost, getStoredFieldPosts } from "../utils/fieldPosts";
+import { deleteFieldPost, fetchFieldPosts } from "../utils/fieldPosts";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-const isSafeHttpImageUrl = (value) => {
-  const text = String(value ?? "").trim();
-  if (!text) {
-    return false;
-  }
-  try {
-    const parsed = new URL(text);
-    return (parsed.protocol === "https:" || parsed.protocol === "http:") && /\.(avif|gif|heic|heif|jpe?g|png|svg|webp)$/i.test(parsed.pathname);
-  } catch {
-    return false;
-  }
-};
-
-const isSafeDataImageUrl = (value) => {
-  const text = String(value ?? "").trim();
-  return /^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]+$/i.test(text);
-};
-
-const toSafeUserImageUrl = (value) => {
-  const text = String(value ?? "").trim();
-  if (isSafeDataImageUrl(text) || isSafeHttpImageUrl(text)) {
-    return text;
-  }
-  return "";
-};
-
-const sanitizeUserFieldPost = (post) => {
-  const source = post && typeof post === "object" ? post : {};
-  const rawPhotoList = Array.isArray(source.photos)
-    ? source.photos
-    : source.photo
-      ? [source.photo]
-      : [];
-  const photos = rawPhotoList.map(toSafeUserImageUrl).filter(Boolean);
-  return {
-    id: String(source.id ?? `user-post-${Math.random().toString(36).slice(2)}`),
-    posterId: source.posterId ?? null,
-    role: source.role ?? null,
-    hostName: String(source.hostName ?? "SharedXP User"),
-    hostPhoto: toSafeUserImageUrl(source.hostPhoto),
-    sport: String(source.sport ?? "Other"),
-    city: String(source.city ?? ""),
-    country: String(source.country ?? ""),
-    caption: String(source.caption ?? ""),
-    photos,
-    photo: photos[0] ?? "",
-    postedAt: String(source.postedAt ?? ""),
-    likes: Number.isFinite(Number(source.likes)) ? Number(source.likes) : 0,
-    sourceRequestId: source.sourceRequestId ?? null,
-  };
-};
-
-const getUserFieldPosts = () => getStoredFieldPosts().map(sanitizeUserFieldPost);
 
 const getRelativePostedLabel = (postedAt) => {
   const postDate = new Date(postedAt);
@@ -91,6 +37,16 @@ const FieldPage = ({ currentUser, onLogout }) => {
   const [selectedSport, setSelectedSport] = useState("All");
   const [carouselIndex, setCarouselIndex] = useState({});
   const [deletedIds, setDeletedIds] = useState(() => new Set());
+  const [fieldPosts, setFieldPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+
+  useEffect(() => {
+    setPostsLoading(true);
+    fetchFieldPosts().then((posts) => {
+      setFieldPosts(posts);
+      setPostsLoading(false);
+    });
+  }, []);
 
   const getCarouselIndex = (postId) => carouselIndex[postId] ?? 0;
 
@@ -109,8 +65,8 @@ const FieldPage = ({ currentUser, onLogout }) => {
   }, []);
 
   const allActivePosts = useMemo(() => {
-    return getUserFieldPosts().filter((post) => !deletedIds.has(post.id));
-  }, [deletedIds]);
+    return fieldPosts.filter((post) => !deletedIds.has(post.id));
+  }, [fieldPosts, deletedIds]);
 
   const countryOptions = useMemo(
     () => ["All", ...[...new Set(allActivePosts.map((p) => p.country).filter(Boolean))].sort()],
@@ -199,7 +155,9 @@ const FieldPage = ({ currentUser, onLogout }) => {
           </div>
         </section>
 
-        {visiblePosts.length === 0 ? (
+        {postsLoading ? (
+          <p className="field-empty-state">Loading…</p>
+        ) : visiblePosts.length === 0 ? (
           <p className="field-empty-state">
             No sessions found for the selected filters. Check back soon!
           </p>

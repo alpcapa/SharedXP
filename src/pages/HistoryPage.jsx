@@ -276,13 +276,13 @@ const HistoryPage = ({
   }, []);
 
   const handleShareToField = useCallback(
-    (item) => {
+    async (item) => {
       if (!shareCaption.trim()) {
         setShareCaptionError(true);
         return;
       }
       const post = buildFieldPost(item, currentUser, shareCaption);
-      saveFieldPost(post);
+      await saveFieldPost(post);
 
       setAllItems((prev) => {
         const next = prev.map((historyItem) =>

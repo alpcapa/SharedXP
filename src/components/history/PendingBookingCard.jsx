@@ -4,7 +4,7 @@ import DeclineModal from "./DeclineModal";
 import DeclineConfirmationModal from "./DeclineConfirmationModal";
 import ShareToFieldModal from "./ShareToFieldModal";
 import { HOST_RATING_FIELDS, clampRating, FALLBACK_EVENT_PHOTO } from "../../utils/historyItem";
-import { deleteFieldPost, getStoredFieldPosts, saveFieldPost } from "../../utils/fieldPosts";
+import { deleteFieldPost, lookupFieldPostId, saveFieldPost } from "../../utils/fieldPosts";
 
 const CURRENCY_SYMBOLS = {
   USD: "$", EUR: "€", GBP: "£", CAD: "C$",
@@ -135,16 +135,15 @@ const PendingBookingCard = ({
   const [shareItem, setShareItem] = useState(null);
   const [shareCaption, setShareCaption] = useState("");
   const [shareCaptionError, setShareCaptionError] = useState(false);
-  const [existingFieldPostId, setExistingFieldPostId] = useState(() => {
-    try {
-      const match = getStoredFieldPosts().find(
-        (p) => p.sourceRequestId === request.id && p.posterId === currentUserId
-      );
-      return match?.id ?? null;
-    } catch {
-      return null;
-    }
-  });
+  const [existingFieldPostId, setExistingFieldPostId] = useState(null);
+
+  // Check Supabase for an existing field post tied to this booking request.
+  useEffect(() => {
+    if (!currentUserId || !request.id) return;
+    lookupFieldPostId(request.id, currentUserId).then((id) => {
+      if (id) setExistingFieldPostId(id);
+    });
+  }, [request.id, currentUserId]);
 
   const isHost = request.host_id === currentUserId;
   const isRequester = request.requester_id === currentUserId;
@@ -241,43 +240,36 @@ const PendingBookingCard = ({
     }
   };
 
-  const handleShare = (item) => {
+  const handleShare = async (item) => {
     if (!shareCaption.trim()) { setShareCaptionError(true); return; }
-    const id =
-      typeof globalThis.crypto?.randomUUID === "function"
-        ? `user-${globalThis.crypto.randomUUID()}`
-        : `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     // Delete any existing field post for this request before saving the new/updated one.
     if (existingFieldPostId) {
-      deleteFieldPost(existingFieldPostId);
+      await deleteFieldPost(existingFieldPostId);
     }
-    saveFieldPost({
-      id,
+    const posterCity = currentUser?.city ?? currentUser?.hostProfile?.city ?? "";
+    const posterCountry = currentUser?.country ?? currentUser?.hostProfile?.country ?? "";
+    const newId = await saveFieldPost({
       sourceRequestId: request.id,
       posterId: currentUserId,
       role: isHost ? "hosted" : "attended",
-      hostId: null,
       hostName: currentUser?.fullName ?? "SharedXP User",
       hostPhoto: currentUser?.photo ?? "",
       sport: item.sport,
-      city: currentUser?.city ?? currentUser?.hostProfile?.city ?? "",
-      country: currentUser?.country ?? currentUser?.hostProfile?.country ?? "",
+      city: posterCity,
+      country: posterCountry,
       caption: shareCaption.trim(),
       photos: (item.photoGallery ?? []).filter((p) => p && p !== FALLBACK_EVENT_PHOTO),
-      photo: (item.photoGallery ?? []).find((p) => p && p !== FALLBACK_EVENT_PHOTO) ?? "",
-      postedAt: new Date().toISOString(),
-      likes: 0,
     });
-    setExistingFieldPostId(id);
+    if (newId) setExistingFieldPostId(newId);
     setShareItem(null);
     setShareCaption("");
     setShowRatingPanel(false);
   };
 
-  const handleDeleteFieldPost = () => {
+  const handleDeleteFieldPost = async () => {
     if (!existingFieldPostId) return;
     if (!window.confirm("Delete this post from The Field?")) return;
-    deleteFieldPost(existingFieldPostId);
+    await deleteFieldPost(existingFieldPostId);
     setExistingFieldPostId(null);
   };
 
