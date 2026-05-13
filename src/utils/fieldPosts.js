@@ -337,6 +337,10 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
     if (error && isFieldPostsUnavailableError(error)) {
       return null;
     }
+    if (error) {
+      console.error("[fieldPosts] lookup id error:", error);
+      return null;
+    }
     return data?.[0]?.id ?? null;
   } catch {
     return null;
