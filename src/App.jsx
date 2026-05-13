@@ -78,7 +78,9 @@ function App() {
   }, [location.hash, location.pathname, location.search, navigate]);
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "PASSWORD_RECOVERY") return;
 
       navigate(
@@ -88,7 +90,7 @@ function App() {
     });
 
     return () => {
-      authListener?.subscription?.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [location.hash, location.search, navigate]);
 
