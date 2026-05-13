@@ -193,43 +193,31 @@ const FieldPage = ({ currentUser, onLogout }) => {
                       ? `/buddy/${post.posterId}`
                       : `/user/${post.posterId}`
                     : null;
+                const avatar = post.hostPhoto ? (
+                  <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                ) : (
+                  <div
+                    className="field-host-avatar field-host-avatar-fallback"
+                    aria-hidden="true"
+                  >
+                    {String(post.hostName ?? "?")
+                      .trim()
+                      .split(" ")
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((word) => word[0].toUpperCase())
+                      .join("") || "?"}
+                  </div>
+                );
                 return (
                   <article key={post.id} className="field-card">
                    <div className="field-host-row">
                      {profilePath ? (
                        <Link to={profilePath} className="field-host-link" aria-label={`View ${post.hostName} profile`}>
-                         {post.hostPhoto ? (
-                           <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
-                         ) : (
-                           <div
-                             className="field-host-avatar field-host-avatar-fallback"
-                             aria-hidden="true"
-                           >
-                             {String(post.hostName ?? "?")
-                               .trim()
-                               .split(" ")
-                               .filter(Boolean)
-                               .slice(0, 2)
-                               .map((word) => word[0].toUpperCase())
-                               .join("") || "?"}
-                           </div>
-                         )}
+                         {avatar}
                        </Link>
-                     ) : post.hostPhoto ? (
-                       <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
                      ) : (
-                       <div
-                         className="field-host-avatar field-host-avatar-fallback"
-                         aria-hidden="true"
-                       >
-                         {String(post.hostName ?? "?")
-                           .trim()
-                           .split(" ")
-                           .filter(Boolean)
-                           .slice(0, 2)
-                           .map((word) => word[0].toUpperCase())
-                           .join("") || "?"}
-                       </div>
+                       avatar
                      )}
                      <div>
                        <p>
