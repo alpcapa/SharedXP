@@ -4,6 +4,7 @@ import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { buddies } from "../data/buddies";
+import { supabase } from "../lib/supabase";
 import { getProfileAge } from "../utils/profileAge";
 
 const LOCALS_PER_PAGE = 4;
@@ -47,7 +48,9 @@ const toOverallHostReview = (historyItem, index) => {
     id: `${hostName}-${eventName || "event"}-${index}`,
     hostName,
     eventName,
-    rating
+    rating,
+    review: item.review || null,
+    completedAt: item.completedAt || null,
   };
 };
 
@@ -70,6 +73,52 @@ const getHistoryGalleryPhotos = (historyItems) => {
 
 const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
   const [recommendationsPage, setRecommendationsPage] = useState(0);
+  const [brReviews, setBrReviews] = useState([]);
+  const [brPhotos, setBrPhotos] = useState([]);
+
+  // Fetch reviews and photos from booking_requests for the current user
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    supabase
+      .from("booking_requests")
+      .select(
+        "host_rating, host_review, host_rated_at, guest_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)"
+      )
+      .eq("requester_id", currentUser.id)
+      .eq("status", "completed")
+      .order("host_rated_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[UserProfilePage] booking_requests fetch:", error);
+          return;
+        }
+        const rows = data ?? [];
+        const reviews = rows
+          .filter((r) => Number(r.host_rating) > 0)
+          .map((r) => {
+            const p = r.host_profile;
+            const hostName = p
+              ? p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Host"
+              : "Host";
+            return {
+              id: `br-${hostName}-${r.sport ?? ""}-${r.host_rated_at ?? ""}`,
+              hostName,
+              eventName: r.sport ?? "",
+              rating: r.host_rating,
+              review: r.host_review || null,
+              completedAt: r.host_rated_at,
+            };
+          });
+        setBrReviews(reviews);
+
+        const photos = rows
+          .flatMap((r) => (Array.isArray(r.guest_photos) ? r.guest_photos : []))
+          .map((p) => String(p ?? "").trim())
+          .filter((p) => p && p !== HISTORY_PLACEHOLDER_EVENT_PHOTO);
+        setBrPhotos([...new Set(photos)]);
+      });
+  }, [currentUser?.id]);
+
   const sportsSelection = (Array.isArray(currentUser?.sports) ? currentUser.sports : [])
     .map((sport) => String(sport ?? "").trim())
     .filter(Boolean);
@@ -83,9 +132,22 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
     const startIndex = recommendationsPage * LOCALS_PER_PAGE;
     return hostRecommendations.slice(startIndex, startIndex + LOCALS_PER_PAGE);
   }, [hostRecommendations, recommendationsPage]);
-  const overallHostReviews = (Array.isArray(currentUser?.history) ? currentUser.history : [])
-    .map(toOverallHostReview)
-    .filter(Boolean);
+
+  // Merge legacy bookings reviews with booking_requests reviews, newest first
+  const overallHostReviews = useMemo(() => {
+    const legacyReviews = (Array.isArray(currentUser?.history) ? currentUser.history : [])
+      .map(toOverallHostReview)
+      .filter(Boolean);
+    const merged = [...brReviews, ...legacyReviews];
+    merged.sort((a, b) => {
+      if (!a.completedAt && !b.completedAt) return 0;
+      if (!a.completedAt) return 1;
+      if (!b.completedAt) return -1;
+      return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+    });
+    return merged;
+  }, [brReviews, currentUser?.history]);
+
   const hostRatings = overallHostReviews
     .map((review) => Number(review.rating))
     .filter((rating) => Number.isFinite(rating) && rating > 0);
@@ -102,7 +164,13 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
     .map((language) => String(language ?? "").trim())
     .filter(Boolean)
     .join(", ");
-  const galleryPhotos = getHistoryGalleryPhotos(currentUser?.history);
+
+  // Merge legacy history photos with booking_requests guest photos
+  const galleryPhotos = useMemo(() => {
+    const legacyPhotos = getHistoryGalleryPhotos(currentUser?.history);
+    return [...new Set([...brPhotos, ...legacyPhotos])];
+  }, [brPhotos, currentUser?.history]);
+
   useEffect(() => {
     setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
   }, [totalRecommendationPages]);
@@ -211,6 +279,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
                 <strong>{review.hostName}</strong>
                 {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
               </p>
+              {review.review && <p>{review.review}</p>}
             </article>
           ))
         ) : (
