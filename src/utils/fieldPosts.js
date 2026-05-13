@@ -169,6 +169,16 @@ const mergeRemoteAndLocalPosts = (remoteRows) => {
   return sortPostsByPostedAt(merged);
 };
 
+const resolveBookingRequestRating = (post, request) => {
+  if (!request) return 0;
+  if (post.role === "hosted") {
+    // `guest_rating` is canonical for completed booking_requests; keep
+    // `guest_host_ratings.overall` as compatibility fallback.
+    return Number(request.guest_rating ?? request.guest_host_ratings?.overall ?? 0);
+  }
+  return Number(request.host_rating ?? 0);
+};
+
 const hydrateMissingRatingsFromBookingRequests = async (posts) => {
   const needsHydration = posts.filter(
     (post) => Number(post.rating ?? 0) <= 0 && post.sourceRequestId
@@ -186,16 +196,12 @@ const hydrateMissingRatingsFromBookingRequests = async (posts) => {
       return posts;
     }
 
-    const ratingByRequestId = new Map((data ?? []).map((row) => [row.id, row]));
+    const requestById = new Map((data ?? []).map((row) => [row.id, row]));
     return posts.map((post) => {
       if (Number(post.rating ?? 0) > 0 || !post.sourceRequestId) return post;
-      const request = ratingByRequestId.get(post.sourceRequestId);
+      const request = requestById.get(post.sourceRequestId);
       if (!request) return post;
-      const nextRating = Number(
-        post.role === "hosted"
-          ? (request.guest_rating ?? request.guest_host_ratings?.overall ?? 0)
-          : (request.host_rating ?? 0)
-      );
+      const nextRating = resolveBookingRequestRating(post, request);
       return nextRating > 0 ? { ...post, rating: clampRating(nextRating) } : post;
     });
   } catch (error) {
