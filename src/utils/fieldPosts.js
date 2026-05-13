@@ -335,7 +335,7 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
       .order("created_at", { ascending: false })
       .limit(1);
     if (error && isFieldPostsUnavailableError(error)) {
-      return null;
+      return local?.id ?? null;
     }
     if (error) {
       console.error("[fieldPosts] lookup id error:", error);
@@ -368,7 +368,7 @@ export const lookupFieldPost = async (sourceRequestId, posterId) => {
       .order("created_at", { ascending: false })
       .limit(1);
     if (error && isFieldPostsUnavailableError(error)) {
-      return null;
+      return local ?? null;
     }
     if (error) {
       console.error("[fieldPosts] lookup error:", error);
