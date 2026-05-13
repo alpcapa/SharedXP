@@ -257,7 +257,7 @@ export const useBookingRequests = (currentUser) => {
     // applied), include it; otherwise fall back to saving without it so that
     // the core rating (host_rating, host_review) is never blocked by the
     // optional column.
-    const shouldIncludeHostPhotos = isHost && photoUrls.length > 0;
+    const shouldIncludeHostPhotos = isHost;
     let { error } = await supabase
       .from("booking_requests")
       .update(shouldIncludeHostPhotos ? { ...updates, host_photos: photoUrls } : updates)

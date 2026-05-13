@@ -28,15 +28,6 @@ const ShareToFieldModal = ({
         aria-label="Share experience to The Field"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          className="booking-modal-close"
-          aria-label="Close"
-          onClick={onCancel}
-        >
-          ×
-        </button>
-
         <h3>Share your experience to The Field?</h3>
         <p className="field-share-modal-sub">
           Your photos will appear as a carousel on The Field — visible to other

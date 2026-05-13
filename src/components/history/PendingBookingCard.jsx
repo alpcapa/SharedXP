@@ -275,6 +275,11 @@ const PendingBookingCard = ({
     if (ok) {
       setRatingDone(true);
       setRatingError("");
+      const existingPost = await lookupFieldPost(request.id, currentUserId);
+      if (existingPost?.id) {
+        setExistingFieldPostId(existingPost.id);
+      }
+      const previousCaption = existingPost?.caption ?? existingFieldCaption;
       // Use uploaded storage URLs for the field post so we avoid base64 data-URL
       // size limits that would cause localStorage.setItem to fail silently.
       const uploadedUrls = (result && typeof result === "object") ? (result.photoUrls ?? []) : [];
@@ -286,7 +291,7 @@ const PendingBookingCard = ({
           sport: request.sport,
           photoGallery: photosForShare,
         });
-        setShareCaption(existingFieldCaption);
+        setShareCaption(previousCaption ?? "");
         setShareCaptionError(false);
         setSharePosting(false);
         setSharePosted(false);
