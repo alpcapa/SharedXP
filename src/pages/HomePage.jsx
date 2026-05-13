@@ -100,14 +100,17 @@ const HomePage = ({ currentUser, onLogout }) => {
     deleteFieldPost(postId);
     setFieldDeletedIds((prev) => new Set([...prev, postId]));
   }, []);
-  const getFieldCarouselIndex = (postId) => fieldCarouselIndex[postId] ?? 0;
-  const shiftFieldCarousel = (postId, photos, step) => {
+  const getFieldCarouselIndex = useCallback(
+    (postId) => fieldCarouselIndex[postId] ?? 0,
+    [fieldCarouselIndex]
+  );
+  const shiftFieldCarousel = useCallback((postId, photos, step) => {
     setFieldCarouselIndex((prev) => {
       const current = prev[postId] ?? 0;
       const next = (current + step + photos.length) % photos.length;
       return { ...prev, [postId]: next };
     });
-  };
+  }, []);
   const [majorEventsList, setMajorEventsList] = useState([]);
   const [majorEventsLoading, setMajorEventsLoading] = useState(true);
   const [majorEventsPage, setMajorEventsPage] = useState(0);
