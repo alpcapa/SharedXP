@@ -11,6 +11,10 @@ const isUpdateNotAllowedError = (error) => {
   return error?.code === "42501";
 };
 
+const isUpdateNoRowError = (error) => {
+  return error?.code === "PGRST116";
+};
+
 /**
  * Fetch all field posts from Supabase, newest first.
  * Returns an array of camelCase post objects ready for display.
@@ -112,19 +116,19 @@ export const saveFieldPost = async (post) => {
         .update(savePayloadWithRating)
         .eq("id", postId)
         .select("id")
-        .single();
+        .maybeSingle();
       if (error && isMissingRatingColumnError(error)) {
         ({ data, error } = await supabase
           .from("field_posts")
           .update(savePayloadBase)
           .eq("id", postId)
           .select("id")
-          .single());
+          .maybeSingle());
       }
-      if (!error) return data?.id ?? null;
-      if (isUpdateNotAllowedError(error)) {
+      if (!error && data?.id) return data.id;
+      if (isUpdateNotAllowedError(error) || isUpdateNoRowError(error) || (!error && !data?.id)) {
         console.warn(
-          "[fieldPosts] UPDATE denied, falling back to delete+insert for post:",
+          "[fieldPosts] UPDATE unavailable, falling back to delete+insert for post:",
           postId
         );
         const deleted = await deleteFieldPost(postId);
