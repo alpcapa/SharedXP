@@ -281,7 +281,7 @@ const PendingBookingCard = ({
       setRatingDone(true);
       setRatingError("");
       const existingPost = await refreshExistingFieldPost();
-      const previousCaption = existingPost?.caption ?? existingFieldCaption;
+      const previousCaption = existingPost?.caption ?? "";
       // Use uploaded storage URLs for the field post so we avoid base64 data-URL
       // size limits that would cause localStorage.setItem to fail silently.
       const uploadedUrls = (result && typeof result === "object") ? (result.photoUrls ?? []) : [];
