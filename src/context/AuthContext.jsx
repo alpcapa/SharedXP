@@ -616,7 +616,7 @@ if (!data?.success) {
 return {
   success: true,
   message:
-    "Your temporary email is sent to this email. You can change your password on Edit Profile. Please check your spam folder if not received.",
+    "Your temporary password is sent to this email. You can change your password on Edit Profile. Please check your spam folder if not received.",
 };
 } catch (e) {
 console.error("[auth] onForgotPassword:", e);

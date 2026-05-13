@@ -42,7 +42,7 @@ const LoginPage = ({
       setErrorMessage("");
       setResetMessage(
         resetResult?.message ??
-          "Your temporary email is sent to this email. You can change your password on Edit Profile. Please check your spam folder if not received."
+          "Your temporary password is sent to this email. You can change your password on Edit Profile. Please check your spam folder if not received."
       );
       return;
     }

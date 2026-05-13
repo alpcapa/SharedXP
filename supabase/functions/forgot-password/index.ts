@@ -13,13 +13,23 @@ const CORS_HEADERS = {
 const FALLBACK_MAX_LIST_PAGES = 1000;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TEMP_PASSWORD_LENGTH = 12;
 
 const generateTemporaryPassword = () => {
+  // Excludes ambiguous characters (I, l, 1, O, 0) to reduce user confusion.
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
-  const randomBytes = crypto.getRandomValues(new Uint8Array(12));
+  const randomBytes = crypto.getRandomValues(new Uint8Array(TEMP_PASSWORD_LENGTH * 2));
+  const maxUnbiasedByte = 256 - (256 % chars.length);
   let out = "";
   for (const byte of randomBytes) {
+    if (byte >= maxUnbiasedByte) continue;
     out += chars[byte % chars.length];
+    if (out.length === TEMP_PASSWORD_LENGTH) break;
+  }
+  while (out.length < TEMP_PASSWORD_LENGTH) {
+    const refill = crypto.getRandomValues(new Uint8Array(1))[0];
+    if (refill >= maxUnbiasedByte) continue;
+    out += chars[refill % chars.length];
   }
   return out;
 };
@@ -187,14 +197,6 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   const temporaryPassword = generateTemporaryPassword();
-  const emailSent = await sendTemporaryPasswordEmail(normalizedEmail, temporaryPassword);
-  if (!emailSent) {
-    return new Response(JSON.stringify({ error: "Failed to send email." }), {
-      status: 500,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
-  }
-
   const { error: updateError } = await adminClient.auth.admin.updateUserById(foundUser.id, {
     password: temporaryPassword,
   });
@@ -204,6 +206,26 @@ serve(async (req: Request): Promise<Response> => {
       status: 500,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
+  }
+
+  const emailSent = await sendTemporaryPasswordEmail(normalizedEmail, temporaryPassword);
+  if (!emailSent) {
+    try {
+      await adminClient.auth.resetPasswordForEmail(normalizedEmail);
+    } catch (recoveryError) {
+      console.error("resetPasswordForEmail fallback failed:", recoveryError);
+    }
+
+    return new Response(
+      JSON.stringify({
+        error:
+          "Failed to send temporary password email. A password recovery email was triggered instead.",
+      }),
+      {
+        status: 500,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      }
+    );
   }
 
   return new Response(JSON.stringify({ success: true }), {
