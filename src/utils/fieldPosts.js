@@ -180,11 +180,10 @@ const resolveBookingRequestRating = (post, request) => {
   return Number(request.host_rating ?? 0);
 };
 
-const needsRatingHydration = (post) =>
-  Number(post.rating ?? 0) === 0 && !!post.sourceRequestId;
+const hasRatingSourceRequest = (post) => !!post.sourceRequestId;
 
 const hydrateMissingRatingsFromBookingRequests = async (posts) => {
-  const needsHydration = posts.filter(needsRatingHydration);
+  const needsHydration = posts.filter(hasRatingSourceRequest);
   if (!needsHydration.length) return posts;
 
   const requestIds = [
@@ -203,11 +202,14 @@ const hydrateMissingRatingsFromBookingRequests = async (posts) => {
 
     const requestById = new Map((data ?? []).map((row) => [row.id, row]));
     return posts.map((post) => {
-      if (!needsRatingHydration(post)) return post;
+      if (!hasRatingSourceRequest(post)) return post;
       const request = requestById.get(post.sourceRequestId);
       if (!request) return post;
-      const nextRating = resolveBookingRequestRating(post, request);
-      return nextRating > 0 ? { ...post, rating: clampRating(nextRating) } : post;
+      const nextRating = clampRating(resolveBookingRequestRating(post, request));
+      if (nextRating <= 0) return post;
+      return Number(post.rating ?? 0) === nextRating
+        ? post
+        : { ...post, rating: nextRating };
     });
   } catch (error) {
     console.error("[fieldPosts] rating hydration exception:", error);
