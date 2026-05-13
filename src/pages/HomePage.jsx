@@ -93,12 +93,21 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [fieldPostsList, setFieldPostsList] = useState([]);
   const [fieldPostsLoading, setFieldPostsLoading] = useState(true);
   const [fieldDeletedIds, setFieldDeletedIds] = useState(() => new Set());
+  const [fieldCarouselIndex, setFieldCarouselIndex] = useState({});
 
   const handleDeleteFieldPost = useCallback((postId) => {
     if (!window.confirm("Remove this post from The Field?")) return;
     deleteFieldPost(postId);
     setFieldDeletedIds((prev) => new Set([...prev, postId]));
   }, []);
+  const getFieldCarouselIndex = (postId) => fieldCarouselIndex[postId] ?? 0;
+  const shiftFieldCarousel = (postId, photos, step) => {
+    setFieldCarouselIndex((prev) => {
+      const current = prev[postId] ?? 0;
+      const next = (current + step + photos.length) % photos.length;
+      return { ...prev, [postId]: next };
+    });
+  };
   const [majorEventsList, setMajorEventsList] = useState([]);
   const [majorEventsLoading, setMajorEventsLoading] = useState(true);
   const [majorEventsPage, setMajorEventsPage] = useState(0);
@@ -500,9 +509,47 @@ const HomePage = ({ currentUser, onLogout }) => {
                             </div>
                           </div>
                         </div>
-                        {post.photo && (
-                          <img src={post.photo} alt={post.sport} className="field-post-photo" />
-                        )}
+                        {(() => {
+                          const photos = Array.isArray(post.photos) && post.photos.length > 0
+                            ? post.photos
+                            : post.photo
+                              ? [post.photo]
+                              : [];
+                          if (photos.length === 0) return null;
+                          const idx = getFieldCarouselIndex(post.id);
+                          return (
+                            <div className="field-carousel">
+                              {photos.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="field-carousel-nav field-carousel-prev"
+                                  aria-label="Previous photo"
+                                  onClick={() => shiftFieldCarousel(post.id, photos, -1)}
+                                >
+                                  ‹
+                                </button>
+                              )}
+                              <img
+                                src={photos[idx]}
+                                alt={post.sport}
+                                className="field-post-photo"
+                              />
+                              {photos.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="field-carousel-nav field-carousel-next"
+                                  aria-label="Next photo"
+                                  onClick={() => shiftFieldCarousel(post.id, photos, 1)}
+                                >
+                                  ›
+                                </button>
+                              )}
+                              {photos.length > 1 && (
+                                <p className="field-carousel-counter">{idx + 1} / {photos.length}</p>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <p className="field-caption">{post.caption}</p>
                         <p className="field-meta">🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}</p>
                         <div className="field-post-actions">
