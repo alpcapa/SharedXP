@@ -33,6 +33,7 @@ import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import AuthConfirmPage from "./pages/AuthConfirmPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { hasRecoveryType } from "./utils/recoveryLink";
+import { supabase } from "./lib/supabase";
 
 function App() {
   const authActions = useAuth();
@@ -75,6 +76,21 @@ function App() {
       { replace: true }
     );
   }, [location.hash, location.pathname, location.search, navigate]);
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "PASSWORD_RECOVERY") return;
+
+      navigate(
+        `/reset-password${location.search}${location.hash}`,
+        { replace: true }
+      );
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, [location.hash, location.search, navigate]);
 
   return (
     <Routes>
