@@ -322,20 +322,22 @@ export const deleteFieldPost = async (postId) => {
  */
 export const lookupFieldPostId = async (sourceRequestId, posterId) => {
   if (!sourceRequestId || !posterId) return null;
+  const local = readLocalFallbackPosts().find(
+    (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
+  );
+  if (local?.id) return local.id;
   try {
     const { data, error } = await supabase
       .from("field_posts")
       .select("id")
       .eq("source_request_id", sourceRequestId)
       .eq("poster_id", posterId)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
     if (error && isFieldPostsUnavailableError(error)) {
-      const local = readLocalFallbackPosts().find(
-        (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
-      );
-      return local?.id ?? null;
+      return null;
     }
-    return data?.id ?? null;
+    return data?.[0]?.id ?? null;
   } catch {
     return null;
   }
@@ -347,6 +349,10 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
  */
 export const lookupFieldPost = async (sourceRequestId, posterId) => {
   if (!sourceRequestId || !posterId) return null;
+  const local = readLocalFallbackPosts()
+    .map(mapFallbackRow)
+    .find((p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId);
+  if (local) return local;
   try {
     const { data, error } = await supabase
       .from("field_posts")
@@ -355,24 +361,17 @@ export const lookupFieldPost = async (sourceRequestId, posterId) => {
       )
       .eq("source_request_id", sourceRequestId)
       .eq("poster_id", posterId)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
     if (error && isFieldPostsUnavailableError(error)) {
-      const local = readLocalFallbackPosts()
-        .map(mapFallbackRow)
-        .find(
-          (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
-      );
-      return local ?? null;
+      return null;
     }
     if (error) {
       console.error("[fieldPosts] lookup error:", error);
       return null;
     }
-    return data ? mapStorageRow(data) : null;
+    return data?.[0] ? mapStorageRow(data[0]) : null;
   } catch {
-    const local = readLocalFallbackPosts()
-      .map(mapFallbackRow)
-      .find((p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId);
-    return local ?? null;
+    return null;
   }
 };

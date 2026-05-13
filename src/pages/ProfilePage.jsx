@@ -117,7 +117,7 @@ const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const getStars = (value) => `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
 const LOCALS_PER_PAGE = 4;
 const REVIEWS_PER_PAGE = 3;
-const PHOTOS_PER_PAGE = 9;
+const PHOTOS_PER_PAGE = 5;
 const normalizeIdentifier = (value) => String(value ?? "").trim().toLowerCase();
 
 const isCurrentUserHostForBuddy = (currentUser, buddy) => {
