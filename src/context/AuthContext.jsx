@@ -610,9 +610,17 @@ if (error) {
     };
   }
 
-  const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+  let fallbackError = null;
+  const fallbackWithRedirect = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
     redirectTo: `${window.location.origin}/reset-password`,
   });
+  fallbackError = fallbackWithRedirect.error;
+  if (fallbackError) {
+    // Some environments fail when redirectTo is not allow-listed.
+    // Retry without redirectTo so password recovery still sends.
+    const fallbackWithoutRedirect = await supabase.auth.resetPasswordForEmail(normalizedEmail);
+    fallbackError = fallbackWithoutRedirect.error;
+  }
 
   if (!fallbackError) {
     return {
