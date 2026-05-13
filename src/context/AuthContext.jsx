@@ -578,26 +578,36 @@ return { success: false, message: "Login failed. Please try again." };
 },
 
 onForgotPassword: async (email) => {
+const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+const fallbackSuccessMessage =
+  "We couldn't send a temporary password right now. A password reset email has been sent instead. Please check your spam folder if not received.";
+
+const tryResetPasswordEmail = async (withRedirect) => {
+  try {
+    if (withRedirect) {
+      return await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+    }
+    return await supabase.auth.resetPasswordForEmail(normalizedEmail);
+  } catch (resetError) {
+    return { error: resetError };
+  }
+};
+
+const sendRecoveryFallback = async () => {
+  const fallbackWithRedirect = await tryResetPasswordEmail(true);
+  if (!fallbackWithRedirect.error) {
+    return null;
+  }
+  const fallbackWithoutRedirect = await tryResetPasswordEmail(false);
+  return fallbackWithoutRedirect.error ?? fallbackWithRedirect.error;
+};
+
 try {
-  const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail) {
     return { success: false, message: "Please enter your email address." };
   }
-
-  const sendRecoveryFallback = async () => {
-    let fallbackError = null;
-    const fallbackWithRedirect = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    fallbackError = fallbackWithRedirect.error;
-    if (fallbackError) {
-      // Some environments fail when redirectTo is not allow-listed.
-      // Retry without redirectTo so password recovery still sends.
-      const fallbackWithoutRedirect = await supabase.auth.resetPasswordForEmail(normalizedEmail);
-      fallbackError = fallbackWithoutRedirect.error;
-    }
-    return fallbackError;
-  };
 
   const { data, error } = await supabase.functions.invoke("forgot-password", {
     body: { email: normalizedEmail },
@@ -630,8 +640,7 @@ if (error) {
   if (!fallbackError) {
     return {
       success: true,
-      message:
-        "We couldn't send a temporary password right now. A password reset email has been sent instead. Please check your spam folder if not received.",
+      message: fallbackSuccessMessage,
     };
   }
 
@@ -655,8 +664,7 @@ if (!data?.success) {
   if (!fallbackError) {
     return {
       success: true,
-      message:
-        "We couldn't send a temporary password right now. A password reset email has been sent instead. Please check your spam folder if not received.",
+      message: fallbackSuccessMessage,
     };
   }
 
@@ -675,6 +683,15 @@ return {
 };
 } catch (e) {
 console.error("[auth] onForgotPassword:", e);
+if (normalizedEmail) {
+  const fallbackError = await sendRecoveryFallback();
+  if (!fallbackError) {
+    return {
+      success: true,
+      message: fallbackSuccessMessage,
+    };
+  }
+}
 return {
   success: false,
   message: "We couldn't process your request right now. Please try again.",
