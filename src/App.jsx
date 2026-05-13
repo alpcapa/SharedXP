@@ -32,6 +32,7 @@ import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import AuthConfirmPage from "./pages/AuthConfirmPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import { hasRecoveryType } from "./utils/recoveryLink";
 
 function App() {
   const authActions = useAuth();
@@ -42,6 +43,12 @@ function App() {
   // After OAuth login the browser lands on "/" with postAuthRedirect in
   // sessionStorage. Consume it once to send the user to their intended page.
   useEffect(() => {
+    const inRecoveryFlow =
+      location.pathname === "/reset-password" ||
+      hasRecoveryType({ search: location.search, hash: location.hash });
+
+    if (inRecoveryFlow) return;
+
     if (!authActions.currentUser) {
       didRedirect.current = false;
       return;
@@ -53,16 +60,14 @@ function App() {
       sessionStorage.removeItem("postAuthRedirect");
       navigate(redirect, { replace: true });
     }
-  }, [authActions.currentUser, navigate]);
+  }, [authActions.currentUser, location.hash, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     if (location.pathname === "/reset-password") return;
-
-    const queryParams = new URLSearchParams(location.search);
-    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
-    const isRecoveryLink =
-      queryParams.get("type") === "recovery" ||
-      hashParams.get("type") === "recovery";
+    const isRecoveryLink = hasRecoveryType({
+      search: location.search,
+      hash: location.hash,
+    });
 
     if (!isRecoveryLink) return;
     navigate(
