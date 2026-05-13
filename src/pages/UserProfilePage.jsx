@@ -328,7 +328,17 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
       <section className="gallery">
         <h3>Photo gallery</h3>
         {galleryPhotos.length > 0 ? (
-          <div className="gallery-grid profile-gallery-scroll" tabIndex={0}>
+          <div
+            className="gallery-grid profile-gallery-scroll"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowRight") {
+                event.currentTarget.scrollBy({ left: 220, behavior: "smooth" });
+              } else if (event.key === "ArrowLeft") {
+                event.currentTarget.scrollBy({ left: -220, behavior: "smooth" });
+              }
+            }}
+          >
             {galleryPhotos.map((photo) => (
               <img key={photo} src={photo} alt={`${currentUser.fullName || currentUser.firstName || "User"} history gallery`} />
             ))}

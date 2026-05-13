@@ -239,7 +239,17 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
                     <p>No history photos yet.</p>
                   ) : (
                     <>
-                      <div className="gallery-grid profile-gallery-scroll" tabIndex={0}>
+                      <div
+                        className="gallery-grid profile-gallery-scroll"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === "ArrowRight") {
+                            event.currentTarget.scrollBy({ left: 220, behavior: "smooth" });
+                          } else if (event.key === "ArrowLeft") {
+                            event.currentTarget.scrollBy({ left: -220, behavior: "smooth" });
+                          }
+                        }}
+                      >
                         {photos.map((src) => (
                           <img key={src} src={src} alt="Experience photo" />
                         ))}
