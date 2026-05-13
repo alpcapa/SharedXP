@@ -179,13 +179,16 @@ const resolveBookingRequestRating = (post, request) => {
   return Number(request.host_rating ?? 0);
 };
 
+const needsRatingHydration = (post) =>
+  Number(post.rating ?? 0) <= 0 && !!post.sourceRequestId;
+
 const hydrateMissingRatingsFromBookingRequests = async (posts) => {
-  const needsHydration = posts.filter(
-    (post) => Number(post.rating ?? 0) <= 0 && post.sourceRequestId
-  );
+  const needsHydration = posts.filter(needsRatingHydration);
   if (!needsHydration.length) return posts;
 
-  const requestIds = [...new Set(needsHydration.map((post) => post.sourceRequestId))];
+  const requestIds = [
+    ...new Set(needsHydration.map((post) => post.sourceRequestId).filter(Boolean)),
+  ];
   try {
     const { data, error } = await supabase
       .from("booking_requests")
@@ -198,7 +201,7 @@ const hydrateMissingRatingsFromBookingRequests = async (posts) => {
 
     const requestById = new Map((data ?? []).map((row) => [row.id, row]));
     return posts.map((post) => {
-      if (Number(post.rating ?? 0) > 0 || !post.sourceRequestId) return post;
+      if (!needsRatingHydration(post)) return post;
       const request = requestById.get(post.sourceRequestId);
       if (!request) return post;
       const nextRating = resolveBookingRequestRating(post, request);
