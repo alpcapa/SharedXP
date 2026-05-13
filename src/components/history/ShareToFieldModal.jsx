@@ -4,6 +4,8 @@ const ShareToFieldModal = ({
   item,
   caption,
   captionError,
+  isSharing = false,
+  isShared = false,
   onChangeCaption,
   onCancel,
   onShare,
@@ -71,15 +73,21 @@ const ShareToFieldModal = ({
         </label>
 
         <div className="booking-modal-actions">
-          <button type="button" className="btn btn-light" onClick={onCancel}>
-            Keep private
+          <button
+            type="button"
+            className="btn btn-light"
+            onClick={onCancel}
+            disabled={isSharing}
+          >
+            {isShared ? "Close" : "Keep private"}
           </button>
           <button
             type="button"
             className="find-button"
             onClick={() => onShare(item)}
+            disabled={isSharing || isShared}
           >
-            Share to The Field
+            {isSharing ? "Posting…" : isShared ? "Posted" : "Share to The Field"}
           </button>
         </div>
       </section>

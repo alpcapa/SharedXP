@@ -44,6 +44,7 @@ const buildFieldPost = (item, currentUser, caption) => {
     photo: realPhotos[0] ?? "",
     postedAt: new Date().toISOString(),
     likes: 0,
+    rating: Number(item.rating ?? 0),
   };
 };
 
@@ -94,7 +95,8 @@ const HistoryPage = ({
   const [sharePromptItemId, setSharePromptItemId] = useState(null);
   const [shareCaption, setShareCaption] = useState("");
   const [shareCaptionError, setShareCaptionError] = useState(false);
-  const [shareSuccess, setShareSuccess] = useState(false);
+  const [sharePosting, setSharePosting] = useState(false);
+  const [sharePosted, setSharePosted] = useState(false);
   const lastAutoConfirmPersistKeyRef = useRef("");
 
   useEffect(() => {
@@ -205,6 +207,8 @@ const HistoryPage = ({
       if (hasRealPhotos && !savedItem?.sharedToField) {
         setShareCaption("");
         setShareCaptionError(false);
+        setSharePosting(false);
+        setSharePosted(false);
         setSharePromptItemId(itemId);
       }
     },
@@ -281,8 +285,14 @@ const HistoryPage = ({
         setShareCaptionError(true);
         return;
       }
+      setSharePosting(true);
+      setShareCaptionError(false);
       const post = buildFieldPost(item, currentUser, shareCaption);
-      await saveFieldPost(post);
+      const savedId = await saveFieldPost(post);
+      if (!savedId) {
+        setSharePosting(false);
+        return;
+      }
 
       setAllItems((prev) => {
         const next = prev.map((historyItem) =>
@@ -299,11 +309,8 @@ const HistoryPage = ({
         next.delete(item.id);
         return next;
       });
-      setShareCaption("");
-      setShareCaptionError(false);
-      setSharePromptItemId(null);
-      setShareSuccess(true);
-      setTimeout(() => setShareSuccess(false), 3000);
+      setSharePosting(false);
+      setSharePosted(true);
     },
     [shareCaption, currentUser, onSaveHistory, onSaveHostHistory]
   );
@@ -575,23 +582,21 @@ const HistoryPage = ({
             item={sharePromptItem}
             caption={shareCaption}
             captionError={shareCaptionError}
+            isSharing={sharePosting}
+            isShared={sharePosted}
             onChangeCaption={(value) => {
               setShareCaption(value);
               if (value.trim()) setShareCaptionError(false);
             }}
-            onCancel={() => setSharePromptItemId(null)}
+            onCancel={() => {
+              setSharePromptItemId(null);
+              setSharePosting(false);
+              setSharePosted(false);
+              setShareCaption("");
+              setShareCaptionError(false);
+            }}
             onShare={handleShareToField}
           />
-
-          {shareSuccess && (
-            <div
-              className="field-share-toast"
-              role="status"
-              aria-live="polite"
-            >
-              ✅ Posted to The Field!
-            </div>
-          )}
         </main>
 
         <SiteFooter />

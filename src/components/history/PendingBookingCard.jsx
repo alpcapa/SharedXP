@@ -135,7 +135,10 @@ const PendingBookingCard = ({
   const [shareItem, setShareItem] = useState(null);
   const [shareCaption, setShareCaption] = useState("");
   const [shareCaptionError, setShareCaptionError] = useState(false);
+  const [sharePosting, setSharePosting] = useState(false);
+  const [sharePosted, setSharePosted] = useState(false);
   const [existingFieldPostId, setExistingFieldPostId] = useState(null);
+  const [initialRatingSnapshot, setInitialRatingSnapshot] = useState(null);
 
   // Check Supabase for an existing field post tied to this booking request.
   useEffect(() => {
@@ -154,23 +157,43 @@ const PendingBookingCard = ({
 
   // Pre-populate form fields from existing request data (for editing or auto-open).
   const populateFromExistingRating = () => {
+    const existingPhotos = isHost
+      ? (Array.isArray(request.host_photos) ? request.host_photos : [])
+      : (Array.isArray(request.guest_photos) ? request.guest_photos : []);
+    const existingReview = isHost ? (request.host_review ?? "") : (request.guest_review ?? "");
+    const existingOverall = isHost ? (request.host_rating ?? 0) : (request.guest_rating ?? 0);
+    const existingBreakdown = !isHost ? (request.guest_host_ratings ?? {}) : {};
+
     if (isHost) {
-      setGuestOverall(request.host_rating ?? 0);
-      setRatingReview(request.host_review ?? "");
-      setRatingPhotos(Array.isArray(request.host_photos) ? request.host_photos : []);
+      setGuestOverall(existingOverall);
+      setRatingReview(existingReview);
+      setRatingPhotos(existingPhotos);
     } else {
-      const breakdown = request.guest_host_ratings ?? {};
+      const breakdown = existingBreakdown;
       setHostRatings({
-        overall: request.guest_rating ?? 0,
+        overall: existingOverall,
         punctuality: breakdown.punctuality ?? 0,
         equipmentQuality: breakdown.equipmentQuality ?? 0,
         localKnowledge: breakdown.localKnowledge ?? 0,
         friendliness: breakdown.friendliness ?? 0,
         value: breakdown.value ?? 0,
       });
-      setRatingReview(request.guest_review ?? "");
-      setRatingPhotos(Array.isArray(request.guest_photos) ? request.guest_photos : []);
+      setRatingReview(existingReview);
+      setRatingPhotos(existingPhotos);
     }
+    setInitialRatingSnapshot({
+      overall: existingOverall,
+      review: existingReview,
+      photos: existingPhotos,
+      hostRatings: {
+        overall: existingOverall,
+        punctuality: existingBreakdown.punctuality ?? 0,
+        equipmentQuality: existingBreakdown.equipmentQuality ?? 0,
+        localKnowledge: existingBreakdown.localKnowledge ?? 0,
+        friendliness: existingBreakdown.friendliness ?? 0,
+        value: existingBreakdown.value ?? 0,
+      },
+    });
     setRatingDone(false);
     setRatingError("");
   };
@@ -185,6 +208,31 @@ const PendingBookingCard = ({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editRatingRequestId]);
+
+  const currentRatingSnapshot = isHost
+    ? {
+      overall: guestOverall,
+      review: ratingReview,
+      photos: ratingPhotos,
+      hostRatings: {
+        overall: guestOverall,
+        punctuality: 0,
+        equipmentQuality: 0,
+        localKnowledge: 0,
+        friendliness: 0,
+        value: 0,
+      },
+    }
+    : {
+      overall: hostRatings.overall,
+      review: ratingReview,
+      photos: ratingPhotos,
+      hostRatings: hostRatings,
+    };
+
+  const hasRatingChanges =
+    !initialRatingSnapshot ||
+    JSON.stringify(currentRatingSnapshot) !== JSON.stringify(initialRatingSnapshot);
 
   const handleRatingPhotoUpload = (e) => {
     const remaining = 5 - ratingPhotos.length;
@@ -208,7 +256,7 @@ const PendingBookingCard = ({
 
   const handleSubmitRating = async () => {
     const overall = isHost ? guestOverall : hostRatings.overall;
-    if (!overall) return;
+    if (!overall || !hasRatingChanges) return;
     setRatingLoading(true);
     setRatingError("");
     const ratingData = isHost
@@ -233,6 +281,10 @@ const PendingBookingCard = ({
           sport: request.sport,
           photoGallery: photosForShare,
         });
+        setShareCaption("");
+        setShareCaptionError(false);
+        setSharePosting(false);
+        setSharePosted(false);
       }
       // Keep panel visible so user can close it with the toggle button
     } else {
@@ -242,28 +294,29 @@ const PendingBookingCard = ({
 
   const handleShare = async (item) => {
     if (!shareCaption.trim()) { setShareCaptionError(true); return; }
-    // Delete any existing field post for this request before saving the new/updated one.
-    if (existingFieldPostId) {
-      await deleteFieldPost(existingFieldPostId);
-    }
+    setSharePosting(true);
+    setShareCaptionError(false);
     const posterCity = currentUser?.city ?? currentUser?.hostProfile?.city ?? "";
     const posterCountry = currentUser?.country ?? currentUser?.hostProfile?.country ?? "";
-    const newId = await saveFieldPost({
+    const savedId = await saveFieldPost({
+      id: existingFieldPostId,
       sourceRequestId: request.id,
       posterId: currentUserId,
       role: isHost ? "hosted" : "attended",
       hostName: currentUser?.fullName ?? "SharedXP User",
       hostPhoto: currentUser?.photo ?? "",
       sport: item.sport,
+      rating: isHost ? guestOverall : hostRatings.overall,
       city: posterCity,
       country: posterCountry,
       caption: shareCaption.trim(),
       photos: (item.photoGallery ?? []).filter((p) => p && p !== FALLBACK_EVENT_PHOTO),
     });
-    if (newId) setExistingFieldPostId(newId);
-    setShareItem(null);
-    setShareCaption("");
-    setShowRatingPanel(false);
+    setSharePosting(false);
+    if (savedId) {
+      setExistingFieldPostId(savedId);
+      setSharePosted(true);
+    }
   };
 
   const handleDeleteFieldPost = async () => {
@@ -574,14 +627,14 @@ const PendingBookingCard = ({
                       >
                         Cancel
                       </button>
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={handleSubmitRating}
-                        disabled={ratingLoading || (isHost ? !guestOverall : !hostRatings.overall)}
-                      >
-                        {ratingLoading ? "Saving…" : alreadyRated ? "Update Rating" : "Submit Rating"}
-                      </button>
+                       <button
+                         type="button"
+                         className="btn btn-primary"
+                         onClick={handleSubmitRating}
+                         disabled={ratingLoading || (isHost ? !guestOverall : !hostRatings.overall) || !hasRatingChanges}
+                       >
+                         {ratingLoading ? "Saving…" : alreadyRated ? "Update Rating" : "Submit Rating"}
+                       </button>
                     </div>
                   </>
                 )}
@@ -610,8 +663,15 @@ const PendingBookingCard = ({
           item={shareItem}
           caption={shareCaption}
           captionError={shareCaptionError}
+          isSharing={sharePosting}
+          isShared={sharePosted}
           onChangeCaption={(v) => { setShareCaption(v); if (v.trim()) setShareCaptionError(false); }}
-          onCancel={() => { setShareItem(null); setShowRatingPanel(false); }}
+          onCancel={() => {
+            setShareItem(null);
+            setSharePosting(false);
+            setSharePosted(false);
+            setShowRatingPanel(false);
+          }}
           onShare={handleShare}
         />
       )}
