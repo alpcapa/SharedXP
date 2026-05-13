@@ -50,6 +50,7 @@ const buildFieldPost = (item, currentUser, caption) => {
     postedAt: new Date().toISOString(),
     likes: 0,
     rating: fieldPostRating,
+    sourceRequestId: item.id ?? null,
   };
 };
 

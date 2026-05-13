@@ -169,6 +169,41 @@ const mergeRemoteAndLocalPosts = (remoteRows) => {
   return sortPostsByPostedAt(merged);
 };
 
+const hydrateMissingRatingsFromBookingRequests = async (posts) => {
+  const needsHydration = posts.filter(
+    (post) => Number(post.rating ?? 0) <= 0 && post.sourceRequestId
+  );
+  if (!needsHydration.length) return posts;
+
+  const requestIds = [...new Set(needsHydration.map((post) => post.sourceRequestId))];
+  try {
+    const { data, error } = await supabase
+      .from("booking_requests")
+      .select("id, guest_rating, guest_host_ratings, host_rating")
+      .in("id", requestIds);
+    if (error) {
+      console.error("[fieldPosts] rating hydration error:", error);
+      return posts;
+    }
+
+    const ratingByRequestId = new Map((data ?? []).map((row) => [row.id, row]));
+    return posts.map((post) => {
+      if (Number(post.rating ?? 0) > 0 || !post.sourceRequestId) return post;
+      const request = ratingByRequestId.get(post.sourceRequestId);
+      if (!request) return post;
+      const nextRating = Number(
+        post.role === "hosted"
+          ? (request.guest_rating ?? request.guest_host_ratings?.overall ?? 0)
+          : (request.host_rating ?? 0)
+      );
+      return nextRating > 0 ? { ...post, rating: clampRating(nextRating) } : post;
+    });
+  } catch (error) {
+    console.error("[fieldPosts] rating hydration exception:", error);
+    return posts;
+  }
+};
+
 /**
  * Fetch all field posts from Supabase, newest first.
  * Returns an array of camelCase post objects ready for display.
@@ -196,7 +231,8 @@ export const fetchFieldPosts = async () => {
       }
       return [];
     }
-    return mergeRemoteAndLocalPosts(data);
+    const mergedPosts = mergeRemoteAndLocalPosts(data);
+    return hydrateMissingRatingsFromBookingRequests(mergedPosts);
   } catch (e) {
     console.error("[fieldPosts] fetch exception:", e);
     return sortPostsByPostedAt(readLocalFallbackPosts().map(mapFallbackRow));
