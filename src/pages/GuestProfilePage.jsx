@@ -8,7 +8,7 @@ import { getAgeFromBirthday } from "../utils/profileAge";
 const FALLBACK_PHOTO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='840' height='480' viewBox='0 0 840 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2384cc16'/%3E%3Cstop offset='1' stop-color='%23065f46'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='840' height='480' fill='url(%23g)'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='52' fill='white'%3ESharedXP Event%3C/text%3E%3C/svg%3E";
 
 const REVIEWS_PER_PAGE = 3;
-const PHOTOS_PER_PAGE = 9;
+const PHOTOS_PER_PAGE = 5;
 
 const fmtDate = (iso) => {
   if (!iso) return "";
@@ -40,6 +40,7 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
   useEffect(() => {
     if (!userId) return;
     setLoading(true);
+    setPhotosPage(0);
 
     Promise.all([
       supabase
@@ -120,9 +121,9 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
 
   const totalReviewPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
   const visibleReviews = reviews.slice(reviewsPage * REVIEWS_PER_PAGE, (reviewsPage + 1) * REVIEWS_PER_PAGE);
-
   const totalPhotoPages = Math.max(1, Math.ceil(photos.length / PHOTOS_PER_PAGE));
   const visiblePhotos = photos.slice(photosPage * PHOTOS_PER_PAGE, (photosPage + 1) * PHOTOS_PER_PAGE);
+
 
   return (
     <div className="home-page">

@@ -322,21 +322,66 @@ export const deleteFieldPost = async (postId) => {
  */
 export const lookupFieldPostId = async (sourceRequestId, posterId) => {
   if (!sourceRequestId || !posterId) return null;
+  const local = readLocalFallbackPosts().find(
+    (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
+  );
+  if (local?.id) return local.id;
   try {
     const { data, error } = await supabase
       .from("field_posts")
       .select("id")
       .eq("source_request_id", sourceRequestId)
       .eq("poster_id", posterId)
-      .maybeSingle();
+      // Keep lookup resilient if duplicate rows exist by taking the latest post.
+      // `limit(1)` returns an array, so we read from data[0] below.
+      .order("created_at", { ascending: false })
+      .limit(1);
     if (error && isFieldPostsUnavailableError(error)) {
-      const local = readLocalFallbackPosts().find(
-        (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
-      );
       return local?.id ?? null;
     }
-    return data?.id ?? null;
-  } catch {
+    if (error) {
+      console.error("[fieldPosts] lookup id error:", error);
+      return null;
+    }
+    return data?.[0]?.id ?? null;
+  } catch (error) {
+    console.error("[fieldPosts] lookup id exception:", error);
+    return null;
+  }
+};
+
+/**
+ * Find a field post by source booking_request ID and poster ID.
+ * Returns the mapped post object (including caption) or null if not found.
+ */
+export const lookupFieldPost = async (sourceRequestId, posterId) => {
+  if (!sourceRequestId || !posterId) return null;
+  const local = readLocalFallbackPosts()
+    .map(mapFallbackRow)
+    .find((p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId);
+  if (local) return local;
+  try {
+    const { data, error } = await supabase
+      .from("field_posts")
+      .select(
+        "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, rating, source_request_id, created_at"
+      )
+      .eq("source_request_id", sourceRequestId)
+      .eq("poster_id", posterId)
+      // Keep lookup resilient if duplicate rows exist by taking the latest post.
+      // `limit(1)` returns an array, so we read from data[0] below.
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (error && isFieldPostsUnavailableError(error)) {
+      return local ?? null;
+    }
+    if (error) {
+      console.error("[fieldPosts] lookup error:", error);
+      return null;
+    }
+    return data?.[0] ? mapStorageRow(data[0]) : null;
+  } catch (error) {
+    console.error("[fieldPosts] lookup exception:", error);
     return null;
   }
 };

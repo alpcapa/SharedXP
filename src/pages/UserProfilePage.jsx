@@ -8,6 +8,7 @@ import { supabase } from "../lib/supabase";
 import { getProfileAge } from "../utils/profileAge";
 
 const LOCALS_PER_PAGE = 4;
+const PHOTOS_PER_PAGE = 5;
 const HISTORY_PLACEHOLDER_EVENT_PHOTO =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='840' height='480' viewBox='0 0 840 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2384cc16'/%3E%3Cstop offset='1' stop-color='%23065f46'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='840' height='480' fill='url(%23g)'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='52' fill='white'%3ESharedXP Event%3C/text%3E%3C/svg%3E";
 
@@ -80,6 +81,7 @@ const getHistoryGalleryPhotos = (historyItems) => {
 
 const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
   const [recommendationsPage, setRecommendationsPage] = useState(0);
+  const [photosPage, setPhotosPage] = useState(0);
   // Reviews/photos received as a guest (host rated the user)
   const [brGuestReviews, setBrGuestReviews] = useState([]);
   const [brGuestPhotos, setBrGuestPhotos] = useState([]);
@@ -238,10 +240,19 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
     const legacyPhotos = getHistoryGalleryPhotos(currentUser?.history);
     return [...new Set([...brGuestPhotos, ...brHostPhotos, ...legacyPhotos])];
   }, [brGuestPhotos, brHostPhotos, currentUser?.history]);
+  const totalPhotoPages = Math.max(1, Math.ceil(galleryPhotos.length / PHOTOS_PER_PAGE));
+  const visibleGalleryPhotos = galleryPhotos.slice(
+    photosPage * PHOTOS_PER_PAGE,
+    (photosPage + 1) * PHOTOS_PER_PAGE
+  );
 
   useEffect(() => {
     setRecommendationsPage((currentPage) => Math.min(currentPage, totalRecommendationPages - 1));
   }, [totalRecommendationPages]);
+
+  useEffect(() => {
+    setPhotosPage((currentPage) => Math.min(currentPage, totalPhotoPages - 1));
+  }, [totalPhotoPages]);
 
   if (!currentUser) {
     if (authLoading) {
@@ -328,11 +339,36 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
       <section className="gallery">
         <h3>Photo gallery</h3>
         {galleryPhotos.length > 0 ? (
+          <>
           <div className="gallery-grid">
-            {galleryPhotos.map((photo) => (
+            {visibleGalleryPhotos.map((photo) => (
               <img key={photo} src={photo} alt={`${currentUser.fullName || currentUser.firstName || "User"} history gallery`} />
             ))}
           </div>
+          {totalPhotoPages > 1 && (
+            <div className="locals-nav-row">
+              <button
+                type="button"
+                className="locals-nav"
+                aria-label="Previous photos"
+                onClick={() => setPhotosPage((page) => Math.max(page - 1, 0))}
+                disabled={photosPage === 0}
+              >
+                ‹
+              </button>
+              <span className="locals-nav-info">{photosPage + 1} / {totalPhotoPages}</span>
+              <button
+                type="button"
+                className="locals-nav"
+                aria-label="Next photos"
+                onClick={() => setPhotosPage((page) => Math.min(page + 1, totalPhotoPages - 1))}
+                disabled={photosPage >= totalPhotoPages - 1}
+              >
+                ›
+              </button>
+            </div>
+          )}
+          </>
         ) : (
           <p>No history photos yet.</p>
         )}

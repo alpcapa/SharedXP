@@ -28,15 +28,6 @@ const ShareToFieldModal = ({
         aria-label="Share experience to The Field"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          className="booking-modal-close"
-          aria-label="Close"
-          onClick={onCancel}
-        >
-          ×
-        </button>
-
         <h3>Share your experience to The Field?</h3>
         <p className="field-share-modal-sub">
           Your photos will appear as a carousel on The Field — visible to other
@@ -61,10 +52,12 @@ const ShareToFieldModal = ({
               captionError ? " field-share-caption-error" : ""
             }`}
             rows={3}
+            maxLength={150}
             placeholder="Tell people about your experience..."
             value={caption}
             onChange={(event) => onChangeCaption(event.target.value)}
           />
+          <span className="field-share-char-count">{caption.length}/150</span>
           {captionError && (
             <span className="field-share-error-msg">
               Caption is required before sharing.
@@ -83,7 +76,7 @@ const ShareToFieldModal = ({
           </button>
           <button
             type="button"
-            className="find-button"
+            className="btn btn-primary"
             onClick={() => onShare(item)}
             disabled={isSharing || isShared}
           >

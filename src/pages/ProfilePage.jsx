@@ -117,7 +117,7 @@ const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const getStars = (value) => `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
 const LOCALS_PER_PAGE = 4;
 const REVIEWS_PER_PAGE = 3;
-const PHOTOS_PER_PAGE = 9;
+const PHOTOS_PER_PAGE = 5;
 const normalizeIdentifier = (value) => String(value ?? "").trim().toLowerCase();
 
 const isCurrentUserHostForBuddy = (currentUser, buddy) => {
@@ -632,7 +632,10 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         : [];
   const galleryPhotos = [...new Set([...baseGallery, ...guestRatingPhotos])];
   const totalPhotoPages = Math.max(1, Math.ceil(galleryPhotos.length / PHOTOS_PER_PAGE));
-  const visibleGalleryPhotos = galleryPhotos.slice(photosPage * PHOTOS_PER_PAGE, (photosPage + 1) * PHOTOS_PER_PAGE);
+  const visibleGalleryPhotos = galleryPhotos.slice(
+    photosPage * PHOTOS_PER_PAGE,
+    (photosPage + 1) * PHOTOS_PER_PAGE
+  );
 
   const formatDate = (dateValue) =>
     new Intl.DateTimeFormat("en-GB", {
@@ -1005,18 +1008,6 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                   </div>
                 )}
                 {review.comment && <p>{review.comment}</p>}
-                {Array.isArray(review.photos) && review.photos.length > 0 && (
-                  <div className="review-photos">
-                    {review.photos.map((photo, pi) => (
-                      <img
-                        key={pi}
-                        src={photo}
-                        alt={`Review photo ${pi + 1}`}
-                        className="review-photo-thumb"
-                      />
-                    ))}
-                  </div>
-                )}
               </article>
               );
             })}

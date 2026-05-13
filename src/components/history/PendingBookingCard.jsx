@@ -4,7 +4,7 @@ import DeclineModal from "./DeclineModal";
 import DeclineConfirmationModal from "./DeclineConfirmationModal";
 import ShareToFieldModal from "./ShareToFieldModal";
 import { HOST_RATING_FIELDS, clampRating, FALLBACK_EVENT_PHOTO } from "../../utils/historyItem";
-import { deleteFieldPost, lookupFieldPostId, saveFieldPost } from "../../utils/fieldPosts";
+import { deleteFieldPost, lookupFieldPost, saveFieldPost } from "../../utils/fieldPosts";
 
 const CURRENCY_SYMBOLS = {
   USD: "$", EUR: "€", GBP: "£", CAD: "C$",
@@ -71,14 +71,9 @@ const getName = (profile) => {
 const ProfileLink = ({ profile, userId, name }) => {
   const href = profile?.is_host ? `/buddy/${userId}` : `/user/${userId}`;
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="pending-profile-link"
-    >
+    <Link to={href} className="pending-profile-link">
       {name}
-    </a>
+    </Link>
   );
 };
 
@@ -138,14 +133,21 @@ const PendingBookingCard = ({
   const [sharePosting, setSharePosting] = useState(false);
   const [sharePosted, setSharePosted] = useState(false);
   const [existingFieldPostId, setExistingFieldPostId] = useState(null);
+  const [existingFieldCaption, setExistingFieldCaption] = useState("");
   const [initialRatingSnapshot, setInitialRatingSnapshot] = useState(null);
+
+  const refreshExistingFieldPost = async () => {
+    if (!currentUserId || !request.id) return null;
+    const post = await lookupFieldPost(request.id, currentUserId);
+    setExistingFieldPostId(post?.id ?? null);
+    setExistingFieldCaption(post?.caption ?? "");
+    return post;
+  };
 
   // Check Supabase for an existing field post tied to this booking request.
   useEffect(() => {
-    if (!currentUserId || !request.id) return;
-    lookupFieldPostId(request.id, currentUserId).then((id) => {
-      if (id) setExistingFieldPostId(id);
-    });
+    refreshExistingFieldPost();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request.id, currentUserId]);
 
   const isHost = request.host_id === currentUserId;
@@ -273,6 +275,8 @@ const PendingBookingCard = ({
     if (ok) {
       setRatingDone(true);
       setRatingError("");
+      const existingPost = await refreshExistingFieldPost();
+      const previousCaption = existingPost?.caption ?? "";
       // Use uploaded storage URLs for the field post so we avoid base64 data-URL
       // size limits that would cause localStorage.setItem to fail silently.
       const uploadedUrls = (result && typeof result === "object") ? (result.photoUrls ?? []) : [];
@@ -284,7 +288,7 @@ const PendingBookingCard = ({
           sport: request.sport,
           photoGallery: photosForShare,
         });
-        setShareCaption("");
+        setShareCaption(previousCaption ?? "");
         setShareCaptionError(false);
         setSharePosting(false);
         setSharePosted(false);
@@ -316,12 +320,13 @@ const PendingBookingCard = ({
       photos: (item.photoGallery ?? []).filter((p) => p && p !== FALLBACK_EVENT_PHOTO),
     });
     setSharePosting(false);
-    if (savedId) {
-      setExistingFieldPostId(savedId);
-      setSharePosted(true);
-    } else {
-      window.alert("Could not post to The Field right now. Please try again.");
-    }
+      if (savedId) {
+        setExistingFieldPostId(savedId);
+        setExistingFieldCaption(shareCaption.trim());
+        setSharePosted(true);
+      } else {
+        window.alert("Could not post to The Field right now. Please try again.");
+      }
   };
 
   const handleDeleteFieldPost = async () => {
@@ -329,6 +334,7 @@ const PendingBookingCard = ({
     if (!window.confirm("Delete this post from The Field?")) return;
     await deleteFieldPost(existingFieldPostId);
     setExistingFieldPostId(null);
+    setExistingFieldCaption("");
   };
 
   // Opens/closes the rating panel; pre-populates fields from saved data when opening for editing.
