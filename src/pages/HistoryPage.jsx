@@ -29,6 +29,11 @@ const buildFieldPost = (item, currentUser, caption) => {
     typeof globalThis.crypto?.randomUUID === "function"
       ? `user-${globalThis.crypto.randomUUID()}`
       : `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const fieldPostRating = Number(
+    item.role === "hosted"
+      ? (item.attendeeRating ?? item.rating ?? 0)
+      : (item.hostRatings?.overall ?? item.rating ?? 0)
+  );
   return {
     id,
     posterId: currentUser?.id ?? null,
@@ -44,7 +49,7 @@ const buildFieldPost = (item, currentUser, caption) => {
     photo: realPhotos[0] ?? "",
     postedAt: new Date().toISOString(),
     likes: 0,
-    rating: Number(item.rating ?? 0),
+    rating: fieldPostRating,
   };
 };
 
