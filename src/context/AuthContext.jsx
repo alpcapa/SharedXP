@@ -589,17 +589,43 @@ const { data, error } = await supabase.functions.invoke("forgot-password", {
 });
 
 if (error) {
+  let functionErrorMessage = data?.error || "";
+  if (!functionErrorMessage && error.context && typeof error.context.clone === "function") {
+    try {
+      const contextPayload = await error.context.clone().json();
+      functionErrorMessage = contextPayload?.error || "";
+    } catch {
+      // Ignore unreadable error payload and continue with fallback.
+    }
+  }
+
   const status = error.context?.status;
-  if (status === 404) {
+  if (
+    status === 404 &&
+    functionErrorMessage === "Sorry, this email does not exist in our database."
+  ) {
     return {
       success: false,
       message: "Sorry, this email does not exist in our database.",
     };
   }
+
+  const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo: window.location.origin,
+  });
+
+  if (!fallbackError) {
+    return {
+      success: true,
+      message:
+        "We couldn't send a temporary password right now. A password reset email has been sent instead. Please check your spam folder if not received.",
+    };
+  }
+
   return {
     success: false,
     message:
-      data?.error ||
+      functionErrorMessage ||
       "We couldn't process your request right now. Please try again.",
   };
 }
