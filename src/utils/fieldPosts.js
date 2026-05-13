@@ -129,6 +129,39 @@ const upsertLocalFallbackPost = (post) => {
   return id;
 };
 
+const mergeRemoteAndLocalPosts = (remoteRows) => {
+  const remotePosts = (remoteRows ?? []).map(mapStorageRow);
+  const localPosts = readLocalFallbackPosts().map(mapFallbackRow);
+
+  if (!localPosts.length) return remotePosts;
+
+  const merged = [...remotePosts];
+  localPosts.forEach((localPost) => {
+    const matchIndex = merged.findIndex(
+      (remotePost) =>
+        remotePost.id === localPost.id ||
+        (
+          localPost.sourceRequestId &&
+          remotePost.sourceRequestId === localPost.sourceRequestId &&
+          remotePost.posterId === localPost.posterId
+        )
+    );
+
+    if (matchIndex >= 0) {
+      const remotePost = merged[matchIndex];
+      merged[matchIndex] = {
+        ...remotePost,
+        ...localPost,
+        postedAt: remotePost.postedAt ?? localPost.postedAt,
+      };
+    } else {
+      merged.push(localPost);
+    }
+  });
+
+  return sortPostsByPostedAt(merged);
+};
+
 /**
  * Fetch all field posts from Supabase, newest first.
  * Returns an array of camelCase post objects ready for display.
@@ -156,7 +189,7 @@ export const fetchFieldPosts = async () => {
       }
       return [];
     }
-    return (data ?? []).map(mapStorageRow);
+    return mergeRemoteAndLocalPosts(data);
   } catch (e) {
     console.error("[fieldPosts] fetch exception:", e);
     return sortPostsByPostedAt(readLocalFallbackPosts().map(mapFallbackRow));
@@ -208,7 +241,9 @@ export const saveFieldPost = async (post) => {
         console.error("[fieldPosts] insert error; falling back to local post storage:", error);
         return upsertLocalFallbackPost(post);
       }
-      return data?.id ?? null;
+      if (data?.id) return data.id;
+      console.warn("[fieldPosts] insert returned no id; falling back to local post storage");
+      return upsertLocalFallbackPost(post);
     };
 
     const updatePost = async (postId) => {
