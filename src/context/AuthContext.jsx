@@ -581,6 +581,8 @@ onForgotPassword: async (email) => {
 const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 const resetLinkSuccessMessage =
   "Reset link has been sent to your email. Check spam folder if not received";
+const resetLinkFailureMessage =
+  "We couldn't send a reset link right now. Please try again.";
 
 const tryResetPasswordEmail = async (withRedirect) => {
   try {
@@ -598,10 +600,16 @@ const tryResetPasswordEmail = async (withRedirect) => {
 const sendRecoveryFallback = async () => {
   const fallbackWithRedirect = await tryResetPasswordEmail(true);
   if (!fallbackWithRedirect.error) {
-    return null;
+    return { sent: true };
   }
   const fallbackWithoutRedirect = await tryResetPasswordEmail(false);
-  return fallbackWithoutRedirect.error ?? fallbackWithRedirect.error;
+  if (!fallbackWithoutRedirect.error) {
+    return { sent: true };
+  }
+  return {
+    sent: false,
+    error: fallbackWithoutRedirect.error ?? fallbackWithRedirect.error,
+  };
 };
 
 try {
@@ -613,76 +621,99 @@ try {
     body: { email: normalizedEmail },
   });
 
-if (error) {
-  let functionErrorMessage = data?.error || "";
-  if (!functionErrorMessage && error.context && typeof error.context.clone === "function") {
-    try {
-      const contextPayload = await error.context.clone().json();
-      functionErrorMessage = contextPayload?.error || "";
-    } catch (parseError) {
-      console.warn("[auth] forgot-password error payload parse failed:", parseError);
+  if (error) {
+    let functionErrorMessage = data?.error || "";
+    if (!functionErrorMessage && error.context && typeof error.context.clone === "function") {
+      try {
+        const contextPayload = await error.context.clone().json();
+        functionErrorMessage = contextPayload?.error || "";
+      } catch (parseError) {
+        console.warn("[auth] forgot-password error payload parse failed:", parseError);
+      }
     }
-  }
 
-  const status = error.context?.status;
-  if (
-    status === 404 &&
-    functionErrorMessage === "Sorry, this email does not exist in our database."
-  ) {
+    const status = error.context?.status;
+    if (
+      status === 404 &&
+      functionErrorMessage === "Sorry, this email does not exist in our database."
+    ) {
+      return {
+        success: false,
+        message: "Sorry, this email does not exist in our database.",
+      };
+    }
+
+    const fallbackResult = await sendRecoveryFallback();
+    if (fallbackResult.sent) {
+      return {
+        success: true,
+        message: resetLinkSuccessMessage,
+      };
+    }
+    console.warn("[auth] forgot-password fallback failed after function error:", fallbackResult.error);
     return {
       success: false,
-      message: "Sorry, this email does not exist in our database.",
+      message: resetLinkFailureMessage,
     };
   }
 
-  const fallbackError = await sendRecoveryFallback();
-  if (fallbackError) {
-    console.warn("[auth] forgot-password fallback failed after function error:", fallbackError);
-  }
-  return {
-    success: true,
-    message: resetLinkSuccessMessage,
-  };
-}
+  if (!data?.success) {
+    if (data?.error === "Sorry, this email does not exist in our database.") {
+      return {
+        success: false,
+        message: "Sorry, this email does not exist in our database.",
+      };
+    }
 
-if (!data?.success) {
-  if (data?.error === "Sorry, this email does not exist in our database.") {
+    const fallbackResult = await sendRecoveryFallback();
+    if (fallbackResult.sent) {
+      return {
+        success: true,
+        message: resetLinkSuccessMessage,
+      };
+    }
+    console.warn(
+      "[auth] forgot-password fallback failed after unsuccessful function payload:",
+      fallbackResult.error,
+    );
     return {
       success: false,
-      message: "Sorry, this email does not exist in our database.",
+      message: resetLinkFailureMessage,
     };
   }
 
-  const fallbackError = await sendRecoveryFallback();
-  if (fallbackError) {
-    console.warn("[auth] forgot-password fallback failed after unsuccessful function payload:", fallbackError);
+  const fallbackResult = await sendRecoveryFallback();
+  if (fallbackResult.sent) {
+    return {
+      success: true,
+      message: resetLinkSuccessMessage,
+    };
   }
+  console.warn("[auth] forgot-password fallback failed after successful function payload:", fallbackResult.error);
   return {
-    success: true,
-    message: resetLinkSuccessMessage,
+    success: false,
+    message: resetLinkFailureMessage,
   };
-}
-
-return {
-  success: true,
-  message: resetLinkSuccessMessage,
-};
 } catch (e) {
-console.error("[auth] onForgotPassword:", e);
-if (normalizedEmail) {
-  const fallbackError = await sendRecoveryFallback();
-  if (fallbackError) {
-    console.warn("[auth] forgot-password fallback failed in catch:", fallbackError);
+  console.error("[auth] onForgotPassword:", e);
+  if (normalizedEmail) {
+    const fallbackResult = await sendRecoveryFallback();
+    if (fallbackResult.sent) {
+      return {
+        success: true,
+        message: resetLinkSuccessMessage,
+      };
+    }
+    console.warn("[auth] forgot-password fallback failed in catch:", fallbackResult.error);
+    return {
+      success: false,
+      message: resetLinkFailureMessage,
+    };
   }
   return {
-    success: true,
-    message: resetLinkSuccessMessage,
+    success: false,
+    message: "We couldn't process your request right now. Please try again.",
   };
-}
-return {
-  success: false,
-  message: "We couldn't process your request right now. Please try again.",
-};
 }
 },
 
