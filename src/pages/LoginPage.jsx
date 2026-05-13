@@ -18,6 +18,8 @@ const LoginPage = ({
   const [resetMessage, setResetMessage] = useState("");
   const resetSuccessMessage =
     "Reset link has been sent to your email. Check spam folder if not received";
+  const unknownEmailMessage = "Sorry, this email does not exist in our database.";
+  const emptyEmailMessage = "Please enter your email address.";
 
   const destination = location.state?.from?.pathname ?? "/";
 
@@ -33,17 +35,25 @@ const LoginPage = ({
         setResetMessage(resetSuccessMessage);
         return;
       }
+
       if (!resetResult?.success) {
-        setErrorMessage(
-          resetResult?.message ?? "We couldn't process your request right now. Please try again."
-        );
-        setResetMessage("");
+        const resetError = typeof resetResult?.message === "string"
+          ? resetResult.message
+          : "";
+        if (
+          resetError === unknownEmailMessage ||
+          resetError === emptyEmailMessage
+        ) {
+          setErrorMessage(resetError);
+          setResetMessage("");
+          return;
+        }
+        setErrorMessage("");
+        setResetMessage(resetSuccessMessage);
         return;
       }
       setErrorMessage("");
-      setResetMessage(
-        resetResult?.message ?? resetSuccessMessage
-      );
+      setResetMessage(resetSuccessMessage);
       return;
     }
 
