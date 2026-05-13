@@ -117,6 +117,7 @@ const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const getStars = (value) => `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
 const LOCALS_PER_PAGE = 4;
 const REVIEWS_PER_PAGE = 3;
+const PHOTOS_PER_PAGE = 9;
 const normalizeIdentifier = (value) => String(value ?? "").trim().toLowerCase();
 
 const isCurrentUserHostForBuddy = (currentUser, buddy) => {
@@ -315,6 +316,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [reviewsPage, setReviewsPage] = useState(0);
+  const [photosPage, setPhotosPage] = useState(0);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isRequestSubmitted, setIsRequestSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -629,6 +631,11 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         ? fallbackGallery
         : [];
   const galleryPhotos = [...new Set([...baseGallery, ...guestRatingPhotos])];
+  const totalPhotoPages = Math.max(1, Math.ceil(galleryPhotos.length / PHOTOS_PER_PAGE));
+  const visibleGalleryPhotos = galleryPhotos.slice(
+    photosPage * PHOTOS_PER_PAGE,
+    (photosPage + 1) * PHOTOS_PER_PAGE
+  );
 
   const formatDate = (dateValue) =>
     new Intl.DateTimeFormat("en-GB", {
@@ -940,21 +947,34 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         <h3>Photo gallery</h3>
         {galleryPhotos.length > 0 ? (
           <>
-            <div
-              className="gallery-grid profile-gallery-scroll"
-              tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === "ArrowRight") {
-                  event.currentTarget.scrollBy({ left: 220, behavior: "smooth" });
-                } else if (event.key === "ArrowLeft") {
-                  event.currentTarget.scrollBy({ left: -220, behavior: "smooth" });
-                }
-              }}
-            >
-              {galleryPhotos.map((photo) => (
+            <div className="gallery-grid">
+              {visibleGalleryPhotos.map((photo) => (
                 <img key={photo} src={photo} alt={`${buddy.name} gallery`} />
               ))}
             </div>
+            {totalPhotoPages > 1 && (
+              <div className="locals-nav-row">
+                <button
+                  type="button"
+                  className="locals-nav"
+                  aria-label="Previous photos"
+                  onClick={() => setPhotosPage((p) => Math.max(p - 1, 0))}
+                  disabled={photosPage === 0}
+                >
+                  ‹
+                </button>
+                <span className="locals-nav-info">{photosPage + 1} / {totalPhotoPages}</span>
+                <button
+                  type="button"
+                  className="locals-nav"
+                  aria-label="Next photos"
+                  onClick={() => setPhotosPage((p) => Math.min(p + 1, totalPhotoPages - 1))}
+                  disabled={photosPage >= totalPhotoPages - 1}
+                >
+                  ›
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <p>No photos yet for this sport.</p>
