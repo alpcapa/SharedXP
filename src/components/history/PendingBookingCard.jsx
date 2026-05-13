@@ -303,6 +303,11 @@ const PendingBookingCard = ({
     if (!shareCaption.trim()) { setShareCaptionError(true); return; }
     setSharePosting(true);
     setShareCaptionError(false);
+    const fieldPostRating = clampRating(
+      isHost
+        ? (request.guest_rating ?? request.guest_host_ratings?.overall ?? 0)
+        : (request.host_rating ?? 0)
+    );
     const posterCity = currentUser?.city ?? currentUser?.hostProfile?.city ?? "";
     const posterCountry = currentUser?.country ?? currentUser?.hostProfile?.country ?? "";
     const savedId = await saveFieldPost({
@@ -313,7 +318,7 @@ const PendingBookingCard = ({
       hostName: currentUser?.fullName ?? "SharedXP User",
       hostPhoto: currentUser?.photo ?? "",
       sport: item.sport,
-      rating: isHost ? guestOverall : hostRatings.overall,
+      rating: fieldPostRating,
       city: posterCity,
       country: posterCountry,
       caption: shareCaption.trim(),
