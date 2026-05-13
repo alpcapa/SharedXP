@@ -71,14 +71,9 @@ const getName = (profile) => {
 const ProfileLink = ({ profile, userId, name }) => {
   const href = profile?.is_host ? `/buddy/${userId}` : `/user/${userId}`;
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="pending-profile-link"
-    >
+    <Link to={href} className="pending-profile-link">
       {name}
-    </a>
+    </Link>
   );
 };
 
