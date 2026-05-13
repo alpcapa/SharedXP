@@ -579,14 +579,29 @@ return { success: false, message: "Login failed. Please try again." };
 
 onForgotPassword: async (email) => {
 try {
-const normalizedEmail = email.trim().toLowerCase();
-if (!normalizedEmail) {
-  return { success: false, message: "Please enter your email address." };
-}
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    return { success: false, message: "Please enter your email address." };
+  }
 
-const { data, error } = await supabase.functions.invoke("forgot-password", {
-  body: { email: normalizedEmail },
-});
+  const sendRecoveryFallback = async () => {
+    let fallbackError = null;
+    const fallbackWithRedirect = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    fallbackError = fallbackWithRedirect.error;
+    if (fallbackError) {
+      // Some environments fail when redirectTo is not allow-listed.
+      // Retry without redirectTo so password recovery still sends.
+      const fallbackWithoutRedirect = await supabase.auth.resetPasswordForEmail(normalizedEmail);
+      fallbackError = fallbackWithoutRedirect.error;
+    }
+    return fallbackError;
+  };
+
+  const { data, error } = await supabase.functions.invoke("forgot-password", {
+    body: { email: normalizedEmail },
+  });
 
 if (error) {
   let functionErrorMessage = data?.error || "";
@@ -610,17 +625,7 @@ if (error) {
     };
   }
 
-  let fallbackError = null;
-  const fallbackWithRedirect = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-    redirectTo: `${window.location.origin}/reset-password`,
-  });
-  fallbackError = fallbackWithRedirect.error;
-  if (fallbackError) {
-    // Some environments fail when redirectTo is not allow-listed.
-    // Retry without redirectTo so password recovery still sends.
-    const fallbackWithoutRedirect = await supabase.auth.resetPasswordForEmail(normalizedEmail);
-    fallbackError = fallbackWithoutRedirect.error;
-  }
+  const fallbackError = await sendRecoveryFallback();
 
   if (!fallbackError) {
     return {
@@ -639,6 +644,22 @@ if (error) {
 }
 
 if (!data?.success) {
+  if (data?.error === "Sorry, this email does not exist in our database.") {
+    return {
+      success: false,
+      message: "Sorry, this email does not exist in our database.",
+    };
+  }
+
+  const fallbackError = await sendRecoveryFallback();
+  if (!fallbackError) {
+    return {
+      success: true,
+      message:
+        "We couldn't send a temporary password right now. A password reset email has been sent instead. Please check your spam folder if not received.",
+    };
+  }
+
   return {
     success: false,
     message:
