@@ -209,30 +209,33 @@ const PendingBookingCard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editRatingRequestId]);
 
-  const currentRatingSnapshot = isHost
-    ? {
-      overall: guestOverall,
-      review: ratingReview,
-      photos: ratingPhotos,
-      hostRatings: {
-        overall: guestOverall,
-        punctuality: 0,
-        equipmentQuality: 0,
-        localKnowledge: 0,
-        friendliness: 0,
-        value: 0,
-      },
-    }
-    : {
-      overall: hostRatings.overall,
-      review: ratingReview,
-      photos: ratingPhotos,
-      hostRatings: hostRatings,
-    };
-
-  const hasRatingChanges =
-    !initialRatingSnapshot ||
-    JSON.stringify(currentRatingSnapshot) !== JSON.stringify(initialRatingSnapshot);
+  const initialHostRatings = initialRatingSnapshot?.hostRatings ?? {
+    overall: 0,
+    punctuality: 0,
+    equipmentQuality: 0,
+    localKnowledge: 0,
+    friendliness: 0,
+    value: 0,
+  };
+  const photosChanged =
+    ratingPhotos.length !== (initialRatingSnapshot?.photos?.length ?? 0) ||
+    ratingPhotos.some((photo, index) => photo !== initialRatingSnapshot?.photos?.[index]);
+  const hasRatingChanges = isHost
+    ? (
+      guestOverall !== (initialRatingSnapshot?.overall ?? 0) ||
+      ratingReview !== (initialRatingSnapshot?.review ?? "") ||
+      photosChanged
+    )
+    : (
+      hostRatings.overall !== initialHostRatings.overall ||
+      hostRatings.punctuality !== initialHostRatings.punctuality ||
+      hostRatings.equipmentQuality !== initialHostRatings.equipmentQuality ||
+      hostRatings.localKnowledge !== initialHostRatings.localKnowledge ||
+      hostRatings.friendliness !== initialHostRatings.friendliness ||
+      hostRatings.value !== initialHostRatings.value ||
+      ratingReview !== (initialRatingSnapshot?.review ?? "") ||
+      photosChanged
+    );
 
   const handleRatingPhotoUpload = (e) => {
     const remaining = 5 - ratingPhotos.length;
@@ -316,6 +319,8 @@ const PendingBookingCard = ({
     if (savedId) {
       setExistingFieldPostId(savedId);
       setSharePosted(true);
+    } else {
+      window.alert("Could not post to The Field right now. Please try again.");
     }
   };
 
