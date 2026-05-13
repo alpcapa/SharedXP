@@ -333,6 +333,7 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
       .eq("source_request_id", sourceRequestId)
       .eq("poster_id", posterId)
       // Keep lookup resilient if duplicate rows exist by taking the latest post.
+      // `limit(1)` returns an array, so we read from data[0] below.
       .order("created_at", { ascending: false })
       .limit(1);
     if (error && isFieldPostsUnavailableError(error)) {
@@ -368,6 +369,7 @@ export const lookupFieldPost = async (sourceRequestId, posterId) => {
       .eq("source_request_id", sourceRequestId)
       .eq("poster_id", posterId)
       // Keep lookup resilient if duplicate rows exist by taking the latest post.
+      // `limit(1)` returns an array, so we read from data[0] below.
       .order("created_at", { ascending: false })
       .limit(1);
     if (error && isFieldPostsUnavailableError(error)) {
