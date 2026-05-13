@@ -3,18 +3,34 @@
 
 import { supabase } from "../lib/supabase";
 
+const isMissingRatingColumnError = (error) => {
+  return error?.code === "42703";
+};
+
+const isUpdateNotAllowedError = (error) => {
+  return error?.code === "42501";
+};
+
 /**
  * Fetch all field posts from Supabase, newest first.
  * Returns an array of camelCase post objects ready for display.
  */
 export const fetchFieldPosts = async () => {
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("field_posts")
       .select(
         "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, rating, source_request_id, created_at"
       )
       .order("created_at", { ascending: false });
+    if (error && isMissingRatingColumnError(error)) {
+      ({ data, error } = await supabase
+        .from("field_posts")
+        .select(
+          "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, source_request_id, created_at"
+        )
+        .order("created_at", { ascending: false }));
+    }
     if (error) {
       console.error("[fieldPosts] fetch error:", error);
       return [];
@@ -47,7 +63,7 @@ export const fetchFieldPosts = async () => {
  */
 export const saveFieldPost = async (post) => {
   try {
-    const savePayload = {
+    const savePayloadBase = {
       poster_id: post.posterId,
       role: post.role ?? "",
       host_name: post.hostName ?? "",
@@ -58,53 +74,86 @@ export const saveFieldPost = async (post) => {
       caption: post.caption ?? "",
       photos: Array.isArray(post.photos) ? post.photos : [],
       source_request_id: post.sourceRequestId ?? null,
+    };
+    const savePayloadWithRating = {
+      ...savePayloadBase,
       rating: Math.max(0, Math.min(5, Number(post.rating ?? 0) || 0)),
     };
 
-    if (post.id) {
-      const { data, error } = await supabase
+    const insertPost = async () => {
+      let { data, error } = await supabase
         .from("field_posts")
-        .update(savePayload)
-        .eq("id", post.id)
+        .insert({
+          ...savePayloadWithRating,
+          likes: 0,
+        })
         .select("id")
         .single();
+      if (error && isMissingRatingColumnError(error)) {
+        ({ data, error } = await supabase
+          .from("field_posts")
+          .insert({
+            ...savePayloadBase,
+            likes: 0,
+          })
+          .select("id")
+          .single());
+      }
       if (error) {
-        console.error("[fieldPosts] update error:", error);
+        console.error("[fieldPosts] insert error:", error);
         return null;
       }
       return data?.id ?? null;
+    };
+
+    const updatePost = async (postId) => {
+      let { data, error } = await supabase
+        .from("field_posts")
+        .update(savePayloadWithRating)
+        .eq("id", postId)
+        .select("id")
+        .single();
+      if (error && isMissingRatingColumnError(error)) {
+        ({ data, error } = await supabase
+          .from("field_posts")
+          .update(savePayloadBase)
+          .eq("id", postId)
+          .select("id")
+          .single());
+      }
+      if (!error) return data?.id ?? null;
+      if (isUpdateNotAllowedError(error)) {
+        console.warn(
+          "[fieldPosts] UPDATE denied, falling back to delete+insert for post:",
+          postId
+        );
+        const deleted = await deleteFieldPost(postId);
+        if (!deleted) return null;
+        const insertedId = await insertPost();
+        if (!insertedId) {
+          console.error(
+            "[fieldPosts] fallback delete+insert failed after delete; original post may be lost:",
+            postId
+          );
+        }
+        return insertedId;
+      }
+      console.error("[fieldPosts] update error:", error);
+      return null;
+    };
+
+    if (post.id) {
+      return updatePost(post.id);
     }
 
     if (post.sourceRequestId && post.posterId) {
       const existingId = await lookupFieldPostId(post.sourceRequestId, post.posterId);
       if (existingId) {
-        const { data, error } = await supabase
-          .from("field_posts")
-          .update(savePayload)
-          .eq("id", existingId)
-          .select("id")
-          .single();
-        if (error) {
-          console.error("[fieldPosts] update-by-source error:", error);
-          return null;
-        }
-        return data?.id ?? null;
+        return updatePost(existingId);
       }
     }
 
-    const { data, error } = await supabase
-      .from("field_posts")
-      .insert({
-        ...savePayload,
-        likes: 0,
-      })
-      .select("id")
-      .single();
-    if (error) {
-      console.error("[fieldPosts] insert error:", error);
-      return null;
-    }
-    return data?.id ?? null;
+    return insertPost();
   } catch (e) {
     console.error("[fieldPosts] save exception:", e);
     return null;
@@ -122,9 +171,12 @@ export const deleteFieldPost = async (postId) => {
       .eq("id", postId);
     if (error) {
       console.error("[fieldPosts] delete error:", error);
+      return false;
     }
+    return true;
   } catch (e) {
     console.error("[fieldPosts] delete exception:", e);
+    return false;
   }
 };
 
