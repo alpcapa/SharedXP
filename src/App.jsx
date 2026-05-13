@@ -82,6 +82,7 @@ function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "PASSWORD_RECOVERY") return;
+      if (location.pathname === "/reset-password") return;
 
       navigate(
         `/reset-password${location.search}${location.hash}`,
@@ -92,7 +93,7 @@ function App() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [location.hash, location.search, navigate]);
+  }, [location.hash, location.pathname, location.search, navigate]);
 
   return (
     <Routes>
