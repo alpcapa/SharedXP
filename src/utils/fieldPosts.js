@@ -332,6 +332,7 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
       .select("id")
       .eq("source_request_id", sourceRequestId)
       .eq("poster_id", posterId)
+      // Keep lookup resilient if duplicate rows exist by taking the latest post.
       .order("created_at", { ascending: false })
       .limit(1);
     if (error && isFieldPostsUnavailableError(error)) {
@@ -342,7 +343,8 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
       return null;
     }
     return data?.[0]?.id ?? null;
-  } catch {
+  } catch (error) {
+    console.error("[fieldPosts] lookup id exception:", error);
     return null;
   }
 };
@@ -365,6 +367,7 @@ export const lookupFieldPost = async (sourceRequestId, posterId) => {
       )
       .eq("source_request_id", sourceRequestId)
       .eq("poster_id", posterId)
+      // Keep lookup resilient if duplicate rows exist by taking the latest post.
       .order("created_at", { ascending: false })
       .limit(1);
     if (error && isFieldPostsUnavailableError(error)) {
@@ -375,7 +378,8 @@ export const lookupFieldPost = async (sourceRequestId, posterId) => {
       return null;
     }
     return data?.[0] ? mapStorageRow(data[0]) : null;
-  } catch {
+  } catch (error) {
+    console.error("[fieldPosts] lookup exception:", error);
     return null;
   }
 };
