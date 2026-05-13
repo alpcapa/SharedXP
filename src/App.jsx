@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
@@ -36,6 +36,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 function App() {
   const authActions = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const didRedirect = useRef(false);
 
   // After OAuth login the browser lands on "/" with postAuthRedirect in
@@ -53,6 +54,22 @@ function App() {
       navigate(redirect, { replace: true });
     }
   }, [authActions.currentUser, navigate]);
+
+  useEffect(() => {
+    if (location.pathname === "/reset-password") return;
+
+    const queryParams = new URLSearchParams(location.search);
+    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const isRecoveryLink =
+      queryParams.get("type") === "recovery" ||
+      hashParams.get("type") === "recovery";
+
+    if (!isRecoveryLink) return;
+    navigate(
+      `/reset-password${location.search}${location.hash}`,
+      { replace: true }
+    );
+  }, [location.hash, location.pathname, location.search, navigate]);
 
   return (
     <Routes>
