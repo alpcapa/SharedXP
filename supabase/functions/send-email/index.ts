@@ -32,7 +32,16 @@ interface HookPayload {
 function confirmationUrl(
   tokenHash: string,
   actionType: string,
+  redirectTo: string | undefined,
 ): string {
+  if (actionType === "recovery") {
+    const recoveryBase = redirectTo || `${APP_URL}/reset-password`;
+    const url = new URL(recoveryBase);
+    url.searchParams.set("token_hash", tokenHash);
+    url.searchParams.set("type", actionType);
+    return url.toString();
+  }
+
   const params = new URLSearchParams({
     token_hash: tokenHash,
     type: actionType,
@@ -174,7 +183,7 @@ serve(async (req: Request): Promise<Response> => {
   const { email_action_type, token_hash, token } = email_data;
 
   const verificationToken = token_hash || token || "";
-  const ctaUrl = confirmationUrl(verificationToken, email_action_type);
+  const ctaUrl = confirmationUrl(verificationToken, email_action_type, email_data.redirect_to);
   const { subject, html } = buildEmail(email_action_type, user.email, ctaUrl);
 
   const resendRes = await fetch("https://api.resend.com/emails", {

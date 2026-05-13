@@ -611,7 +611,7 @@ if (error) {
   }
 
   const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-    redirectTo: window.location.origin,
+    redirectTo: `${window.location.origin}/reset-password`,
   });
 
   if (!fallbackError) {

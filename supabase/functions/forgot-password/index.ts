@@ -5,6 +5,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "noreply@sharedxp.com";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const APP_URL = Deno.env.get("APP_URL") ?? "";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -211,7 +212,9 @@ serve(async (req: Request): Promise<Response> => {
   const emailSent = await sendTemporaryPasswordEmail(normalizedEmail, temporaryPassword);
   if (!emailSent) {
     try {
-      await adminClient.auth.resetPasswordForEmail(normalizedEmail);
+      await adminClient.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: APP_URL ? `${APP_URL}/reset-password` : undefined,
+      });
     } catch (recoveryError) {
       console.error("resetPasswordForEmail fallback failed:", recoveryError);
     }

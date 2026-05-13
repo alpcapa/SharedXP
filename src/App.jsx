@@ -31,6 +31,7 @@ import GuestProfilePage from "./pages/GuestProfilePage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import AuthConfirmPage from "./pages/AuthConfirmPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 function App() {
   const authActions = useAuth();
@@ -93,6 +94,7 @@ function App() {
       <Route path="/about" element={<AboutPage {...authActions} />} />
       <Route path="/events" element={<EventsPage {...authActions} />} />
       <Route path="/auth/confirm" element={<AuthConfirmPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage {...authActions} />} />
       <Route path="*" element={<NotFoundPage {...authActions} />} />
     </Routes>
   );

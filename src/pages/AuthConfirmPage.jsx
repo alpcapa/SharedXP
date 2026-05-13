@@ -16,6 +16,15 @@ export default function AuthConfirmPage() {
       return;
     }
 
+    if (type === "recovery") {
+      const params = new URLSearchParams({
+        token_hash: tokenHash,
+        type,
+      });
+      navigate(`/reset-password?${params.toString()}`, { replace: true });
+      return;
+    }
+
     supabase.auth
       .verifyOtp({ token_hash: tokenHash, type })
       .then(({ error: verifyError }) => {

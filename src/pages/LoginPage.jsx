@@ -87,7 +87,11 @@ const LoginPage = ({
                 type="email"
                 required
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  if (errorMessage) setErrorMessage("");
+                  if (resetMessage) setResetMessage("");
+                }}
               />
 
               {!resetMode && (
