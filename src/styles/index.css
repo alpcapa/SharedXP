@@ -3513,6 +3513,20 @@ body {
   font-size: 13px;
 }
 
+.field-like-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.field-like-btn:disabled {
+  cursor: default;
+}
+
 .field-empty-state {
   text-align: center;
   color: #596164;

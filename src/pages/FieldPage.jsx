@@ -3,33 +3,7 @@ import { Link } from "react-router-dom";
 import RolePill from "../components/RolePill";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { deleteFieldPost, fetchFieldPosts } from "../utils/fieldPosts";
-
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-const getRelativePostedLabel = (postedAt) => {
-  const postDate = new Date(postedAt);
-
-  if (Number.isNaN(postDate.getTime())) {
-    return "";
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  postDate.setHours(0, 0, 0, 0);
-
-  const dayDiff = Math.floor((today.getTime() - postDate.getTime()) / MS_PER_DAY);
-
-  if (dayDiff <= 0) {
-    return "Today";
-  }
-
-  if (dayDiff === 1) {
-    return "Yesterday";
-  }
-
-  return `${dayDiff} days ago`;
-};
+import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, toggleFieldPostLike } from "../utils/fieldPosts";
 
 const FieldPage = ({ currentUser, onLogout }) => {
   const [selectedCountry, setSelectedCountry] = useState("All");
@@ -39,6 +13,8 @@ const FieldPage = ({ currentUser, onLogout }) => {
   const [deletedIds, setDeletedIds] = useState(() => new Set());
   const [fieldPosts, setFieldPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(true);
+  const [likedPostIds, setLikedPostIds] = useState(() => new Set());
+  const [pendingLikeIds, setPendingLikeIds] = useState(() => new Set());
 
   useEffect(() => {
     setPostsLoading(true);
@@ -47,6 +23,50 @@ const FieldPage = ({ currentUser, onLogout }) => {
       setPostsLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (!currentUser?.id) {
+      setLikedPostIds(new Set());
+      return;
+    }
+    fetchLikedPostIds(currentUser.id).then(setLikedPostIds);
+  }, [currentUser?.id]);
+
+  const handleLikePost = useCallback(async (post) => {
+    if (!currentUser?.id || pendingLikeIds.has(post.id)) return;
+    const isCurrentlyLiked = likedPostIds.has(post.id);
+    setPendingLikeIds((prev) => new Set([...prev, post.id]));
+    setLikedPostIds((prev) => {
+      const next = new Set(prev);
+      if (isCurrentlyLiked) next.delete(post.id);
+      else next.add(post.id);
+      return next;
+    });
+    setFieldPosts((prev) =>
+      prev.map((p) =>
+        p.id === post.id
+          ? { ...p, likes: isCurrentlyLiked ? Math.max(0, p.likes - 1) : p.likes + 1 }
+          : p
+      )
+    );
+    const result = await toggleFieldPostLike(post.id, currentUser.id, post.likes);
+    if (!result) {
+      setLikedPostIds((prev) => {
+        const next = new Set(prev);
+        if (isCurrentlyLiked) next.add(post.id);
+        else next.delete(post.id);
+        return next;
+      });
+      setFieldPosts((prev) =>
+        prev.map((p) => (p.id === post.id ? { ...p, likes: post.likes } : p))
+      );
+    }
+    setPendingLikeIds((prev) => {
+      const next = new Set(prev);
+      next.delete(post.id);
+      return next;
+    });
+  }, [currentUser, likedPostIds, pendingLikeIds]);
 
   const getCarouselIndex = (postId) => carouselIndex[postId] ?? 0;
 
@@ -245,7 +265,16 @@ const FieldPage = ({ currentUser, onLogout }) => {
                   })()}
                   <p className="field-caption">{post.caption}</p>
                    <p className="field-meta">
-                     🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
+                     <button
+                       type="button"
+                       className="field-like-btn"
+                       onClick={() => handleLikePost(post)}
+                       disabled={!currentUser || pendingLikeIds.has(post.id)}
+                       aria-label={likedPostIds.has(post.id) ? "Unlike" : "Like"}
+                     >
+                       {likedPostIds.has(post.id) ? "❤️" : "🤍"}
+                     </button>
+                     {" "}{post.likes}
                    </p>
                    <div className="field-card-footer">
                      {post.hostId != null && String(post.hostId).trim() !== "" && (
