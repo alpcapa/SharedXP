@@ -340,3 +340,35 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
     return null;
   }
 };
+
+/**
+ * Find a field post by source booking_request ID and poster ID.
+ * Returns the mapped post object (including caption) or null if not found.
+ */
+export const lookupFieldPost = async (sourceRequestId, posterId) => {
+  if (!sourceRequestId || !posterId) return null;
+  try {
+    const { data, error } = await supabase
+      .from("field_posts")
+      .select(
+        "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, rating, source_request_id, created_at"
+      )
+      .eq("source_request_id", sourceRequestId)
+      .eq("poster_id", posterId)
+      .maybeSingle();
+    if (error && isFieldPostsUnavailableError(error)) {
+      const local = readLocalFallbackPosts()
+        .map(mapFallbackRow)
+        .find(
+          (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
+        );
+      return local ?? null;
+    }
+    return data ? mapStorageRow(data) : null;
+  } catch {
+    const local = readLocalFallbackPosts()
+      .map(mapFallbackRow)
+      .find((p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId);
+    return local ?? null;
+  }
+};

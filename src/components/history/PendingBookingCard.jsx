@@ -4,7 +4,7 @@ import DeclineModal from "./DeclineModal";
 import DeclineConfirmationModal from "./DeclineConfirmationModal";
 import ShareToFieldModal from "./ShareToFieldModal";
 import { HOST_RATING_FIELDS, clampRating, FALLBACK_EVENT_PHOTO } from "../../utils/historyItem";
-import { deleteFieldPost, lookupFieldPostId, saveFieldPost } from "../../utils/fieldPosts";
+import { deleteFieldPost, lookupFieldPost, saveFieldPost } from "../../utils/fieldPosts";
 
 const CURRENCY_SYMBOLS = {
   USD: "$", EUR: "€", GBP: "£", CAD: "C$",
@@ -138,13 +138,15 @@ const PendingBookingCard = ({
   const [sharePosting, setSharePosting] = useState(false);
   const [sharePosted, setSharePosted] = useState(false);
   const [existingFieldPostId, setExistingFieldPostId] = useState(null);
+  const [existingFieldCaption, setExistingFieldCaption] = useState("");
   const [initialRatingSnapshot, setInitialRatingSnapshot] = useState(null);
 
   // Check Supabase for an existing field post tied to this booking request.
   useEffect(() => {
     if (!currentUserId || !request.id) return;
-    lookupFieldPostId(request.id, currentUserId).then((id) => {
-      if (id) setExistingFieldPostId(id);
+    lookupFieldPost(request.id, currentUserId).then((post) => {
+      setExistingFieldPostId(post?.id ?? null);
+      setExistingFieldCaption(post?.caption ?? "");
     });
   }, [request.id, currentUserId]);
 
@@ -284,7 +286,7 @@ const PendingBookingCard = ({
           sport: request.sport,
           photoGallery: photosForShare,
         });
-        setShareCaption("");
+        setShareCaption(existingFieldCaption);
         setShareCaptionError(false);
         setSharePosting(false);
         setSharePosted(false);
@@ -316,12 +318,13 @@ const PendingBookingCard = ({
       photos: (item.photoGallery ?? []).filter((p) => p && p !== FALLBACK_EVENT_PHOTO),
     });
     setSharePosting(false);
-    if (savedId) {
-      setExistingFieldPostId(savedId);
-      setSharePosted(true);
-    } else {
-      window.alert("Could not post to The Field right now. Please try again.");
-    }
+      if (savedId) {
+        setExistingFieldPostId(savedId);
+        setExistingFieldCaption(shareCaption.trim());
+        setSharePosted(true);
+      } else {
+        window.alert("Could not post to The Field right now. Please try again.");
+      }
   };
 
   const handleDeleteFieldPost = async () => {
@@ -329,6 +332,7 @@ const PendingBookingCard = ({
     if (!window.confirm("Delete this post from The Field?")) return;
     await deleteFieldPost(existingFieldPostId);
     setExistingFieldPostId(null);
+    setExistingFieldCaption("");
   };
 
   // Opens/closes the rating panel; pre-populates fields from saved data when opening for editing.

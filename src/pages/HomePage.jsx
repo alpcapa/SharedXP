@@ -491,6 +491,8 @@ const HomePage = ({ currentUser, onLogout }) => {
                 <div className="field-feed">
                   {visibleFieldPosts.map((post) => {
                     const isOwner = post.posterId != null && post.posterId === currentUser?.id;
+                    const postLocation = [post.city, post.country].filter(Boolean).join(", ");
+                    const postRating = Number(post.rating ?? 0);
                     return (
                       <article key={post.id} className="field-card">
                         <div className="field-host-row">
@@ -504,7 +506,12 @@ const HomePage = ({ currentUser, onLogout }) => {
                           <div>
                             <p>
                               <span className="field-host-name">{post.hostName}</span>
-                              <span className="field-host-city"> · {post.city}</span>
+                              {postRating > 0 && (
+                                <span className="field-host-rating"> · {postRating.toFixed(1)}⭐</span>
+                              )}
+                              {postLocation && (
+                                <span className="field-host-city"> · {postLocation}</span>
+                              )}
                             </p>
                             <div className="field-sport-pill-row">
                               <span className="sport-pill">{post.sport}</span>

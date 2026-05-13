@@ -3503,6 +3503,7 @@ body {
 .field-caption {
   margin: 12px 0 0;
   color: #273033;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -4040,6 +4041,13 @@ body {
   line-height: 1.5;
   resize: vertical;
   color: #141a1f;
+}
+
+.field-share-char-count {
+  align-self: flex-end;
+  font-size: 12px;
+  font-weight: 500;
+  color: #596164;
 }
 
 .field-share-caption-input:focus {

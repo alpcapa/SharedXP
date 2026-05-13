@@ -61,10 +61,12 @@ const ShareToFieldModal = ({
               captionError ? " field-share-caption-error" : ""
             }`}
             rows={3}
+            maxLength={150}
             placeholder="Tell people about your experience..."
             value={caption}
             onChange={(event) => onChangeCaption(event.target.value)}
           />
+          <span className="field-share-char-count">{caption.length}/150</span>
           {captionError && (
             <span className="field-share-error-msg">
               Caption is required before sharing.
