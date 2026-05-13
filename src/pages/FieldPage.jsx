@@ -228,7 +228,9 @@ const FieldPage = ({ currentUser, onLogout }) => {
                           ) : (
                             <span className="field-host-name">{post.hostName}</span>
                           )}
-                          <span className="field-host-rating"> · {postRating.toFixed(1)}⭐</span>
+                          <span className="field-host-rating">
+                            {" · "}⭐ {postRating > 0 ? postRating.toFixed(1) : "Not rated"}
+                          </span>
                          {postLocation && (
                            <span className="field-host-city"> · {postLocation}</span>
                          )}
