@@ -577,6 +577,56 @@ return { success: false, message: "Login failed. Please try again." };
 }
 },
 
+onForgotPassword: async (email) => {
+try {
+const normalizedEmail = email.trim().toLowerCase();
+if (!normalizedEmail) {
+  return { success: false, message: "Please enter your email address." };
+}
+
+const { data, error } = await supabase.functions.invoke("forgot-password", {
+  body: { email: normalizedEmail },
+});
+
+if (error) {
+  const status = error.context?.status;
+  if (status === 404) {
+    return {
+      success: false,
+      message: "Sorry, this email does not exist in our database.",
+    };
+  }
+  return {
+    success: false,
+    message:
+      data?.error ||
+      "We couldn't process your request right now. Please try again.",
+  };
+}
+
+if (!data?.success) {
+  return {
+    success: false,
+    message:
+      data?.error ||
+      "We couldn't process your request right now. Please try again.",
+  };
+}
+
+return {
+  success: true,
+  message:
+    "Your temporary email is sent to this email. You can change your pasword on Edit Profile. Please check your spam folder if not received.",
+};
+} catch (e) {
+console.error("[auth] onForgotPassword:", e);
+return {
+  success: false,
+  message: "We couldn't process your request right now. Please try again.",
+};
+}
+},
+
 onSocialLogin: async (provider) => {
 await supabase.auth.signInWithOAuth({
 provider: provider === "apple" ? "apple" : "google",
