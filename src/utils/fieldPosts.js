@@ -176,11 +176,12 @@ const resolveBookingRequestRating = (post, request) => {
     // `guest_host_ratings.overall` as compatibility fallback.
     return Number(request.guest_rating ?? request.guest_host_ratings?.overall ?? 0);
   }
+  // `host_rating` is the canonical and only persisted guest-side score.
   return Number(request.host_rating ?? 0);
 };
 
 const needsRatingHydration = (post) =>
-  clampRating(post.rating) === 0 && !!post.sourceRequestId;
+  Number(post.rating ?? 0) === 0 && !!post.sourceRequestId;
 
 const hydrateMissingRatingsFromBookingRequests = async (posts) => {
   const needsHydration = posts.filter(needsRatingHydration);
