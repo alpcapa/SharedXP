@@ -185,7 +185,7 @@ const GuestProfilePage = ({ currentUser, onLogout }) => {
               </div>
 
               <section className="guest-profile-reviews">
-                <h2 className="guest-profile-section-title">Reviews</h2>
+                <h2 className="guest-profile-section-title">Reviews from hosts</h2>
                 {reviews.length === 0 ? (
                   <p>No reviews yet.</p>
                 ) : (

@@ -6,7 +6,7 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { loadMajorEvents } from "../lib/events";
 import { supabase } from "../lib/supabase";
-import { deleteFieldPost, getStoredFieldPosts } from "../utils/fieldPosts";
+import { deleteFieldPost, fetchFieldPosts } from "../utils/fieldPosts";
 import { getAgeFromBirthday } from "../utils/profileAge";
 
 const LOCALS_PER_PAGE = 3;
@@ -90,18 +90,26 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [selectedYear, setSelectedYear] = useState(DEFAULT_YEAR);
   const [localsPage, setLocalsPage] = useState(0);
   const [fieldPage, setFieldPage] = useState(0);
-  const [fieldPostsList, setFieldPostsList] = useState(() => {
-    const stored = getStoredFieldPosts();
-    return [...stored].sort(
-      (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
-    );
-  });
+  const [fieldPostsList, setFieldPostsList] = useState([]);
+  const [fieldPostsLoading, setFieldPostsLoading] = useState(true);
   const [fieldDeletedIds, setFieldDeletedIds] = useState(() => new Set());
+  const [fieldCarouselIndex, setFieldCarouselIndex] = useState({});
 
   const handleDeleteFieldPost = useCallback((postId) => {
     if (!window.confirm("Remove this post from The Field?")) return;
     deleteFieldPost(postId);
     setFieldDeletedIds((prev) => new Set([...prev, postId]));
+  }, []);
+  const getFieldCarouselIndex = useCallback(
+    (postId) => fieldCarouselIndex[postId] ?? 0,
+    [fieldCarouselIndex]
+  );
+  const shiftFieldCarousel = useCallback((postId, photos, step) => {
+    setFieldCarouselIndex((prev) => {
+      const current = prev[postId] ?? 0;
+      const next = (current + step + photos.length) % photos.length;
+      return { ...prev, [postId]: next };
+    });
   }, []);
   const [majorEventsList, setMajorEventsList] = useState([]);
   const [majorEventsLoading, setMajorEventsLoading] = useState(true);
@@ -167,6 +175,13 @@ const HomePage = ({ currentUser, onLogout }) => {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    fetchFieldPosts().then((posts) => {
+      setFieldPostsList(posts);
+      setFieldPostsLoading(false);
+    });
   }, []);
 
   const countryOptions = useMemo(
@@ -462,7 +477,9 @@ const HomePage = ({ currentUser, onLogout }) => {
               </div>
               <Link to="/the-field" className="view-all-link">View all</Link>
             </div>
-            {activeFieldPosts.length === 0 ? (
+            {fieldPostsLoading ? (
+              <p className="explore-loading">Loading…</p>
+            ) : activeFieldPosts.length === 0 ? (
               <p className="explore-empty">
                 No sessions shared yet.{" "}
                 <Link to="/history" className="field-share-invite-link">
@@ -495,9 +512,47 @@ const HomePage = ({ currentUser, onLogout }) => {
                             </div>
                           </div>
                         </div>
-                        {post.photo && (
-                          <img src={post.photo} alt={post.sport} className="field-post-photo" />
-                        )}
+                        {(() => {
+                          const photos = Array.isArray(post.photos) && post.photos.length > 0
+                            ? post.photos
+                            : post.photo
+                              ? [post.photo]
+                              : [];
+                          if (photos.length === 0) return null;
+                          const idx = getFieldCarouselIndex(post.id);
+                          return (
+                            <div className="field-carousel">
+                              {photos.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="field-carousel-nav field-carousel-prev"
+                                  aria-label="Previous photo"
+                                  onClick={() => shiftFieldCarousel(post.id, photos, -1)}
+                                >
+                                  ‹
+                                </button>
+                              )}
+                              <img
+                                src={photos[idx]}
+                                alt={post.sport}
+                                className="field-post-photo"
+                              />
+                              {photos.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="field-carousel-nav field-carousel-next"
+                                  aria-label="Next photo"
+                                  onClick={() => shiftFieldCarousel(post.id, photos, 1)}
+                                >
+                                  ›
+                                </button>
+                              )}
+                              {photos.length > 1 && (
+                                <p className="field-carousel-counter">{idx + 1} / {photos.length}</p>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <p className="field-caption">{post.caption}</p>
                         <p className="field-meta">🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}</p>
                         <div className="field-post-actions">
