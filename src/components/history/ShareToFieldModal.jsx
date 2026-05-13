@@ -76,7 +76,7 @@ const ShareToFieldModal = ({
           </button>
           <button
             type="button"
-            className="find-button"
+            className="btn btn-primary"
             onClick={() => onShare(item)}
             disabled={isSharing || isShared}
           >

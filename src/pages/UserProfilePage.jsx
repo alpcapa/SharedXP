@@ -328,7 +328,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
       <section className="gallery">
         <h3>Photo gallery</h3>
         {galleryPhotos.length > 0 ? (
-          <div className="gallery-grid">
+          <div className="gallery-grid profile-gallery-scroll">
             {galleryPhotos.map((photo) => (
               <img key={photo} src={photo} alt={`${currentUser.fullName || currentUser.firstName || "User"} history gallery`} />
             ))}

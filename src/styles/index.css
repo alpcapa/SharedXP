@@ -2475,6 +2475,21 @@ body {
   border-radius: 10px;
 }
 
+.profile-gallery-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.profile-gallery-scroll img {
+  flex: 0 0 180px;
+  width: 180px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
 .review-card {
   border-top: 1px solid #e5e5e5;
   padding-top: 10px;
