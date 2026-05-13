@@ -152,8 +152,7 @@ export const fetchFieldPosts = async () => {
     if (error) {
       console.error("[fieldPosts] fetch error:", error);
       if (isFieldPostsUnavailableError(error)) {
-        const localPosts = readLocalFallbackPosts().map(mapFallbackRow);
-        return sortPostsByPostedAt(localPosts);
+        return sortPostsByPostedAt(readLocalFallbackPosts().map(mapFallbackRow));
       }
       return [];
     }
@@ -206,11 +205,8 @@ export const saveFieldPost = async (post) => {
           .single());
       }
       if (error) {
-        console.error("[fieldPosts] insert error:", error);
-        if (isFieldPostsUnavailableError(error)) {
-          return upsertLocalFallbackPost(post);
-        }
-        return null;
+        console.error("[fieldPosts] insert error; falling back to local post storage:", error);
+        return upsertLocalFallbackPost(post);
       }
       return data?.id ?? null;
     };
@@ -233,25 +229,13 @@ export const saveFieldPost = async (post) => {
       if (!error && data?.id) return data.id;
       if (isUpdateNotAllowedError(error) || isUpdateNoRowError(error) || (!error && !data?.id)) {
         console.warn(
-          "[fieldPosts] UPDATE unavailable, falling back to delete+insert for post:",
+          "[fieldPosts] UPDATE unavailable, falling back to local post storage for post:",
           postId
         );
-        const deleted = await deleteFieldPost(postId);
-        if (!deleted) return null;
-        const insertedId = await insertPost();
-        if (!insertedId) {
-          console.error(
-            "[fieldPosts] fallback delete+insert failed after delete; original post may be lost:",
-            postId
-          );
-        }
-        return insertedId;
-      }
-      if (isFieldPostsUnavailableError(error)) {
         return upsertLocalFallbackPost(post);
       }
-      console.error("[fieldPosts] update error:", error);
-      return null;
+      console.error("[fieldPosts] update error; falling back to local post storage:", error);
+      return upsertLocalFallbackPost(post);
     };
 
     if (post.id) {
@@ -267,8 +251,8 @@ export const saveFieldPost = async (post) => {
 
     return insertPost();
   } catch (e) {
-    console.error("[fieldPosts] save exception:", e);
-    return null;
+    console.error("[fieldPosts] save exception; falling back to local post storage:", e);
+    return upsertLocalFallbackPost(post);
   }
 };
 
@@ -318,9 +302,6 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
     }
     return data?.id ?? null;
   } catch {
-    const local = readLocalFallbackPosts().find(
-      (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
-    );
-    return local?.id ?? null;
+    return null;
   }
 };
