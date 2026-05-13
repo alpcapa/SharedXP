@@ -35,7 +35,21 @@ function confirmationUrl(
   redirectTo: string | undefined,
 ): string {
   if (actionType === "recovery") {
-    const recoveryBase = redirectTo || `${APP_URL}/reset-password`;
+    const fallbackRecoveryUrl = new URL("/reset-password", APP_URL).toString();
+    let recoveryBase = fallbackRecoveryUrl;
+
+    if (redirectTo) {
+      try {
+        const requestedUrl = new URL(redirectTo);
+        const appBaseUrl = new URL(APP_URL);
+        if (requestedUrl.origin === appBaseUrl.origin) {
+          recoveryBase = requestedUrl.toString();
+        }
+      } catch (error) {
+        console.error("Invalid redirectTo URL for recovery email:", error);
+      }
+    }
+
     const url = new URL(recoveryBase);
     url.searchParams.set("token_hash", tokenHash);
     url.searchParams.set("type", actionType);

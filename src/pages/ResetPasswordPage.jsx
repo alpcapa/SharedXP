@@ -82,10 +82,16 @@ const ResetPasswordPage = ({ currentUser, onLogout }) => {
       return;
     }
 
-    await supabase.auth.signOut();
+    const { error: signOutError } = await supabase.auth.signOut();
+    if (signOutError) {
+      console.error("[reset-password] signOut:", signOutError);
+    }
+
     setErrorMessage("");
     setSuccessMessage(
-      "Your password has been changed. If it wasn't you, please notify support@sharedxp.com."
+      signOutError
+        ? "Your password has been changed. Please refresh the page or log out manually, then log in with your new password."
+        : "Your password has been successfully changed. You can now log in with your new password."
     );
     setStatus("success");
   };
