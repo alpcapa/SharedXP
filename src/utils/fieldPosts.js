@@ -361,8 +361,12 @@ export const lookupFieldPost = async (sourceRequestId, posterId) => {
         .map(mapFallbackRow)
         .find(
           (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
-        );
+      );
       return local ?? null;
+    }
+    if (error) {
+      console.error("[fieldPosts] lookup error:", error);
+      return null;
     }
     return data ? mapStorageRow(data) : null;
   } catch {
