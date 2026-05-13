@@ -10,14 +10,16 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+const FALLBACK_MAX_LIST_PAGES = 1000;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const generateTemporaryPassword = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+  const randomBytes = crypto.getRandomValues(new Uint8Array(12));
   let out = "";
-  for (let i = 0; i < 12; i += 1) {
-    out += chars[Math.floor(Math.random() * chars.length)];
+  for (const byte of randomBytes) {
+    out += chars[byte % chars.length];
   }
   return out;
 };
@@ -132,26 +134,46 @@ serve(async (req: Request): Promise<Response> => {
   });
 
   let foundUser: { id: string; email?: string } | null = null;
-  let page = 1;
-  const perPage = 200;
 
-  while (!foundUser) {
-    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+  const adminApi = adminClient.auth.admin as {
+    getUserByEmail?: (email: string) => Promise<{
+      data: { user: { id: string; email?: string } | null };
+      error: { message: string } | null;
+    }>;
+  };
+
+  if (typeof adminApi.getUserByEmail === "function") {
+    const { data, error } = await adminApi.getUserByEmail(normalizedEmail);
     if (error) {
-      console.error("listUsers error:", error);
+      console.error("getUserByEmail error:", error);
       return new Response(JSON.stringify({ error: "Failed to process request." }), {
         status: 500,
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });
     }
+    foundUser = data?.user ?? null;
+  } else {
+    let page = 1;
+    const perPage = 200;
 
-    const users = data?.users ?? [];
-    foundUser =
-      users.find((user) => (user.email ?? "").trim().toLowerCase() === normalizedEmail) ?? null;
+    while (!foundUser) {
+      const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+      if (error) {
+        console.error("listUsers error:", error);
+        return new Response(JSON.stringify({ error: "Failed to process request." }), {
+          status: 500,
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        });
+      }
 
-    if (users.length < perPage) break;
-    page += 1;
-    if (page > 1000) break;
+      const users = data?.users ?? [];
+      foundUser =
+        users.find((user) => (user.email ?? "").trim().toLowerCase() === normalizedEmail) ?? null;
+
+      if (users.length < perPage) break;
+      page += 1;
+      if (page > FALLBACK_MAX_LIST_PAGES) break;
+    }
   }
 
   if (!foundUser?.id) {
@@ -165,6 +187,13 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   const temporaryPassword = generateTemporaryPassword();
+  const emailSent = await sendTemporaryPasswordEmail(normalizedEmail, temporaryPassword);
+  if (!emailSent) {
+    return new Response(JSON.stringify({ error: "Failed to send email." }), {
+      status: 500,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
 
   const { error: updateError } = await adminClient.auth.admin.updateUserById(foundUser.id, {
     password: temporaryPassword,
@@ -172,14 +201,6 @@ serve(async (req: Request): Promise<Response> => {
   if (updateError) {
     console.error("updateUserById error:", updateError);
     return new Response(JSON.stringify({ error: "Failed to process request." }), {
-      status: 500,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
-  }
-
-  const emailSent = await sendTemporaryPasswordEmail(normalizedEmail, temporaryPassword);
-  if (!emailSent) {
-    return new Response(JSON.stringify({ error: "Failed to send email." }), {
       status: 500,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });

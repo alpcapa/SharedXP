@@ -42,7 +42,7 @@ const LoginPage = ({
       setErrorMessage("");
       setResetMessage(
         resetResult?.message ??
-          "Your temporary email is sent to this email. You can change your pasword on Edit Profile. Please check your spam folder if not received."
+          "Your temporary email is sent to this email. You can change your password on Edit Profile. Please check your spam folder if not received."
       );
       return;
     }
@@ -77,7 +77,7 @@ const LoginPage = ({
             <h1>{resetMode ? "Forgot Password?" : "Log in"}</h1>
             <p>
               {resetMode
-                ? "Enter Email"
+                ? "Enter your email address to receive a temporary password."
                 : "Log in with your email account."}
             </p>
 
