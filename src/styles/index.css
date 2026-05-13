@@ -3443,6 +3443,8 @@ body {
 
 .field-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   background: #fff;
   border: 1px solid #e8e9e4;
   border-radius: 14px;
@@ -3473,8 +3475,15 @@ body {
   font-weight: 700;
 }
 
+.field-host-rating {
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .field-host-city {
   color: #596164;
+  font-size: 12px;
 }
 
 .field-post-photo {
@@ -4064,6 +4073,12 @@ body {
   white-space: nowrap;
 }
 
+.field-share-modal .booking-modal-actions .find-button:disabled,
+.field-share-modal .booking-modal-actions .btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
 /* ── The Field — photo carousel on cards ──── */
 .field-carousel {
   position: relative;
@@ -4184,7 +4199,9 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-top: 10px;
+  margin-top: auto;
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
 /* ── The Field — post action links (edit / delete / report) ─── */
@@ -4225,7 +4242,6 @@ body {
 /* ── The Field — view host link ─────────── */
 .field-view-host-link {
   display: inline-block;
-  margin-top: 10px;
   color: #6ca43b;
   font-size: 13px;
   font-weight: 700;
@@ -4234,6 +4250,13 @@ body {
 
 .field-view-host-link:hover {
   text-decoration: underline;
+}
+
+.field-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .host-photo-upload-hint {
@@ -6323,4 +6346,3 @@ body {
 .invoice-detail-ref span {
   font-family: monospace;
 }
-

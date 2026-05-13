@@ -163,10 +163,12 @@ const FieldPage = ({ currentUser, onLogout }) => {
           </p>
         ) : (
           <div className="field-feed">
-            {visiblePosts.map((post) => {
-              const isOwner = post.posterId != null && post.posterId === currentUser?.id;
-              return (
-                <article key={post.id} className="field-card">
+             {visiblePosts.map((post) => {
+               const isOwner = post.posterId != null && post.posterId === currentUser?.id;
+               const postLocation = [post.city, post.country].filter(Boolean).join(", ");
+               const postRating = Number(post.rating ?? 0);
+               return (
+                 <article key={post.id} className="field-card">
                   <div className="field-host-row">
                     {post.hostPhoto ? (
                       <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
@@ -184,13 +186,18 @@ const FieldPage = ({ currentUser, onLogout }) => {
                           .join("") || "?"}
                       </div>
                     )}
-                    <div>
-                      <p>
-                        <span className="field-host-name">{post.hostName}</span>
-                        <span className="field-host-city"> · {post.city}</span>
-                      </p>
-                      <div className="field-sport-pill-row">
-                        <span className="sport-pill">{post.sport}</span>
+                     <div>
+                       <p>
+                         <span className="field-host-name">{post.hostName}</span>
+                         {postRating > 0 && (
+                           <span className="field-host-rating"> · {postRating.toFixed(1)}⭐</span>
+                         )}
+                         {postLocation && (
+                           <span className="field-host-city"> · {postLocation}</span>
+                         )}
+                       </p>
+                       <div className="field-sport-pill-row">
+                         <span className="sport-pill">{post.sport}</span>
                         <RolePill role={post.role} />
                       </div>
                     </div>
@@ -237,53 +244,55 @@ const FieldPage = ({ currentUser, onLogout }) => {
                     );
                   })()}
                   <p className="field-caption">{post.caption}</p>
-                  <p className="field-meta">
-                    🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
-                  </p>
-                  <div className="field-post-actions">
-                    {isOwner && post.sourceRequestId && (
-                      <Link
-                        to={`/history?editRating=${post.sourceRequestId}`}
-                        className="field-post-action-link"
-                      >
-                        Edit post
-                      </Link>
-                    )}
-                    {isOwner && (
-                      <button
-                        type="button"
-                        className="field-post-action-link"
-                        aria-label="Delete this post"
-                        onClick={() => handleDeletePost(post.id)}
-                      >
-                        Delete post
-                      </button>
-                    )}
-                    {!isOwner && (
-                      <button
-                        type="button"
-                        className="field-post-action-link"
-                        onClick={() => {
-                          if (window.confirm("Report this post as inappropriate?\n\nWe will review it and take action if needed.")) {
-                            window.alert("Thank you — your report has been received.");
-                          }
-                        }}
-                      >
-                        Report
-                      </button>
-                    )}
-                  </div>
-                  {post.hostId != null && String(post.hostId).trim() !== "" && (
-                    <Link
-                      to={`/buddy/${post.hostId}`}
-                      className="field-view-host-link"
-                    >
-                      View host profile →
-                    </Link>
-                  )}
-                </article>
-              );
-            })}
+                   <p className="field-meta">
+                     🤍 {post.likes} · {getRelativePostedLabel(post.postedAt)}
+                   </p>
+                   <div className="field-card-footer">
+                     {post.hostId != null && String(post.hostId).trim() !== "" && (
+                       <Link
+                         to={`/buddy/${post.hostId}`}
+                         className="field-view-host-link"
+                       >
+                         View host profile →
+                       </Link>
+                     )}
+                     <div className="field-post-actions">
+                       {isOwner && post.sourceRequestId && (
+                         <Link
+                           to={`/history?editRating=${post.sourceRequestId}`}
+                           className="field-post-action-link"
+                         >
+                           Edit post
+                         </Link>
+                       )}
+                       {isOwner && (
+                         <button
+                           type="button"
+                           className="field-post-action-link"
+                           aria-label="Delete this post"
+                           onClick={() => handleDeletePost(post.id)}
+                         >
+                           Delete post
+                         </button>
+                       )}
+                       {!isOwner && (
+                         <button
+                           type="button"
+                           className="field-post-action-link"
+                           onClick={() => {
+                             if (window.confirm("Report this post as inappropriate?\n\nWe will review it and take action if needed.")) {
+                               window.alert("Thank you — your report has been received.");
+                             }
+                           }}
+                         >
+                           Report
+                         </button>
+                       )}
+                     </div>
+                   </div>
+                 </article>
+               );
+             })}
           </div>
         )}
         </main>
