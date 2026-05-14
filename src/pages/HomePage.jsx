@@ -484,7 +484,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show previous 3 locals"
+                    aria-label="Show previous 6 locals"
                     onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
                     disabled={localsPage === 0}
                   >
@@ -493,7 +493,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show next 3 locals"
+                    aria-label="Show next 6 locals"
                     onClick={() =>
                       setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
                     }
