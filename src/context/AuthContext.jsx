@@ -514,14 +514,24 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
     ...profileMeta
   } = newUser;
 
-  // Avatar upload requires authentication; store data URL for post-confirmation upload.
-  // localStorage.setItem can throw QuotaExceededError (e.g. iOS Safari ~2.5 MB limit),
-  // so wrap it — a missing pending avatar is recoverable, a thrown exception is not.
+  // Upload the avatar to storage before creating the auth user so the public
+  // URL can be embedded in sharedxp_pending_profile.photoUrl — safe to do
+  // pre-auth because uploadAvatarFromDataUrl uses userId=null (root bucket
+  // path) which is allowed by the Avatars bucket INSERT policy for anon.
+  // fetchUserProfile already reads om.sharedxp_pending_profile?.photoUrl so
+  // no additional changes are needed on the confirmation side.
+  // Fallback: if the storage upload fails, store the data URL in localStorage
+  // (wrapped in its own try/catch so a QuotaExceededError on iOS Safari never
+  // aborts the signup).
+  let pendingPhotoUrl = "";
   if (photo && photo.startsWith("data:")) {
-    try {
-      localStorage.setItem("sharedxp_pending_avatar", photo);
-    } catch {
-      console.warn("[auth] Could not cache pending avatar (storage quota exceeded). Photo can be added from profile settings after sign-up.");
+    pendingPhotoUrl = await uploadAvatarFromDataUrl(photo, normalizedEmail, null);
+    if (!pendingPhotoUrl) {
+      try {
+        localStorage.setItem("sharedxp_pending_avatar", photo);
+      } catch {
+        console.warn("[auth] Could not cache pending avatar (storage quota exceeded). Photo can be added from profile settings after sign-up.");
+      }
     }
   }
 
@@ -534,6 +544,7 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
         sharedxp_pending_profile: {
           ...profileMeta,
           email: normalizedEmail,
+          ...(pendingPhotoUrl && { photoUrl: pendingPhotoUrl }),
         },
       },
     },
