@@ -282,11 +282,22 @@ fetchUserBookings(authUser.id),
 ]);
 
 let profile = profileResult.data?.[0] ?? null;
+let languagesData = languagesResult.data || [];
+let sportsData = sportsResult.data || [];
 
 if (!profile) {
   const meta = authUser.user_metadata?.sharedxp_pending_profile;
   if (meta) {
     profile = metaToProfileShape(meta, authUser);
+    await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
+    // Seed languages and sports from signup metadata into their own tables.
+    await upsertLanguagesAndSports(authUser.id, meta.languages || [], meta.sports || []);
+    languagesData = normalizeLanguages(meta.languages || [])
+      .map((language, position) => ({ user_id: authUser.id, language, position }))
+      .filter((r) => r.language);
+    sportsData = normalizeSports(meta.sports || [])
+      .map((sport, position) => ({ user_id: authUser.id, sport, position }))
+      .filter((r) => r.sport);
   } else {
     // OAuth sign-in (Google / Apple) — seed profile from provider metadata
     const om = authUser.user_metadata || {};
@@ -301,8 +312,8 @@ if (!profile) {
       is_host: false,
       signed_up_at: authUser.created_at || new Date().toISOString(),
     };
+    await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
   }
-  await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
 }
 
 if (!profile.photo_url) {
@@ -351,8 +362,8 @@ hostSports = hs || [];
 return buildUserObject(
 authUser,
 profile,
-languagesResult.data || [],
-sportsResult.data || [],
+languagesData,
+sportsData,
 hostProfile,
 hostSports,
 bookings
