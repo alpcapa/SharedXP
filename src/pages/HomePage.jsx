@@ -9,7 +9,7 @@ import { supabase } from "../lib/supabase";
 import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, toggleFieldPostLike } from "../utils/fieldPosts";
 import { getAgeFromBirthday } from "../utils/profileAge";
 
-const LOCALS_PER_PAGE = 3;
+const LOCALS_PER_PAGE = 6;
 const FIELD_PER_PAGE = 3;
 const HOME_EVENTS_PAGE_SIZE = 3;
 
@@ -175,6 +175,12 @@ const HomePage = ({ currentUser, onLogout }) => {
               signedUpAt: hp.profile.signed_up_at || "",
               sports: (hp.host_sports || []).filter((hs) => !hs.paused)
             }));
+          transformed.sort((a, b) => {
+            if (a.signedUpAt && b.signedUpAt) return b.signedUpAt.localeCompare(a.signedUpAt);
+            if (a.signedUpAt) return -1;
+            if (b.signedUpAt) return 1;
+            return 0;
+          });
           setHosts(transformed);
         }
         setHostsLoading(false);
