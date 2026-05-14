@@ -515,8 +515,14 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
   } = newUser;
 
   // Avatar upload requires authentication; store data URL for post-confirmation upload.
+  // localStorage.setItem can throw QuotaExceededError (e.g. iOS Safari ~2.5 MB limit),
+  // so wrap it — a missing pending avatar is recoverable, a thrown exception is not.
   if (photo && photo.startsWith("data:")) {
-    localStorage.setItem("sharedxp_pending_avatar", photo);
+    try {
+      localStorage.setItem("sharedxp_pending_avatar", photo);
+    } catch {
+      console.warn("[auth] Could not cache pending avatar (storage quota exceeded). Photo can be added from profile settings after sign-up.");
+    }
   }
 
   const { data, error } = await supabase.auth.signUp({
