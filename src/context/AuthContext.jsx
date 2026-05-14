@@ -291,13 +291,9 @@ if (!profile) {
     profile = metaToProfileShape(meta, authUser);
     await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
     // Seed languages and sports from signup metadata into their own tables.
-    await upsertLanguagesAndSports(authUser.id, meta.languages || [], meta.sports || []);
-    languagesData = normalizeLanguages(meta.languages || [])
-      .map((language, position) => ({ user_id: authUser.id, language, position }))
-      .filter((r) => r.language);
-    sportsData = normalizeSports(meta.sports || [])
-      .map((sport, position) => ({ user_id: authUser.id, sport, position }))
-      .filter((r) => r.sport);
+    const { langRows, sportRows } = await upsertLanguagesAndSports(authUser.id, meta.languages || [], meta.sports || []);
+    languagesData = langRows;
+    sportsData = sportRows;
   } else {
     // OAuth sign-in (Google / Apple) — seed profile from provider metadata
     const om = authUser.user_metadata || {};
@@ -393,6 +389,7 @@ sportRows.length
 ]);
 if (langResult?.error) console.error("[auth] insert languages:", langResult.error);
 if (sportResult?.error) console.error("[auth] insert sports:", sportResult.error);
+return { langRows, sportRows };
 };
 
 // When userId is provided (authenticated profile update) the file is stored in
