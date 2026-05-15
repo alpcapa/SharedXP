@@ -5839,7 +5839,22 @@ body {
 
 /* ── Unified Profile page ────────────────────────── */
 .unified-profile-page {
-  padding: 20px 0 64px;
+  padding: 20px 10px 64px;
+}
+
+/* Card sections inside the profile page already have 10px side margin from the
+   shared rule; remove it here since the parent now supplies that padding. */
+.unified-profile-page > .reviews,
+.unified-profile-page > .gallery,
+.unified-profile-page > .booking-engine-section,
+.unified-profile-page > .recommendations {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Collapse the gap between the photo gallery and the reviews card in host tab */
+.unified-profile-page .gallery + .reviews {
+  margin-top: 8px;
 }
 
 .unified-profile-tabs {
@@ -5878,6 +5893,19 @@ body {
   font-size: 13px;
   color: #6b7280;
   font-weight: 400;
+}
+
+/* Guest tab content sections — match the white-card style of host-tab sections */
+.guest-profile-reviews,
+.guest-profile-gallery {
+  background: white;
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.guest-profile-reviews + .guest-profile-gallery {
+  margin-top: 8px;
 }
 
 /* ── Payment History page ─────────────────────────── */
