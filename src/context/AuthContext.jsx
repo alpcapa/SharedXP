@@ -616,16 +616,16 @@ if (!normalizedEmail) {
   return { success: false, message: "Please enter your email address." };
 }
 
+const successMsg = "Reset link has been sent to your email. Check spam folder if not received";
+const redirectTo = `${window.location.origin}/reset-password`;
+
 try {
   // The Edge Function checks if the email exists, generates a recovery link
-  // via the admin API (hashed_token), and emails it via Resend. Passing the
-  // frontend origin means the link always points to the correct deployment —
-  // no Supabase redirect allow-list configuration needed.
+  // via admin.generateLink (hashed_token), and sends it via Resend. Passing
+  // the frontend origin means the link works on any deployment without needing
+  // the URL in Supabase's redirect allow-list.
   const { data, error } = await supabase.functions.invoke("forgot-password", {
-    body: {
-      email: normalizedEmail,
-      redirectTo: `${window.location.origin}/reset-password`,
-    },
+    body: { email: normalizedEmail, redirectTo },
   });
 
   const httpStatus = error?.context?.status;
@@ -634,15 +634,23 @@ try {
     return { success: false, message: "Sorry, this email does not exist in our database." };
   }
 
-  if (error || !data?.success) {
-    console.warn("[auth] forgot-password function error:", error ?? data);
-    return { success: false, message: "We couldn't send a reset link right now. Please try again." };
+  // Edge Function succeeded — email was sent by the function.
+  if (!error && data?.success) {
+    return { success: true, message: successMsg };
   }
 
-  return {
-    success: true,
-    message: "Reset link has been sent to your email. Check spam folder if not received",
-  };
+  // Edge Function not yet deployed or returned an unexpected error.
+  // Fall back to Supabase's built-in recovery email so the user isn't blocked.
+  console.warn("[auth] forgot-password function unavailable, using built-in fallback:", error ?? data);
+  const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+    normalizedEmail,
+    { redirectTo },
+  );
+  if (resetError) {
+    console.warn("[auth] resetPasswordForEmail fallback failed:", resetError);
+    return { success: false, message: "We couldn't send a reset link right now. Please try again." };
+  }
+  return { success: true, message: successMsg };
 } catch (e) {
   console.error("[auth] onForgotPassword:", e);
   return { success: false, message: "We couldn't send a reset link right now. Please try again." };
