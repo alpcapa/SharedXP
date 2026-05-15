@@ -33,13 +33,7 @@ const ResetPasswordPage = ({ currentUser, onLogout }) => {
 
     const verifyRecovery = async () => {
       if (!tokenParams) {
-        // No token params — check if a recovery session already exists
-        // (happens when PASSWORD_RECOVERY fires before the hash is copied to the URL).
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!isMounted) return;
-        if (session) {
-          setStatus("ready");
-        } else {
+        if (isMounted) {
           setStatus("error");
           setErrorMessage("Invalid or expired password reset link.");
         }
@@ -47,8 +41,8 @@ const ResetPasswordPage = ({ currentUser, onLogout }) => {
       }
 
       if (!tokenParams.tokenHash) {
-        // Implicit-flow: Supabase already verified the hash token and created a
-        // recovery session; no explicit verifyOtp call needed.
+        // Implicit-flow: Supabase already created a recovery session from the
+        // hash fragment; no explicit verifyOtp call needed.
         if (isMounted) setStatus("ready");
         return;
       }

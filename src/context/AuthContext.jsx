@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 const padStringArray = (arr, n) =>
@@ -427,16 +427,35 @@ export const AuthProvider = ({ children }) => {
 const [currentUser, setCurrentUser] = useState(null);
 const [authLoading, setAuthLoading] = useState(true);
 
+// Tracks whether the current page load is a password-recovery flow.
+// When true, any stored session from a different user is suppressed so it
+// cannot bleed into the reset-password form.
+const inRecoveryMode = useRef(false);
+
 useEffect(() => {
 let mounted = true;
 
+// Detect a recovery URL at mount time before any async auth operations run.
+const isRecoveryUrl = () => {
+  try {
+    if (window.location.pathname === "/reset-password") return true;
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("type") === "recovery") return true;
+    const h = new URLSearchParams(window.location.hash.slice(1));
+    if (h.get("type") === "recovery") return true;
+  } catch { /* ignore */ }
+  return false;
+};
+if (isRecoveryUrl()) inRecoveryMode.current = true;
+
 const loadUser = async (authUser) => {
+  if (inRecoveryMode.current) return;
   try {
     const u = await fetchUserProfile(authUser);
-    if (mounted && u) setCurrentUser(u);
+    if (mounted && u && !inRecoveryMode.current) setCurrentUser(u);
   } catch (e) {
     console.error("[auth] fetchUserProfile failed:", e);
-    if (mounted) {
+    if (mounted && !inRecoveryMode.current) {
       setCurrentUser(
         buildUserObject(
           authUser,
@@ -456,6 +475,10 @@ supabase.auth
   .getSession()
   .then(({ data: { session } }) => {
     if (!mounted) return;
+    if (inRecoveryMode.current) {
+      setAuthLoading(false);
+      return;
+    }
     if (session?.user) {
       loadUser(session.user).finally(() => {
         if (mounted) setAuthLoading(false);
@@ -474,7 +497,16 @@ const {
   data: { subscription },
 } = supabase.auth.onAuthStateChange((event, session) => {
   if (!mounted) return;
-  if (event === "PASSWORD_RECOVERY") return;
+  if (event === "PASSWORD_RECOVERY") {
+    // Entering recovery mode: clear any existing user from React state so a
+    // different user's stored session cannot show through on the reset form.
+    inRecoveryMode.current = true;
+    setCurrentUser(null);
+    setAuthLoading(false);
+    return;
+  }
+  // Leaving recovery mode on any other auth event (SIGNED_IN after reset, etc.)
+  inRecoveryMode.current = false;
   if (session?.user) loadUser(session.user);
   else setCurrentUser(null);
 });
@@ -584,36 +616,27 @@ if (!normalizedEmail) {
   return { success: false, message: "Please enter your email address." };
 }
 
-const NOT_FOUND_MESSAGE = "Sorry, this email does not exist in our database.";
-
 try {
-  // Check email existence via Edge Function. Returns 404 if not found.
+  // The Edge Function checks if the email exists, generates a recovery link
+  // via the admin API (hashed_token), and emails it via Resend. Passing the
+  // frontend origin means the link always points to the correct deployment —
+  // no Supabase redirect allow-list configuration needed.
   const { data, error } = await supabase.functions.invoke("forgot-password", {
-    body: { email: normalizedEmail },
+    body: {
+      email: normalizedEmail,
+      redirectTo: `${window.location.origin}/reset-password`,
+    },
   });
 
-  const httpStatus = error?.context?.status ?? (data?.notFound ? 404 : 200);
+  const httpStatus = error?.context?.status;
 
-  if (httpStatus === 404 || data?.notFound) {
-    return { success: false, message: NOT_FOUND_MESSAGE };
+  if (httpStatus === 404) {
+    return { success: false, message: "Sorry, this email does not exist in our database." };
   }
 
-  if (error && httpStatus !== 200) {
-    console.warn("[auth] forgot-password function error, proceeding with recovery email:", error);
-  }
-
-  // Trigger Supabase password recovery email.
-  const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-    normalizedEmail,
-    { redirectTo: `${window.location.origin}/reset-password` },
-  );
-
-  if (resetError) {
-    console.warn("[auth] resetPasswordForEmail failed:", resetError);
-    return {
-      success: false,
-      message: "We couldn't send a reset link right now. Please try again.",
-    };
+  if (error || !data?.success) {
+    console.warn("[auth] forgot-password function error:", error ?? data);
+    return { success: false, message: "We couldn't send a reset link right now. Please try again." };
   }
 
   return {
@@ -622,10 +645,7 @@ try {
   };
 } catch (e) {
   console.error("[auth] onForgotPassword:", e);
-  return {
-    success: false,
-    message: "We couldn't send a reset link right now. Please try again.",
-  };
+  return { success: false, message: "We couldn't send a reset link right now. Please try again." };
 }
 },
 
