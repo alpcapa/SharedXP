@@ -26,8 +26,14 @@ export const useHosts = ({ sports, excludeId } = {}) => {
       )
       .eq("pause_hosting", false)
       .then(({ data, error }) => {
-        if (cancelled || error || !data) {
-          if (!cancelled) setLoading(false);
+        if (cancelled) return;
+        if (error) {
+          console.error("[useHosts] fetch error:", error);
+          setLoading(false);
+          return;
+        }
+        if (!data) {
+          setLoading(false);
           return;
         }
 
