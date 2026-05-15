@@ -398,7 +398,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
                     <article key={review.id} className="review-card">
                       <p>
                         <strong>{review.hostName}</strong>
-                        {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
+                        {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating ? Number(review.rating).toFixed(1) : "Not rated"}
                       </p>
                       {review.review && <p>{review.review}</p>}
                     </article>
@@ -469,7 +469,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
                     <article key={review.id} className="review-card">
                       <p>
                         <strong>{review.guestName}</strong>
-                        {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
+                        {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating ? Number(review.rating).toFixed(1) : "Not rated"}
                       </p>
                       {review.review && <p>{review.review}</p>}
                     </article>
