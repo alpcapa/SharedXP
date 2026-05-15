@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
-/**
- * Fetches active (non-paused) hosts from Supabase.
- * Returns hosts shaped for BuddyCard and recommendations carousels.
- *
- * @param {object} opts
- * @param {string[]} [opts.sports]    Filter to hosts who offer any of these sports (case-insensitive)
- * @param {string}   [opts.excludeId] Exclude a specific user ID (e.g. the profile being viewed)
- */
 export const useHosts = ({ sports, excludeId } = {}) => {
   const [hosts, setHosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +13,7 @@ export const useHosts = ({ sports, excludeId } = {}) => {
       .from("host_profiles")
       .select(
         `pause_hosting, city, country,
-         profile:profiles!user_id(id, full_name, first_name, last_name, photo_url),
+         profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday),
          host_sports(sport, pricing, pricing_currency, level, description, about, equipment_available, paused)`
       )
       .eq("pause_hosting", false)
@@ -52,7 +44,6 @@ export const useHosts = ({ sports, excludeId } = {}) => {
             const activeSports = (hp.host_sports || []).filter((s) => !s.paused);
             if (activeSports.length === 0) return null;
 
-            // When filtering by sport, pick the matching sport as the primary one
             const primarySport = sportSet
               ? activeSports.find((s) => sportSet.has(String(s.sport).toLowerCase())) ?? null
               : activeSports[0];
@@ -65,10 +56,13 @@ export const useHosts = ({ sports, excludeId } = {}) => {
                 [profile.first_name, profile.last_name].filter(Boolean).join(" ") ||
                 "Host",
               image: profile.photo_url || "",
+              gender: profile.gender || "",
+              birthday: profile.birthday || "",
               city: hp.city || "",
               country: hp.country || "",
+              sports: activeSports,
+              // primary-sport shorthands kept for any caller that reads them directly
               sport: primarySport.sport || "",
-              bio: primarySport.description || primarySport.about || "",
               equipmentAvailable: primarySport.equipment_available || false,
               price: primarySport.pricing || 0,
               pricingCurrency: primarySport.pricing_currency || "EUR",

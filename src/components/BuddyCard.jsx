@@ -1,13 +1,24 @@
 import { Link } from "react-router-dom";
-import { CURRENCY_SYMBOLS } from "../utils/pricing";
+import { getAgeFromBirthday } from "../utils/profileAge";
 
 const BuddyCard = ({ buddy }) => {
-  const currency = String(buddy.pricingCurrency ?? "EUR").toUpperCase();
-  const currencySymbol = CURRENCY_SYMBOLS[currency] ?? `${currency} `;
-  const price = Number(buddy.price ?? buddy.pricing ?? 0);
-  const hasEquipment = buddy.equipmentAvailable ?? buddy.bikeAvailable;
   const locationLine = [buddy.city, buddy.country].filter(Boolean).join(", ");
   const initials = buddy.name.trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?";
+
+  const allSports = Array.isArray(buddy.sports) && buddy.sports.length > 0
+    ? buddy.sports
+    : buddy.sport ? [{ sport: buddy.sport, level: buddy.level, equipment_available: buddy.equipmentAvailable }] : [];
+
+  const sportNames = allSports.map((s) => s.sport).filter(Boolean);
+  const hasEquipment = allSports.some((s) => s.equipment_available);
+  const levels = [...new Set(allSports.map((s) => s.level).filter(Boolean))];
+  const age = getAgeFromBirthday(buddy.birthday);
+
+  const meta = [
+    (buddy.gender || age != null) && `👤 ${[buddy.gender, age].filter((v) => v != null && v !== "").join(", ")}`,
+    levels.length > 0 && `🏅 ${levels.join(", ")}`,
+    `🎒 ${hasEquipment ? "Yes" : "No"}`,
+  ].filter(Boolean).join(" · ");
 
   return (
     <Link to={`/user/${buddy.id}`} className="local-card-link">
@@ -24,7 +35,9 @@ const BuddyCard = ({ buddy }) => {
               {locationLine && <span className="field-host-city"> · {locationLine}</span>}
             </p>
             <div className="local-sport-pills">
-              {buddy.sport && <span className="sport-pill">{buddy.sport}</span>}
+              {sportNames.slice(0, 3).map((s) => (
+                <span key={s} className="sport-pill">{s}</span>
+              ))}
             </div>
           </div>
         </div>
@@ -33,13 +46,7 @@ const BuddyCard = ({ buddy }) => {
         ) : (
           <div className="field-post-photo-placeholder" />
         )}
-        <p className="field-meta">
-          {[
-            buddy.level && `🏅 ${buddy.level}`,
-            `🎒 ${hasEquipment ? "Yes" : "No"}`,
-            price > 0 && `${currencySymbol}${price}`,
-          ].filter(Boolean).join(" · ")}
-        </p>
+        {meta && <p className="field-meta">{meta}</p>}
       </article>
     </Link>
   );
