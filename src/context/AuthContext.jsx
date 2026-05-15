@@ -505,7 +505,14 @@ const {
     setAuthLoading(false);
     return;
   }
-  // Leaving recovery mode on any other auth event (SIGNED_IN after reset, etc.)
+  if (event === "USER_UPDATED" && inRecoveryMode.current) {
+    // Password was just changed inside the recovery flow. Stay in recovery
+    // mode — ResetPasswordPage calls signOut next, which fires SIGNED_OUT and
+    // clears state. Loading the user here would race against that signOut and
+    // leave a stale logged-in user on the success screen.
+    return;
+  }
+  // Leaving recovery mode on SIGNED_OUT or any subsequent auth event.
   inRecoveryMode.current = false;
   if (session?.user) loadUser(session.user);
   else setCurrentUser(null);
