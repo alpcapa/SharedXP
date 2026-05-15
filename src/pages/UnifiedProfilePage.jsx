@@ -472,7 +472,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
   }
 
   // ── Derived display values ────────────────────────────────────────────────────
-  const isOwnProfile = !staticBuddy && currentUser?.id === userId;
+  const isOwnProfile = currentUser?.id === userId;
   const isHost = profile.is_host;
   const displayName = getName(profile);
   const age = getAgeFromBirthday(profile.birthday);
