@@ -478,6 +478,7 @@ body {
   justify-content: space-between;
   gap: 20px;
   padding: 11px 28px;
+  min-height: 72px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.95);
 }
