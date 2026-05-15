@@ -127,7 +127,7 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
                 My Profile
               </Link>
               <Link to="/history" className="user-dropdown-link user-dropdown-xp-history" role="menuitem">
-                My XP History
+                My <span style={{color: "#96c93d"}}>XP</span> History
                 {activeTags.length > 0 && (
                   <span className="xp-history-tags">
                     {activeTags.map((status) => (
