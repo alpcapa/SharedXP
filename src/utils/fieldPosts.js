@@ -149,10 +149,17 @@ const mergeRemoteAndLocalPosts = (remoteRows) => {
 
     if (matchIndex >= 0) {
       const remotePost = merged[matchIndex];
+      const remoteRating = Number(remotePost.rating ?? 0);
+      const localRating = Number(localPost.rating ?? 0);
       merged[matchIndex] = {
         ...remotePost,
         ...localPost,
         postedAt: remotePost.postedAt ?? localPost.postedAt,
+        rating: remoteRating > 0
+          ? remotePost.rating
+          : localRating > 0
+            ? localPost.rating
+            : 0,
       };
     } else {
       merged.push(localPost);
@@ -160,6 +167,54 @@ const mergeRemoteAndLocalPosts = (remoteRows) => {
   });
 
   return sortPostsByPostedAt(merged);
+};
+
+const resolveBookingRequestRating = (post, request) => {
+  if (!request) return 0;
+  if (post.role === "hosted") {
+    // `guest_rating` is canonical for completed booking_requests; keep
+    // `guest_host_ratings.overall` as compatibility fallback.
+    return Number(request.guest_rating ?? request.guest_host_ratings?.overall ?? 0);
+  }
+  // `host_rating` is the canonical and only persisted guest-side score.
+  return Number(request.host_rating ?? 0);
+};
+
+const hasRatingSourceRequest = (post) => !!post.sourceRequestId;
+
+const hydrateMissingRatingsFromBookingRequests = async (posts) => {
+  const needsHydration = posts.filter(hasRatingSourceRequest);
+  if (!needsHydration.length) return posts;
+
+  const requestIds = [
+    ...new Set(needsHydration.map((post) => post.sourceRequestId).filter(Boolean)),
+  ];
+  if (!requestIds.length) return posts;
+  try {
+    const { data, error } = await supabase
+      .from("booking_requests")
+      .select("id, guest_rating, guest_host_ratings, host_rating")
+      .in("id", requestIds);
+    if (error) {
+      console.error("[fieldPosts] rating hydration error:", error);
+      return posts;
+    }
+
+    const requestById = new Map((data ?? []).map((row) => [row.id, row]));
+    return posts.map((post) => {
+      if (!hasRatingSourceRequest(post)) return post;
+      const request = requestById.get(post.sourceRequestId);
+      if (!request) return post;
+      const nextRating = clampRating(resolveBookingRequestRating(post, request));
+      if (nextRating <= 0) return post;
+      return Number(post.rating ?? 0) === nextRating
+        ? post
+        : { ...post, rating: nextRating };
+    });
+  } catch (error) {
+    console.error("[fieldPosts] rating hydration exception:", error);
+    return posts;
+  }
 };
 
 /**
@@ -189,7 +244,8 @@ export const fetchFieldPosts = async () => {
       }
       return [];
     }
-    return mergeRemoteAndLocalPosts(data);
+    const mergedPosts = mergeRemoteAndLocalPosts(data);
+    return hydrateMissingRatingsFromBookingRequests(mergedPosts);
   } catch (e) {
     console.error("[fieldPosts] fetch exception:", e);
     return sortPostsByPostedAt(readLocalFallbackPosts().map(mapFallbackRow));

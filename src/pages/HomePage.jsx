@@ -9,7 +9,7 @@ import { supabase } from "../lib/supabase";
 import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, toggleFieldPostLike } from "../utils/fieldPosts";
 import { getAgeFromBirthday } from "../utils/profileAge";
 
-const LOCALS_PER_PAGE = 3;
+const LOCALS_PER_PAGE = 6;
 const FIELD_PER_PAGE = 3;
 const HOME_EVENTS_PAGE_SIZE = 3;
 
@@ -175,6 +175,12 @@ const HomePage = ({ currentUser, onLogout }) => {
               signedUpAt: hp.profile.signed_up_at || "",
               sports: (hp.host_sports || []).filter((hs) => !hs.paused)
             }));
+          transformed.sort((a, b) => {
+            if (a.signedUpAt && b.signedUpAt) return b.signedUpAt.localeCompare(a.signedUpAt);
+            if (a.signedUpAt) return -1;
+            if (b.signedUpAt) return 1;
+            return 0;
+          });
           setHosts(transformed);
         }
         setHostsLoading(false);
@@ -478,7 +484,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show previous 3 locals"
+                    aria-label="Show previous 6 locals"
                     onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
                     disabled={localsPage === 0}
                   >
@@ -487,7 +493,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Show next 3 locals"
+                    aria-label="Show next 6 locals"
                     onClick={() =>
                       setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
                     }
@@ -525,22 +531,41 @@ const HomePage = ({ currentUser, onLogout }) => {
                     const isOwner = post.posterId != null && post.posterId === currentUser?.id;
                     const postLocation = [post.city, post.country].filter(Boolean).join(", ");
                     const postRating = Number(post.rating ?? 0);
+                    const profilePath =
+                      post.posterId && String(post.posterId).trim() !== ""
+                        ? post.role === "hosted"
+                          ? `/buddy/${post.posterId}`
+                          : `/user/${post.posterId}`
+                        : null;
+                    const avatar = post.hostPhoto ? (
+                      <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                    ) : (
+                      <div className="field-host-avatar field-host-avatar-fallback" aria-hidden="true">
+                        {String(post.hostName ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
+                      </div>
+                    );
                     return (
                       <article key={post.id} className="field-card">
                         <div className="field-host-row">
-                          {post.hostPhoto ? (
-                            <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                          {profilePath ? (
+                            <Link to={profilePath} className="field-host-link" aria-label={`View ${post.hostName} profile`}>
+                              {avatar}
+                            </Link>
                           ) : (
-                            <div className="field-host-avatar field-host-avatar-fallback" aria-hidden="true">
-                              {String(post.hostName ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
-                            </div>
+                            avatar
                           )}
                           <div>
                             <p>
-                              <span className="field-host-name">{post.hostName}</span>
-                              {postRating > 0 && (
-                                <span className="field-host-rating"> · {postRating.toFixed(1)}⭐</span>
+                              {profilePath ? (
+                                <Link to={profilePath} className="field-host-name field-host-name-link">
+                                  {post.hostName}
+                                </Link>
+                              ) : (
+                                <span className="field-host-name">{post.hostName}</span>
                               )}
+                              <span className="field-host-rating">
+                                {" · "}⭐ {postRating > 0 ? postRating.toFixed(1) : "Not rated"}
+                              </span>
                               {postLocation && (
                                 <span className="field-host-city"> · {postLocation}</span>
                               )}

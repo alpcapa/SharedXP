@@ -282,11 +282,18 @@ fetchUserBookings(authUser.id),
 ]);
 
 let profile = profileResult.data?.[0] ?? null;
+let languagesData = languagesResult.data || [];
+let sportsData = sportsResult.data || [];
 
 if (!profile) {
   const meta = authUser.user_metadata?.sharedxp_pending_profile;
   if (meta) {
     profile = metaToProfileShape(meta, authUser);
+    await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
+    // Seed languages and sports from signup metadata into their own tables.
+    const { langRows, sportRows } = await upsertLanguagesAndSports(authUser.id, meta.languages || [], meta.sports || []);
+    languagesData = langRows;
+    sportsData = sportRows;
   } else {
     // OAuth sign-in (Google / Apple) — seed profile from provider metadata
     const om = authUser.user_metadata || {};
@@ -301,8 +308,8 @@ if (!profile) {
       is_host: false,
       signed_up_at: authUser.created_at || new Date().toISOString(),
     };
+    await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
   }
-  await supabase.from("profiles").insert({ id: authUser.id, ...profile, is_admin: false });
 }
 
 if (!profile.photo_url) {
@@ -351,8 +358,8 @@ hostSports = hs || [];
 return buildUserObject(
 authUser,
 profile,
-languagesResult.data || [],
-sportsResult.data || [],
+languagesData,
+sportsData,
 hostProfile,
 hostSports,
 bookings
@@ -382,6 +389,7 @@ sportRows.length
 ]);
 if (langResult?.error) console.error("[auth] insert languages:", langResult.error);
 if (sportResult?.error) console.error("[auth] insert sports:", sportResult.error);
+return { langRows, sportRows };
 };
 
 // When userId is provided (authenticated profile update) the file is stored in
@@ -546,9 +554,25 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
     ...profileMeta
   } = newUser;
 
-  // Avatar upload requires authentication; store data URL for post-confirmation upload.
+  // Upload the avatar to storage before creating the auth user so the public
+  // URL can be embedded in sharedxp_pending_profile.photoUrl — safe to do
+  // pre-auth because uploadAvatarFromDataUrl uses userId=null (root bucket
+  // path) which is allowed by the Avatars bucket INSERT policy for anon.
+  // fetchUserProfile already reads om.sharedxp_pending_profile?.photoUrl so
+  // no additional changes are needed on the confirmation side.
+  // Fallback: if the storage upload fails, store the data URL in localStorage
+  // (wrapped in its own try/catch so a QuotaExceededError on iOS Safari never
+  // aborts the signup).
+  let pendingPhotoUrl = "";
   if (photo && photo.startsWith("data:")) {
-    localStorage.setItem("sharedxp_pending_avatar", photo);
+    pendingPhotoUrl = await uploadAvatarFromDataUrl(photo, normalizedEmail, null);
+    if (!pendingPhotoUrl) {
+      try {
+        localStorage.setItem("sharedxp_pending_avatar", photo);
+      } catch {
+        console.warn("[auth] Could not cache pending avatar (storage quota exceeded). Photo can be added from profile settings after sign-up.");
+      }
+    }
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -560,6 +584,7 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
         sharedxp_pending_profile: {
           ...profileMeta,
           email: normalizedEmail,
+          ...(pendingPhotoUrl && { photoUrl: pendingPhotoUrl }),
         },
       },
     },

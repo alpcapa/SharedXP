@@ -183,35 +183,54 @@ const FieldPage = ({ currentUser, onLogout }) => {
           </p>
         ) : (
           <div className="field-feed">
-             {visiblePosts.map((post) => {
-               const isOwner = post.posterId != null && post.posterId === currentUser?.id;
-               const postLocation = [post.city, post.country].filter(Boolean).join(", ");
-               const postRating = Number(post.rating ?? 0);
-               return (
-                 <article key={post.id} className="field-card">
-                  <div className="field-host-row">
-                    {post.hostPhoto ? (
-                      <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
-                    ) : (
-                      <div
-                        className="field-host-avatar field-host-avatar-fallback"
-                        aria-hidden="true"
-                      >
-                        {String(post.hostName ?? "?")
-                          .trim()
-                          .split(" ")
-                          .filter(Boolean)
-                          .slice(0, 2)
-                          .map((word) => word[0].toUpperCase())
-                          .join("") || "?"}
-                      </div>
-                    )}
+              {visiblePosts.map((post) => {
+                const isOwner = post.posterId != null && post.posterId === currentUser?.id;
+                const postLocation = [post.city, post.country].filter(Boolean).join(", ");
+                const postRating = Number(post.rating ?? 0);
+                const profilePath =
+                  post.posterId && String(post.posterId).trim() !== ""
+                    ? post.role === "hosted"
+                      ? `/buddy/${post.posterId}`
+                      : `/user/${post.posterId}`
+                    : null;
+                const avatar = post.hostPhoto ? (
+                  <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                ) : (
+                  <div
+                    className="field-host-avatar field-host-avatar-fallback"
+                    aria-hidden="true"
+                  >
+                    {String(post.hostName ?? "?")
+                      .trim()
+                      .split(" ")
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((word) => word[0].toUpperCase())
+                      .join("") || "?"}
+                  </div>
+                );
+                return (
+                  <article key={post.id} className="field-card">
+                   <div className="field-host-row">
+                     {profilePath ? (
+                       <Link to={profilePath} className="field-host-link" aria-label={`View ${post.hostName} profile`}>
+                         {avatar}
+                       </Link>
+                     ) : (
+                       avatar
+                     )}
                      <div>
                        <p>
-                         <span className="field-host-name">{post.hostName}</span>
-                         {postRating > 0 && (
-                           <span className="field-host-rating"> · {postRating.toFixed(1)}⭐</span>
-                         )}
+                          {profilePath ? (
+                            <Link to={profilePath} className="field-host-name field-host-name-link">
+                              {post.hostName}
+                            </Link>
+                          ) : (
+                            <span className="field-host-name">{post.hostName}</span>
+                          )}
+                          <span className="field-host-rating">
+                            {" · "}⭐ {postRating > 0 ? postRating.toFixed(1) : "Not rated"}
+                          </span>
                          {postLocation && (
                            <span className="field-host-city"> · {postLocation}</span>
                          )}

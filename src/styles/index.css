@@ -3498,8 +3498,22 @@ body {
   border: 1px solid #d7dccf;
 }
 
+.field-host-link {
+  display: inline-flex;
+  border-radius: 50%;
+}
+
 .field-host-name {
   font-weight: 700;
+}
+
+.field-host-name-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.field-host-name-link:hover {
+  text-decoration: underline;
 }
 
 .field-host-rating {
