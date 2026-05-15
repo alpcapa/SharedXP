@@ -415,8 +415,8 @@ const HistoryPage = ({
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
-        <main className="middle-section simple-page history-page">
-          <h1>History</h1>
+        <main className="middle-section edit-profile-page history-page">
+          <h1>My <span style={{color: "#96c93d", fontWeight: 800}}>XP</span> History</h1>
           <p className="history-subtitle">
             Your experiences, shown from latest to oldest.
           </p>
