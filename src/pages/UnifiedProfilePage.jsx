@@ -598,14 +598,14 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
               </h1>
               {locationLine && <p className="guest-profile-location">{locationLine}</p>}
               {memberSince && <p className="guest-profile-member-since">Member since {memberSince}</p>}
+              {isHost && hostLanguages && (
+                <p className="unified-profile-languages"><strong>Languages:</strong> {hostLanguages}</p>
+              )}
               {isOwnProfile && (
                 <div className="unified-profile-own-actions">
                   <Link to="/my-profile" className="btn btn-primary">Edit Profile</Link>
                   {isHost && <Link to="/host-settings" className="btn btn-light">Host Settings</Link>}
                 </div>
-              )}
-              {!isOwnProfile && isHost && activeTab === "host" && !isHostPaused && (
-                <p className="unified-profile-book-hint">Select a date and time below to book</p>
               )}
             </div>
           </div>
@@ -734,7 +734,11 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                         {activeSport.description && (
                           <p className="booking-subtitle"><strong>Description:</strong> {activeSport.description}</p>
                         )}
+                        {activeSport.about && (
+                          <p className="booking-subtitle"><strong>About:</strong> {activeSport.about}</p>
+                        )}
 
+                        <p className="unified-profile-book-hint" style={{ marginBottom: 4 }}>Select a date and time below to book</p>
                         <p className="booking-label"><strong>Choose Date:</strong></p>
                         <div className="booking-calendar" aria-label="Available dates calendar">
                           <div className="booking-calendar-header">
@@ -812,12 +816,6 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                     )}
                   </div>
                 </section>
-              )}
-
-              {hostLanguages && (
-                <p className="unified-profile-languages">
-                  <strong>Languages:</strong> {hostLanguages}
-                </p>
               )}
 
               {/* Host photo gallery */}
