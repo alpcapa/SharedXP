@@ -329,10 +329,10 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
               </h1>
               {locationLine && <p className="guest-profile-location">{locationLine}</p>}
               <p className="guest-profile-member-since">Member since {memberSince}</p>
-              <div className="unified-profile-own-actions">
-                <Link to="/my-profile" className="btn btn-primary">Edit Profile</Link>
-                {currentUser.isHost && <Link to="/host-settings" className="btn btn-light">Host Settings</Link>}
-              </div>
+            </div>
+            <div className="unified-profile-own-actions">
+              <Link to="/my-profile" className="btn btn-primary">Edit Profile</Link>
+              {currentUser.isHost && <Link to="/host-settings" className="btn btn-light">Host Settings</Link>}
             </div>
           </div>
 

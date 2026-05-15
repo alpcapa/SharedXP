@@ -5874,7 +5874,12 @@ body {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 8px;
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+.unified-profile-own-actions .btn {
+  text-decoration: none;
 }
 
 .unified-profile-book-hint {
