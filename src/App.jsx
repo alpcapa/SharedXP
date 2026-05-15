@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
@@ -31,15 +31,25 @@ import GuestProfilePage from "./pages/GuestProfilePage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import AuthConfirmPage from "./pages/AuthConfirmPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import { hasRecoveryType } from "./utils/recoveryLink";
+import { supabase } from "./lib/supabase";
 
 function App() {
   const authActions = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const didRedirect = useRef(false);
 
   // After OAuth login the browser lands on "/" with postAuthRedirect in
   // sessionStorage. Consume it once to send the user to their intended page.
   useEffect(() => {
+    const inRecoveryFlow =
+      location.pathname === "/reset-password" ||
+      hasRecoveryType({ search: location.search, hash: location.hash });
+
+    if (inRecoveryFlow) return;
+
     if (!authActions.currentUser) {
       didRedirect.current = false;
       return;
@@ -51,7 +61,35 @@ function App() {
       sessionStorage.removeItem("postAuthRedirect");
       navigate(redirect, { replace: true });
     }
-  }, [authActions.currentUser, navigate]);
+  }, [authActions.currentUser, location.hash, location.pathname, location.search, navigate]);
+
+  useEffect(() => {
+    if (location.pathname === "/reset-password") return;
+    const isRecoveryLink = hasRecoveryType({
+      search: location.search,
+      hash: location.hash,
+    });
+
+    if (!isRecoveryLink) return;
+    navigate(
+      `/reset-password${location.search}${location.hash}`,
+      { replace: true }
+    );
+  }, [location.hash, location.pathname, location.search, navigate]);
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "PASSWORD_RECOVERY") return;
+      if (window.location.pathname === "/reset-password") return;
+      navigate("/reset-password", { replace: true });
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   return (
     <Routes>
@@ -93,6 +131,7 @@ function App() {
       <Route path="/about" element={<AboutPage {...authActions} />} />
       <Route path="/events" element={<EventsPage {...authActions} />} />
       <Route path="/auth/confirm" element={<AuthConfirmPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage {...authActions} />} />
       <Route path="*" element={<NotFoundPage {...authActions} />} />
     </Routes>
   );

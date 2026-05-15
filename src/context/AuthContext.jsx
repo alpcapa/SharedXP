@@ -472,8 +472,9 @@ supabase.auth
 
 const {
   data: { subscription },
-} = supabase.auth.onAuthStateChange((_event, session) => {
+} = supabase.auth.onAuthStateChange((event, session) => {
   if (!mounted) return;
+  if (event === "PASSWORD_RECOVERY") return;
   if (session?.user) loadUser(session.user);
   else setCurrentUser(null);
 });
@@ -574,6 +575,57 @@ return { success: true };
 } catch (e) {
 console.error("[auth] onEmailLogin:", e);
 return { success: false, message: "Login failed. Please try again." };
+}
+},
+
+onForgotPassword: async (email) => {
+const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+if (!normalizedEmail) {
+  return { success: false, message: "Please enter your email address." };
+}
+
+const NOT_FOUND_MESSAGE = "Sorry, this email does not exist in our database.";
+
+try {
+  // Check email existence via Edge Function. Returns 404 if not found.
+  const { data, error } = await supabase.functions.invoke("forgot-password", {
+    body: { email: normalizedEmail },
+  });
+
+  const httpStatus = error?.context?.status ?? (data?.notFound ? 404 : 200);
+
+  if (httpStatus === 404 || data?.notFound) {
+    return { success: false, message: NOT_FOUND_MESSAGE };
+  }
+
+  if (error && httpStatus !== 200) {
+    console.warn("[auth] forgot-password function error, proceeding with recovery email:", error);
+  }
+
+  // Trigger Supabase password recovery email.
+  const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+    normalizedEmail,
+    { redirectTo: `${window.location.origin}/reset-password` },
+  );
+
+  if (resetError) {
+    console.warn("[auth] resetPasswordForEmail failed:", resetError);
+    return {
+      success: false,
+      message: "We couldn't send a reset link right now. Please try again.",
+    };
+  }
+
+  return {
+    success: true,
+    message: "Reset link has been sent to your email. Check spam folder if not received",
+  };
+} catch (e) {
+  console.error("[auth] onForgotPassword:", e);
+  return {
+    success: false,
+    message: "We couldn't send a reset link right now. Please try again.",
+  };
 }
 },
 
