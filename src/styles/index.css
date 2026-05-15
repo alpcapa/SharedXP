@@ -568,8 +568,8 @@ body {
 }
 
 .avatar-thumbnail {
-  width: 52px;
-  height: 52px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #e5e7eb;
