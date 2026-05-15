@@ -5843,18 +5843,20 @@ body {
 }
 
 /* Card sections inside the profile page already have 10px side margin from the
-   shared rule; remove it here since the parent now supplies that padding. */
+   shared rule; remove it here since the parent now supplies that padding.
+   Also tighten vertical gaps between sections. */
 .unified-profile-page > .reviews,
 .unified-profile-page > .gallery,
 .unified-profile-page > .booking-engine-section,
 .unified-profile-page > .recommendations {
-  margin-left: 0;
-  margin-right: 0;
+  margin: 8px 0;
 }
 
-/* Collapse the gap between the photo gallery and the reviews card in host tab */
-.unified-profile-page .gallery + .reviews {
-  margin-top: 8px;
+.unified-profile-page > .reviews:first-of-type,
+.unified-profile-page > .gallery:first-of-type,
+.unified-profile-page > .booking-engine-section:first-of-type,
+.unified-profile-page > .recommendations:first-of-type {
+  margin-top: 0;
 }
 
 .unified-profile-tabs {
@@ -5899,13 +5901,13 @@ body {
 .guest-profile-reviews,
 .guest-profile-gallery {
   background: white;
-  margin: 20px 0;
+  margin: 8px 0;
   padding: 20px;
   border-radius: 10px;
 }
 
-.guest-profile-reviews + .guest-profile-gallery {
-  margin-top: 8px;
+.guest-profile-reviews:first-of-type {
+  margin-top: 0;
 }
 
 /* ── Payment History page ─────────────────────────── */
