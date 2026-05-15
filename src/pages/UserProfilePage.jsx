@@ -188,7 +188,6 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
 
   const { hosts: hostRecommendations } = useHosts({
     sports: sportsSelection.length > 0 ? sportsSelection : undefined,
-    excludeId: currentUser?.id,
   });
   const totalRecommendationPages = Math.max(1, Math.ceil(hostRecommendations.length / LOCALS_PER_PAGE));
   const visibleRecommendations = useMemo(() => {
