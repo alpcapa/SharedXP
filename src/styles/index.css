@@ -5837,6 +5837,79 @@ body {
   }
 }
 
+/* ── Unified Profile page ────────────────────────── */
+.unified-profile-page {
+  padding: 20px 10px 64px;
+}
+
+/* Card sections inside the profile page already have 10px side margin from the
+   shared rule; remove it here since the parent now supplies that padding.
+   Also tighten vertical gaps between sections. */
+.unified-profile-page > .reviews,
+.unified-profile-page > .gallery,
+.unified-profile-page > .booking-engine-section,
+.unified-profile-page > .recommendations {
+  margin: 8px 0;
+}
+
+.unified-profile-page > .reviews:first-of-type,
+.unified-profile-page > .gallery:first-of-type,
+.unified-profile-page > .booking-engine-section:first-of-type,
+.unified-profile-page > .recommendations:first-of-type {
+  margin-top: 0;
+}
+
+.unified-profile-tabs {
+  margin-top: 0;
+  margin-bottom: 32px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.unified-profile-tab-rating {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #596164;
+}
+
+.unified-profile-own-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.unified-profile-book-hint {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #596164;
+}
+
+.unified-profile-languages {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.review-date {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Guest tab content sections — match the white-card style of host-tab sections */
+.guest-profile-reviews,
+.guest-profile-gallery {
+  background: white;
+  margin: 8px 0;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.guest-profile-reviews:first-of-type {
+  margin-top: 0;
+}
+
 /* ── Payment History page ─────────────────────────── */
 .payment-history-page {
   display: flex;

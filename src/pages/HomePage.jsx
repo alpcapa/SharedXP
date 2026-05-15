@@ -439,7 +439,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                       ...new Set(host.sports.map((s) => s.level).filter(Boolean))
                     ];
                     return (
-                      <Link to={`/buddy/${host.userId}`} key={host.id} className="local-card-link">
+                      <Link to={`/user/${host.userId}`} key={host.id} className="local-card-link">
                         <article className="field-card">
                           <div className="field-host-row">
                             {host.photo ? (
@@ -533,9 +533,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                     const postRating = Number(post.rating ?? 0);
                     const profilePath =
                       post.posterId && String(post.posterId).trim() !== ""
-                        ? post.role === "hosted"
-                          ? `/buddy/${post.posterId}`
-                          : `/user/${post.posterId}`
+                        ? `/user/${post.posterId}`
                         : null;
                     const avatar = post.hostPhoto ? (
                       <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />

@@ -126,7 +126,7 @@ const ExploreMap = ({ hosts, userLocation }) => {
       L.marker([host.coordinates.lat, host.coordinates.lng], { icon })
         .addTo(hostLayerRef.current)
         .bindTooltip(tooltipHtml, { direction: "top", offset: [0, -40], opacity: 1 })
-        .on("click", () => navigate(`/buddy/${host.userId}`));
+        .on("click", () => navigate(`/user/${host.userId}`));
     });
   }, [hosts, navigate]);
 

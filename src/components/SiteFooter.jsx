@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { buddies } from "../data/buddies";
+import { supabase } from "../lib/supabase";
 
 const trustedHighlights = [
   {
@@ -22,7 +23,6 @@ const trustedHighlights = [
   }
 ];
 
-const hostAvatars = buddies.slice(0, 3);
 const footerLinks = [
   { label: "About", href: "/about" },
   { label: "Follow", href: "/follow" },
@@ -31,6 +31,23 @@ const footerLinks = [
 ];
 
 const SiteFooter = () => {
+  const [avatars, setAvatars] = useState([]);
+
+  useEffect(() => {
+    supabase
+      .from("host_profiles")
+      .select("profile:profiles!user_id(id, photo_url)")
+      .eq("pause_hosting", false)
+      .limit(3)
+      .then(({ data }) => {
+        if (!data) return;
+        const photos = data
+          .map((hp) => ({ id: hp.profile?.id, src: hp.profile?.photo_url }))
+          .filter((a) => a.id && a.src);
+        setAvatars(photos);
+      });
+  }, []);
+
   return (
     <footer className="site-footer">
       <div className="footer-promo" role="presentation">
@@ -39,11 +56,13 @@ const SiteFooter = () => {
             <h2>Love your sport? Become a host</h2>
             <p>Share your passion, earn money, and meet amazing people.</p>
           </div>
-          <div className="footer-host-avatars" aria-hidden="true">
-            {hostAvatars.map((buddy) => (
-              <img key={buddy.id} src={buddy.image} alt="" />
-            ))}
-          </div>
+          {avatars.length > 0 && (
+            <div className="footer-host-avatars" aria-hidden="true">
+              {avatars.map((a) => (
+                <img key={a.id} src={a.src} alt="" />
+              ))}
+            </div>
+          )}
           <Link to="/become-a-host" className="footer-host-button">
             Join as a Host
           </Link>

@@ -69,7 +69,7 @@ const getName = (profile) => {
 };
 
 const ProfileLink = ({ profile, userId, name }) => {
-  const href = profile?.is_host ? `/buddy/${userId}` : `/user/${userId}`;
+  const href = `/user/${userId}`;
   return (
     <Link to={href} className="pending-profile-link">
       {name}

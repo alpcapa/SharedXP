@@ -425,7 +425,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                   ];
                   return (
                     <Link
-                      to={`/buddy/${host.userId}`}
+                      to={`/user/${host.userId}`}
                       state={{ from: "explore" }}
                       key={host.id}
                       className="local-card-link"

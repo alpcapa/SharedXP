@@ -454,11 +454,6 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
               <Link to="/user-profile" className="btn btn-primary">
                 My Profile
               </Link>
-              {currentUser.isHost && (
-                <Link to={`/buddy/${currentUser.id}`} className="btn btn-primary">
-                  My Host Page
-                </Link>
-              )}
             </div>
           </div>
           <div className="profile-name-row">

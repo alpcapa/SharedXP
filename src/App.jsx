@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
@@ -9,7 +9,6 @@ import FollowPage from "./pages/FollowPage";
 import HelpPage from "./pages/HelpPage";
 import LoginPage from "./pages/LoginPage";
 import MyProfilePage from "./pages/MyProfilePage";
-import ProfilePage from "./pages/ProfilePage";
 import SignUpPage from "./pages/SignUpPage";
 import PaymentPage from "./pages/PaymentPage";
 import ChatPage from "./pages/ChatPage";
@@ -27,13 +26,18 @@ import NotFoundPage from "./pages/NotFoundPage";
 import AboutPage from "./pages/AboutPage";
 import EventsPage from "./pages/EventsPage";
 import UserProfilePage from "./pages/UserProfilePage";
-import GuestProfilePage from "./pages/GuestProfilePage";
+import UnifiedProfilePage from "./pages/UnifiedProfilePage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import AuthConfirmPage from "./pages/AuthConfirmPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { hasRecoveryType } from "./utils/recoveryLink";
 import { supabase } from "./lib/supabase";
+
+const BuddyRedirect = () => {
+  const { buddyId } = useParams();
+  return <Navigate to={`/user/${buddyId}`} replace />;
+};
 
 function App() {
   const authActions = useAuth();
@@ -96,12 +100,12 @@ function App() {
       <Route path="/" element={<HomePage {...authActions} />} />
       <Route path="/locals" element={<ExplorePage {...authActions} />} />
       <Route path="/how-it-works" element={<Navigate to="/about" replace />} />
-      <Route path="/buddy/:buddyId" element={<ProfilePage {...authActions} />} />
+      <Route path="/buddy/:buddyId" element={<BuddyRedirect />} />
       <Route path="/signup" element={<SignUpPage {...authActions} />} />
       <Route path="/login" element={<LoginPage {...authActions} />} />
       <Route path="/my-profile" element={<MyProfilePage {...authActions} />} />
       <Route path="/user-profile" element={<UserProfilePage {...authActions} />} />
-      <Route path="/user/:userId" element={<GuestProfilePage {...authActions} />} />
+      <Route path="/user/:userId" element={<UnifiedProfilePage {...authActions} />} />
       <Route path="/become-a-host" element={<HostPage {...authActions} />} />
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />
