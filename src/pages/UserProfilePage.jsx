@@ -82,7 +82,8 @@ const getHistoryGalleryPhotos = (historyItems) => {
 const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
   const [activeTab, setActiveTab] = useState("guest");
   const [recommendationsPage, setRecommendationsPage] = useState(0);
-  const [photosPage, setPhotosPage] = useState(0);
+  const [guestPhotosPage, setGuestPhotosPage] = useState(0);
+  const [hostPhotosPage, setHostPhotosPage] = useState(0);
   // Reviews/photos received as a guest (host rated the user)
   const [brGuestReviews, setBrGuestReviews] = useState([]);
   const [brGuestPhotos, setBrGuestPhotos] = useState([]);
@@ -98,7 +99,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
       supabase
         .from("booking_requests")
         .select(
-          "host_rating, host_review, host_rated_at, guest_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)"
+          "host_rating, host_review, host_rated_at, guest_photos, host_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)"
         )
         .eq("requester_id", currentUser.id)
         .eq("status", "completed")
@@ -137,7 +138,10 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
         setBrGuestReviews(reviews);
 
         const photos = rows
-          .flatMap((r) => (Array.isArray(r.guest_photos) ? r.guest_photos : []))
+          .flatMap((r) => [
+            ...(Array.isArray(r.guest_photos) ? r.guest_photos : []),
+            ...(Array.isArray(r.host_photos) ? r.host_photos : []),
+          ])
           .map((p) => String(p ?? "").trim())
           .filter((p) => p && p !== HISTORY_PLACEHOLDER_EVENT_PHOTO);
         setBrGuestPhotos([...new Set(photos)]);
@@ -224,15 +228,22 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
   const memberSince = getMemberSinceLabel(currentUser);
   const userAge = getProfileAge(currentUser);
 
-  // Merge legacy history photos with booking_requests photos (both roles)
-  const galleryPhotos = useMemo(() => {
+  // Guest gallery: only photos from attended sessions (not hosted)
+  const guestGalleryPhotos = useMemo(() => {
     const legacyPhotos = getHistoryGalleryPhotos(currentUser?.history);
-    return [...new Set([...brGuestPhotos, ...brHostPhotos, ...legacyPhotos])];
-  }, [brGuestPhotos, brHostPhotos, currentUser?.history]);
-  const totalPhotoPages = Math.max(1, Math.ceil(galleryPhotos.length / PHOTOS_PER_PAGE));
-  const visibleGalleryPhotos = galleryPhotos.slice(
-    photosPage * PHOTOS_PER_PAGE,
-    (photosPage + 1) * PHOTOS_PER_PAGE
+    return [...new Set([...brGuestPhotos, ...legacyPhotos])];
+  }, [brGuestPhotos, currentUser?.history]);
+  const totalGuestPhotoPages = Math.max(1, Math.ceil(guestGalleryPhotos.length / PHOTOS_PER_PAGE));
+  const visibleGuestPhotos = guestGalleryPhotos.slice(
+    guestPhotosPage * PHOTOS_PER_PAGE,
+    (guestPhotosPage + 1) * PHOTOS_PER_PAGE
+  );
+
+  // Host gallery: photos from hosted sessions (host_photos + guest_photos)
+  const totalHostPhotoPages = Math.max(1, Math.ceil(brHostPhotos.length / PHOTOS_PER_PAGE));
+  const visibleHostPhotos = brHostPhotos.slice(
+    hostPhotosPage * PHOTOS_PER_PAGE,
+    (hostPhotosPage + 1) * PHOTOS_PER_PAGE
   );
 
   useEffect(() => {
@@ -240,8 +251,12 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
   }, [totalRecommendationPages]);
 
   useEffect(() => {
-    setPhotosPage((currentPage) => Math.min(currentPage, totalPhotoPages - 1));
-  }, [totalPhotoPages]);
+    setGuestPhotosPage((currentPage) => Math.min(currentPage, totalGuestPhotoPages - 1));
+  }, [totalGuestPhotoPages]);
+
+  useEffect(() => {
+    setHostPhotosPage((currentPage) => Math.min(currentPage, totalHostPhotoPages - 1));
+  }, [totalHostPhotoPages]);
 
   if (!currentUser) {
     if (authLoading) {
@@ -355,39 +370,27 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
             <>
               <section className="gallery">
                 <h3>Photo gallery</h3>
-                {galleryPhotos.length > 0 ? (
+                {guestGalleryPhotos.length > 0 ? (
                   <>
                     <div className="gallery-grid">
-                      {visibleGalleryPhotos.map((photo) => (
-                        <img key={photo} src={photo} alt={`${currentUser.fullName || currentUser.firstName || "User"} history gallery`} />
+                      {visibleGuestPhotos.map((photo) => (
+                        <img key={photo} src={photo} alt="Experience photo" />
                       ))}
                     </div>
-                    {totalPhotoPages > 1 && (
+                    {totalGuestPhotoPages > 1 && (
                       <div className="locals-nav-row">
-                        <button
-                          type="button"
-                          className="locals-nav"
-                          aria-label="Previous photos"
-                          onClick={() => setPhotosPage((page) => Math.max(page - 1, 0))}
-                          disabled={photosPage === 0}
-                        >
-                          ‹
-                        </button>
-                        <span className="locals-nav-info">{photosPage + 1} / {totalPhotoPages}</span>
-                        <button
-                          type="button"
-                          className="locals-nav"
-                          aria-label="Next photos"
-                          onClick={() => setPhotosPage((page) => Math.min(page + 1, totalPhotoPages - 1))}
-                          disabled={photosPage >= totalPhotoPages - 1}
-                        >
-                          ›
-                        </button>
+                        <button type="button" className="locals-nav" aria-label="Previous photos"
+                          onClick={() => setGuestPhotosPage((p) => Math.max(p - 1, 0))}
+                          disabled={guestPhotosPage === 0}>‹</button>
+                        <span className="locals-nav-info">{guestPhotosPage + 1} / {totalGuestPhotoPages}</span>
+                        <button type="button" className="locals-nav" aria-label="Next photos"
+                          onClick={() => setGuestPhotosPage((p) => Math.min(p + 1, totalGuestPhotoPages - 1))}
+                          disabled={guestPhotosPage >= totalGuestPhotoPages - 1}>›</button>
                       </div>
                     )}
                   </>
                 ) : (
-                  <p>No history photos yet.</p>
+                  <p>No photos yet.</p>
                 )}
               </section>
 
@@ -407,65 +410,80 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
                   <p>No reviews from hosts yet.</p>
                 )}
               </section>
+
+              <section className="recommendations">
+                <h3>More locals you might like</h3>
+                {hostRecommendations.length > 0 ? (
+                  <div className="locals-grid-wrap">
+                    <div className="locals-grid">
+                      {visibleRecommendations.map((recommendation) => (
+                        <BuddyCard key={recommendation.id} buddy={recommendation} />
+                      ))}
+                    </div>
+                    <div className="locals-nav-row">
+                      <button type="button" className="locals-nav" aria-label="Show previous locals"
+                        onClick={() => setRecommendationsPage((page) => Math.max(page - 1, 0))}
+                        disabled={recommendationsPage === 0}>‹</button>
+                      <button type="button" className="locals-nav" aria-label="Show next locals"
+                        onClick={() => setRecommendationsPage((page) => Math.min(page + 1, totalRecommendationPages - 1))}
+                        disabled={recommendationsPage >= totalRecommendationPages - 1}>›</button>
+                    </div>
+                  </div>
+                ) : (
+                  <p>No other hosts yet.</p>
+                )}
+              </section>
             </>
           )}
 
           {/* ── As Host tab ── */}
           {activeTab === "host" && currentUser.isHost && (
-            <section className="reviews">
-              <h3>Reviews from guests</h3>
-              {overallGuestReviews.length > 0 ? (
-                overallGuestReviews.map((review) => (
-                  <article key={review.id} className="review-card">
-                    <p>
-                      <strong>{review.guestName}</strong>
-                      {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
-                    </p>
-                    {review.review && <p>{review.review}</p>}
-                  </article>
-                ))
-              ) : (
-                <p>No reviews from guests yet.</p>
-              )}
-            </section>
+            <>
+              <section className="gallery">
+                <h3>Photo gallery</h3>
+                {brHostPhotos.length > 0 ? (
+                  <>
+                    <div className="gallery-grid">
+                      {visibleHostPhotos.map((photo) => (
+                        <img key={photo} src={photo} alt="Experience photo" />
+                      ))}
+                    </div>
+                    {totalHostPhotoPages > 1 && (
+                      <div className="locals-nav-row">
+                        <button type="button" className="locals-nav" aria-label="Previous photos"
+                          onClick={() => setHostPhotosPage((p) => Math.max(p - 1, 0))}
+                          disabled={hostPhotosPage === 0}>‹</button>
+                        <span className="locals-nav-info">{hostPhotosPage + 1} / {totalHostPhotoPages}</span>
+                        <button type="button" className="locals-nav" aria-label="Next photos"
+                          onClick={() => setHostPhotosPage((p) => Math.min(p + 1, totalHostPhotoPages - 1))}
+                          disabled={hostPhotosPage >= totalHostPhotoPages - 1}>›</button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p>No session photos yet.</p>
+                )}
+              </section>
+
+              <section className="reviews">
+                <h3>Reviews from guests</h3>
+                {overallGuestReviews.length > 0 ? (
+                  overallGuestReviews.map((review) => (
+                    <article key={review.id} className="review-card">
+                      <p>
+                        <strong>{review.guestName}</strong>
+                        {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
+                      </p>
+                      {review.review && <p>{review.review}</p>}
+                    </article>
+                  ))
+                ) : (
+                  <p>No reviews from guests yet.</p>
+                )}
+              </section>
+            </>
           )}
 
-          <section className="recommendations">
-            <h3>More hosts you might like</h3>
-            {hostRecommendations.length > 0 ? (
-              <div className="locals-grid-wrap">
-                <div className="locals-grid">
-                  {visibleRecommendations.map((recommendation) => (
-                    <BuddyCard key={recommendation.id} buddy={recommendation} />
-                  ))}
-                </div>
-                <div className="locals-nav-row">
-                  <button
-                    type="button"
-                    className="locals-nav"
-                    aria-label="Show previous 4 hosts"
-                    onClick={() => setRecommendationsPage((page) => Math.max(page - 1, 0))}
-                    disabled={recommendationsPage === 0}
-                  >
-                    ‹
-                  </button>
-                  <button
-                    type="button"
-                    className="locals-nav"
-                    aria-label="Show next 4 hosts"
-                    onClick={() =>
-                      setRecommendationsPage((page) => Math.min(page + 1, totalRecommendationPages - 1))
-                    }
-                    disabled={recommendationsPage >= totalRecommendationPages - 1}
-                  >
-                    ›
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p>No hosts match your selected sports yet.</p>
-            )}
-          </section>
         </main>
 
         <SiteFooter />
