@@ -477,8 +477,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 11px 28px;
-  min-height: 72px;
+  padding: 16px 28px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.95);
 }
@@ -570,8 +569,8 @@ body {
 
 .avatar-thumbnail {
   display: block;
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #e5e7eb;
