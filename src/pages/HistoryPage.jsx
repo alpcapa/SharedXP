@@ -415,7 +415,7 @@ const HistoryPage = ({
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
-        <main className="middle-section simple-page history-page">
+        <main className="middle-section edit-profile-page history-page">
           <h1>History</h1>
           <p className="history-subtitle">
             Your experiences, shown from latest to oldest.
