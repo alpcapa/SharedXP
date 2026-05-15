@@ -224,7 +224,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
         .order("completed_at", { ascending: false }),
       supabase
         .from("booking_requests")
-        .select("host_rating, host_review, host_rated_at, guest_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)")
+        .select("host_rating, host_review, host_rated_at, guest_photos, host_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)")
         .eq("requester_id", userId)
         .eq("status", "completed")
         .order("host_rated_at", { ascending: false }),
@@ -255,9 +255,12 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
       });
       setGuestReviews(allGuestReviews);
 
-      // Guest photos
+      // Guest photos — both what the guest shared and what the host shared for those sessions
       const legacyPhotos = legacyBookings.flatMap((b) => [b.photo, ...(Array.isArray(b.photo_gallery) ? b.photo_gallery : [])]);
-      const brPhotos = brGuestRows.flatMap((r) => Array.isArray(r.guest_photos) ? r.guest_photos : []);
+      const brPhotos = brGuestRows.flatMap((r) => [
+        ...(Array.isArray(r.guest_photos) ? r.guest_photos : []),
+        ...(Array.isArray(r.host_photos) ? r.host_photos : []),
+      ]);
       const allPhotos = [...brPhotos, ...legacyPhotos]
         .map((p) => String(p ?? "").trim())
         .filter((p) => p && p !== FALLBACK_PHOTO);
@@ -702,6 +705,26 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                   )}
                 </section>
               )}
+
+              {/* Recommendations — always in guest tab */}
+              <section className="recommendations">
+                <h3>More locals you might like</h3>
+                <div className="locals-grid-wrap">
+                  <div className="locals-grid">
+                    {visibleRecs.map((rec) => <BuddyCard key={rec.id} buddy={rec} />)}
+                  </div>
+                  {totalRecPages > 1 && (
+                    <div className="locals-nav-row">
+                      <button type="button" className="locals-nav" aria-label="Show previous locals"
+                        onClick={() => setRecsPage((p) => Math.max(p - 1, 0))}
+                        disabled={recsPage === 0}>‹</button>
+                      <button type="button" className="locals-nav" aria-label="Show next locals"
+                        onClick={() => setRecsPage((p) => Math.min(p + 1, totalRecPages - 1))}
+                        disabled={recsPage >= totalRecPages - 1}>›</button>
+                    </div>
+                  )}
+                </div>
+              </section>
             </>
           )}
 
@@ -887,25 +910,6 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
             </>
           )}
 
-          {/* ── Recommendations ── */}
-          <section className="recommendations">
-            <h3>More locals you might like</h3>
-            <div className="locals-grid-wrap">
-              <div className="locals-grid">
-                {visibleRecs.map((rec) => <BuddyCard key={rec.id} buddy={rec} />)}
-              </div>
-              {totalRecPages > 1 && (
-                <div className="locals-nav-row">
-                  <button type="button" className="locals-nav" aria-label="Show previous locals"
-                    onClick={() => setRecsPage((p) => Math.max(p - 1, 0))}
-                    disabled={recsPage === 0}>‹</button>
-                  <button type="button" className="locals-nav" aria-label="Show next locals"
-                    onClick={() => setRecsPage((p) => Math.min(p + 1, totalRecPages - 1))}
-                    disabled={recsPage >= totalRecPages - 1}>›</button>
-                </div>
-              )}
-            </div>
-          </section>
         </main>
 
         <SiteFooter />

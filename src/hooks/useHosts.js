@@ -25,6 +25,7 @@ export const useHosts = ({ sports, excludeId } = {}) => {
          host_sports(sport, pricing, pricing_currency, level, description, about, equipment_available, paused)`
       )
       .eq("pause_hosting", false)
+      .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) {
