@@ -575,7 +575,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section simple-page unified-profile-page">
+        <main className="middle-section host-settings-page unified-profile-page">
           {/* ── Header ── */}
           <div className="guest-profile-header">
             {profile.photo_url ? (

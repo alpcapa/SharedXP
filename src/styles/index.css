@@ -5839,9 +5839,7 @@ body {
 
 /* ── Unified Profile page ────────────────────────── */
 .unified-profile-page {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 32px 16px 64px;
+  padding: 20px 0 64px;
 }
 
 .unified-profile-tabs {

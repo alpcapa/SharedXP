@@ -295,7 +295,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section simple-page unified-profile-page">
+        <main className="middle-section host-settings-page unified-profile-page">
           <div className="guest-profile-header">
             {currentUser.photo ? (
               <img src={currentUser.photo} alt={currentUser.fullName || currentUser.firstName || "User"} className="guest-profile-photo" />
