@@ -1397,6 +1397,12 @@ body {
   font-size: 13px;
 }
 
+.auth-success {
+  margin: 2px 0 0;
+  color: #166534;
+  font-size: 13px;
+}
+
 .auth-submit {
   margin-top: 10px;
 }
@@ -1420,6 +1426,27 @@ body {
   margin-top: 16px;
   font-size: 14px;
   color: #4b5563;
+}
+
+.auth-footnote-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.auth-footnote-signup {
+  margin: 0;
+}
+
+.auth-text-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #166534;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .simple-page {

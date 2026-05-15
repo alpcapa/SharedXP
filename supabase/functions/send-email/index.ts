@@ -32,7 +32,27 @@ interface HookPayload {
 function confirmationUrl(
   tokenHash: string,
   actionType: string,
+  redirectTo: string | undefined,
 ): string {
+  if (actionType === "recovery") {
+    // Use redirectTo when provided (already validated by Supabase's allow-list).
+    // Fall back to APP_URL/reset-password if absent or malformed.
+    let base = `${APP_URL}/reset-password`;
+    if (redirectTo) {
+      try {
+        new URL(redirectTo); // validate
+        base = redirectTo;
+      } catch {
+        // malformed URL — use APP_URL fallback
+      }
+    }
+
+    const url = new URL(base);
+    url.searchParams.set("token_hash", tokenHash);
+    url.searchParams.set("type", actionType);
+    return url.toString();
+  }
+
   const params = new URLSearchParams({
     token_hash: tokenHash,
     type: actionType,
@@ -174,7 +194,7 @@ serve(async (req: Request): Promise<Response> => {
   const { email_action_type, token_hash, token } = email_data;
 
   const verificationToken = token_hash || token || "";
-  const ctaUrl = confirmationUrl(verificationToken, email_action_type);
+  const ctaUrl = confirmationUrl(verificationToken, email_action_type, email_data.redirect_to);
   const { subject, html } = buildEmail(email_action_type, user.email, ctaUrl);
 
   const resendRes = await fetch("https://api.resend.com/emails", {

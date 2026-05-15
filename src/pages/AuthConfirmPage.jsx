@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { isResetPasswordRedirectUrl } from "../utils/recoveryLink";
 
 export default function AuthConfirmPage() {
   const [searchParams] = useSearchParams();
@@ -10,9 +11,22 @@ export default function AuthConfirmPage() {
   useEffect(() => {
     const tokenHash = searchParams.get("token_hash");
     const type = searchParams.get("type");
+    const redirectTo = searchParams.get("redirect_to");
+    const shouldTreatAsRecovery =
+      type === "recovery" ||
+      isResetPasswordRedirectUrl(redirectTo);
 
     if (!tokenHash || !type) {
       setError("Invalid confirmation link.");
+      return;
+    }
+
+    if (shouldTreatAsRecovery) {
+      const params = new URLSearchParams({
+        token_hash: tokenHash,
+        type: "recovery",
+      });
+      navigate(`/reset-password?${params.toString()}`, { replace: true });
       return;
     }
 

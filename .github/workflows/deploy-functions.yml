@@ -2,7 +2,7 @@ name: Deploy Edge Functions
 
 on:
   push:
-    branches: [main, claude/add-resend-mailing-nh960]
+    branches: [main, claude/add-resend-mailing-nh960, claude/fix-forgot-password-flow-xFLKX]
   workflow_dispatch:
 
 jobs:
@@ -22,5 +22,10 @@ jobs:
 
       - name: Deploy send-email
         run: supabase functions deploy send-email --project-ref bwdkelprrvhztpviiujo --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy forgot-password
+        run: supabase functions deploy forgot-password --project-ref bwdkelprrvhztpviiujo --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

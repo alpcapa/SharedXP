@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 const padStringArray = (arr, n) =>
@@ -435,16 +435,35 @@ export const AuthProvider = ({ children }) => {
 const [currentUser, setCurrentUser] = useState(null);
 const [authLoading, setAuthLoading] = useState(true);
 
+// Tracks whether the current page load is a password-recovery flow.
+// When true, any stored session from a different user is suppressed so it
+// cannot bleed into the reset-password form.
+const inRecoveryMode = useRef(false);
+
 useEffect(() => {
 let mounted = true;
 
+// Detect a recovery URL at mount time before any async auth operations run.
+const isRecoveryUrl = () => {
+  try {
+    if (window.location.pathname === "/reset-password") return true;
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("type") === "recovery") return true;
+    const h = new URLSearchParams(window.location.hash.slice(1));
+    if (h.get("type") === "recovery") return true;
+  } catch { /* ignore */ }
+  return false;
+};
+if (isRecoveryUrl()) inRecoveryMode.current = true;
+
 const loadUser = async (authUser) => {
+  if (inRecoveryMode.current) return;
   try {
     const u = await fetchUserProfile(authUser);
-    if (mounted && u) setCurrentUser(u);
+    if (mounted && u && !inRecoveryMode.current) setCurrentUser(u);
   } catch (e) {
     console.error("[auth] fetchUserProfile failed:", e);
-    if (mounted) {
+    if (mounted && !inRecoveryMode.current) {
       setCurrentUser(
         buildUserObject(
           authUser,
@@ -464,6 +483,10 @@ supabase.auth
   .getSession()
   .then(({ data: { session } }) => {
     if (!mounted) return;
+    if (inRecoveryMode.current) {
+      setAuthLoading(false);
+      return;
+    }
     if (session?.user) {
       loadUser(session.user).finally(() => {
         if (mounted) setAuthLoading(false);
@@ -480,8 +503,25 @@ supabase.auth
 
 const {
   data: { subscription },
-} = supabase.auth.onAuthStateChange((_event, session) => {
+} = supabase.auth.onAuthStateChange((event, session) => {
   if (!mounted) return;
+  if (event === "PASSWORD_RECOVERY") {
+    // Entering recovery mode: clear any existing user from React state so a
+    // different user's stored session cannot show through on the reset form.
+    inRecoveryMode.current = true;
+    setCurrentUser(null);
+    setAuthLoading(false);
+    return;
+  }
+  if (event === "USER_UPDATED" && inRecoveryMode.current) {
+    // Password was just changed inside the recovery flow. Stay in recovery
+    // mode — ResetPasswordPage calls signOut next, which fires SIGNED_OUT and
+    // clears state. Loading the user here would race against that signOut and
+    // leave a stale logged-in user on the success screen.
+    return;
+  }
+  // Leaving recovery mode on SIGNED_OUT or any subsequent auth event.
+  inRecoveryMode.current = false;
   if (session?.user) loadUser(session.user);
   else setCurrentUser(null);
 });
@@ -599,6 +639,53 @@ return { success: true };
 } catch (e) {
 console.error("[auth] onEmailLogin:", e);
 return { success: false, message: "Login failed. Please try again." };
+}
+},
+
+onForgotPassword: async (email) => {
+const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+if (!normalizedEmail) {
+  return { success: false, message: "Please enter your email address." };
+}
+
+const successMsg = "Reset link has been sent to your email. Check spam folder if not received";
+const redirectTo = `${window.location.origin}/reset-password`;
+
+try {
+  // The Edge Function checks if the email exists, generates a recovery link
+  // via admin.generateLink (hashed_token), and sends it via Resend. Passing
+  // the frontend origin means the link works on any deployment without needing
+  // the URL in Supabase's redirect allow-list.
+  const { data, error } = await supabase.functions.invoke("forgot-password", {
+    body: { email: normalizedEmail, redirectTo },
+  });
+
+  const httpStatus = error?.context?.status;
+
+  if (httpStatus === 404) {
+    return { success: false, message: "Sorry, this email does not exist in our database." };
+  }
+
+  // Edge Function succeeded — email was sent by the function.
+  if (!error && data?.success) {
+    return { success: true, message: successMsg };
+  }
+
+  // Edge Function not yet deployed or returned an unexpected error.
+  // Fall back to Supabase's built-in recovery email so the user isn't blocked.
+  console.warn("[auth] forgot-password function unavailable, using built-in fallback:", error ?? data);
+  const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+    normalizedEmail,
+    { redirectTo },
+  );
+  if (resetError) {
+    console.warn("[auth] resetPasswordForEmail fallback failed:", resetError);
+    return { success: false, message: "We couldn't send a reset link right now. Please try again." };
+  }
+  return { success: true, message: successMsg };
+} catch (e) {
+  console.error("[auth] onForgotPassword:", e);
+  return { success: false, message: "We couldn't send a reset link right now. Please try again." };
 }
 },
 
