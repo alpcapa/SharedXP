@@ -437,6 +437,15 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
     return [...new Set([...base, ...ratingPhotos])];
   }, [activeSport, hostData, hostReviews]);
 
+  // All session photos across every sport — used for own-profile host gallery
+  const allHostSessionPhotos = useMemo(() =>
+    [...new Set(
+      hostReviews
+        .filter((r) => Array.isArray(r.photos))
+        .flatMap((r) => r.photos.filter(Boolean))
+    )],
+  [hostReviews]);
+
   // Recommendations — real hosts from Supabase, excluding the profile being viewed
   const { hosts: recommendations } = useHosts({ excludeId: userId });
   const [recsPage, setRecsPage] = useState(0);
@@ -502,8 +511,10 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
 
   const totalHostReviewPages = Math.max(1, Math.ceil(sortedHostReviews.length / REVIEWS_PER_PAGE));
   const visibleHostReviews = sortedHostReviews.slice(hostReviewsPage * REVIEWS_PER_PAGE, (hostReviewsPage + 1) * REVIEWS_PER_PAGE);
-  const totalHostPhotoPages = Math.max(1, Math.ceil(hostGalleryPhotos.length / PHOTOS_PER_PAGE));
-  const visibleHostPhotos = hostGalleryPhotos.slice(hostPhotosPage * PHOTOS_PER_PAGE, (hostPhotosPage + 1) * PHOTOS_PER_PAGE);
+  // Own profile: show all session photos (host + guest); visitor: show sport-filtered gallery
+  const activeHostPhotos = isOwnProfile ? allHostSessionPhotos : hostGalleryPhotos;
+  const totalHostPhotoPages = Math.max(1, Math.ceil(activeHostPhotos.length / PHOTOS_PER_PAGE));
+  const visibleHostPhotos = activeHostPhotos.slice(hostPhotosPage * PHOTOS_PER_PAGE, (hostPhotosPage + 1) * PHOTOS_PER_PAGE);
 
   const formatDate = (v) =>
     new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(
@@ -844,8 +855,8 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
               {/* Host photo gallery */}
               <section className="gallery">
                 <h3>Photo gallery</h3>
-                {hostGalleryPhotos.length === 0 ? (
-                  <p>No photos yet for this sport.</p>
+                {activeHostPhotos.length === 0 ? (
+                  <p>{isOwnProfile ? "No session photos yet." : "No photos yet for this sport."}</p>
                 ) : (
                   <>
                     <div className="gallery-grid">
