@@ -446,8 +446,8 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
     )],
   [hostReviews]);
 
-  // Recommendations — real hosts from Supabase, excluding the profile being viewed
-  const { hosts: recommendations } = useHosts({ excludeId: userId });
+  // Recommendations — include the host being viewed so they appear in their own guest tab
+  const { hosts: recommendations } = useHosts();
   const [recsPage, setRecsPage] = useState(0);
   const totalRecPages = Math.max(1, Math.ceil(recommendations.length / LOCALS_PER_PAGE));
   const visibleRecs = useMemo(
