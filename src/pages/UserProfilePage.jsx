@@ -220,14 +220,9 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
   }, [brHostReviews, currentUser?.hostHistory]);
 
   const locationLine =
-    [String(currentUser?.city ?? "").trim(), String(currentUser?.country ?? "").trim()].filter(Boolean).join(", ") ||
-    "Location unavailable";
+    [String(currentUser?.city ?? "").trim(), String(currentUser?.country ?? "").trim()].filter(Boolean).join(", ");
   const memberSince = getMemberSinceLabel(currentUser);
   const userAge = getProfileAge(currentUser);
-  const languageLine = (Array.isArray(currentUser?.languages) ? currentUser.languages : [])
-    .map((language) => String(language ?? "").trim())
-    .filter(Boolean)
-    .join(", ");
 
   // Merge legacy history photos with booking_requests photos (both roles)
   const galleryPhotos = useMemo(() => {
@@ -300,194 +295,180 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <section className="profile-summary">
-        <div className="profile-summary-header">
-          <div className="profile-summary-top-row">
-            <div>
-              <h1 className="profile-name-with-age">
+        <main className="middle-section simple-page unified-profile-page">
+          <div className="guest-profile-header">
+            {currentUser.photo ? (
+              <img src={currentUser.photo} alt={currentUser.fullName || currentUser.firstName || "User"} className="guest-profile-photo" />
+            ) : (
+              <div className="guest-profile-photo guest-profile-photo-placeholder">
+                {(currentUser.fullName || currentUser.firstName || "U").charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="guest-profile-info">
+              <h1 className="guest-profile-name">
                 {currentUser.fullName || currentUser.firstName || "User"}
-                {userAge != null && (
-                  <span className="profile-name-age" aria-label={`age ${userAge}`}>
-                    ({userAge})
-                  </span>
-                )}
+                {userAge != null && <span className="guest-profile-age"> ({userAge})</span>}
                 {currentRating !== null && (
-                  <span className="profile-rating-inline">
+                  <span className="guest-profile-rating-inline">
                     ⭐ {currentRating}
-                    {currentRatingCount > 0 ? ` (${currentRatingCount})` : ""} · <span className="verified">Verified</span>
+                    {currentRatingCount > 0 && ` (${currentRatingCount})`}
                   </span>
                 )}
               </h1>
-              <p className="profile-location-line">{locationLine}</p>
-              <p className="profile-member-since">Member since {memberSince}</p>
-            </div>
-            <div className="profile-summary-actions">
-              <Link to="/my-profile" className="btn btn-primary">
-                Edit Profile
-              </Link>
-              {currentUser.isHost && (
-                <Link to="/host-settings" className="btn btn-light">
-                  Host Settings
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="profile-summary-body">
-          <div className="profile-summary-photo-column">
-            <img src={currentUser.photo} alt={currentUser.fullName || currentUser.firstName || "User"} className="profile-main-image" />
-            <div className="profile-summary-meta">
-              <p><strong>Language:</strong> {languageLine || "Not specified"}</p>
-              <p><strong>Sports:</strong> {sportsSelection.length ? sportsSelection.join(", ") : "Not specified"}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Role tabs (only shown when user is a host) ── */}
-      {currentUser.isHost && (
-        <div className="host-tab-bar unified-profile-tabs">
-          <button
-            type="button"
-            className={`host-tab-btn${activeTab === "guest" ? " active" : ""}`}
-            onClick={() => setActiveTab("guest")}
-          >
-            As Guest
-            {guestAvgRating !== null && (
-              <span className="unified-profile-tab-rating">⭐ {guestAvgRating}</span>
-            )}
-          </button>
-          <button
-            type="button"
-            className={`host-tab-btn${activeTab === "host" ? " active" : ""}`}
-            onClick={() => setActiveTab("host")}
-          >
-            As Host
-            {hostAvgRating !== null && (
-              <span className="unified-profile-tab-rating">⭐ {hostAvgRating}</span>
-            )}
-          </button>
-        </div>
-      )}
-
-      {/* ── As Guest tab ── */}
-      {activeTab === "guest" && (
-        <>
-          <section className="gallery">
-            <h3>Photo gallery</h3>
-            {galleryPhotos.length > 0 ? (
-              <>
-              <div className="gallery-grid">
-                {visibleGalleryPhotos.map((photo) => (
-                  <img key={photo} src={photo} alt={`${currentUser.fullName || currentUser.firstName || "User"} history gallery`} />
-                ))}
+              {locationLine && <p className="guest-profile-location">{locationLine}</p>}
+              <p className="guest-profile-member-since">Member since {memberSince}</p>
+              <div className="unified-profile-own-actions">
+                <Link to="/my-profile" className="btn btn-primary">Edit Profile</Link>
+                {currentUser.isHost && <Link to="/host-settings" className="btn btn-light">Host Settings</Link>}
               </div>
-              {totalPhotoPages > 1 && (
+            </div>
+          </div>
+
+          {/* ── Role tabs (only shown when user is a host) ── */}
+          {currentUser.isHost && (
+            <div className="host-tab-bar unified-profile-tabs">
+              <button
+                type="button"
+                className={`host-tab-btn${activeTab === "guest" ? " active" : ""}`}
+                onClick={() => setActiveTab("guest")}
+              >
+                As Guest
+                {guestAvgRating !== null && (
+                  <span className="unified-profile-tab-rating">⭐ {guestAvgRating}</span>
+                )}
+              </button>
+              <button
+                type="button"
+                className={`host-tab-btn${activeTab === "host" ? " active" : ""}`}
+                onClick={() => setActiveTab("host")}
+              >
+                As Host
+                {hostAvgRating !== null && (
+                  <span className="unified-profile-tab-rating">⭐ {hostAvgRating}</span>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* ── As Guest tab ── */}
+          {activeTab === "guest" && (
+            <>
+              <section className="gallery">
+                <h3>Photo gallery</h3>
+                {galleryPhotos.length > 0 ? (
+                  <>
+                    <div className="gallery-grid">
+                      {visibleGalleryPhotos.map((photo) => (
+                        <img key={photo} src={photo} alt={`${currentUser.fullName || currentUser.firstName || "User"} history gallery`} />
+                      ))}
+                    </div>
+                    {totalPhotoPages > 1 && (
+                      <div className="locals-nav-row">
+                        <button
+                          type="button"
+                          className="locals-nav"
+                          aria-label="Previous photos"
+                          onClick={() => setPhotosPage((page) => Math.max(page - 1, 0))}
+                          disabled={photosPage === 0}
+                        >
+                          ‹
+                        </button>
+                        <span className="locals-nav-info">{photosPage + 1} / {totalPhotoPages}</span>
+                        <button
+                          type="button"
+                          className="locals-nav"
+                          aria-label="Next photos"
+                          onClick={() => setPhotosPage((page) => Math.min(page + 1, totalPhotoPages - 1))}
+                          disabled={photosPage >= totalPhotoPages - 1}
+                        >
+                          ›
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p>No history photos yet.</p>
+                )}
+              </section>
+
+              <section className="reviews">
+                <h3>Reviews from hosts</h3>
+                {overallHostReviews.length > 0 ? (
+                  overallHostReviews.map((review) => (
+                    <article key={review.id} className="review-card">
+                      <p>
+                        <strong>{review.hostName}</strong>
+                        {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
+                      </p>
+                      {review.review && <p>{review.review}</p>}
+                    </article>
+                  ))
+                ) : (
+                  <p>No reviews from hosts yet.</p>
+                )}
+              </section>
+            </>
+          )}
+
+          {/* ── As Host tab ── */}
+          {activeTab === "host" && currentUser.isHost && (
+            <section className="reviews">
+              <h3>Reviews from guests</h3>
+              {overallGuestReviews.length > 0 ? (
+                overallGuestReviews.map((review) => (
+                  <article key={review.id} className="review-card">
+                    <p>
+                      <strong>{review.guestName}</strong>
+                      {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
+                    </p>
+                    {review.review && <p>{review.review}</p>}
+                  </article>
+                ))
+              ) : (
+                <p>No reviews from guests yet.</p>
+              )}
+            </section>
+          )}
+
+          <section className="recommendations">
+            <h3>More hosts you might like</h3>
+            {hostRecommendations.length > 0 ? (
+              <div className="locals-grid-wrap">
+                <div className="locals-grid">
+                  {visibleRecommendations.map((recommendation) => (
+                    <BuddyCard key={recommendation.id} buddy={recommendation} />
+                  ))}
+                </div>
                 <div className="locals-nav-row">
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Previous photos"
-                    onClick={() => setPhotosPage((page) => Math.max(page - 1, 0))}
-                    disabled={photosPage === 0}
+                    aria-label="Show previous 4 hosts"
+                    onClick={() => setRecommendationsPage((page) => Math.max(page - 1, 0))}
+                    disabled={recommendationsPage === 0}
                   >
                     ‹
                   </button>
-                  <span className="locals-nav-info">{photosPage + 1} / {totalPhotoPages}</span>
                   <button
                     type="button"
                     className="locals-nav"
-                    aria-label="Next photos"
-                    onClick={() => setPhotosPage((page) => Math.min(page + 1, totalPhotoPages - 1))}
-                    disabled={photosPage >= totalPhotoPages - 1}
+                    aria-label="Show next 4 hosts"
+                    onClick={() =>
+                      setRecommendationsPage((page) => Math.min(page + 1, totalRecommendationPages - 1))
+                    }
+                    disabled={recommendationsPage >= totalRecommendationPages - 1}
                   >
                     ›
                   </button>
                 </div>
-              )}
-              </>
+              </div>
             ) : (
-              <p>No history photos yet.</p>
+              <p>No hosts match your selected sports yet.</p>
             )}
           </section>
+        </main>
 
-          <section className="reviews">
-            <h3>Reviews from hosts</h3>
-            {overallHostReviews.length > 0 ? (
-              overallHostReviews.map((review) => (
-                <article key={review.id} className="review-card">
-                  <p>
-                    <strong>{review.hostName}</strong>
-                    {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
-                  </p>
-                  {review.review && <p>{review.review}</p>}
-                </article>
-              ))
-            ) : (
-              <p>No reviews from hosts yet.</p>
-            )}
-          </section>
-        </>
-      )}
-
-      {/* ── As Host tab ── */}
-      {activeTab === "host" && currentUser.isHost && (
-        <section className="reviews">
-          <h3>Reviews from guests</h3>
-          {overallGuestReviews.length > 0 ? (
-            overallGuestReviews.map((review) => (
-              <article key={review.id} className="review-card">
-                <p>
-                  <strong>{review.guestName}</strong>
-                  {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
-                </p>
-                {review.review && <p>{review.review}</p>}
-              </article>
-            ))
-          ) : (
-            <p>No reviews from guests yet.</p>
-          )}
-        </section>
-      )}
-
-      <section className="recommendations">
-        <h3>More hosts you might like</h3>
-        {hostRecommendations.length > 0 ? (
-          <div className="locals-grid-wrap">
-            <div className="locals-grid">
-              {visibleRecommendations.map((recommendation) => (
-                <BuddyCard key={recommendation.id} buddy={recommendation} />
-              ))}
-            </div>
-            <div className="locals-nav-row">
-              <button
-                type="button"
-                className="locals-nav"
-                aria-label="Show previous 4 hosts"
-                onClick={() => setRecommendationsPage((page) => Math.max(page - 1, 0))}
-                disabled={recommendationsPage === 0}
-              >
-                ‹
-              </button>
-              <button
-                type="button"
-                className="locals-nav"
-                aria-label="Show next 4 hosts"
-                onClick={() =>
-                  setRecommendationsPage((page) => Math.min(page + 1, totalRecommendationPages - 1))
-                }
-                disabled={recommendationsPage >= totalRecommendationPages - 1}
-              >
-                ›
-              </button>
-            </div>
-          </div>
-        ) : (
-          <p>No hosts match your selected sports yet.</p>
-        )}
-      </section>
-
-      <SiteFooter />
+        <SiteFooter />
       </div>
     </div>
   );
