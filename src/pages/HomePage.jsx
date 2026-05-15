@@ -53,15 +53,15 @@ const LockIcon = () => (
     fill="none"
     aria-hidden="true"
   >
-    <rect x="12" y="34" width="48" height="30" rx="7" stroke="#6ca43b" strokeWidth="3" />
+    <rect x="12" y="34" width="48" height="30" rx="7" stroke="#96c93d" strokeWidth="3" />
     <path
       d="M24 34V24a12 12 0 0124 0v10"
-      stroke="#6ca43b"
+      stroke="#96c93d"
       strokeWidth="3"
       strokeLinecap="round"
     />
-    <circle cx="36" cy="49" r="4" fill="#6ca43b" />
-    <line x1="36" y1="53" x2="36" y2="58" stroke="#6ca43b" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="36" cy="49" r="4" fill="#96c93d" />
+    <line x1="36" y1="53" x2="36" y2="58" stroke="#96c93d" strokeWidth="3" strokeLinecap="round" />
   </svg>
 );
 
