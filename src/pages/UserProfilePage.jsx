@@ -80,6 +80,7 @@ const getHistoryGalleryPhotos = (historyItems) => {
 };
 
 const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
+  const [activeTab, setActiveTab] = useState("guest");
   const [recommendationsPage, setRecommendationsPage] = useState(0);
   const [photosPage, setPhotosPage] = useState(0);
   // Reviews/photos received as a guest (host rated the user)
@@ -218,13 +219,6 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
     return merged;
   }, [brHostReviews, currentUser?.hostHistory]);
 
-  const hostRatings = overallHostReviews
-    .map((review) => Number(review.rating))
-    .filter((rating) => Number.isFinite(rating) && rating > 0);
-  const averageRating =
-    hostRatings.length > 0
-      ? (hostRatings.reduce((sum, rating) => sum + rating, 0) / hostRatings.length).toFixed(1)
-      : "0.0";
   const locationLine =
     [String(currentUser?.city ?? "").trim(), String(currentUser?.country ?? "").trim()].filter(Boolean).join(", ") ||
     "Location unavailable";
@@ -287,6 +281,18 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
     );
   }
 
+  const guestAvgRating =
+    overallHostReviews.length > 0
+      ? (overallHostReviews.reduce((s, r) => s + Number(r.rating), 0) / overallHostReviews.length).toFixed(1)
+      : null;
+  const hostAvgRating =
+    overallGuestReviews.length > 0
+      ? (overallGuestReviews.reduce((s, r) => s + Number(r.rating), 0) / overallGuestReviews.length).toFixed(1)
+      : null;
+
+  const currentRating = activeTab === "host" ? hostAvgRating : guestAvgRating;
+  const currentRatingCount = activeTab === "host" ? overallGuestReviews.length : overallHostReviews.length;
+
   return (
     <div className="home-page">
       <div className="middle-page-frame">
@@ -305,10 +311,12 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
                     ({userAge})
                   </span>
                 )}
-                <span className="profile-rating-inline">
-                  ⭐ {averageRating}
-                  {hostRatings.length > 0 ? ` (${hostRatings.length})` : ""} · <span className="verified">Verified</span>
-                </span>
+                {currentRating !== null && (
+                  <span className="profile-rating-inline">
+                    ⭐ {currentRating}
+                    {currentRatingCount > 0 ? ` (${currentRatingCount})` : ""} · <span className="verified">Verified</span>
+                  </span>
+                )}
               </h1>
               <p className="profile-location-line">{locationLine}</p>
               <p className="profile-member-since">Member since {memberSince}</p>
@@ -318,8 +326,8 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
                 Edit Profile
               </Link>
               {currentUser.isHost && (
-                <Link to={`/buddy/${currentUser.id}`} className="btn btn-primary">
-                  My Host Page
+                <Link to="/host-settings" className="btn btn-light">
+                  Host Settings
                 </Link>
               )}
             </div>
@@ -336,62 +344,94 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
         </div>
       </section>
 
-      <section className="gallery">
-        <h3>Photo gallery</h3>
-        {galleryPhotos.length > 0 ? (
-          <>
-          <div className="gallery-grid">
-            {visibleGalleryPhotos.map((photo) => (
-              <img key={photo} src={photo} alt={`${currentUser.fullName || currentUser.firstName || "User"} history gallery`} />
-            ))}
-          </div>
-          {totalPhotoPages > 1 && (
-            <div className="locals-nav-row">
-              <button
-                type="button"
-                className="locals-nav"
-                aria-label="Previous photos"
-                onClick={() => setPhotosPage((page) => Math.max(page - 1, 0))}
-                disabled={photosPage === 0}
-              >
-                ‹
-              </button>
-              <span className="locals-nav-info">{photosPage + 1} / {totalPhotoPages}</span>
-              <button
-                type="button"
-                className="locals-nav"
-                aria-label="Next photos"
-                onClick={() => setPhotosPage((page) => Math.min(page + 1, totalPhotoPages - 1))}
-                disabled={photosPage >= totalPhotoPages - 1}
-              >
-                ›
-              </button>
-            </div>
-          )}
-          </>
-        ) : (
-          <p>No history photos yet.</p>
-        )}
-      </section>
-
-      <section className="reviews">
-        <h3>Reviews from hosts</h3>
-        {overallHostReviews.length > 0 ? (
-          overallHostReviews.map((review) => (
-            <article key={review.id} className="review-card">
-              <p>
-                <strong>{review.hostName}</strong>
-                {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
-              </p>
-              {review.review && <p>{review.review}</p>}
-            </article>
-          ))
-        ) : (
-          <p>No reviews from hosts yet.</p>
-        )}
-      </section>
-
+      {/* ── Role tabs (only shown when user is a host) ── */}
       {currentUser.isHost && (
+        <div className="host-tab-bar unified-profile-tabs">
+          <button
+            type="button"
+            className={`host-tab-btn${activeTab === "guest" ? " active" : ""}`}
+            onClick={() => setActiveTab("guest")}
+          >
+            As Guest
+            {guestAvgRating !== null && (
+              <span className="unified-profile-tab-rating">⭐ {guestAvgRating}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={`host-tab-btn${activeTab === "host" ? " active" : ""}`}
+            onClick={() => setActiveTab("host")}
+          >
+            As Host
+            {hostAvgRating !== null && (
+              <span className="unified-profile-tab-rating">⭐ {hostAvgRating}</span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* ── As Guest tab ── */}
+      {activeTab === "guest" && (
+        <>
+          <section className="gallery">
+            <h3>Photo gallery</h3>
+            {galleryPhotos.length > 0 ? (
+              <>
+              <div className="gallery-grid">
+                {visibleGalleryPhotos.map((photo) => (
+                  <img key={photo} src={photo} alt={`${currentUser.fullName || currentUser.firstName || "User"} history gallery`} />
+                ))}
+              </div>
+              {totalPhotoPages > 1 && (
+                <div className="locals-nav-row">
+                  <button
+                    type="button"
+                    className="locals-nav"
+                    aria-label="Previous photos"
+                    onClick={() => setPhotosPage((page) => Math.max(page - 1, 0))}
+                    disabled={photosPage === 0}
+                  >
+                    ‹
+                  </button>
+                  <span className="locals-nav-info">{photosPage + 1} / {totalPhotoPages}</span>
+                  <button
+                    type="button"
+                    className="locals-nav"
+                    aria-label="Next photos"
+                    onClick={() => setPhotosPage((page) => Math.min(page + 1, totalPhotoPages - 1))}
+                    disabled={photosPage >= totalPhotoPages - 1}
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
+              </>
+            ) : (
+              <p>No history photos yet.</p>
+            )}
+          </section>
+
+          <section className="reviews">
+            <h3>Reviews from hosts</h3>
+            {overallHostReviews.length > 0 ? (
+              overallHostReviews.map((review) => (
+                <article key={review.id} className="review-card">
+                  <p>
+                    <strong>{review.hostName}</strong>
+                    {review.eventName ? ` (${review.eventName})` : ""} · ⭐ {review.rating || "Not rated"}
+                  </p>
+                  {review.review && <p>{review.review}</p>}
+                </article>
+              ))
+            ) : (
+              <p>No reviews from hosts yet.</p>
+            )}
+          </section>
+        </>
+      )}
+
+      {/* ── As Host tab ── */}
+      {activeTab === "host" && currentUser.isHost && (
         <section className="reviews">
           <h3>Reviews from guests</h3>
           {overallGuestReviews.length > 0 ? (

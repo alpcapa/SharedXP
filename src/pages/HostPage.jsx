@@ -225,7 +225,7 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
               <Link to="/user-profile" className="btn btn-primary">
                 My Profile
               </Link>
-              <Link to={`/buddy/${currentUser.id}`} className="btn btn-primary">
+              <Link to={`/user/${currentUser.id}`} className="btn btn-primary">
                 My Host Page
               </Link>
             </div>

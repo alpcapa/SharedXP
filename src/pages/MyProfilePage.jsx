@@ -455,7 +455,7 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
                 My Profile
               </Link>
               {currentUser.isHost && (
-                <Link to={`/buddy/${currentUser.id}`} className="btn btn-primary">
+                <Link to={`/user/${currentUser.id}`} className="btn btn-primary">
                   My Host Page
                 </Link>
               )}

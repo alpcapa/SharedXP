@@ -189,9 +189,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
                 const postRating = Number(post.rating ?? 0);
                 const profilePath =
                   post.posterId && String(post.posterId).trim() !== ""
-                    ? post.role === "hosted"
-                      ? `/buddy/${post.posterId}`
-                      : `/user/${post.posterId}`
+                    ? `/user/${post.posterId}`
                     : null;
                 const avatar = post.hostPhoto ? (
                   <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
@@ -298,7 +296,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
                    <div className="field-card-footer">
                      {post.hostId != null && String(post.hostId).trim() !== "" && (
                        <Link
-                         to={`/buddy/${post.hostId}`}
+                         to={`/user/${post.hostId}`}
                          className="field-view-host-link"
                        >
                          View host profile →
