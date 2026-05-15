@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { buddies } from "../data/buddies";
+import { useHosts } from "../hooks/useHosts";
 import { supabase } from "../lib/supabase";
 import { getDateKey } from "../utils/date";
 import { getAgeFromBirthday } from "../utils/profileAge";
@@ -162,11 +162,6 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const staticBuddy = useMemo(
-    () => buddies.find((item) => String(item.id) === userId) ?? null,
-    [userId]
-  );
-
   // ── State ──────────────────────────────────────────────────────────────────
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -198,34 +193,9 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
   const [submitError, setSubmitError] = useState("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  // ── Static buddy (legacy numeric IDs) ─────────────────────────────────────
-  useEffect(() => {
-    if (!staticBuddy) return;
-    const p = {
-      id: staticBuddy.id,
-      full_name: staticBuddy.name ?? staticBuddy.fullName ?? "",
-      photo_url: staticBuddy.image ?? "",
-      city: staticBuddy.city ?? String(staticBuddy.location ?? "").split(",")[0]?.trim() ?? "",
-      country: staticBuddy.country ?? String(staticBuddy.location ?? "").split(",")[1]?.trim() ?? "",
-      is_host: true,
-      signed_up_at: null,
-      birthday: null,
-    };
-    setProfile(p);
-    setHostData(staticBuddy);
-    const reviews = Array.isArray(staticBuddy.reviews)
-      ? staticBuddy.reviews.map((r) => ({ ...r, author: r.author ?? r.name ?? "Guest", overall: r.overall ?? r.rating }))
-      : [];
-    setHostReviews(reviews);
-    setGuestReviews([]);
-    setGuestPhotos([]);
-    setActiveTab("host");
-    setLoading(false);
-  }, [staticBuddy]);
-
   // ── Supabase fetch ──────────────────────────────────────────────────────────
   useEffect(() => {
-    if (staticBuddy || !userId) return;
+    if (!userId) return;
     setLoading(true);
     setProfile(null);
     setGuestReviews([]);
@@ -389,7 +359,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
     });
 
     return () => { cancelled = true; };
-  }, [userId, staticBuddy]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset booking state when switching sports
   useEffect(() => {
@@ -398,24 +368,10 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
   }, [selectedSportIndex]);
 
   // ── Derived: host booking engine ────────────────────────────────────────────
-  const hostSports = useMemo(() => {
-    if (!hostData) return [];
-    if (Array.isArray(hostData.sports) && hostData.sports.length > 0) return hostData.sports;
-    // Static buddy fallback
-    return [{
-      sport: hostData.sport ?? "",
-      level: hostData.level ?? "",
-      description: hostData.description ?? hostData.bio ?? "",
-      about: hostData.about ?? "",
-      equipmentAvailable: hostData.equipmentAvailable ?? hostData.bikeAvailable ?? false,
-      pricing: hostData.price ?? "",
-      pricingCurrency: "EUR",
-      priceUnit: hostData.priceUnit ?? "per session",
-      availableDates: generateAvailableDates([]),
-      availableTimes: generateTimeSlots("09:00", "18:00"),
-      images: Array.isArray(hostData.gallery) ? hostData.gallery : [],
-    }];
-  }, [hostData]);
+  const hostSports = useMemo(
+    () => (hostData && Array.isArray(hostData.sports) ? hostData.sports : []),
+    [hostData]
+  );
 
   const activeSport = hostSports[selectedSportIndex] ?? hostSports[0] ?? {};
   const availableDates = activeSport.availableDates ?? [];
@@ -478,11 +434,8 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
     return [...new Set([...base, ...ratingPhotos])];
   }, [activeSport, hostData, hostReviews]);
 
-  // Recommendations (same sport, excluding this user)
-  const recommendations = useMemo(
-    () => buddies.filter((b) => String(b.id) !== userId && !b.paused),
-    [userId]
-  );
+  // Recommendations — real hosts from Supabase, excluding the profile being viewed
+  const { hosts: recommendations } = useHosts({ excludeId: userId });
   const [recsPage, setRecsPage] = useState(0);
   const totalRecPages = Math.max(1, Math.ceil(recommendations.length / LOCALS_PER_PAGE));
   const visibleRecs = useMemo(
