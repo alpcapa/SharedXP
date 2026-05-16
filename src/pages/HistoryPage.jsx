@@ -437,7 +437,7 @@ const HistoryPage = ({
               { value: "hosted", label: `Hosted${(completedHosted.length + allItems.filter((i) => i.role === "hosted").length) ? ` (${completedHosted.length + allItems.filter((i) => i.role === "hosted").length})` : ""}` },
               { value: "attended", label: `Attended${(completedAttended.length + allItems.filter((i) => i.role === "attended").length) ? ` (${completedAttended.length + allItems.filter((i) => i.role === "attended").length})` : ""}` },
               { value: "cancelled", label: `Cancelled${cancelledBookingRequests.length ? ` (${cancelledBookingRequests.length})` : ""}` },
-              { value: "disputes", label: `Disputes${disputedBookingRequests.length ? ` (${disputedBookingRequests.length})` : ""}` },
+              { value: "disputes", label: `Disputed${disputedBookingRequests.length ? ` (${disputedBookingRequests.length})` : ""}` },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -500,7 +500,7 @@ const HistoryPage = ({
                 ))}
               </div>
             ) : (
-              <p>No cancelled or declined bookings.</p>
+              <p>No cancelled experiences yet.</p>
             )
           ) : selectedRole === "disputes" ? (
             requestsLoading ? (
@@ -525,7 +525,7 @@ const HistoryPage = ({
                 ))}
               </div>
             ) : (
-              <p>No disputes.</p>
+              <p>No disputed experiences yet.</p>
             )
           ) : selectedRole === "pending" ? (
             requestsLoading ? (
@@ -548,7 +548,7 @@ const HistoryPage = ({
                 ))}
               </div>
             ) : (
-              <p>No active bookings. <Link to="/locals">Find a host</Link> to get started.</p>
+              <p>No ongoing experiences yet.</p>
             )
           ) : (
             <>
@@ -625,13 +625,15 @@ const HistoryPage = ({
                   ))}
                 </div>
               ) : selectedRole === "all" && (activeBookingRequests.length > 0 || completedBookingRequests.length > 0) ? null : (
-                completedHosted.length === 0 && completedAttended.length === 0 && (
-                  <p>
-                    {allItems.length
-                      ? "No completed experiences for this sport yet."
-                      : "No completed experiences yet."}
-                  </p>
-                )
+                (() => {
+                  if (selectedRole === "hosted")
+                    return completedHosted.length === 0 ? <p>No hosted experiences yet.</p> : null;
+                  if (selectedRole === "attended")
+                    return completedAttended.length === 0 ? <p>No attended experiences yet.</p> : null;
+                  return completedHosted.length === 0 && completedAttended.length === 0 ? (
+                    <p>{allItems.length ? "No experiences for this sport yet." : "No experiences yet."}</p>
+                  ) : null;
+                })()
               )}
             </>
           )}
