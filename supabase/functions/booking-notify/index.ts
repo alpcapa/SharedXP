@@ -656,13 +656,19 @@ serve(async (req: Request): Promise<Response> => {
       }
       case "dispute_resolved_refund": {
         const e = buildDisputeResolvedRefund(booking, requester);
-        await sendEmail(e.to, e.subject, e.html);
+        await Promise.all([
+          sendEmail(e.to, e.subject, e.html),
+          sendEmail(CS_EMAIL, `[Dispute resolved — refunded] ${e.subject}`, e.html),
+        ]);
         break;
       }
       case "dispute_resolved_paid_host": {
         if (!invoice) break;
         const emails = buildDisputeResolvedPaidHost(booking, requester, host, invoice);
-        await Promise.all(emails.map((e) => sendEmail(e.to, e.subject, e.html)));
+        await Promise.all([
+          ...emails.map((e) => sendEmail(e.to, e.subject, e.html)),
+          sendEmail(CS_EMAIL, `[Dispute resolved — paid host] ${emails[0].subject}`, emails[0].html),
+        ]);
         break;
       }
       default:
