@@ -531,7 +531,7 @@ const PendingBookingCard = ({
         {isRequester && request.status === "accepted" && (
           <div className="pending-card-actions">
             <Link to={`/payment/${request.id}`} className="find-button pending-pay-btn">
-              Proceed to Payment →
+              Proceed to Payment
             </Link>
             <button
               type="button"
