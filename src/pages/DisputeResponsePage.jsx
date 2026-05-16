@@ -153,7 +153,7 @@ const DisputeResponsePage = ({ currentUser, onLogout }) => {
             </div>
 
             <div className="dispute-guest-account">
-              <h2>{requesterName}'s account</h2>
+              <h2>{requesterName}'s response</h2>
               <blockquote className="dispute-quote">
                 "{dispute.requester_explanation}"
               </blockquote>

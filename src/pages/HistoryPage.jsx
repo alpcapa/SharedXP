@@ -94,6 +94,9 @@ const HistoryPage = ({
   const cancelledBookingRequests = bookingRequests.filter((r) =>
     ["cancelled", "declined", "resolved_refunded", "resolved_paid_host"].includes(r.status)
   );
+  const disputedBookingRequests = bookingRequests.filter((r) =>
+    ["disputed", "resolved_refunded", "resolved_paid_host"].includes(r.status)
+  );
 
   // Sync tab from URL (e.g. after booking submission redirect)
   useEffect(() => {
@@ -434,6 +437,7 @@ const HistoryPage = ({
               { value: "hosted", label: `Hosted${(completedHosted.length + allItems.filter((i) => i.role === "hosted").length) ? ` (${completedHosted.length + allItems.filter((i) => i.role === "hosted").length})` : ""}` },
               { value: "attended", label: `Attended${(completedAttended.length + allItems.filter((i) => i.role === "attended").length) ? ` (${completedAttended.length + allItems.filter((i) => i.role === "attended").length})` : ""}` },
               { value: "cancelled", label: `Cancelled${cancelledBookingRequests.length ? ` (${cancelledBookingRequests.length})` : ""}` },
+              { value: "disputes", label: `Disputes${disputedBookingRequests.length ? ` (${disputedBookingRequests.length})` : ""}` },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -497,6 +501,31 @@ const HistoryPage = ({
               </div>
             ) : (
               <p>No cancelled or declined bookings.</p>
+            )
+          ) : selectedRole === "disputes" ? (
+            requestsLoading ? (
+              <p className="history-loading">Loading…</p>
+            ) : disputedBookingRequests.length ? (
+              <div className="history-list">
+                {disputedBookingRequests.map((req) => (
+                  <PendingBookingCard
+                    key={req.id}
+                    request={req}
+                    currentUserId={currentUser.id}
+                    unreadCount={unreadCounts[req.id] ?? 0}
+                    onAccept={acceptRequest}
+                    onDecline={declineRequest}
+                    onCancel={cancelRequest}
+                    onConfirmExperience={confirmExperience}
+                    onOpenDispute={openDispute}
+                    onSubmitRating={submitRating}
+                    currentUser={currentUser}
+                    editRatingRequestId={queryEditRating}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p>No disputes.</p>
             )
           ) : selectedRole === "pending" ? (
             requestsLoading ? (
