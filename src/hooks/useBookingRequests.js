@@ -40,10 +40,21 @@ export const useBookingRequests = (currentUser) => {
         for (const p of profiles ?? []) profileMap[p.id] = p;
       }
 
+      const disputedIds = rows.filter((r) => r.status === "disputed").map((r) => r.id);
+      let disputeMap = {};
+      if (disputedIds.length > 0) {
+        const { data: disputes } = await supabase
+          .from("disputes")
+          .select("*")
+          .in("booking_request_id", disputedIds);
+        for (const d of disputes ?? []) disputeMap[d.booking_request_id] = d;
+      }
+
       const enrichedRows = rows.map((r) => ({
         ...r,
         host_profile: profileMap[r.host_id] ?? null,
         requester_profile: profileMap[r.requester_id] ?? null,
+        dispute: disputeMap[r.id] ?? null,
       }));
 
       setRequests(enrichedRows);

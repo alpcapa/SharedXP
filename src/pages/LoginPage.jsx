@@ -19,7 +19,8 @@ const LoginPage = ({
   const resetSuccessMessage =
     "Reset link has been sent to your email. Check spam folder if not received";
 
-  const destination = location.state?.from?.pathname ?? "/";
+  const storedRedirect = sessionStorage.getItem("postAuthRedirect");
+  const destination = storedRedirect || location.state?.from?.pathname || "/";
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -67,6 +68,7 @@ const LoginPage = ({
     }
 
     setErrorMessage("");
+    sessionStorage.removeItem("postAuthRedirect");
     navigate(destination);
   };
 
