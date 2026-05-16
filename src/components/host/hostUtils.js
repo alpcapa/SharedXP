@@ -93,6 +93,7 @@ export const getInitialHostProfile = (user) => {
   return {
     pauseHosting: existing.pauseHosting ?? false,
     bankDetailsComplete: existing.bankDetailsComplete ?? false,
+    cancellationPolicy: existing.cancellationPolicy ?? "flexible",
     country: existing.country ?? user?.country ?? "",
     city:
       existing.city ?? user?.city ?? inferCityFromAddress(user?.address) ?? "",

@@ -44,6 +44,7 @@ latitude: hostProfile.latitude ?? null,
 longitude: hostProfile.longitude ?? null,
 pauseHosting: hostProfile.pause_hosting || false,
 bankDetailsComplete: hostProfile.bank_details_complete || false,
+cancellationPolicy: hostProfile.cancellation_policy || "flexible",
 sports: (hostSports || []).map((hs) => ({
 sport: hs.sport || "",
 description: hs.description || "",
@@ -768,6 +769,7 @@ const { data: savedHostProfile, error: hpError } = await supabase
       account_number: hostProfile.stripe?.accountNumber || "",
       routing_number: hostProfile.stripe?.routingNumber || "",
       payout_currency: hostProfile.stripe?.payoutCurrency || "EUR",
+      cancellation_policy: hostProfile.cancellationPolicy || "flexible",
       agree_terms: hostProfile.consents?.agreeTermsAndConditions || false,
       agree_promotions:
         hostProfile.consents?.agreePromotionsAndMarketingEmails || false,

@@ -5,6 +5,7 @@ import DeclineConfirmationModal from "./DeclineConfirmationModal";
 import ShareToFieldModal from "./ShareToFieldModal";
 import { HOST_RATING_FIELDS, clampRating, FALLBACK_EVENT_PHOTO } from "../../utils/historyItem";
 import { deleteFieldPost, lookupFieldPost, saveFieldPost } from "../../utils/fieldPosts";
+import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../../utils/cancellationPolicy";
 
 const CURRENCY_SYMBOLS = {
   USD: "$", EUR: "€", GBP: "£", CAD: "C$",
@@ -377,9 +378,14 @@ const PendingBookingCard = ({
   };
 
   const handleCancel = async () => {
-    if (!confirm("Cancel this booking request?")) return;
+    const policy = request.cancellation_policy || "flexible";
+    const refundPct = computeRefundPct(policy, request.requested_date, request.requested_time);
+    const refundText = refundLabel(refundPct);
+    const policyLabel = CANCELLATION_POLICIES[policy]?.label ?? "Flexible";
+    const message = `Cancel this booking?\n\nCancellation policy: ${policyLabel}\nRefund: ${refundText}`;
+    if (!confirm(message)) return;
     setActionLoading(true);
-    await onCancel(request.id);
+    await onCancel(request.id, request);
     setActionLoading(false);
   };
 
@@ -420,6 +426,14 @@ const PendingBookingCard = ({
               <>Hosted by <ProfileLink profile={request.host_profile} userId={request.host_id} name={hostName} /></>
             )}
           </p>
+          {request.cancellation_policy && ["pending", "accepted", "in_progress"].includes(request.status) && (
+            <p className="pending-card-cancel-policy">
+              <span className={`cancel-policy-badge cancel-policy-badge--${CANCELLATION_POLICIES[request.cancellation_policy]?.color ?? "green"}`}>
+                {CANCELLATION_POLICIES[request.cancellation_policy]?.label ?? "Flexible"}
+              </span>
+              {" "}{CANCELLATION_POLICIES[request.cancellation_policy]?.tagline}
+            </p>
+          )}
         </div>
 
         {/* In-progress countdown + actions */}

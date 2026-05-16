@@ -10,6 +10,7 @@ import {
   createEmptySportConfig,
   getCountryFlag,
 } from "./hostUtils";
+import { CANCELLATION_POLICIES } from "../../utils/cancellationPolicy";
 
 const HostSportTab = ({
   draft,
@@ -552,6 +553,39 @@ const HostSportTab = ({
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ── Cancellation policy ───────────────────────────────────────── */}
+      <section className="host-onboarding-card">
+        <h2>Cancellation Policy</h2>
+        <p className="host-form-hint">
+          This policy applies to all your sport sessions and is shown to guests before they book.
+        </p>
+        <div className="cancel-policy-options">
+          {Object.entries(CANCELLATION_POLICIES).map(([key, tier]) => (
+            <label
+              key={key}
+              className={`cancel-policy-option${draft.cancellationPolicy === key ? " selected" : ""}`}
+            >
+              <input
+                type="radio"
+                name="cancellationPolicy"
+                value={key}
+                checked={draft.cancellationPolicy === key}
+                onChange={() => setDraft((prev) => ({ ...prev, cancellationPolicy: key }))}
+              />
+              <span className={`cancel-policy-badge cancel-policy-badge--${tier.color}`}>
+                {tier.label}
+              </span>
+              <span className="cancel-policy-tagline">{tier.tagline}</span>
+              <ul className="cancel-policy-rules">
+                {tier.rules.map((rule, i) => (
+                  <li key={i}>{rule.description}</li>
+                ))}
+              </ul>
+            </label>
+          ))}
         </div>
       </section>
 
