@@ -84,6 +84,7 @@ const shapeSupabaseHost = (data) => {
       paused: false,
       equipmentAvailable: hs.equipment_available || false,
       equipmentDetails: hs.equipment_details || "",
+      cancellationPolicy: hs.cancellation_policy || "flexible",
       availability: {
         days: hs.availability_days || [],
         startTime: hs.availability_start_time || "09:00",
@@ -113,7 +114,6 @@ const shapeSupabaseHost = (data) => {
     city: hp.city || "",
     country: hp.country || "",
     paused: hp.pause_hosting || false,
-    cancellationPolicy: hp.cancellation_policy || "flexible",
     sports,
     languages,
   };
@@ -281,7 +281,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                ),
                host_sports(
                  id, sport, description, about, pricing, pricing_currency, level, paused,
-                 equipment_available, equipment_details, availability_days,
+                 equipment_available, equipment_details, cancellation_policy, availability_days,
                  availability_start_time, availability_end_time,
                  host_sport_images(image_url, position)
                )`
@@ -567,7 +567,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
         price: Number(activeSport.pricing) || 0,
         currency: activeSport.pricingCurrency || "EUR",
         status: "pending",
-        cancellation_policy: hostData?.cancellationPolicy || "flexible",
+        cancellation_policy: activeSport.cancellationPolicy || "flexible",
       })
       .select()
       .single();
@@ -826,7 +826,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                         </div>
 
                         {(() => {
-                          const policy = hostData?.cancellationPolicy || "flexible";
+                          const policy = activeSport.cancellationPolicy || "flexible";
                           const tier = CANCELLATION_POLICIES[policy];
                           return (
                             <div className="booking-cancel-policy">

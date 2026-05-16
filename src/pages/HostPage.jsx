@@ -127,16 +127,18 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
   }
 
   const isHostingPaused = Boolean(hostProfileDraft.pauseHosting);
-  const isSportsTabComplete = validateSportsTab(hostProfileDraft) === "";
+  const isSportsTabComplete = validateSportsTab(hostProfileDraft).message === "";
   const isPaymentTabComplete = hostProfileDraft.bankDetailsComplete === true;
 
   const onSaveSports = async (event) => {
     event.preventDefault();
     if (isSaving) return;
-    const validationError = validateSportsTab(hostProfileDraft);
+    const { message: validationError, sportIndex } = validateSportsTab(hostProfileDraft);
     if (validationError) {
+      if (sportIndex !== null) setActiveSportIndex(sportIndex);
       setErrorMessage(validationError);
       setSuccessMessage("");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     setIsSaving(true);

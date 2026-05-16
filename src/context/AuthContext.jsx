@@ -44,7 +44,6 @@ latitude: hostProfile.latitude ?? null,
 longitude: hostProfile.longitude ?? null,
 pauseHosting: hostProfile.pause_hosting || false,
 bankDetailsComplete: hostProfile.bank_details_complete || false,
-cancellationPolicy: hostProfile.cancellation_policy || "flexible",
 sports: (hostSports || []).map((hs) => ({
 sport: hs.sport || "",
 description: hs.description || "",
@@ -55,6 +54,7 @@ level: hs.level || "",
 paused: hs.paused || false,
 equipmentAvailable: hs.equipment_available || false,
 equipmentDetails: hs.equipment_details || "",
+cancellationPolicy: hs.cancellation_policy || "flexible",
 availability: {
 days: hs.availability_days || [],
 startTime: hs.availability_start_time || "09:00",
@@ -769,7 +769,6 @@ const { data: savedHostProfile, error: hpError } = await supabase
       account_number: hostProfile.stripe?.accountNumber || "",
       routing_number: hostProfile.stripe?.routingNumber || "",
       payout_currency: hostProfile.stripe?.payoutCurrency || "EUR",
-      cancellation_policy: hostProfile.cancellationPolicy || "flexible",
       agree_terms: hostProfile.consents?.agreeTermsAndConditions || false,
       agree_promotions:
         hostProfile.consents?.agreePromotionsAndMarketingEmails || false,
@@ -842,6 +841,7 @@ if (hostProfile.sports?.length > 0) {
         paused: sportConfig.paused || false,
         equipment_available: sportConfig.equipmentAvailable || false,
         equipment_details: sportConfig.equipmentDetails || "",
+        cancellation_policy: sportConfig.cancellationPolicy || "flexible",
         availability_days: sportConfig.availability?.days || [],
         availability_start_time:
           sportConfig.availability?.startTime || "09:00",

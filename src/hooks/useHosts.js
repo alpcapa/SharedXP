@@ -12,9 +12,9 @@ export const useHosts = ({ sports, excludeId } = {}) => {
     supabase
       .from("host_profiles")
       .select(
-        `pause_hosting, city, country, cancellation_policy,
+        `pause_hosting, city, country,
          profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday),
-         host_sports(sport, pricing, pricing_currency, level, description, about, equipment_available, paused)`
+         host_sports(sport, pricing, pricing_currency, level, description, about, equipment_available, paused, cancellation_policy)`
       )
       .eq("pause_hosting", false)
       .order("created_at", { ascending: false })
@@ -67,7 +67,7 @@ export const useHosts = ({ sports, excludeId } = {}) => {
               price: primarySport.pricing || 0,
               pricingCurrency: primarySport.pricing_currency || "EUR",
               level: primarySport.level || "",
-              cancellationPolicy: hp.cancellation_policy || "flexible",
+              cancellationPolicy: primarySport.cancellation_policy || "flexible",
               rating: null,
               paused: false,
             };

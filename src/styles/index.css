@@ -6513,6 +6513,19 @@ body {
   color: #991b1b;
 }
 
+/* ── Host settings: cancellation policy block (inside sport card) ─── */
+.host-cancel-policy-block {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.host-cancel-policy-block h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
 /* ── Host settings: cancellation policy selector ─── */
 .cancel-policy-options {
   display: flex;
