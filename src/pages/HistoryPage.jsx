@@ -91,6 +91,9 @@ const HistoryPage = ({
   const completedBookingRequests = bookingRequests.filter((r) => r.status === "completed");
   const completedHosted = completedBookingRequests.filter((r) => r.host_id === currentUser?.id);
   const completedAttended = completedBookingRequests.filter((r) => r.requester_id === currentUser?.id);
+  const cancelledBookingRequests = bookingRequests.filter((r) =>
+    ["cancelled", "declined", "resolved_refunded", "resolved_paid_host"].includes(r.status)
+  );
 
   // Sync tab from URL (e.g. after booking submission redirect)
   useEffect(() => {
@@ -430,6 +433,7 @@ const HistoryPage = ({
               { value: "pending", label: `Ongoing${activeBookingRequests.length ? ` (${activeBookingRequests.length})` : ""}` },
               { value: "hosted", label: `Hosted${(completedHosted.length + allItems.filter((i) => i.role === "hosted").length) ? ` (${completedHosted.length + allItems.filter((i) => i.role === "hosted").length})` : ""}` },
               { value: "attended", label: `Attended${(completedAttended.length + allItems.filter((i) => i.role === "attended").length) ? ` (${completedAttended.length + allItems.filter((i) => i.role === "attended").length})` : ""}` },
+              { value: "cancelled", label: `Cancelled${cancelledBookingRequests.length ? ` (${cancelledBookingRequests.length})` : ""}` },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -469,7 +473,32 @@ const HistoryPage = ({
             </div>
           )}
 
-          {selectedRole === "pending" ? (
+          {selectedRole === "cancelled" ? (
+            requestsLoading ? (
+              <p className="history-loading">Loading…</p>
+            ) : cancelledBookingRequests.length ? (
+              <div className="history-list">
+                {cancelledBookingRequests.map((req) => (
+                  <PendingBookingCard
+                    key={req.id}
+                    request={req}
+                    currentUserId={currentUser.id}
+                    unreadCount={unreadCounts[req.id] ?? 0}
+                    onAccept={acceptRequest}
+                    onDecline={declineRequest}
+                    onCancel={cancelRequest}
+                    onConfirmExperience={confirmExperience}
+                    onOpenDispute={openDispute}
+                    onSubmitRating={submitRating}
+                    currentUser={currentUser}
+                    editRatingRequestId={queryEditRating}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p>No cancelled or declined bookings.</p>
+            )
+          ) : selectedRole === "pending" ? (
             requestsLoading ? (
               <p className="history-loading">Loading…</p>
             ) : activeBookingRequests.length ? (
