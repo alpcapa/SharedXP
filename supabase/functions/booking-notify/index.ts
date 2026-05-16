@@ -330,6 +330,82 @@ function buildNewMessage(
   };
 }
 
+const POLICY_LABELS: Record<string, string> = {
+  flexible: "Flexible",
+  moderate: "Moderate",
+  strict: "Strict",
+};
+
+function buildCancelledPrePaymentToHost(
+  booking: Record<string, unknown>,
+  requester: Record<string, unknown>,
+  host: Record<string, unknown>,
+): { to: string; subject: string; html: string } {
+  const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() || "A guest");
+  const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() || "Host");
+  return {
+    to: String(host.email),
+    subject: `Booking cancelled — ${booking.sport} on ${booking.requested_date}`,
+    html: emailHtml(
+      `Booking cancelled, ${hostName}`,
+      [
+        `<strong>${reqName}</strong> has cancelled their <strong>${booking.sport}</strong> booking for <strong>${booking.requested_date}</strong> at <strong>${booking.requested_time}</strong>.`,
+        `No payment was made, so there is nothing further to action. Your slot is now open again.`,
+      ],
+      `${APP_URL}/history?tab=pending`,
+      "View Bookings",
+    ),
+  };
+}
+
+function buildCancelledPostPaymentToHost(
+  booking: Record<string, unknown>,
+  requester: Record<string, unknown>,
+  host: Record<string, unknown>,
+  invoice: Record<string, unknown>,
+): { to: string; subject: string; html: string } {
+  const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() || "A guest");
+  const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() || "Host");
+
+  const refundPct = Number(booking.refund_pct ?? 0);
+  const policyLabel = POLICY_LABELS[String(booking.cancellation_policy ?? "flexible")] ?? "Flexible";
+  const gross = Number(invoice.gross_amount);
+  const net = Number(invoice.net_amount);
+  const currency = String(invoice.currency);
+  const fmt = (n: number) => n.toFixed(2);
+
+  const guestRefundAmt = gross * refundPct / 100;
+  const hostPayoutAmt  = net   * (100 - refundPct) / 100;
+
+  const refundLine =
+    refundPct === 100
+      ? `Under the <strong>${policyLabel}</strong> cancellation policy, the guest is entitled to a <strong>full refund</strong> of ${currency} ${fmt(guestRefundAmt)}.`
+      : refundPct === 0
+      ? `Under the <strong>${policyLabel}</strong> cancellation policy, <strong>no refund</strong> is due to the guest.`
+      : `Under the <strong>${policyLabel}</strong> cancellation policy, the guest receives a <strong>${refundPct}% refund</strong> of ${currency} ${fmt(guestRefundAmt)}.`;
+
+  const hostLine =
+    hostPayoutAmt > 0.005
+      ? `Your payout for this session: <strong>${currency} ${fmt(hostPayoutAmt)}</strong>. Please allow 3–5 business days.`
+      : `No payout will be made for this session.`;
+
+  return {
+    to: String(host.email),
+    subject: `Booking cancelled after payment — ${booking.sport} on ${booking.requested_date}`,
+    html: emailHtml(
+      `Booking cancelled, ${hostName}`,
+      [
+        `<strong>${reqName}</strong> has cancelled their paid <strong>${booking.sport}</strong> session scheduled for <strong>${booking.requested_date}</strong> at <strong>${booking.requested_time}</strong>.`,
+        `<strong>Amount charged:</strong> ${currency} ${fmt(gross)}`,
+        refundLine,
+        hostLine,
+      ],
+      `${APP_URL}/history?tab=pending`,
+      "View Bookings",
+    ),
+  };
+}
+
 function buildDisputeResolvedRefund(
   booking: Record<string, unknown>,
   requester: Record<string, unknown>,
@@ -563,6 +639,17 @@ serve(async (req: Request): Promise<Response> => {
         const senderProfile = isRequesterSender ? requester : host;
         const senderName = String((senderProfile.full_name ?? `${senderProfile.first_name ?? ""} ${senderProfile.last_name ?? ""}`.trim()) || "Someone");
         const e = buildNewMessage(booking, recipient, senderName);
+        await sendEmail(e.to, e.subject, e.html);
+        break;
+      }
+      case "booking_cancelled_pre_payment_to_host": {
+        const e = buildCancelledPrePaymentToHost(booking, requester, host);
+        await sendEmail(e.to, e.subject, e.html);
+        break;
+      }
+      case "booking_cancelled_post_payment_to_host": {
+        if (!invoice) break;
+        const e = buildCancelledPostPaymentToHost(booking, requester, host, invoice);
         await sendEmail(e.to, e.subject, e.html);
         break;
       }

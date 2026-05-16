@@ -54,6 +54,7 @@ level: hs.level || "",
 paused: hs.paused || false,
 equipmentAvailable: hs.equipment_available || false,
 equipmentDetails: hs.equipment_details || "",
+cancellationPolicy: hs.cancellation_policy || "flexible",
 availability: {
 days: hs.availability_days || [],
 startTime: hs.availability_start_time || "09:00",
@@ -840,6 +841,7 @@ if (hostProfile.sports?.length > 0) {
         paused: sportConfig.paused || false,
         equipment_available: sportConfig.equipmentAvailable || false,
         equipment_details: sportConfig.equipmentDetails || "",
+        cancellation_policy: sportConfig.cancellationPolicy || "flexible",
         availability_days: sportConfig.availability?.days || [],
         availability_start_time:
           sportConfig.availability?.startTime || "09:00",

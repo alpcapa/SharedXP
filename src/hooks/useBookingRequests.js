@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { sendNotification } from "../utils/sendNotification";
 import { COMMISSION_RATE, TAX_RATE } from "../utils/pricing";
+import { computeRefundPct } from "../utils/cancellationPolicy";
 
 export const useBookingRequests = (currentUser) => {
   const [requests, setRequests] = useState([]);
@@ -137,13 +138,25 @@ export const useBookingRequests = (currentUser) => {
     return !error;
   }, [fetchRequests]);
 
-  const cancelRequest = useCallback(async (requestId) => {
+  const cancelRequest = useCallback(async (requestId, booking) => {
+    const isPrePayment = ["pending", "accepted"].includes(booking?.status ?? "");
+    const refundPct = isPrePayment
+      ? 100  // no payment taken — full refund by definition
+      : booking
+      ? computeRefundPct(booking.cancellation_policy || "flexible", booking.requested_date, booking.requested_time)
+      : 0;
     const { error } = await supabase
       .from("booking_requests")
-      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .update({ status: "cancelled", refund_pct: refundPct, updated_at: new Date().toISOString() })
       .eq("id", requestId);
-    if (!error) fetchRequests();
-    return !error;
+    if (!error) {
+      const emailType = isPrePayment
+        ? "booking_cancelled_pre_payment_to_host"
+        : "booking_cancelled_post_payment_to_host";
+      await sendNotification(emailType, requestId);
+      fetchRequests();
+    }
+    return { ok: !error, refundPct };
   }, [fetchRequests]);
 
   const confirmExperience = useCallback(async (requestId) => {

@@ -67,6 +67,7 @@ export const createEmptySportConfig = () => ({
   equipmentDetails: "",
   availability: { days: [], startTime: "", endTime: "" },
   images: [],
+  cancellationPolicy: "flexible",
 });
 
 export const inferCityFromAddress = (address) => {
@@ -87,6 +88,7 @@ export const getInitialHostProfile = (user) => {
             ...(sportConfig.availability ?? {}),
           },
           images: Array.isArray(sportConfig.images) ? sportConfig.images : [],
+          cancellationPolicy: sportConfig.cancellationPolicy ?? "flexible",
         }))
       : [createEmptySportConfig()];
 
@@ -120,13 +122,16 @@ export const getInitialHostProfile = (user) => {
   };
 };
 
+// Returns { message, sportIndex } where sportIndex is the 0-based index of the
+// failing sport (null for non-sport errors). Callers can auto-switch to the
+// failing sport tab and scroll to the error.
 export const validateSportsTab = (draft) => {
-  if (!draft.country.trim()) return "Please choose your host country.";
-  if (!draft.city.trim()) return "Please choose your host city.";
+  if (!draft.country.trim()) return { message: "Please choose your host country.", sportIndex: null };
+  if (!draft.city.trim()) return { message: "Please choose your host city.", sportIndex: null };
   const missingConsent = REQUIRED_HOST_CONSENTS.find(
     (c) => !draft.consents?.[c.field]
   );
-  if (missingConsent) return missingConsent.message;
+  if (missingConsent) return { message: missingConsent.message, sportIndex: null };
 
   const empty = createEmptySportConfig().availability;
   const invalidIndex = draft.sports.findIndex((s) => {
@@ -146,15 +151,15 @@ export const validateSportsTab = (draft) => {
     );
   });
   if (invalidIndex !== -1)
-    return `Complete all required fields for Sport ${invalidIndex + 1}.`;
+    return { message: `Complete all required fields for Sport ${invalidIndex + 1}.`, sportIndex: invalidIndex };
 
   const missingPhotoIndex = draft.sports.findIndex(
     (s) => s.images.length === 0
   );
   if (missingPhotoIndex !== -1)
-    return `Please add at least one photo for Sport ${missingPhotoIndex + 1}.`;
+    return { message: `Please add at least one photo for Sport ${missingPhotoIndex + 1}.`, sportIndex: missingPhotoIndex };
 
-  return "";
+  return { message: "", sportIndex: null };
 };
 
 export const validatePaymentTab = (draft) => {

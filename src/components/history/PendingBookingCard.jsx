@@ -5,6 +5,7 @@ import DeclineConfirmationModal from "./DeclineConfirmationModal";
 import ShareToFieldModal from "./ShareToFieldModal";
 import { HOST_RATING_FIELDS, clampRating, FALLBACK_EVENT_PHOTO } from "../../utils/historyItem";
 import { deleteFieldPost, lookupFieldPost, saveFieldPost } from "../../utils/fieldPosts";
+import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../../utils/cancellationPolicy";
 
 const CURRENCY_SYMBOLS = {
   USD: "$", EUR: "€", GBP: "£", CAD: "C$",
@@ -363,6 +364,11 @@ const PendingBookingCard = ({
     request.experience_ends_at &&
     new Date(request.experience_ends_at).getTime() <= Date.now();
 
+  const sessionStarted =
+    request.requested_date &&
+    request.requested_time &&
+    new Date(`${request.requested_date}T${request.requested_time}:00`).getTime() <= Date.now();
+
   const handleAccept = async () => {
     setActionLoading(true);
     await onAccept(request.id);
@@ -377,9 +383,18 @@ const PendingBookingCard = ({
   };
 
   const handleCancel = async () => {
-    if (!confirm("Cancel this booking request?")) return;
+    let message;
+    if (request.status === "accepted") {
+      message = "Cancel this booking?\n\nNo payment has been taken — you'll receive a full refund.";
+    } else {
+      const policy = request.cancellation_policy || "flexible";
+      const refundPct = computeRefundPct(policy, request.requested_date, request.requested_time);
+      const policyLabel = CANCELLATION_POLICIES[policy]?.label ?? "Flexible";
+      message = `Cancel this booking?\n\nCancellation policy: ${policyLabel}\nRefund: ${refundLabel(refundPct)}`;
+    }
+    if (!confirm(message)) return;
     setActionLoading(true);
-    await onCancel(request.id);
+    await onCancel(request.id, request);
     setActionLoading(false);
   };
 
@@ -420,6 +435,22 @@ const PendingBookingCard = ({
               <>Hosted by <ProfileLink profile={request.host_profile} userId={request.host_id} name={hostName} /></>
             )}
           </p>
+          {["pending", "accepted", "in_progress"].includes(request.status) && (
+            <p className="pending-card-cancel-policy">
+              {(() => {
+                const policy = request.cancellation_policy || "flexible";
+                const tier = CANCELLATION_POLICIES[policy] ?? CANCELLATION_POLICIES.flexible;
+                return (
+                  <>
+                    <span className={`cancel-policy-badge cancel-policy-badge--${tier.color}`}>
+                      {tier.label}
+                    </span>
+                    {" "}{tier.tagline}
+                  </>
+                );
+              })()}
+            </p>
+          )}
         </div>
 
         {/* In-progress countdown + actions */}
@@ -460,6 +491,16 @@ const PendingBookingCard = ({
                   </button>
                 </>
               )}
+              {isRequester && !sessionStarted && (
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  onClick={handleCancel}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? "…" : "Cancel Booking"}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -492,10 +533,18 @@ const PendingBookingCard = ({
             <Link to={`/payment/${request.id}`} className="find-button pending-pay-btn">
               Proceed to Payment →
             </Link>
+            <button
+              type="button"
+              className="btn btn-light"
+              onClick={handleCancel}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "…" : "Cancel Booking"}
+            </button>
           </div>
         )}
 
-        {/* Requester can cancel a pending request */}
+        {/* Requester can cancel a pending or accepted request */}
         {isRequester && request.status === "pending" && (
           <div className="pending-card-actions">
             <button
@@ -504,10 +553,11 @@ const PendingBookingCard = ({
               onClick={handleCancel}
               disabled={actionLoading}
             >
-              Cancel Request
+              {actionLoading ? "…" : "Cancel Request"}
             </button>
           </div>
         )}
+
 
         {/* Declined: show reason */}
         {request.status === "declined" && request.decline_reason && (

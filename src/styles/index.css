@@ -6486,3 +6486,152 @@ body {
 .invoice-detail-ref span {
   font-family: monospace;
 }
+
+/* ── Cancellation policy badge (shared across booking widget, payment page, history cards) ─── */
+.cancel-policy-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.cancel-policy-badge--green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.cancel-policy-badge--amber {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.cancel-policy-badge--red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ── Host settings: cancellation policy block (inside sport card) ─── */
+.host-cancel-policy-block {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.host-cancel-policy-block h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* ── Host settings: cancellation policy selector ─── */
+.cancel-policy-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.cancel-policy-option {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.cancel-policy-option input[type="radio"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.cancel-policy-option.selected {
+  border-color: #96c93d;
+  background: #f7fee7;
+}
+
+.cancel-policy-tagline {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  flex: 1;
+}
+
+.cancel-policy-rules {
+  width: 100%;
+  margin: 4px 0 0 24px;
+  padding: 0;
+  font-size: 13px;
+  color: #6b7280;
+  list-style: disc;
+}
+
+.cancel-policy-rules li {
+  margin-bottom: 2px;
+}
+
+/* ── Booking widget: policy display ─── */
+.booking-cancel-policy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+  flex-wrap: wrap;
+}
+
+.booking-cancel-policy-tagline {
+  font-size: 13px;
+  color: #596164;
+}
+
+/* ── Pending booking card: policy line ─── */
+.pending-card-cancel-policy {
+  font-size: 13px;
+  color: #596164;
+  margin: 6px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── Payment page: cancellation policy block ─── */
+.payment-cancel-policy {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.payment-cancel-policy-heading {
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.payment-cancel-policy-rules {
+  margin: 0 0 8px 16px;
+  padding: 0;
+  color: #6b7280;
+  list-style: disc;
+}
+
+.payment-cancel-policy-rules li {
+  margin-bottom: 3px;
+}
+
+.payment-cancel-policy-now {
+  margin: 0;
+  color: #374151;
+}

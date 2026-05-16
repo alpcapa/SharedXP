@@ -9,6 +9,7 @@ import { getDateKey } from "../utils/date";
 import { getAgeFromBirthday } from "../utils/profileAge";
 import { sendNotification } from "../utils/sendNotification";
 import { CURRENCY_SYMBOLS } from "../utils/pricing";
+import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../utils/cancellationPolicy";
 
 const FALLBACK_PHOTO =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='840' height='480' viewBox='0 0 840 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2384cc16'/%3E%3Cstop offset='1' stop-color='%23065f46'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='840' height='480' fill='url(%23g)'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='52' fill='white'%3ESharedXP Event%3C/text%3E%3C/svg%3E";
@@ -83,6 +84,7 @@ const shapeSupabaseHost = (data) => {
       paused: false,
       equipmentAvailable: hs.equipment_available || false,
       equipmentDetails: hs.equipment_details || "",
+      cancellationPolicy: hs.cancellation_policy || "flexible",
       availability: {
         days: hs.availability_days || [],
         startTime: hs.availability_start_time || "09:00",
@@ -268,8 +270,30 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
 
       // Host data (if applicable)
       if (profileData?.is_host) {
-        const [hostResult, legacyHostResult, brHostResult] = await Promise.all([
-          supabase
+        // Fetch host_profiles without cancellation_policy (moved to host_sports in migration 025).
+        // Try including cancellation_policy in host_sports; if the column doesn't exist yet
+        // (migration 025 pending), retry without it so availability dates still render.
+        const fetchHostResult = async () => {
+          const full = await supabase
+            .from("host_profiles")
+            .select(
+              `pause_hosting, city, country,
+               profile:profiles!user_id(
+                 id, email, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at,
+                 user_languages(language, position)
+               ),
+               host_sports(
+                 id, sport, description, about, pricing, pricing_currency, level, paused,
+                 equipment_available, equipment_details, cancellation_policy, availability_days,
+                 availability_start_time, availability_end_time,
+                 host_sport_images(image_url, position)
+               )`
+            )
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (!full.error) return full;
+          // cancellation_policy column not yet in host_sports — retry without it
+          return supabase
             .from("host_profiles")
             .select(
               `pause_hosting, city, country,
@@ -285,7 +309,11 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                )`
             )
             .eq("user_id", userId)
-            .maybeSingle(),
+            .maybeSingle();
+        };
+
+        const [hostResult, legacyHostResult, brHostResult] = await Promise.all([
+          fetchHostResult(),
           supabase
             .from("bookings")
             .select("counterparty_name, attendee_rating, sport, completed_at")
@@ -565,6 +593,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
         price: Number(activeSport.pricing) || 0,
         currency: activeSport.pricingCurrency || "EUR",
         status: "pending",
+        cancellation_policy: activeSport.cancellationPolicy || "flexible",
       })
       .select()
       .single();
@@ -821,6 +850,19 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                           <p className="booking-label"><strong>Equipment:</strong> {activeSport.equipmentAvailable ? "Available" : "Not available"}</p>
                           {activeSport.equipmentDetails && <p className="booking-subtitle">{activeSport.equipmentDetails}</p>}
                         </div>
+
+                        {(() => {
+                          const policy = activeSport.cancellationPolicy || "flexible";
+                          const tier = CANCELLATION_POLICIES[policy];
+                          return (
+                            <div className="booking-cancel-policy">
+                              <span className={`cancel-policy-badge cancel-policy-badge--${tier.color}`}>
+                                {tier.label}
+                              </span>
+                              <span className="booking-cancel-policy-tagline">{tier.tagline}</span>
+                            </div>
+                          );
+                        })()}
 
                         <p className="booking-selection-hint">
                           <span className={selectedDate ? "booking-hint-selected" : "booking-hint-unselected"}>

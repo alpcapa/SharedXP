@@ -4,6 +4,7 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
 import { COMMISSION_RATE, TAX_RATE, formatCurrency as fmt } from "../utils/pricing";
+import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../utils/cancellationPolicy";
 
 const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours assumed
 const AUTO_CONFIRM_MS = 72 * 60 * 60 * 1000;     // 72 hours
@@ -238,6 +239,28 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
                 </tr>
               </tbody>
             </table>
+
+            {(() => {
+              const policy = booking.cancellation_policy || "flexible";
+              const tier = CANCELLATION_POLICIES[policy];
+              const refundPct = computeRefundPct(policy, booking.requested_date, booking.requested_time);
+              return (
+                <div className="payment-cancel-policy">
+                  <p className="payment-cancel-policy-heading">
+                    <span className={`cancel-policy-badge cancel-policy-badge--${tier.color}`}>{tier.label}</span>
+                    {" "}Cancellation policy
+                  </p>
+                  <ul className="payment-cancel-policy-rules">
+                    {tier.rules.map((rule, i) => (
+                      <li key={i}>{rule.description}</li>
+                    ))}
+                  </ul>
+                  <p className="payment-cancel-policy-now">
+                    If you cancel now: <strong>{refundLabel(refundPct)}</strong>
+                  </p>
+                </div>
+              );
+            })()}
           </aside>
 
           {/* Simulated payment form */}

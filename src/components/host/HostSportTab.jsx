@@ -10,6 +10,7 @@ import {
   createEmptySportConfig,
   getCountryFlag,
 } from "./hostUtils";
+import { CANCELLATION_POLICIES } from "../../utils/cancellationPolicy";
 
 const HostSportTab = ({
   draft,
@@ -552,6 +553,39 @@ const HostSportTab = ({
               ))}
             </div>
           )}
+        </div>
+
+        {/* ── Cancellation policy (per sport) ───────────────────────── */}
+        <div className="host-cancel-policy-block">
+          <h3>Cancellation Policy</h3>
+          <p className="host-form-hint">
+            Shown to guests before they book this sport.
+          </p>
+          <div className="cancel-policy-options">
+            {Object.entries(CANCELLATION_POLICIES).map(([key, tier]) => (
+              <label
+                key={key}
+                className={`cancel-policy-option${activeSport.cancellationPolicy === key ? " selected" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name={`cancellationPolicy-${activeSportIndex}`}
+                  value={key}
+                  checked={activeSport.cancellationPolicy === key}
+                  onChange={() => updateSportField("cancellationPolicy", key)}
+                />
+                <span className={`cancel-policy-badge cancel-policy-badge--${tier.color}`}>
+                  {tier.label}
+                </span>
+                <span className="cancel-policy-tagline">{tier.tagline}</span>
+                <ul className="cancel-policy-rules">
+                  {tier.rules.map((rule, i) => (
+                    <li key={i}>{rule.description}</li>
+                  ))}
+                </ul>
+              </label>
+            ))}
+          </div>
         </div>
       </section>
 
