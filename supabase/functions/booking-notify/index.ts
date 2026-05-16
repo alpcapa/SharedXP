@@ -364,6 +364,7 @@ function buildCancelledPostPaymentToHost(
   host: Record<string, unknown>,
   invoice: Record<string, unknown>,
 ): { to: string; subject: string; html: string } {
+<<<<<<< HEAD
   const reqName = String((requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim()) || "A guest");
   const hostName = String((host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim()) || "Host");
 
