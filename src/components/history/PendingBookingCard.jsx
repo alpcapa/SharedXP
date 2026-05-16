@@ -579,7 +579,7 @@ const PendingBookingCard = ({
             {request.dispute && (
               <div className="dispute-accounts">
                 <div className="dispute-account-block">
-                  <p className="dispute-account-label">{requesterName}'s account</p>
+                  <p className="dispute-account-label">{requesterName}'s response</p>
                   <blockquote className="dispute-quote">{request.dispute.requester_explanation}</blockquote>
                 </div>
                 {request.dispute.host_response ? (
