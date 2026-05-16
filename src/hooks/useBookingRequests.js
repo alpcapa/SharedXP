@@ -139,15 +139,23 @@ export const useBookingRequests = (currentUser) => {
   }, [fetchRequests]);
 
   const cancelRequest = useCallback(async (requestId, booking) => {
-    const policy = booking?.cancellation_policy || "flexible";
-    const refundPct = booking
-      ? computeRefundPct(policy, booking.requested_date, booking.requested_time)
+    const isPrePayment = ["pending", "accepted"].includes(booking?.status ?? "");
+    const refundPct = isPrePayment
+      ? 100  // no payment taken — full refund by definition
+      : booking
+      ? computeRefundPct(booking.cancellation_policy || "flexible", booking.requested_date, booking.requested_time)
       : 0;
     const { error } = await supabase
       .from("booking_requests")
       .update({ status: "cancelled", refund_pct: refundPct, updated_at: new Date().toISOString() })
       .eq("id", requestId);
-    if (!error) fetchRequests();
+    if (!error) {
+      const emailType = isPrePayment
+        ? "booking_cancelled_pre_payment_to_host"
+        : "booking_cancelled_post_payment_to_host";
+      await sendNotification(emailType, requestId);
+      fetchRequests();
+    }
     return { ok: !error, refundPct };
   }, [fetchRequests]);
 
