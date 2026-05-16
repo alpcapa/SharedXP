@@ -270,11 +270,14 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
 
       // Host data (if applicable)
       if (profileData?.is_host) {
-        const [hostResult, legacyHostResult, brHostResult] = await Promise.all([
-          supabase
+        // Fetch host_profiles without cancellation_policy (moved to host_sports in migration 025).
+        // Try including cancellation_policy in host_sports; if the column doesn't exist yet
+        // (migration 025 pending), retry without it so availability dates still render.
+        const fetchHostResult = async () => {
+          const full = await supabase
             .from("host_profiles")
             .select(
-              `pause_hosting, city, country, cancellation_policy,
+              `pause_hosting, city, country,
                profile:profiles!user_id(
                  id, email, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at,
                  user_languages(language, position)
@@ -287,7 +290,30 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                )`
             )
             .eq("user_id", userId)
-            .maybeSingle(),
+            .maybeSingle();
+          if (!full.error) return full;
+          // cancellation_policy column not yet in host_sports — retry without it
+          return supabase
+            .from("host_profiles")
+            .select(
+              `pause_hosting, city, country,
+               profile:profiles!user_id(
+                 id, email, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at,
+                 user_languages(language, position)
+               ),
+               host_sports(
+                 id, sport, description, about, pricing, pricing_currency, level, paused,
+                 equipment_available, equipment_details, availability_days,
+                 availability_start_time, availability_end_time,
+                 host_sport_images(image_url, position)
+               )`
+            )
+            .eq("user_id", userId)
+            .maybeSingle();
+        };
+
+        const [hostResult, legacyHostResult, brHostResult] = await Promise.all([
+          fetchHostResult(),
           supabase
             .from("bookings")
             .select("counterparty_name, attendee_rating, sport, completed_at")
