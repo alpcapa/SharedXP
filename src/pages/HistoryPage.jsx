@@ -437,7 +437,7 @@ const HistoryPage = ({
               { value: "hosted", label: `Hosted${(completedHosted.length + allItems.filter((i) => i.role === "hosted").length) ? ` (${completedHosted.length + allItems.filter((i) => i.role === "hosted").length})` : ""}` },
               { value: "attended", label: `Attended${(completedAttended.length + allItems.filter((i) => i.role === "attended").length) ? ` (${completedAttended.length + allItems.filter((i) => i.role === "attended").length})` : ""}` },
               { value: "cancelled", label: `Cancelled${cancelledBookingRequests.length ? ` (${cancelledBookingRequests.length})` : ""}` },
-              { value: "disputes", label: `Disputes${disputedBookingRequests.length ? ` (${disputedBookingRequests.length})` : ""}` },
+              { value: "disputes", label: `Disputed${disputedBookingRequests.length ? ` (${disputedBookingRequests.length})` : ""}` },
             ].map((tab) => (
               <button
                 key={tab.value}
