@@ -579,12 +579,12 @@ const PendingBookingCard = ({
             {request.dispute && (
               <div className="dispute-accounts">
                 <div className="dispute-account-block">
-                  <p className="dispute-account-label">Guest's account</p>
+                  <p className="dispute-account-label">{requesterName}'s account</p>
                   <blockquote className="dispute-quote">{request.dispute.requester_explanation}</blockquote>
                 </div>
                 {request.dispute.host_response ? (
                   <div className="dispute-account-block">
-                    <p className="dispute-account-label">Host's response</p>
+                    <p className="dispute-account-label">{hostName}'s response</p>
                     <blockquote className="dispute-quote dispute-quote-host">{request.dispute.host_response}</blockquote>
                   </div>
                 ) : isHost ? (
@@ -601,7 +601,7 @@ const PendingBookingCard = ({
                   </div>
                 ) : (
                   <div className="dispute-account-block">
-                    <p className="dispute-account-label">Host's response</p>
+                    <p className="dispute-account-label">{hostName}'s response</p>
                     <p className="dispute-pending-note">Awaiting host's response.</p>
                   </div>
                 )}
