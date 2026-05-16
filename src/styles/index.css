@@ -4697,6 +4697,7 @@ body {
 .pending-chat-btn {
   font-size: 14px;
   padding: 10px 20px;
+  text-decoration: none;
 }
 
 /* ── In-progress panel ───────────────────────────── */
