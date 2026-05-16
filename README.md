@@ -15,17 +15,6 @@ SharedXP connects sports-loving travelers with local people who are eager to sha
 
 -----
 
-## Screenshots
-
-|Home                                                      |Explore                                                         |Profile                                                         |
-|----------------------------------------------------------|----------------------------------------------------------------|----------------------------------------------------------------|
-|![Home](docs/screenshots/home-hero-background-visible.png)|![Explore](docs/screenshots/explore-page-no-hero-background.png)|![Profile](docs/screenshots/my-profile-language-host-sports.png)|
-
-|Sign Up                                                 |History                                              |
-|--------------------------------------------------------|-----------------------------------------------------|
-|![Sign Up](docs/screenshots/signup-language-section.png)|![History](docs/screenshots/history-page-revised.png)|
-
------
 
 ## Features
 
