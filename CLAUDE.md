@@ -16,6 +16,8 @@ Edge Functions (requires Supabase CLI):
 ```bash
 supabase functions deploy booking-notify
 supabase functions deploy send-email
+supabase functions deploy events-sync
+supabase functions deploy forgot-password
 supabase secrets set RESEND_API_KEY=... RESEND_FROM_EMAIL=... APP_URL=... SEND_EMAIL_HOOK_SECRET=...
 ```
 
@@ -27,7 +29,7 @@ supabase secrets set RESEND_API_KEY=... RESEND_FROM_EMAIL=... APP_URL=... SEND_E
 
 `src/context/AuthContext.jsx` is the most important file in the codebase. It:
 - Holds all auth state (`currentUser`, `authLoading`) in a React context
-- Owns every user-mutating operation: `onEmailSignUp`, `onEmailLogin`, `onSocialLogin`, `onLogout`, `onUpdateProfile`, `onToggleHost`, `onSaveHostProfile`, `onTogglePauseHosting`, `onSaveHistory`, `onSaveHostHistory`
+- Owns every user-mutating operation: `onEmailSignUp`, `onEmailLogin`, `onForgotPassword`, `onSocialLogin`, `onLogout`, `onUpdateProfile`, `onToggleHost`, `onSaveHostProfile`, `onTogglePauseHosting`, `onSaveHistory`, `onSaveHostHistory`
 - Translates between Supabase DB rows (snake_case) and the JS user object (camelCase)
 - `fetchUserProfile` loads the full user graph on session restore: `profiles` + `user_languages` + `user_sports` + `host_profiles` + `host_sports` + `host_sport_images` + `bookings` in parallel
 
@@ -35,10 +37,11 @@ supabase secrets set RESEND_API_KEY=... RESEND_FROM_EMAIL=... APP_URL=... SEND_E
 
 ### Data model (Supabase Postgres + RLS)
 
-Migrations live in `supabase/migrations/` (run in numeric order):
+Migrations live in `supabase/migrations/` (001–023, run in numeric order):
 - `profiles` — one row per auth user; `is_host` and `is_admin` flags here
+- `pending_profiles` — intermediate profile state during OAuth/email confirmation
 - `user_languages` / `user_sports` — up to 4 ordered entries per user
-- `host_profiles` — one-to-one with `profiles` when `is_host=true`; holds payout/bank info
+- `host_profiles` — one-to-one with `profiles` when `is_host=true`; holds payout/bank info, postcode, and geocoded coordinates
 - `host_sports` — one `host_profiles` → many sports, each with availability, pricing, equipment
 - `host_sport_images` — ordered gallery images per `host_sport`
 - `bookings` — completed history with roles (`attended` / `hosted`); synced client-side via `syncBookings`
@@ -46,6 +49,9 @@ Migrations live in `supabase/migrations/` (run in numeric order):
 - `messages` — per booking_request chat thread
 - `invoices` — payment record per booking_request; `released_at` signals payout
 - `disputes` — opened by requester when disputing a completed booking; resolved by admin
+- `external_events` — major international sports events (marathons, tennis, cycling, F1, etc.) sourced via the `events-sync` edge function
+- `field_posts` — community experience feed posts sourced from completed bookings
+- `field_post_likes` — like tracking per user per field post
 
 Storage buckets: `Avatars` (user photos) and `host-sport-images` (host sport galleries). Both store public URLs after upload.
 
@@ -55,7 +61,7 @@ Storage buckets: `Avatars` (user photos) and `host-sport-images` (host sport gal
 
 ### Booking flow
 
-`src/hooks/useBookingRequests.js` manages the active booking lifecycle. Key points:
+`src/hooks/useBookingRequests.js` manages the active booking lifecycle. `src/hooks/useHosts.js` fetches and filters the host list for Explore. Key points for booking requests:
 - Auto-confirm logic runs **client-side**: when a booking's `auto_confirm_at` has passed and status is `in_progress`, the first participant to load the page triggers completion and invoice release.
 - Platform fee is 15% + 5% tax, computed in `computeInvoice()`.
 - Notifications are sent by calling `supabase.functions.invoke('booking-notify', …)` via `src/utils/sendNotification.js`.
@@ -72,13 +78,22 @@ New pages: `/payment-history` (`PaymentHistoryPage`) shows invoices with per-tra
 
 `supabase/functions/send-email/index.ts` — Supabase Auth hook for signup/recovery/invite emails. Must be registered in Supabase Dashboard → Authentication → Hooks → Send Email.
 
+`supabase/functions/forgot-password/index.ts` — sends password-reset emails via Resend. Called by the `onForgotPassword` AuthContext callback.
+
+`supabase/functions/events-sync/index.ts` — pulls major sports events from public sources and upserts them into the `external_events` table. Intended to run on a daily cron (pg_cron, GitHub Action, or Supabase scheduled trigger). Can also be invoked manually via HTTP POST with the service role key.
+
 ### Styling
 
-All styles are in `src/styles/index.css` (~3400 lines). No CSS modules, no utility framework. Add styles directly to this file; there is no per-component stylesheet.
+All styles are in `src/styles/index.css` (~6500 lines). No CSS modules, no utility framework. Add styles directly to this file; there is no per-component stylesheet.
 
 ### Mock / seed data
 
-`src/data/buddies.js` and `src/data/fieldPosts.js` are static prototype fixtures (4 hosts, 8 Field posts across Lisbon/Porto/Barcelona/Berlin). Host availability dates are generated dynamically relative to today so the calendar always shows upcoming slots.
+`src/data/` contains static prototype fixtures and reference data:
+- `buddies.js` — 4 prototype hosts across Lisbon/Porto/Barcelona/Berlin. Availability dates generated dynamically relative to today.
+- `fieldPosts.js` — 8 prototype Field posts seeded from the same cities.
+- `majorEvents.js` — static list of major international sports events shown on the Events page.
+- `sports.js` — canonical sport list used across the app.
+- `countries.js` / `countryCities.js` — country and city reference data for location pickers.
 
 ### Tests
 

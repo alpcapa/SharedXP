@@ -55,12 +55,19 @@ SharedXP connects sports-loving travelers with local people who are eager to sha
 - View host profiles from community posts
 - Remove your own posts at any time
 
+### Events
+
+- Browse major international sports events (marathons, cycling races, tennis, F1, etc.)
+- Events synced daily via the `events-sync` edge function
+- Filter and discover events relevant to your sport interests
+
 ### Platform
 
 - Sign up with email or social (Google / Apple — prototype)
 - Email confirmation and password reset via Resend
 - Hosting paused indicator in nav
 - Admin dispute dashboard for customer service
+- Full legal pages suite (Terms, Privacy, Payments, Safety, IP, Disclaimers)
 
 -----
 
@@ -75,6 +82,7 @@ SharedXP connects sports-loving travelers with local people who are eager to sha
 |Backend   |Supabase (Postgres + Auth + Storage)|
 |Auth      |Supabase Auth (email + OAuth, implicit flow)|
 |Email     |Resend via Supabase Edge Functions (Deno)|
+|Geocoding |Nominatim / OpenStreetMap      |
 |Deployment|Vercel                         |
 
 No external UI libraries. No TypeScript (frontend). The only runtime dependency beyond React and React Router is `@supabase/supabase-js`.
@@ -83,7 +91,7 @@ No external UI libraries. No TypeScript (frontend). The only runtime dependency 
 
 ## Project Status
 
-The core platform is live and backed by Supabase. Auth, profiles, host onboarding, booking requests, in-app chat, invoicing, disputes, and transactional email are all functional.
+The core platform is live and backed by Supabase. Auth (including password reset), profiles, host onboarding, booking requests, in-app chat, invoicing, disputes, transactional email, The Field community feed, XP loyalty program, payment history, and the Events page are all functional.
 
 ### Still to come
 
@@ -137,19 +145,21 @@ src/
 ├── assets/              # Static images and SVGs
 ├── components/          # Shared UI (SiteHeader, SiteFooter, BuddyCard)
 ├── context/             # AuthContext — all auth state and user mutations
-├── data/                # Prototype seed data (buddies, field posts)
-├── hooks/               # useBookingRequests — booking lifecycle logic
+├── data/                # Seed and reference data (buddies, field posts, sports, countries, events)
+├── hooks/               # useBookingRequests, useHosts
 ├── lib/                 # supabase.js — singleton Supabase client
 ├── pages/               # One file per route
-├── styles/              # index.css — global styles (~3,400 lines, no modules)
-├── utils/               # Date, age, and notification helpers
+├── styles/              # index.css — global styles (~6,500 lines, no modules)
+├── utils/               # Date, age, pricing, and notification helpers
 ├── App.jsx              # Route declarations
 └── main.jsx             # Entry point
 supabase/
 ├── functions/
 │   ├── booking-notify/  # Transactional email dispatcher (Deno)
-│   └── send-email/      # Supabase Auth email hook (Deno)
-└── migrations/          # Numbered SQL migrations (001–012)
+│   ├── send-email/      # Supabase Auth email hook (Deno)
+│   ├── forgot-password/ # Password reset email sender (Deno)
+│   └── events-sync/     # Daily sports events sync (Deno)
+└── migrations/          # Numbered SQL migrations (001–023)
 ```
 
 -----
@@ -160,11 +170,13 @@ supabase/
 |----------------------------------|-------------------------------------------------------|
 |`/`                               |Home — hero, featured locals, sport chips, how it works|
 |`/locals`                         |Explore — map + filtered list of hosts                 |
-|`/buddy/:buddyId`                 |Host profile — gallery, calendar, booking, reviews     |
 |`/the-field`                      |Community experience feed                              |
+|`/events`                         |Major international sports events                      |
 |`/about`                          |About, story, how it works, values, CTA                |
 |`/signup`                         |Sign up                                                |
 |`/login`                          |Log in                                                 |
+|`/auth/confirm`                   |Email confirmation handler                             |
+|`/reset-password`                 |Password reset form                                    |
 |`/my-profile`                     |Edit personal profile                                  |
 |`/user-profile`                   |Logged-in user's public profile view                   |
 |`/user/:userId`                   |Another user's public profile                          |
@@ -179,8 +191,16 @@ supabase/
 |`/admin/disputes`                 |Admin dispute dashboard (requires `is_admin = true`)   |
 |`/follow`                         |Follow / connections                                   |
 |`/help`                           |Help centre                                            |
+|`/legal`                          |Legal hub — links to all legal pages                   |
+|`/terms-and-conditions`           |Terms and Conditions                                   |
+|`/privacy-notice`                 |Privacy Notice                                         |
+|`/payments-and-payout-terms`      |Payments and Payout Terms                              |
+|`/safety-and-risk-policy`         |Safety and Risk Policy                                 |
+|`/content-and-intellectual-property-policy`|Content and IP Policy                         |
+|`/disclaimers`                    |Disclaimers                                            |
 |`/how-it-works`                   |→ redirects to `/about`                                |
 |`/host-history`                   |→ redirects to `/history`                              |
+|`/buddy/:buddyId`                 |→ redirects to `/user/:buddyId`                        |
 
 -----
 
