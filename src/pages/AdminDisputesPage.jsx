@@ -148,7 +148,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
 
                   <div className="admin-dispute-accounts">
                     <div>
-                      <p className="admin-dispute-label">Guest's account</p>
+                      <p className="admin-dispute-label">Guest's response</p>
                       <blockquote className="dispute-quote">{d.requester_explanation}</blockquote>
                     </div>
                     <div>
