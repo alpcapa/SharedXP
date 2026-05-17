@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/investor-deck.html", "destination": "/investor-deck.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
