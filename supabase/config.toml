@@ -65,3 +65,15 @@ secrets = "env(SEND_EMAIL_HOOK_SECRET)"
 
 [analytics]
 enabled = false
+
+[functions.booking-notify]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.forgot-password]
+verify_jwt = false
+
+[functions.events-sync]
+verify_jwt = false
