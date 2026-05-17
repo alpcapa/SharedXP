@@ -8,7 +8,7 @@ const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "noreply@sharedxp.com";
 const APP_URL = Deno.env.get("APP_URL") ?? "";
 
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": APP_URL || "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
