@@ -80,7 +80,7 @@ const getHistoryGalleryPhotos = (historyItems) => {
   );
 };
 
-const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin }) => {
+const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const [activeTab, setActiveTab] = useState("guest");
   const [recommendationsPage, setRecommendationsPage] = useState(0);
   const [guestPhotosPage, setGuestPhotosPage] = useState(0);
@@ -279,6 +279,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin }) =
           <main className="middle-section simple-page">
             <InlineLoginForm
               onEmailLogin={onEmailLogin}
+              onForgotPassword={onForgotPassword}
               title="Please log in"
               description="You need to log in to view this profile."
             />

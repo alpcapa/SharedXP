@@ -60,6 +60,7 @@ const HistoryPage = ({
   authLoading,
   onLogout,
   onEmailLogin,
+  onForgotPassword,
   onSaveHistory,
   onSaveHostHistory,
 }) => {
@@ -405,6 +406,7 @@ const HistoryPage = ({
           <main className="middle-section simple-page">
             <InlineLoginForm
               onEmailLogin={onEmailLogin}
+              onForgotPassword={onForgotPassword}
               title="Please log in"
               description="You need to log in to view your experience history."
             />

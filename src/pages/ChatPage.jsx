@@ -25,7 +25,7 @@ const fmtTime = (iso) =>
         .format(new Date(iso))
     : "";
 
-const ChatPage = ({ currentUser, authLoading, onLogout, onEmailLogin }) => {
+const ChatPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const { bookingRequestId } = useParams();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
@@ -162,7 +162,7 @@ const ChatPage = ({ currentUser, authLoading, onLogout, onEmailLogin }) => {
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
           <main className="middle-section simple-page">
-            <InlineLoginForm onEmailLogin={onEmailLogin} title="Please log in" />
+            <InlineLoginForm onEmailLogin={onEmailLogin} onForgotPassword={onForgotPassword} title="Please log in" />
           </main>
           <SiteFooter />
         </div>

@@ -6,7 +6,7 @@ import InlineLoginForm from "../components/InlineLoginForm";
 import { supabase } from "../lib/supabase";
 import { sendNotification } from "../utils/sendNotification";
 
-const DisputeResponsePage = ({ currentUser, onLogout, onEmailLogin }) => {
+const DisputeResponsePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword }) => {
   const { disputeId } = useParams();
 
   const [dispute, setDispute] = useState(null);
@@ -84,6 +84,7 @@ const DisputeResponsePage = ({ currentUser, onLogout, onEmailLogin }) => {
           <main className="middle-section simple-page">
             <InlineLoginForm
               onEmailLogin={onEmailLogin}
+              onForgotPassword={onForgotPassword}
               title="Please log in"
               description="You need to log in to submit your dispute response."
             />

@@ -135,7 +135,7 @@ const getInitialFormValues = (user) => {
   };
 };
 
-const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onUpdateProfile }) => {
+const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onUpdateProfile }) => {
   const navigate = useNavigate();
   const photoInputRef = useRef(null);
   const countryDropdownRef = useRef(null);
@@ -271,6 +271,7 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onUpdateProfile })
           <main className="middle-section simple-page">
             <InlineLoginForm
               onEmailLogin={onEmailLogin}
+              onForgotPassword={onForgotPassword}
               title="Please log in"
               description="You need to log in to see your profile."
             />

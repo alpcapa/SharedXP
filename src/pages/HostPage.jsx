@@ -14,7 +14,7 @@ import {
   validateSportsTab,
 } from "../components/host/hostUtils";
 
-const HostPage = ({ currentUser, onLogout, onEmailLogin, onSaveHostProfile, onTogglePauseHosting }) => {
+const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSaveHostProfile, onTogglePauseHosting }) => {
   const location = useLocation();
   const isHostSettingsRoute = location.pathname === "/host-settings";
 
@@ -113,6 +113,7 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onSaveHostProfile, onTo
           <main className="middle-section simple-page">
             <InlineLoginForm
               onEmailLogin={onEmailLogin}
+              onForgotPassword={onForgotPassword}
               title="Please log in"
               description="You need to log in before becoming a host."
             />

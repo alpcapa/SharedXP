@@ -18,7 +18,7 @@ const fmtTime = (t) =>
   t ? new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit" })
         .format(new Date(`2000-01-01T${t}:00`)) : "";
 
-const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin }) => {
+const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const { bookingRequestId } = useParams();
   const navigate = useNavigate();
 
@@ -73,7 +73,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin }) => {
         <div className="middle-page-frame">
           <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
-            <InlineLoginForm onEmailLogin={onEmailLogin} title="Please log in" />
+            <InlineLoginForm onEmailLogin={onEmailLogin} onForgotPassword={onForgotPassword} title="Please log in" />
           </main>
           <SiteFooter />
         </div>
