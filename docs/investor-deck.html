@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SharedXP — Investor Deck 2026</title>
+<style>
+  /* ── Reset & base ───────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black:   #0a0a0f;
+    --dark:    #12121a;
+    --card:    #1a1a26;
+    --border:  #2a2a3e;
+    --muted:   #3a3a54;
+    --text:    #e8e8f0;
+    --dim:     #9090aa;
+    --accent:  #6c63ff;
+    --accent2: #ff6b6b;
+    --green:   #4ecb71;
+    --teal:    #38d9c0;
+    --yellow:  #f5c842;
+    --r:       12px;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); text-decoration: none; }
+
+  /* ── Nav ────────────────────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-weight: 700; font-size: 18px; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a {
+    font-size: 13px; color: var(--dim); transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── Slides ─────────────────────────────────────────────────────── */
+  .slide {
+    min-height: 100vh;
+    padding: 100px 80px 80px;
+    display: flex; flex-direction: column; justify-content: center;
+    border-bottom: 1px solid var(--border);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .slide.full { max-width: 100%; padding: 100px 80px 80px; }
+  .slide-inner { max-width: 1200px; margin: 0 auto; width: 100%; }
+
+  /* ── Typography helpers ──────────────────────────────────────────── */
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+  }
+  h1 { font-size: clamp(36px, 5vw, 64px); font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; }
+  h2 { font-size: clamp(28px, 3.5vw, 44px); font-weight: 700; letter-spacing: -1px; margin-bottom: 12px; }
+  h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  p { color: var(--dim); }
+  .lead { font-size: 20px; color: var(--dim); max-width: 640px; line-height: 1.7; margin-top: 16px; }
+  .tag {
+    display: inline-block;
+    background: rgba(108,99,255,.15);
+    border: 1px solid rgba(108,99,255,.3);
+    color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+    margin-right: 6px; margin-bottom: 6px;
+  }
+  .tag.green { background: rgba(78,203,113,.12); border-color: rgba(78,203,113,.3); color: var(--green); }
+  .tag.yellow { background: rgba(245,200,66,.12); border-color: rgba(245,200,66,.3); color: var(--yellow); }
+  .tag.red { background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.3); color: var(--accent2); }
+  .tag.teal { background: rgba(56,217,192,.12); border-color: rgba(56,217,192,.3); color: var(--teal); }
+
+  /* ── Grid & card ─────────────────────────────────────────────────── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 28px;
+  }
+  .card.accent-top { border-top: 3px solid var(--accent); }
+  .card.green-top  { border-top: 3px solid var(--green); }
+  .card.teal-top   { border-top: 3px solid var(--teal); }
+  .card.yellow-top { border-top: 3px solid var(--yellow); }
+  .card.red-top    { border-top: 3px solid var(--accent2); }
+
+  /* ── Big numbers ──────────────────────────────────────────────────── */
+  .stat-num {
+    font-size: 42px; font-weight: 800; letter-spacing: -2px; line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-num.accent { color: var(--accent); }
+  .stat-num.green  { color: var(--green); }
+  .stat-num.teal   { color: var(--teal); }
+  .stat-num.yellow { color: var(--yellow); }
+  .stat-label { font-size: 13px; color: var(--dim); font-weight: 500; }
+
+  /* ── Divider ─────────────────────────────────────────────────────── */
+  .divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+  /* ── Problem ──────────────────────────────────────────────────────── */
+  .problem-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 28px 32px;
+    display: flex; gap: 20px; align-items: flex-start;
+  }
+  .problem-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: rgba(255,107,107,.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+
+  /* ── How it works ─────────────────────────────────────────────────── */
+  .step {
+    display: flex; gap: 20px; align-items: flex-start; margin-bottom: 24px;
+  }
+  .step-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ── Market bar ───────────────────────────────────────────────────── */
+  .market-bar-wrap { margin-top: 12px; }
+  .market-bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .market-bar-track {
+    height: 10px; background: var(--muted); border-radius: 10px; overflow: hidden;
+  }
+  .market-bar-fill {
+    height: 100%; border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), var(--teal));
+  }
+
+  /* ── Timeline / roadmap ───────────────────────────────────────────── */
+  .roadmap-item {
+    display: flex; gap: 20px; position: relative; padding-bottom: 32px;
+  }
+  .roadmap-item:last-child { padding-bottom: 0; }
+  .roadmap-item::before {
+    content: '';
+    position: absolute; left: 19px; top: 40px; bottom: 0;
+    width: 2px; background: var(--border);
+  }
+  .roadmap-item:last-child::before { display: none; }
+  .roadmap-dot {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; margin-top: 2px;
+    border: 2px solid var(--border);
+    background: var(--card);
+  }
+  .roadmap-dot.active {
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    border-color: transparent; color: #fff;
+  }
+
+  /* ── Chart bars ───────────────────────────────────────────────────── */
+  .chart-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 28px;
+  }
+  .bar-chart {
+    display: flex; align-items: flex-end;
+    gap: 16px; height: 220px; margin-top: 20px;
+  }
+  .bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 8px; }
+  .bar-col { width: 100%; border-radius: 6px 6px 0 0; transition: opacity .2s; }
+  .bar-col:hover { opacity: .8; }
+  .bar-label { font-size: 12px; color: var(--dim); font-weight: 500; }
+  .bar-value { font-size: 13px; font-weight: 700; color: var(--text); }
+
+  /* ── Comparison table ─────────────────────────────────────────────── */
+  .comp-table { width: 100%; border-collapse: collapse; }
+  .comp-table th, .comp-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .comp-table th { font-size: 12px; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .comp-table tr:last-child td { border-bottom: none; }
+  .comp-table tr.highlight-row { background: rgba(108,99,255,.06); }
+  .check { color: var(--green); }
+  .cross { color: var(--accent2); }
+  .partial { color: var(--yellow); }
+
+  /* ── Metrics table ────────────────────────────────────────────────── */
+  .metrics-table { width: 100%; border-collapse: collapse; }
+  .metrics-table th, .metrics-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .metrics-table th { font-size: 12px; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+  .metrics-table td:first-child { color: var(--dim); font-size: 13px; }
+  .metrics-table td:not(:first-child) { text-align: center; font-weight: 600; }
+  .metrics-table tr:last-child td { border-bottom: none; }
+
+  /* ── Team ─────────────────────────────────────────────────────────── */
+  .team-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 28px; text-align: center;
+  }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700; margin: 0 auto 16px;
+  }
+
+  /* ── Ask ──────────────────────────────────────────────────────────── */
+  .ask-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+  .ask-pct {
+    width: 56px; font-size: 16px; font-weight: 700; color: var(--accent); flex-shrink: 0;
+  }
+  .ask-bar {
+    flex: 1; margin-top: 8px;
+  }
+  .ask-track { height: 8px; background: var(--muted); border-radius: 10px; overflow: hidden; }
+  .ask-fill { height: 100%; border-radius: 10px; }
+  .ask-text { font-size: 14px; color: var(--text); margin-top: 2px; }
+
+  /* ── Cover gradient ───────────────────────────────────────────────── */
+  .cover-slide {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 100px 80px 80px;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 40%, rgba(108,99,255,.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 20% 80%, rgba(56,217,192,.08) 0%, transparent 50%),
+      var(--black);
+    position: relative; overflow: hidden;
+  }
+  .cover-slide::after {
+    content: '';
+    position: absolute; right: 80px; top: 50%;
+    transform: translateY(-50%);
+    width: 400px; height: 400px; border-radius: 50%;
+    background: linear-gradient(135deg, rgba(108,99,255,.18), rgba(56,217,192,.1));
+    filter: blur(60px);
+    pointer-events: none;
+  }
+  .cover-inner { position: relative; z-index: 1; max-width: 720px; }
+
+  /* ── Confidential footer ──────────────────────────────────────────── */
+  .slide-footer {
+    font-size: 11px; color: var(--muted); margin-top: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .page-num { font-size: 11px; color: var(--muted); }
+
+  /* ── Quote ────────────────────────────────────────────────────────── */
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 16px 24px;
+    background: rgba(108,99,255,.06);
+    border-radius: 0 var(--r) var(--r) 0;
+    font-style: italic;
+    color: var(--text);
+    font-size: 17px;
+    margin: 24px 0;
+  }
+
+  /* ── Responsive ───────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .slide, .cover-slide { padding: 90px 32px 60px; }
+    .grid2, .grid3, .grid4 { grid-template-columns: 1fr; }
+    nav { padding: 0 24px; }
+    .nav-links { display: none; }
+  }
+
+  @media print {
+    nav { display: none; }
+    .slide, .cover-slide { page-break-after: always; min-height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-brand">SharedXP</div>
+  <div class="nav-links">
+    <a href="#cover">Overview</a>
+    <a href="#problem">Problem</a>
+    <a href="#solution">Solution</a>
+    <a href="#market">Market</a>
+    <a href="#model">Business Model</a>
+    <a href="#projections">Projections</a>
+    <a href="#competition">Competition</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#ask">The Ask</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     01  COVER
+════════════════════════════════════════════════════════════════════ -->
+<div class="cover-slide" id="cover">
+  <div class="cover-inner">
+    <div class="eyebrow">Seed Round · 2026</div>
+    <h1>The global platform for<br><span style="background:linear-gradient(135deg,var(--accent),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">shared sports<br>experiences</span></h1>
+    <p class="lead">SharedXP connects active travelers with local sports enthusiasts — so you never have to give up the sport you love, wherever you are in the world.</p>
+    <div style="margin-top:36px;display:flex;gap:12px;flex-wrap:wrap;">
+      <span class="tag">43 Sports</span>
+      <span class="tag teal">177 Countries</span>
+      <span class="tag green">15% Commission</span>
+      <span class="tag yellow">Pre-Revenue · Product Stage</span>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;gap:48px;flex-wrap:wrap;">
+      <div>
+        <div class="stat-num accent" style="font-size:28px;">$400B+</div>
+        <div class="stat-label">Addressable market</div>
+      </div>
+      <div>
+        <div class="stat-num teal" style="font-size:28px;">1.6B</div>
+        <div class="stat-label">Active sports participants worldwide</div>
+      </div>
+      <div>
+        <div class="stat-num green" style="font-size:28px;">15%</div>
+        <div class="stat-label">Platform take rate</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>CONFIDENTIAL — For authorised recipients only</span>
+    <span class="page-num">01</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     02  THE PROBLEM
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="problem">
+  <div class="eyebrow">The Problem</div>
+  <h2>Active people are forced to pause<br>the sport they love when they travel</h2>
+  <p class="lead" style="margin-bottom:36px;">Over a billion people participate in sports regularly. When they travel, they face a trio of friction points that no existing platform solves end-to-end.</p>
+
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    <div class="problem-card">
+      <div class="problem-icon">🎒</div>
+      <div>
+        <h4>No equipment abroad</h4>
+        <p>Bikes, boards, rackets, and wetsuits are impractical to carry on planes. Rental shops are expensive, unreliable, or simply non-existent at the destination.</p>
+      </div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-icon">🗺️</div>
+      <div>
+        <h4>No local knowledge</h4>
+        <p>The best trails, courts, pools, and surf breaks are hidden from tourists. Finding safe, suitable spots — and the right difficulty level — is a major research burden.</p>
+      </div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-icon">👤</div>
+      <div>
+        <h4>No trustworthy local partner</h4>
+        <p>Many sports require a buddy for safety or simply work better socially. Finding a verified local who matches your level, language, and schedule is nearly impossible today.</p>
+      </div>
+    </div>
+  </div>
+
+  <blockquote style="margin-top:32px;">"I travel six times a year for work and always have to skip my morning rides. I'd pay good money to cycle with a local who knows the roads." — Target user archetype</blockquote>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">02</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     03  THE SOLUTION
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="solution">
+  <div class="eyebrow">The Solution</div>
+  <h2>SharedXP — Book a local sports<br>experience in minutes</h2>
+
+  <div class="grid2" style="margin-top:36px;gap:40px;align-items:start;">
+    <div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <h4>Search your destination</h4>
+          <p>Filter by sport, level, equipment provided, language, date, and distance. An interactive map shows verified hosts nearby.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <h4>Review &amp; request</h4>
+          <p>Explore host profiles with photo galleries, six-dimension reviews, and clear pricing. Send a booking request in one tap.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <h4>Experience &amp; earn XP</h4>
+          <p>Show up, enjoy the session with a local, and pay securely. Both guest and host earn SharedXP loyalty points — redeemable for future perks.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div>
+          <h4>Share &amp; review</h4>
+          <p>Upload photos to "The Field" — a community feed of real sessions — and leave structured reviews that build trust across the network.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card accent-top" style="margin-bottom:20px;">
+        <div class="eyebrow" style="margin-bottom:12px;">For Guests (Travelers)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <p style="color:var(--text);font-size:14px;">✦ Stay active without carrying gear</p>
+          <p style="color:var(--text);font-size:14px;">✦ Authentic local experience, not a tourist trap</p>
+          <p style="color:var(--text);font-size:14px;">✦ 43 sports across 177 countries</p>
+          <p style="color:var(--text);font-size:14px;">✦ Secure payments &amp; dispute protection</p>
+          <p style="color:var(--text);font-size:14px;">✦ Earn XP on every session</p>
+        </div>
+      </div>
+      <div class="card teal-top">
+        <div class="eyebrow" style="margin-bottom:12px;color:var(--teal);">For Hosts (Locals)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <p style="color:var(--text);font-size:14px;">✦ Monetise what you'd do anyway</p>
+          <p style="color:var(--text);font-size:14px;">✦ Set your own schedule, price, and sport list</p>
+          <p style="color:var(--text);font-size:14px;">✦ Keep 85% of every booking</p>
+          <p style="color:var(--text);font-size:14px;">✦ Build a profile &amp; grow your reputation</p>
+          <p style="color:var(--text);font-size:14px;">✦ Earn equal XP to guests</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">03</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     04  MARKET SIZE
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="market">
+  <div class="eyebrow">Market Opportunity</div>
+  <h2>A massive, underserved intersection<br>of travel &amp; sport</h2>
+
+  <div class="grid3" style="margin-top:36px;">
+    <div class="card accent-top">
+      <div class="stat-num accent">$1.8T</div>
+      <div class="stat-label">Sports Tourism TAM by 2030</div>
+      <div class="divider" style="margin:16px 0;"></div>
+      <p style="font-size:13px;">Global sports tourism market was valued at $587B in 2023, growing at 17% CAGR. Includes spectator events, active participation, and sports equipment travel.</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">Source: Allied Market Research, 2023</p>
+    </div>
+    <div class="card teal-top">
+      <div class="stat-num teal">$180B</div>
+      <div class="stat-label">Active Sports Travel SAM</div>
+      <div class="divider" style="margin:16px 0;"></div>
+      <p style="font-size:13px;">~360M active sports travelers globally who travel 3+ times per year and participate in sports abroad. Average $500/trip spend on activity bookings. SharedXP directly targets this segment.</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">Source: UNWTO, GlobalData, 2024</p>
+    </div>
+    <div class="card green-top">
+      <div class="stat-num green">$2.8B</div>
+      <div class="stat-label">5-Year SOM (Year 5 target)</div>
+      <div class="divider" style="margin:16px 0;"></div>
+      <p style="font-size:13px;">Capturing ~1.5% of the SAM across 80 cities within 5 years, at 15% platform take rate. Comparable to Airbnb Experiences' trajectory in equivalent launch windows.</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">Based on internal model — see Projections slide</p>
+    </div>
+  </div>
+
+  <div style="margin-top:40px;">
+    <h3 style="margin-bottom:20px;">Key demand-side macro signals</h3>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="market-bar-wrap">
+        <div class="market-bar-label"><span>Fitness/wellness spending — fastest-growing travel category</span><span style="color:var(--accent);font-weight:600;">+14% CAGR</span></div>
+        <div class="market-bar-track"><div class="market-bar-fill" style="width:70%;"></div></div>
+      </div>
+      <div class="market-bar-wrap">
+        <div class="market-bar-label"><span>Travelers who prioritise staying active on trips (2024 survey)</span><span style="color:var(--accent);font-weight:600;">68%</span></div>
+        <div class="market-bar-track"><div class="market-bar-fill" style="width:68%;"></div></div>
+      </div>
+      <div class="market-bar-wrap">
+        <div class="market-bar-label"><span>"Experience over stuff" preference among 25-45 year-olds</span><span style="color:var(--accent);font-weight:600;">79%</span></div>
+        <div class="market-bar-track"><div class="market-bar-fill" style="width:79%;"></div></div>
+      </div>
+      <div class="market-bar-wrap">
+        <div class="market-bar-label"><span>Growth in gig-economy participation among sports enthusiasts</span><span style="color:var(--accent);font-weight:600;">+22% YoY</span></div>
+        <div class="market-bar-track"><div class="market-bar-fill" style="width:55%;"></div></div>
+      </div>
+      <div class="market-bar-wrap">
+        <div class="market-bar-label"><span>Airbnb Experiences GBV peak — validating peer-led activity model</span><span style="color:var(--accent);font-weight:600;">$1.5B/yr</span></div>
+        <div class="market-bar-track"><div class="market-bar-fill" style="width:40%;"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">04</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     05  PRODUCT
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="product">
+  <div class="eyebrow">Product</div>
+  <h2>A full-stack sports marketplace,<br>not just a directory</h2>
+
+  <div class="grid3" style="margin-top:36px;">
+    <div class="card">
+      <div style="font-size:28px;margin-bottom:12px;">🔍</div>
+      <h3>Discover</h3>
+      <p style="font-size:14px;">Interactive map, distance-sorted hosts, 7-dimension filtering (sport, level, equipment, gender, language, date, location). Backed by geolocation and OpenStreetMap.</p>
+    </div>
+    <div class="card">
+      <div style="font-size:28px;margin-bottom:12px;">📅</div>
+      <h3>Book</h3>
+      <p style="font-size:14px;">Real-time booking requests with accept/decline, auto-confirm logic, in-app messaging per booking thread, and transparent invoice breakdown before payment.</p>
+    </div>
+    <div class="card">
+      <div style="font-size:28px;margin-bottom:12px;">💬</div>
+      <h3>Connect</h3>
+      <p style="font-size:14px;">Per-session chat thread. Six-dimension reviews (skill match, safety, communication, equipment, local knowledge, overall). Mutual trust building for both sides.</p>
+    </div>
+    <div class="card">
+      <div style="font-size:28px;margin-bottom:12px;">🌄</div>
+      <h3>The Field</h3>
+      <p style="font-size:14px;">Community feed seeded from completed real sessions. Multi-image posts, city &amp; sport filters. Creates organic social proof and drives re-engagement.</p>
+    </div>
+    <div class="card">
+      <div style="font-size:28px;margin-bottom:12px;">⭐</div>
+      <h3>XP Loyalty</h3>
+      <p style="font-size:14px;">Currency-normalised loyalty points earned on every paid session. Both host and guest earn equally. Tiered program (Explorer → Adventurer → Legend) planned for Phase 2.</p>
+    </div>
+    <div class="card">
+      <div style="font-size:28px;margin-bottom:12px;">🏆</div>
+      <h3>Events</h3>
+      <p style="font-size:14px;">Major international sports events (marathons, Grand Slams, F1, cycling) synced daily. Drives peak demand — travelers book SharedXP experiences around events.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="grid4">
+    <div style="text-align:center;">
+      <div class="stat-num accent" style="font-size:32px;">43</div>
+      <div class="stat-label">Sports supported</div>
+    </div>
+    <div style="text-align:center;">
+      <div class="stat-num teal" style="font-size:32px;">177</div>
+      <div class="stat-label">Countries</div>
+    </div>
+    <div style="text-align:center;">
+      <div class="stat-num green" style="font-size:32px;">6</div>
+      <div class="stat-label">Review dimensions</div>
+    </div>
+    <div style="text-align:center;">
+      <div class="stat-num yellow" style="font-size:32px;">130+</div>
+      <div class="stat-label">Currencies normalised</div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">05</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     06  BUSINESS MODEL
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="model">
+  <div class="eyebrow">Business Model</div>
+  <h2>Transaction-first, loyalty-amplified</h2>
+
+  <div class="grid2" style="margin-top:36px;gap:32px;">
+    <div>
+      <div class="card accent-top" style="margin-bottom:20px;">
+        <h3>Core Revenue — Commission</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:14px;color:var(--dim);">Platform commission</span>
+          <span style="font-size:20px;font-weight:700;color:var(--accent);">15%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:14px;color:var(--dim);">VAT / applicable tax</span>
+          <span style="font-size:20px;font-weight:700;color:var(--dim);">5%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:14px;color:var(--dim);">Host payout rate</span>
+          <span style="font-size:20px;font-weight:700;color:var(--green);">85%</span>
+        </div>
+        <div class="divider" style="margin:16px 0;"></div>
+        <p style="font-size:13px;">Example: $100 booking → $15 to platform + $5 tax → $80 net to host. Stripe Connect handles automated split payouts at checkout.</p>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <h3>Future Revenue Streams</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;">
+            <span style="color:var(--dim);">Host Pro subscription (featured listings, analytics)</span>
+            <span class="tag yellow" style="margin:0;">Phase 2</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;">
+            <span style="color:var(--dim);">XP redemption / premium tier membership</span>
+            <span class="tag yellow" style="margin:0;">Phase 2</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;">
+            <span style="color:var(--dim);">Sponsored events &amp; brand partnerships (gear brands)</span>
+            <span class="tag yellow" style="margin:0;">Phase 3</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;">
+            <span style="color:var(--dim);">B2B corporate wellness travel packages</span>
+            <span class="tag yellow" style="margin:0;">Phase 3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card green-top" style="margin-bottom:20px;">
+        <h3>Unit Economics</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:8px 0;font-size:14px;color:var(--dim);border-bottom:1px solid var(--border);">Average Booking Value (ABV)</td>
+            <td style="padding:8px 0;font-size:14px;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">$90</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;font-size:14px;color:var(--dim);border-bottom:1px solid var(--border);">Platform revenue per booking</td>
+            <td style="padding:8px 0;font-size:14px;font-weight:700;color:var(--accent);text-align:right;border-bottom:1px solid var(--border);">$13.50</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;font-size:14px;color:var(--dim);border-bottom:1px solid var(--border);">Est. customer acquisition cost (CAC)</td>
+            <td style="padding:8px 0;font-size:14px;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">$15</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;font-size:14px;color:var(--dim);border-bottom:1px solid var(--border);">12-month LTV (guest)</td>
+            <td style="padding:8px 0;font-size:14px;font-weight:700;color:var(--green);text-align:right;border-bottom:1px solid var(--border);">$180</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;font-size:14px;color:var(--dim);border-bottom:1px solid var(--border);">LTV / CAC ratio</td>
+            <td style="padding:8px 0;font-size:14px;font-weight:700;color:var(--green);text-align:right;border-bottom:1px solid var(--border);">12×</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;font-size:14px;color:var(--dim);border-bottom:1px solid var(--border);">CAC payback period</td>
+            <td style="padding:8px 0;font-size:14px;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">~9 months</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;font-size:14px;color:var(--dim);">Gross margin (software marketplace)</td>
+            <td style="padding:8px 0;font-size:14px;font-weight:700;color:var(--teal);text-align:right;">~72%</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Why 15% works</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <p style="font-size:13px;margin-bottom:10px;">Airbnb charges 3–14%; Fiverr 20%; Airbnb Experiences 20%. SharedXP's 15% is competitive for a high-trust, safety-critical activity marketplace where hosts bring significant value (equipment, local knowledge, liability coverage).</p>
+        <p style="font-size:13px;">The XP loyalty program reinforces repeat behavior without discounting — protecting the margin while improving retention.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">06</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     07  KEY METRICS & ASSUMPTIONS
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="metrics">
+  <div class="eyebrow">Key Metrics &amp; Assumptions</div>
+  <h2>Marketplace health benchmarks<br>used in our model</h2>
+
+  <div class="grid2" style="margin-top:36px;gap:32px;">
+    <div>
+      <div class="card accent-top" style="margin-bottom:20px;">
+        <h3>Growth Assumptions</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Monthly host-side growth (Y1–Y2)</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">+12% MoM</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Monthly guest-side growth (Y1–Y2)</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">+18% MoM</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Host : Guest ratio target</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">1 : 10</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">New cities opened per quarter (Y2+)</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">4–6</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);">ABV growth rate per year</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;">+5%</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card teal-top">
+        <h3>Conversion Funnel</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Visitor → Signup</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">8%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Signup → First booking (guest)</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">22%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Signup → First listing (host)</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">35%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Booking request → Confirmed</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">78%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);">Confirmed booking → Review left</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;">55%</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="card green-top" style="margin-bottom:20px;">
+        <h3>Retention &amp; Churn</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Guest M1 retention (booked at least once)</td>
+            <td style="padding:8px 0;font-weight:700;color:var(--green);text-align:right;border-bottom:1px solid var(--border);">45%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Guest M6 retention (active users)</td>
+            <td style="padding:8px 0;font-weight:700;color:var(--green);text-align:right;border-bottom:1px solid var(--border);">28%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Guest M12 retention</td>
+            <td style="padding:8px 0;font-weight:700;color:var(--green);text-align:right;border-bottom:1px solid var(--border);">18%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Host annual churn</td>
+            <td style="padding:8px 0;font-weight:700;color:var(--accent2);text-align:right;border-bottom:1px solid var(--border);">15%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Avg bookings per active guest / month</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;border-bottom:1px solid var(--border);">1.3×</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);">Avg sessions hosted per host / month</td>
+            <td style="padding:8px 0;font-weight:700;text-align:right;">2.1×</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card yellow-top">
+        <h3>Why retention is defensible</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <p style="font-size:13px;color:var(--text);">🔒 <strong>XP lock-in</strong> — accumulated loyalty points create switching costs</p>
+          <p style="font-size:13px;color:var(--text);">📸 <strong>The Field</strong> — session photos create a social journal users return to</p>
+          <p style="font-size:13px;color:var(--text);">⭐ <strong>Review history</strong> — trusted reputation makes users reluctant to restart elsewhere</p>
+          <p style="font-size:13px;color:var(--text);">🗓️ <strong>Travel cadence</strong> — regular travelers naturally book repeatedly</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">07</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     08  FINANCIAL PROJECTIONS
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="projections">
+  <div class="eyebrow">Financial Projections</div>
+  <h2>5-year model: city-by-city expansion<br>driven by supply-side seeding</h2>
+
+  <!-- Bar chart: GBV -->
+  <div class="chart-wrap" style="margin-top:36px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h3>Gross Booking Value (GBV) &amp; Revenue</h3>
+        <p style="font-size:13px;">GBV = total guest spend; Revenue = 15% platform commission</p>
+      </div>
+      <div style="display:flex;gap:16px;font-size:13px;">
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--accent);display:inline-block;"></span>GBV</span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--teal);display:inline-block;"></span>Revenue</span>
+      </div>
+    </div>
+    <div class="bar-chart">
+      <!-- Y1 -->
+      <div class="bar-group">
+        <div class="bar-value">$1.9M / $292K</div>
+        <div style="display:flex;gap:4px;width:100%;align-items:flex-end;height:180px;">
+          <div class="bar-col" style="height:2%;background:var(--accent);"></div>
+          <div class="bar-col" style="height:1%;background:var(--teal);"></div>
+        </div>
+        <div class="bar-label">Year 1</div>
+      </div>
+      <!-- Y2 -->
+      <div class="bar-group">
+        <div class="bar-value">$13M / $2M</div>
+        <div style="display:flex;gap:4px;width:100%;align-items:flex-end;height:180px;">
+          <div class="bar-col" style="height:10%;background:var(--accent);"></div>
+          <div class="bar-col" style="height:2%;background:var(--teal);"></div>
+        </div>
+        <div class="bar-label">Year 2</div>
+      </div>
+      <!-- Y3 -->
+      <div class="bar-group">
+        <div class="bar-value">$51M / $7.7M</div>
+        <div style="display:flex;gap:4px;width:100%;align-items:flex-end;height:180px;">
+          <div class="bar-col" style="height:38%;background:var(--accent);"></div>
+          <div class="bar-col" style="height:8%;background:var(--teal);"></div>
+        </div>
+        <div class="bar-label">Year 3</div>
+      </div>
+      <!-- Y4 -->
+      <div class="bar-group">
+        <div class="bar-value">$120M / $18M</div>
+        <div style="display:flex;gap:4px;width:100%;align-items:flex-end;height:180px;">
+          <div class="bar-col" style="height:68%;background:var(--accent);"></div>
+          <div class="bar-col" style="height:13%;background:var(--teal);"></div>
+        </div>
+        <div class="bar-label">Year 4</div>
+      </div>
+      <!-- Y5 -->
+      <div class="bar-group">
+        <div class="bar-value">$280M / $42M</div>
+        <div style="display:flex;gap:4px;width:100%;align-items:flex-end;height:180px;">
+          <div class="bar-col" style="height:100%;background:var(--accent);"></div>
+          <div class="bar-col" style="height:23%;background:var(--teal);"></div>
+        </div>
+        <div class="bar-label">Year 5</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail table -->
+  <div class="chart-wrap" style="margin-top:24px;padding:0;">
+    <table class="metrics-table">
+      <thead>
+        <tr style="background:var(--dark);">
+          <th style="text-align:left;padding:16px;">Metric</th>
+          <th>Year 1</th>
+          <th>Year 2</th>
+          <th>Year 3</th>
+          <th>Year 4</th>
+          <th>Year 5</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cities active</td>
+          <td>3</td><td>8</td><td>20</td><td>40</td><td>80</td>
+        </tr>
+        <tr>
+          <td>Hosts</td>
+          <td>500</td><td>2,500</td><td>8,000</td><td>20,000</td><td>50,000</td>
+        </tr>
+        <tr>
+          <td>Registered guests</td>
+          <td>5,000</td><td>25,000</td><td>80,000</td><td>200,000</td><td>500,000</td>
+        </tr>
+        <tr>
+          <td>Monthly active guests (30% → 38%)</td>
+          <td>1,500</td><td>8,750</td><td>30,400</td><td>78,000</td><td>200,000</td>
+        </tr>
+        <tr>
+          <td>Annual bookings</td>
+          <td>23,400</td><td>136,500</td><td>511,920</td><td>1,216,800</td><td>3,120,000</td>
+        </tr>
+        <tr>
+          <td>Avg booking value</td>
+          <td>$83</td><td>$95</td><td>$100</td><td>$99</td><td>$90</td>
+        </tr>
+        <tr style="background:rgba(108,99,255,.06);">
+          <td><strong>GBV</strong></td>
+          <td><strong>$1.9M</strong></td><td><strong>$13M</strong></td><td><strong>$51M</strong></td><td><strong>$120M</strong></td><td><strong>$280M</strong></td>
+        </tr>
+        <tr style="background:rgba(56,217,192,.05);">
+          <td><strong>Revenue (15%)</strong></td>
+          <td><strong>$292K</strong></td><td><strong>$2.0M</strong></td><td><strong>$7.7M</strong></td><td><strong>$18M</strong></td><td><strong>$42M</strong></td>
+        </tr>
+        <tr>
+          <td>Gross profit (~72% margin)</td>
+          <td>$210K</td><td>$1.4M</td><td>$5.5M</td><td>$13M</td><td>$30M</td>
+        </tr>
+        <tr>
+          <td>EBITDA (est.)</td>
+          <td style="color:var(--accent2);">-$1.5M</td>
+          <td style="color:var(--accent2);">-$2.1M</td>
+          <td style="color:var(--accent2);">-$0.8M</td>
+          <td style="color:var(--green);">$4.5M</td>
+          <td style="color:var(--green);">$14M</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:12px;color:var(--muted);margin-top:12px;">* Projections are forward-looking estimates based on internal assumptions. Actual results may differ materially. See Metrics &amp; Assumptions slide for input parameters.</p>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">08</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     09  COMPETITION
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="competition">
+  <div class="eyebrow">Competitive Landscape</div>
+  <h2>No direct competitor owns<br>the local sports experience niche</h2>
+
+  <div class="chart-wrap" style="margin-top:36px;padding:0;">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th style="width:20%;">Platform</th>
+          <th>Sports-specific</th>
+          <th>Equipment sharing</th>
+          <th>Local guide match</th>
+          <th>Peer-to-peer</th>
+          <th>Global (177 countries)</th>
+          <th>Loyalty program</th>
+          <th>Community feed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="highlight-row">
+          <td><strong style="color:var(--accent);">SharedXP</strong></td>
+          <td class="check">✔ 43 sports</td>
+          <td class="check">✔</td>
+          <td class="check">✔ Verified</td>
+          <td class="check">✔ C2C</td>
+          <td class="check">✔</td>
+          <td class="check">✔ XP Points</td>
+          <td class="check">✔ The Field</td>
+        </tr>
+        <tr>
+          <td>Airbnb Experiences</td>
+          <td class="partial">~ Some</td>
+          <td class="cross">✗</td>
+          <td class="partial">~ Generic</td>
+          <td class="partial">~ Mixed</td>
+          <td class="check">✔</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+        </tr>
+        <tr>
+          <td>Strava</td>
+          <td class="partial">~ Running/Cycling</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="check">✔ Social</td>
+          <td class="check">✔</td>
+          <td class="cross">✗ No bookings</td>
+          <td class="check">✔</td>
+        </tr>
+        <tr>
+          <td>Viator / GetYourGuide</td>
+          <td class="partial">~ Some tours</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗ B2C only</td>
+          <td class="check">✔</td>
+          <td class="partial">~ Points</td>
+          <td class="cross">✗</td>
+        </tr>
+        <tr>
+          <td>SportsBuddy / Meetup</td>
+          <td class="check">✔</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="check">✔</td>
+          <td class="cross">✗ Limited</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+        </tr>
+        <tr>
+          <td>Gear rental apps</td>
+          <td class="partial">~ Sport-specific</td>
+          <td class="check">✔</td>
+          <td class="cross">✗</td>
+          <td class="partial">~ Mixed</td>
+          <td class="cross">✗ Fragmented</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid3" style="margin-top:28px;">
+    <div class="card">
+      <h4 style="color:var(--accent);">vs. Airbnb Experiences</h4>
+      <p style="font-size:13px;">SharedXP is sports-first and structured (verified levels, equipment, safety). Airbnb Experiences is generic and skewed toward tourist activities with professional guides, not peer-to-peer sport.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--teal);">vs. Strava / Komoot</h4>
+      <p style="font-size:13px;">These are activity tracking and route discovery tools — no transactional layer, no host-guest model, no equipment sharing. SharedXP adds commerce on top of social sport discovery.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--green);">vs. Gear Rentals</h4>
+      <p style="font-size:13px;">Gear rental is a commodity with thin margins and logistics overhead. SharedXP bundles equipment access with local expertise, social experience, and a loyalty flywheel — far higher value per transaction.</p>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">09</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     10  GO-TO-MARKET
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="gtm">
+  <div class="eyebrow">Go-to-Market Strategy</div>
+  <h2>Supply-led launch in high-density<br>sports cities, demand follows</h2>
+
+  <div class="grid2" style="margin-top:36px;gap:32px;align-items:start;">
+    <div>
+      <h3 style="margin-bottom:16px;">Phase 1 — Seed supply in 3 anchor cities</h3>
+      <div class="card" style="margin-bottom:20px;">
+        <p style="font-size:14px;margin-bottom:12px;">Target: <strong style="color:var(--accent);">Lisbon, Barcelona, Berlin</strong></p>
+        <p style="font-size:13px;margin-bottom:8px;">• Partner with local triathlon clubs, cycling communities, padel associations — 20–50 host partnerships per city before launch.</p>
+        <p style="font-size:13px;margin-bottom:8px;">• Free host onboarding + dedicated city champion (1 per city): paid community manager who is also a local athlete.</p>
+        <p style="font-size:13px;">• Host incentive: first 3 bookings commission-free to build supply-side trust and profile reviews.</p>
+      </div>
+
+      <h3 style="margin-bottom:16px;">Demand acquisition channels</h3>
+      <div class="card">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">SEO / travel content ("best cycling in Lisbon")</td>
+            <td style="padding:8px 0;font-weight:600;text-align:right;border-bottom:1px solid var(--border);color:var(--green);">Low CAC</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Strava / Komoot community integrations &amp; ads</td>
+            <td style="padding:8px 0;font-weight:600;text-align:right;border-bottom:1px solid var(--border);color:var(--accent);">Targeted</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Sports events attendee targeting (marathons, F1)</td>
+            <td style="padding:8px 0;font-weight:600;text-align:right;border-bottom:1px solid var(--border);color:var(--teal);">High intent</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);border-bottom:1px solid var(--border);">Corporate wellness travel partnerships</td>
+            <td style="padding:8px 0;font-weight:600;text-align:right;border-bottom:1px solid var(--border);color:var(--yellow);">B2B channel</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--dim);">Host referral / "invite a buddy" program</td>
+            <td style="padding:8px 0;font-weight:600;text-align:right;color:var(--green);">Viral loop</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="margin-bottom:16px;">Growth flywheel</h3>
+      <div class="card" style="padding:24px;text-align:center;margin-bottom:20px;">
+        <div style="display:flex;flex-direction:column;gap:0;position:relative;">
+          <div style="background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.3);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+            <strong style="font-size:13px;">More hosts onboarded</strong>
+          </div>
+          <div style="font-size:20px;color:var(--accent);margin:-4px 0;">↓</div>
+          <div style="background:rgba(56,217,192,.08);border:1px solid rgba(56,217,192,.2);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+            <strong style="font-size:13px;">More sports &amp; slots available</strong>
+          </div>
+          <div style="font-size:20px;color:var(--teal);margin:-4px 0;">↓</div>
+          <div style="background:rgba(78,203,113,.08);border:1px solid rgba(78,203,113,.2);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+            <strong style="font-size:13px;">Guests book &amp; earn XP</strong>
+          </div>
+          <div style="font-size:20px;color:var(--green);margin:-4px 0;">↓</div>
+          <div style="background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+            <strong style="font-size:13px;">Reviews &amp; Field posts grow trust</strong>
+          </div>
+          <div style="font-size:20px;color:var(--yellow);margin:-4px 0;">↓</div>
+          <div style="background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.3);border-radius:8px;padding:12px 16px;">
+            <strong style="font-size:13px;">New guests &amp; hosts attracted</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card yellow-top">
+        <h4>Events-driven demand spikes</h4>
+        <p style="font-size:13px;margin-top:8px;">Our integrated events calendar (marathons, Grand Slams, Ironmans, F1) creates predictable demand spikes. Travelers attending a race weekend actively want to train, ride, or explore the city. SharedXP captures this demand with intent-based targeting 4–8 weeks before each event.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">10</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     11  ROADMAP
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="roadmap">
+  <div class="eyebrow">Product Roadmap</div>
+  <h2>Three phases from MVP<br>to global marketplace</h2>
+
+  <div class="grid2" style="margin-top:36px;gap:48px;">
+    <div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot active">1</div>
+        <div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+            <h3 style="margin:0;">Phase 1 — Foundation</h3>
+            <span class="tag green">Now → Q4 2026</span>
+          </div>
+          <p style="font-size:13px;margin-bottom:8px;">Core marketplace live: auth, profiles, host onboarding, booking lifecycle, in-app chat, invoicing, dispute resolution, email notifications.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">
+            <span class="tag">Auth ✔</span>
+            <span class="tag">Booking flow ✔</span>
+            <span class="tag">The Field ✔</span>
+            <span class="tag">XP system ✔</span>
+            <span class="tag">Disputes ✔</span>
+          </div>
+          <div style="margin-top:12px;font-size:13px;color:var(--dim);">
+            <strong style="color:var(--text);">Remaining:</strong> Stripe Connect payouts · Social OAuth (Google/Apple) · App Store listing
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-dot">2</div>
+        <div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+            <h3 style="margin:0;">Phase 2 — Growth</h3>
+            <span class="tag yellow">Q1–Q4 2027</span>
+          </div>
+          <p style="font-size:13px;margin-bottom:8px;">City-by-city expansion (8 → 20 cities). XP tier rewards (Explorer / Adventurer / Legend). Host Pro subscription. Native iOS &amp; Android apps. Advanced analytics dashboard for hosts.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">
+            <span class="tag yellow">XP tiers</span>
+            <span class="tag yellow">Native apps</span>
+            <span class="tag yellow">Host Pro</span>
+            <span class="tag yellow">20 cities</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-dot">3</div>
+        <div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+            <h3 style="margin:0;">Phase 3 — Scale</h3>
+            <span class="tag" style="background:rgba(56,217,192,.1);border-color:rgba(56,217,192,.3);color:var(--teal);">2028+</span>
+          </div>
+          <p style="font-size:13px;margin-bottom:8px;">Brand partnerships (gear brands sponsoring XP events). Corporate wellness B2B packages. 40–80 cities. XP redemption marketplace. International media &amp; sports event co-marketing.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">
+            <span class="tag teal">Brand deals</span>
+            <span class="tag teal">B2B wellness</span>
+            <span class="tag teal">80 cities</span>
+            <span class="tag teal">XP redemption</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:20px;">
+        <h3>Technology stack</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--dim);">Frontend</span><span>React 18 + React Router v6 + Vite 5</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--dim);">Backend / DB</span><span>Supabase (Postgres + Auth + RLS + Storage)</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--dim);">Edge functions</span><span>Deno / TypeScript on Supabase</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--dim);">Email</span><span>Resend (transactional + Auth hooks)</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--dim);">Payments</span><span>Stripe Connect (in progress)</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--dim);">Deployment</span><span>Vercel (CDN-edge, global)</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--dim);">Maps</span><span>OpenStreetMap / Nominatim</span></div>
+        </div>
+        <div class="divider" style="margin:16px 0;"></div>
+        <p style="font-size:13px;">Lean, proven stack. No vendor lock-in on custom UI framework — full control over UX. Row-Level Security on every table ensures data isolation at the DB layer.</p>
+      </div>
+
+      <div class="card teal-top">
+        <h3>Scalability moats</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <p style="font-size:13px;margin-bottom:8px;color:var(--text);">🌐 <strong>Global from day one</strong> — 177 countries, 130+ currencies, no geo-restriction in the data model.</p>
+        <p style="font-size:13px;margin-bottom:8px;color:var(--text);">⚡ <strong>Event-driven architecture</strong> — edge functions decouple notifications, payouts, and event sync from the core app.</p>
+        <p style="font-size:13px;color:var(--text);">🔐 <strong>Trust infrastructure</strong> — 23 DB migrations of RLS policies, dispute resolution, and 6-dimension reviews baked in before any user sees the product.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">11</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     12  TEAM
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="team">
+  <div class="eyebrow">Team</div>
+  <h2>Built by an athlete<br>who lived the problem</h2>
+
+  <div style="max-width:640px;margin:36px 0;">
+    <div class="card accent-top" style="display:flex;gap:24px;align-items:flex-start;">
+      <div class="avatar">AC</div>
+      <div>
+        <h3>Alp R. Capa</h3>
+        <div class="stat-label" style="margin-bottom:12px;">Founder &amp; CEO</div>
+        <p style="font-size:14px;color:var(--text);margin-bottom:12px;">Triathlete and serial traveler who repeatedly faced the problem of finding safe, suitable local sports experiences abroad. Built SharedXP from the ground up — product, architecture, design, and go-to-market.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span class="tag">Full-stack builder</span>
+          <span class="tag">Sports practitioner</span>
+          <span class="tag">Domain expert</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:640px;margin-bottom:24px;">
+    <h3>Key hires with seed funding</h3>
+    <div class="divider" style="margin:16px 0;"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;">
+      <div style="display:flex;gap:16px;">
+        <span class="tag" style="width:160px;text-align:center;flex-shrink:0;">Head of Growth</span>
+        <span style="color:var(--dim);">Community-led supply acquisition; city launch playbook; sports club partnerships</span>
+      </div>
+      <div style="display:flex;gap:16px;">
+        <span class="tag teal" style="width:160px;text-align:center;flex-shrink:0;">Mobile Engineer</span>
+        <span style="color:var(--dim);">React Native iOS/Android app to complement the existing web platform</span>
+      </div>
+      <div style="display:flex;gap:16px;">
+        <span class="tag yellow" style="width:160px;text-align:center;flex-shrink:0;">City Champion ×3</span>
+        <span style="color:var(--dim);">Part-time local athletes who seed host supply and manage quality in anchor cities</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">12</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     13  RISKS
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="risks">
+  <div class="eyebrow">Risks &amp; Mitigations</div>
+  <h2>Known challenges and<br>how we address them</h2>
+
+  <div style="display:flex;flex-direction:column;gap:16px;margin-top:36px;max-width:900px;">
+    <div class="card">
+      <div class="grid2" style="gap:24px;">
+        <div>
+          <h4 style="color:var(--accent2);">⚠ Chicken-and-egg marketplace</h4>
+          <p style="font-size:13px;">Classic cold-start: guests won't come without hosts; hosts won't list without guests.</p>
+        </div>
+        <div>
+          <h4 style="color:var(--green);">✔ Mitigation</h4>
+          <p style="font-size:13px;">Supply-first strategy: seed 20–50 hosts per city before demand launch. City champions guaranteed. First 3 bookings commission-free for hosts.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="grid2" style="gap:24px;">
+        <div>
+          <h4 style="color:var(--accent2);">⚠ Safety &amp; liability</h4>
+          <p style="font-size:13px;">Physical activities carry injury risk. A serious incident could damage trust platform-wide.</p>
+        </div>
+        <div>
+          <h4 style="color:var(--green);">✔ Mitigation</h4>
+          <p style="font-size:13px;">Full legal suite live (Terms, Safety Policy, Disclaimers, Dispute Resolution). Profile verification, six-dimension reviews, dispute system, and insurance partner integration in Phase 2.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="grid2" style="gap:24px;">
+        <div>
+          <h4 style="color:var(--accent2);">⚠ Airbnb / Strava entry</h4>
+          <p style="font-size:13px;">A large platform could replicate sports-specific features quickly.</p>
+        </div>
+        <div>
+          <h4 style="color:var(--green);">✔ Mitigation</h4>
+          <p style="font-size:13px;">Community network effects (XP, The Field, reviews) are hard to copy. Pure-play focus allows deeper sport-specific features than any generalist. First-mover in C2C sports.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="grid2" style="gap:24px;">
+        <div>
+          <h4 style="color:var(--accent2);">⚠ Payment regulation</h4>
+          <p style="font-size:13px;">Stripe Connect, KYC/AML, and local tax compliance across 177 countries is complex.</p>
+        </div>
+        <div>
+          <h4 style="color:var(--green);">✔ Mitigation</h4>
+          <p style="font-size:13px;">Launch in EU/EEA first (lower regulatory complexity). Stripe handles KYC and splits. Expand jurisdictions gradually as compliance is confirmed.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">13</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     14  THE ASK
+════════════════════════════════════════════════════════════════════ -->
+<section class="slide" id="ask">
+  <div class="eyebrow">The Ask</div>
+  <h2>Raising <span style="background:linear-gradient(135deg,var(--accent),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">$1.5M seed</span> to reach<br>product-market fit in 3 cities</h2>
+
+  <div class="grid2" style="margin-top:36px;gap:40px;align-items:start;">
+    <div>
+      <div class="card accent-top" style="margin-bottom:20px;">
+        <h3>Use of Funds</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+
+        <div class="ask-row">
+          <div class="ask-pct">35%</div>
+          <div class="ask-bar">
+            <div class="ask-track"><div class="ask-fill" style="width:35%;background:var(--accent);"></div></div>
+            <div class="ask-text">Product &amp; Engineering — Stripe Connect, native apps (iOS/Android), host analytics</div>
+          </div>
+        </div>
+        <div class="ask-row">
+          <div class="ask-pct">28%</div>
+          <div class="ask-bar">
+            <div class="ask-track"><div class="ask-fill" style="width:28%;background:var(--teal);"></div></div>
+            <div class="ask-text">Growth &amp; Supply — 3 city champions, host acquisition, community marketing</div>
+          </div>
+        </div>
+        <div class="ask-row">
+          <div class="ask-pct">20%</div>
+          <div class="ask-bar">
+            <div class="ask-track"><div class="ask-fill" style="width:20%;background:var(--green);"></div></div>
+            <div class="ask-text">Demand marketing — SEO content, sports event activations, paid acquisition tests</div>
+          </div>
+        </div>
+        <div class="ask-row">
+          <div class="ask-pct">12%</div>
+          <div class="ask-bar">
+            <div class="ask-track"><div class="ask-fill" style="width:12%;background:var(--yellow);"></div></div>
+            <div class="ask-text">Operations &amp; Legal — compliance, insurance partner, payment regulatory setup</div>
+          </div>
+        </div>
+        <div class="ask-row">
+          <div class="ask-pct">5%</div>
+          <div class="ask-bar">
+            <div class="ask-track"><div class="ask-fill" style="width:5%;background:var(--accent2);"></div></div>
+            <div class="ask-text">Reserve — contingency buffer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card green-top" style="margin-bottom:20px;">
+        <h3>Milestones this round funds</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="color:var(--green);font-size:18px;line-height:1;margin-top:2px;">●</span>
+            <span>Stripe Connect live → first real-money bookings cleared</span>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="color:var(--green);font-size:18px;line-height:1;margin-top:2px;">●</span>
+            <span>500+ active hosts across Lisbon, Barcelona, Berlin</span>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="color:var(--green);font-size:18px;line-height:1;margin-top:2px;">●</span>
+            <span>5,000+ registered guests; 23,000+ annual bookings in Y1</span>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="color:var(--green);font-size:18px;line-height:1;margin-top:2px;">●</span>
+            <span>Native iOS &amp; Android app shipped</span>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="color:var(--green);font-size:18px;line-height:1;margin-top:2px;">●</span>
+            <span>€292K revenue run-rate; Series A raise justified</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card teal-top">
+        <h3>Why now?</h3>
+        <div class="divider" style="margin:16px 0;"></div>
+        <p style="font-size:13px;margin-bottom:8px;">Post-COVID, sports travel is at an all-time high. The gig economy has normalised monetising personal expertise. Trust infrastructure (Stripe, Supabase RLS, Resend) that would have taken millions to build 5 years ago is now commodity. No venture-backed player has claimed this niche.</p>
+        <p style="font-size:13px;"><strong style="color:var(--teal);">The window is now.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>CONFIDENTIAL</span><span class="page-num">14</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     15  CLOSING
+════════════════════════════════════════════════════════════════════ -->
+<div class="cover-slide" id="closing" style="background:
+  radial-gradient(ellipse 60% 60% at 30% 50%, rgba(56,217,192,.1) 0%, transparent 60%),
+  radial-gradient(ellipse 80% 60% at 80% 40%, rgba(108,99,255,.12) 0%, transparent 60%),
+  var(--black);">
+  <div class="cover-inner" style="max-width:640px;">
+    <div class="eyebrow">SharedXP</div>
+    <h1 style="font-size:clamp(28px,4vw,52px);">"Don't give up the sport you love<br>just because you're somewhere new."</h1>
+    <div class="divider" style="margin:32px 0;"></div>
+    <div class="grid3" style="margin-bottom:36px;">
+      <div>
+        <div class="stat-num accent" style="font-size:28px;">$1.8T</div>
+        <div class="stat-label">Sports tourism TAM (2030)</div>
+      </div>
+      <div>
+        <div class="stat-num teal" style="font-size:28px;">$280M</div>
+        <div class="stat-label">GBV target, Year 5</div>
+      </div>
+      <div>
+        <div class="stat-num green" style="font-size:28px;">12×</div>
+        <div class="stat-label">LTV / CAC ratio</div>
+      </div>
+    </div>
+    <p class="lead" style="font-size:17px;">We are raising $1.5M seed to reach first-mover product-market fit in 3 European sports cities and build the infrastructure for global expansion.</p>
+    <div style="margin-top:32px;padding:24px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r);">
+      <p style="font-size:14px;color:var(--text);margin-bottom:4px;"><strong>Contact</strong></p>
+      <p style="font-size:14px;color:var(--dim);">Alp R. Capa — Founder &amp; CEO, SharedXP</p>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>CONFIDENTIAL — SharedXP · Seed Deck · May 2026 · For authorised recipients only. Forward-looking statements are subject to material risk. Past marketplace performance is not indicative of future results.</span>
+    <span class="page-num">15</span>
+  </div>
+</div>
+
+</body>
+</html>
