@@ -974,6 +974,34 @@ body {
   margin-bottom: 10px;
 }
 
+.explore-geo-notice p {
+  margin: 0 0 0.25rem;
+}
+
+.explore-geo-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.82rem;
+  color: #4a7c4e;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.explore-geo-link:hover {
+  color: #2e5e32;
+}
+
+.explore-geo-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: #888;
+  line-height: 1.4;
+}
+
 .explore-map-section {
   margin-top: 14px;
 }

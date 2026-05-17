@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ExploreMap from "../components/ExploreMap";
 import SiteFooter from "../components/SiteFooter";
@@ -27,6 +27,8 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const [detectedCountry, setDetectedCountry] = useState("");
   const [detectedCity, setDetectedCity] = useState("");
   const [geoStatus, setGeoStatus] = useState("pending"); // pending | granted | denied | unavailable
+  const [permissionState, setPermissionState] = useState(null); // "granted" | "prompt" | "denied" | null
+  const [showSettingsHint, setShowSettingsHint] = useState(false);
 
   // Fetch hosts — coordinates now come from the DB
   useEffect(() => {
@@ -79,18 +81,11 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     };
   }, []);
 
-  // Request browser geolocation; reverse-geocode to detect country/city for the filters
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setGeoStatus("unavailable");
-      return;
-    }
-
-    let cancelled = false;
-
+  // Reusable location request — called on mount and by the "Share location" button
+  const doGeoRequest = useCallback((knownPermState) => {
+    setGeoStatus("pending");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        if (cancelled) return;
         const { latitude: lat, longitude: lng } = pos.coords;
         setUserLocation({ lat, lng });
         setGeoStatus("granted");
@@ -98,7 +93,6 @@ const ExplorePage = ({ currentUser, onLogout }) => {
           const resp = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`
           );
-          if (cancelled) return;
           const data = await resp.json();
           setDetectedCountry(data.address?.country || "");
           setDetectedCity(
@@ -112,16 +106,54 @@ const ExplorePage = ({ currentUser, onLogout }) => {
         }
       },
       (err) => {
-        if (!cancelled)
-          setGeoStatus(err.code === 1 ? "denied" : "unavailable");
+        // On mobile in-app browsers/WebViews, PERMISSION_DENIED (code 1) fires
+        // immediately without ever showing the system prompt. Only treat it as
+        // "denied" when the Permissions API confirmed the user already denied.
+        if (err.code === 1 && knownPermState === "denied") {
+          setGeoStatus("denied");
+        } else {
+          setGeoStatus("unavailable");
+        }
       },
       { timeout: 15000, enableHighAccuracy: false }
     );
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  // Auto-request location on mount
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setGeoStatus("unavailable");
+      return;
+    }
+
+    if (navigator.permissions) {
+      navigator.permissions
+        .query({ name: "geolocation" })
+        .then((result) => {
+          setPermissionState(result.state);
+          if (result.state === "denied") {
+            setGeoStatus("denied");
+            return;
+          }
+          doGeoRequest(result.state);
+        })
+        .catch(() => doGeoRequest("prompt"));
+    } else {
+      doGeoRequest("prompt");
+    }
+  }, [doGeoRequest]);
+
+  // "Share your location" button handler
+  const handleShareLocation = useCallback(() => {
+    if (!navigator.geolocation) return;
+    if (permissionState === "denied") {
+      // Can't re-trigger the dialog once permanently denied — show settings hint
+      setShowSettingsHint(true);
+      return;
+    }
+    setShowSettingsHint(false);
+    doGeoRequest(permissionState || "prompt");
+  }, [doGeoRequest, permissionState]);
 
   const countryOptions = useMemo(
     () => [
@@ -390,15 +422,22 @@ const ExplorePage = ({ currentUser, onLogout }) => {
               {geoStatus === "pending" && (
                 <p className="explore-geo-notice">📍 Requesting your location…</p>
               )}
-              {geoStatus === "denied" && (
-                <p className="explore-geo-notice">
-                  📍 Location access denied — showing all hosts.
-                </p>
-              )}
-              {geoStatus === "unavailable" && (
-                <p className="explore-geo-notice">
-                  📍 Could not determine your location — showing all hosts.
-                </p>
+              {(geoStatus === "denied" || geoStatus === "unavailable") && (
+                <div className="explore-geo-notice">
+                  <p>
+                    {geoStatus === "denied"
+                      ? "📍 Location access denied — showing all hosts."
+                      : "📍 Could not determine your location — showing all hosts."}
+                  </p>
+                  <button className="explore-geo-link" onClick={handleShareLocation}>
+                    Share your location for a better experience
+                  </button>
+                  {showSettingsHint && (
+                    <p className="explore-geo-hint">
+                      To enable: tap the lock icon (🔒) in your browser's address bar → Site settings → Location → Allow, then reload the page.
+                    </p>
+                  )}
+                </div>
               )}
               <ExploreMap hosts={visibleHosts} userLocation={userLocation} />
             </section>
