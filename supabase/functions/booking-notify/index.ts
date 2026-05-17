@@ -410,29 +410,46 @@ function buildCancelledPostPaymentToHost(
 function buildDisputeResolvedRefund(
   booking: Record<string, unknown>,
   requester: Record<string, unknown>,
-): { to: string; subject: string; html: string } {
+  host: Record<string, unknown>,
+): { to: string; subject: string; html: string }[] {
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
-  return {
-    to: String(requester.email),
-    subject: `Your refund has been approved — SharedXP`,
-    html: emailHtml(
-      `Refund approved`,
-      [
-        `Dear ${reqName}, after reviewing both accounts for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team has decided to issue a full refund.`,
-        `Please allow 5–7 business days for the funds to appear on your original payment method.`,
-        `We're sorry for the inconvenience and hope to see you on SharedXP again soon.`,
-      ],
-      `${APP_URL}/locals`,
-      "Find Another Host",
-    ),
-  };
+  const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
+  return [
+    {
+      to: String(requester.email),
+      subject: `Your refund has been approved — SharedXP`,
+      html: emailHtml(
+        `Refund approved`,
+        [
+          `Dear ${reqName}, after reviewing both accounts for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team has decided to issue a full refund.`,
+          `Please allow 5–7 business days for the funds to appear on your original payment method.`,
+          `We're sorry for the inconvenience and hope to see you on SharedXP again soon.`,
+        ],
+        `${APP_URL}/locals`,
+        "Find Another Host",
+      ),
+    },
+    {
+      to: String(host.email),
+      subject: `Dispute outcome — SharedXP`,
+      html: emailHtml(
+        `Dispute outcome, ${hostName}`,
+        [
+          `After reviewing the dispute for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team has decided to refund the guest.`,
+          `Payment will not be released for this session. If you have any questions, please contact us at support@sharedxp.com.`,
+        ],
+        `${APP_URL}/history`,
+        "View History",
+      ),
+    },
+  ];
 }
 
 function buildDisputeResolvedPaidHost(
   booking: Record<string, unknown>,
   requester: Record<string, unknown>,
   host: Record<string, unknown>,
-  invoice: Record<string, unknown>,
+  invoice: Record<string, unknown> | null,
 ): { to: string; subject: string; html: string }[] {
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
@@ -461,7 +478,7 @@ function buildDisputeResolvedPaidHost(
         ],
         `${APP_URL}/history`,
         "View History",
-        invoiceTable(invoice),
+        invoice ? invoiceTable(invoice) : "",
       ),
     },
   ];
@@ -655,15 +672,14 @@ serve(async (req: Request): Promise<Response> => {
         break;
       }
       case "dispute_resolved_refund": {
-        const e = buildDisputeResolvedRefund(booking, requester);
+        const emails = buildDisputeResolvedRefund(booking, requester, host);
         await Promise.all([
-          sendEmail(e.to, e.subject, e.html),
-          sendEmail(CS_EMAIL, `[Dispute resolved — refunded] ${e.subject}`, e.html),
+          ...emails.map((e) => sendEmail(e.to, e.subject, e.html)),
+          sendEmail(CS_EMAIL, `[Dispute resolved — refunded] ${emails[0].subject}`, emails[0].html),
         ]);
         break;
       }
       case "dispute_resolved_paid_host": {
-        if (!invoice) break;
         const emails = buildDisputeResolvedPaidHost(booking, requester, host, invoice);
         await Promise.all([
           ...emails.map((e) => sendEmail(e.to, e.subject, e.html)),

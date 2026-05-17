@@ -88,11 +88,13 @@ const HistoryPage = ({
 
   const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
   const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status));
-  const completedBookingRequests = bookingRequests.filter((r) => r.status === "completed");
+  const completedBookingRequests = bookingRequests.filter((r) =>
+    r.status === "completed" || r.status === "resolved_paid_host"
+  );
   const completedHosted = completedBookingRequests.filter((r) => r.host_id === currentUser?.id);
   const completedAttended = completedBookingRequests.filter((r) => r.requester_id === currentUser?.id);
   const cancelledBookingRequests = bookingRequests.filter((r) =>
-    ["cancelled", "declined", "resolved_refunded", "resolved_paid_host"].includes(r.status)
+    ["cancelled", "declined", "resolved_refunded"].includes(r.status)
   );
   const disputedBookingRequests = bookingRequests.filter((r) =>
     ["disputed", "resolved_refunded", "resolved_paid_host"].includes(r.status)
