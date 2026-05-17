@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ExploreMap from "../components/ExploreMap";
 import SiteFooter from "../components/SiteFooter";
@@ -68,6 +68,8 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   const [geoStatus, setGeoStatus] = useState("pending"); // pending | granted | denied | unavailable
   const [permissionState, setPermissionState] = useState(null); // "granted" | "prompt" | "denied" | null
   const [showSettingsHint, setShowSettingsHint] = useState(false);
+  const geoStatusRef = useRef("pending"); // readable inside event handlers without re-subscribing
+  useEffect(() => { geoStatusRef.current = geoStatus; }, [geoStatus]);
 
   // Fetch hosts — coordinates now come from the DB
   useEffect(() => {
@@ -194,6 +196,34 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     } else {
       doGeoRequest("prompt");
     }
+  }, [doGeoRequest]);
+
+  // Re-check location when the user returns to the page (e.g. after changing OS settings)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+      const status = geoStatusRef.current;
+      if (status !== "denied" && status !== "unavailable") return;
+      if (!navigator.geolocation) return;
+      setShowSettingsHint(false);
+      if (navigator.permissions) {
+        navigator.permissions
+          .query({ name: "geolocation" })
+          .then((result) => {
+            setPermissionState(result.state);
+            if (result.state === "denied") {
+              setGeoStatus("denied");
+            } else {
+              doGeoRequest(result.state);
+            }
+          })
+          .catch(() => doGeoRequest("prompt"));
+      } else {
+        doGeoRequest("prompt");
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [doGeoRequest]);
 
   // "Share your location" button handler
