@@ -912,10 +912,10 @@ const nextPhone = (
   profileUpdates.phone ?? currentUser.phone ?? ""
 ).trim();
 const previousPhone = (currentUser.phone ?? "").trim();
-const emailChanged = nextEmail !== previousEmail;
-const phoneChanged = nextPhone !== previousPhone;
+const hasCriticalChanges =
+  nextEmail !== previousEmail || nextPhone !== previousPhone;
 
-if (emailChanged) {
+if (nextEmail !== previousEmail) {
   const { data: existing } = await supabase
     .from("profiles")
     .select("id")
@@ -937,15 +937,14 @@ const normalizedCity =
 
 let resolvedPhotoUrl = profileUpdates.photo ?? currentUser.photo ?? "";
 if (resolvedPhotoUrl.startsWith("data:")) {
-  const uploaded = await uploadAvatarFromDataUrl(resolvedPhotoUrl, previousEmail, currentUser.id);
+  const uploaded = await uploadAvatarFromDataUrl(resolvedPhotoUrl, nextEmail, currentUser.id);
   if (uploaded) resolvedPhotoUrl = uploaded;
 }
 
-// When email is changing, keep the old email in profiles until the user confirms the new one.
 await supabase
   .from("profiles")
   .update({
-    email: emailChanged ? previousEmail : nextEmail,
+    email: nextEmail,
     phone: nextPhone,
     phone_country_code:
       profileUpdates.phoneCountryCode ?? currentUser.phoneCountryCode ?? "",
@@ -973,17 +972,11 @@ if (profileUpdates.languages || profileUpdates.sports) {
   );
 }
 
-if (emailChanged) {
-  // Trigger Supabase email-change confirmation; email in auth.users stays unchanged until user clicks the link.
+if (hasCriticalChanges && nextEmail !== previousEmail) {
   await supabase.auth.updateUser({ email: nextEmail });
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
-  if (authUser) setCurrentUser(await fetchUserProfile(authUser));
-  return { success: true, emailChangeRequested: true };
 }
 
-if (phoneChanged) {
+if (hasCriticalChanges) {
   await supabase.auth.signOut();
   setCurrentUser(null);
   return { success: true, requiresReauthentication: true };
