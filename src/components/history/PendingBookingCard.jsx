@@ -58,8 +58,8 @@ const STATUS_LABELS = {
   declined: { label: "Declined by host", cls: "declined" },
   cancelled: { label: "Cancelled", cls: "cancelled" },
   disputed: { label: "Dispute in progress", cls: "disputed" },
-  resolved_paid_host: { label: "Resolved — payment released", cls: "resolved" },
-  resolved_refunded: { label: "Resolved — refunded", cls: "resolved" },
+  resolved_paid_host: { label: "Dispute resolved — payment released", cls: "resolved" },
+  resolved_refunded: { label: "Dispute resolved — cancelled", cls: "resolved" },
 };
 
 const getName = (profile) => {
