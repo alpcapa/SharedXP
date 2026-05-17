@@ -226,6 +226,17 @@ const ExplorePage = ({ currentUser, onLogout }) => {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [doGeoRequest]);
 
+  // Sync Country/City dropdowns with location permission state
+  useEffect(() => {
+    if (geoStatus === "granted") {
+      setSelectedCountry("My Location");
+      setSelectedCity("My Location");
+    } else if (geoStatus === "denied" || geoStatus === "unavailable") {
+      setSelectedCountry((prev) => (prev === "My Location" ? "All" : prev));
+      setSelectedCity((prev) => (prev === "My Location" ? "All" : prev));
+    }
+  }, [geoStatus]);
+
   // "Share your location" button handler
   const handleShareLocation = useCallback(() => {
     if (!navigator.geolocation) return;
