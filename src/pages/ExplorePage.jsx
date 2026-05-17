@@ -9,6 +9,45 @@ import { getAgeFromBirthday } from "../utils/profileAge";
 const EXPLORE_HOSTS_PER_PAGE = 12;
 const GENDER_OPTIONS = ["All", "Male", "Female"];
 
+function isInAppBrowser() {
+  return /Instagram|FBAN|FBAV|Twitter|Line|LinkedIn|Snapchat|TikTok|Pinterest|MicroMessenger/.test(
+    navigator.userAgent
+  );
+}
+
+function isStandalonePWA() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigator.standalone === true
+  );
+}
+
+function getLocationHint() {
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/.test(ua);
+  const isAndroid = /Android/.test(ua);
+
+  if (isInAppBrowser()) {
+    return "Open SharedXP in Safari or Chrome to enable location access.";
+  }
+  if (isStandalonePWA()) {
+    if (isIOS) {
+      return "Go to Settings → Privacy & Security → Location Services → SharedXP and select 'While Using'.";
+    }
+    if (isAndroid) {
+      return "Go to Settings → Apps → SharedXP → Permissions → Location → Allow.";
+    }
+    return "Go to your device Settings → find SharedXP → Permissions → Location → Allow.";
+  }
+  if (isIOS) {
+    return "Tap the AA button in the address bar → Website Settings → Location → Allow.";
+  }
+  if (isAndroid) {
+    return "Tap the lock icon in the address bar → Site settings → Location → Allow.";
+  }
+  return "Click the lock icon in the address bar → Site settings → Location → Allow, then reload.";
+}
+
 const ExplorePage = ({ currentUser, onLogout }) => {
   const [searchParams] = useSearchParams();
   const [hosts, setHosts] = useState([]);
@@ -160,8 +199,8 @@ const ExplorePage = ({ currentUser, onLogout }) => {
   // "Share your location" button handler
   const handleShareLocation = useCallback(() => {
     if (!navigator.geolocation) return;
-    if (permissionState === "denied") {
-      // Can't re-trigger the dialog once permanently denied — show settings hint
+    // Can't re-trigger the dialog when denied, or in in-app browsers that block silently
+    if (permissionState === "denied" || isInAppBrowser()) {
       setShowSettingsHint(true);
       return;
     }
@@ -447,9 +486,7 @@ const ExplorePage = ({ currentUser, onLogout }) => {
                     Share your location for a better experience
                   </button>
                   {showSettingsHint && (
-                    <p className="explore-geo-hint">
-                      To enable: tap the lock icon (🔒) in your browser's address bar → Site settings → Location → Allow, then reload the page.
-                    </p>
+                    <p className="explore-geo-hint">{getLocationHint()}</p>
                   )}
                 </div>
               )}
