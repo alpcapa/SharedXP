@@ -150,26 +150,27 @@ function buildEmail(
         ),
       };
 
+    case "email_change":
     case "email_change_new":
     case "email_change_current":
       return {
-        subject: "Confirm your new email address",
+        subject: "Email confirmation required for your SharedXP account",
         html: emailHtml(
-          "Confirm your new email",
-          `You requested an email change on your SharedXP account. Click the button below to confirm this change.`,
+          "Email confirmation required",
+          "Please click the button below to confirm your email on your SharedXP account. After confirmation, you will be able to login with your new email and old password.",
           ctaUrl,
-          "Confirm new email",
+          "Confirm email",
         ),
       };
 
     default:
       return {
-        subject: "Action required for your SharedXP account",
+        subject: "Email confirmation required for your SharedXP account",
         html: emailHtml(
-          "Action required",
-          "Please click the button below to complete the requested action on your SharedXP account.",
+          "Email confirmation required",
+          "Please click the button below to confirm your email on your SharedXP account. After confirmation, you will be able to login with your new email and old password.",
           ctaUrl,
-          "Continue",
+          "Confirm email",
         ),
       };
   }
