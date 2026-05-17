@@ -88,35 +88,62 @@ const ExplorePage = ({ currentUser, onLogout }) => {
 
     let cancelled = false;
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        if (cancelled) return;
-        const { latitude: lat, longitude: lng } = pos.coords;
-        setUserLocation({ lat, lng });
-        setGeoStatus("granted");
-        try {
-          const resp = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`
-          );
+    const doRequest = (knownPermState) => {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
           if (cancelled) return;
-          const data = await resp.json();
-          setDetectedCountry(data.address?.country || "");
-          setDetectedCity(
-            data.address?.city ||
-              data.address?.town ||
-              data.address?.village ||
-              ""
-          );
-        } catch {
-          // Reverse geocode failed — filters stay in "show all" mode
-        }
-      },
-      (err) => {
-        if (!cancelled)
-          setGeoStatus(err.code === 1 ? "denied" : "unavailable");
-      },
-      { timeout: 15000, enableHighAccuracy: false }
-    );
+          const { latitude: lat, longitude: lng } = pos.coords;
+          setUserLocation({ lat, lng });
+          setGeoStatus("granted");
+          try {
+            const resp = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`
+            );
+            if (cancelled) return;
+            const data = await resp.json();
+            setDetectedCountry(data.address?.country || "");
+            setDetectedCity(
+              data.address?.city ||
+                data.address?.town ||
+                data.address?.village ||
+                ""
+            );
+          } catch {
+            // Reverse geocode failed — filters stay in "show all" mode
+          }
+        },
+        (err) => {
+          if (cancelled) return;
+          // On mobile in-app browsers/WebViews, PERMISSION_DENIED (code 1) fires
+          // immediately without ever showing the system prompt. Only treat it as
+          // "denied" when the Permissions API confirmed the user already denied.
+          if (err.code === 1 && knownPermState === "denied") {
+            setGeoStatus("denied");
+          } else {
+            setGeoStatus("unavailable");
+          }
+        },
+        { timeout: 15000, enableHighAccuracy: false }
+      );
+    };
+
+    if (navigator.permissions) {
+      navigator.permissions
+        .query({ name: "geolocation" })
+        .then((result) => {
+          if (cancelled) return;
+          if (result.state === "denied") {
+            setGeoStatus("denied");
+            return;
+          }
+          doRequest(result.state);
+        })
+        .catch(() => {
+          if (!cancelled) doRequest("prompt");
+        });
+    } else {
+      doRequest("prompt");
+    }
 
     return () => {
       cancelled = true;
