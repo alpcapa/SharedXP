@@ -48,6 +48,7 @@ const MyProfileForm = ({
   phoneCodeDropdown,
   errorMessage,
   successMessage,
+  saveStatus,
   onInputChange,
   onLanguageChange,
   onSportChange,
@@ -442,8 +443,8 @@ const MyProfileForm = ({
       {successMessage && (
         <p className="host-success-message">{successMessage}</p>
       )}
-      <button type="submit" className="btn btn-primary auth-submit">
-        Save Changes
+      <button type="submit" className="btn btn-primary auth-submit" disabled={saveStatus === "saving"}>
+        {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "Saved" : "Save Changes"}
       </button>
     </form>
   );

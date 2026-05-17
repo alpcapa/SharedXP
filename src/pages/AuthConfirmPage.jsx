@@ -30,14 +30,33 @@ export default function AuthConfirmPage() {
       return;
     }
 
+    const isEmailChange = type === "email_change" || type === "email_change_new" || type === "email_change_current";
+
     supabase.auth
       .verifyOtp({ token_hash: tokenHash, type })
-      .then(({ error: verifyError }) => {
+      .then(async ({ data, error: verifyError }) => {
         if (verifyError) {
           setError(verifyError.message);
-        } else {
-          navigate("/", { replace: true });
+          return;
         }
+        if (isEmailChange) {
+          // After confirmation, auth.users has the new email. Sync it to profiles.
+          const newEmail = data?.user?.email;
+          const userId = data?.user?.id;
+          if (newEmail && userId) {
+            await supabase
+              .from("profiles")
+              .update({ email: newEmail, updated_at: new Date().toISOString() })
+              .eq("id", userId);
+          }
+          await supabase.auth.signOut();
+          navigate("/login", {
+            replace: true,
+            state: { emailUpdated: true },
+          });
+          return;
+        }
+        navigate("/", { replace: true });
       });
   }, [searchParams, navigate]);
 

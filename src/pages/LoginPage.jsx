@@ -21,6 +21,9 @@ const LoginPage = ({
 
   const storedRedirect = sessionStorage.getItem("postAuthRedirect");
   const destination = storedRedirect || location.state?.from?.pathname || "/";
+  const emailUpdatedMessage = location.state?.emailUpdated
+    ? "Your email has been successfully updated. Now you can login with your new email."
+    : "";
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -115,6 +118,7 @@ const LoginPage = ({
                 </>
               )}
 
+              {emailUpdatedMessage && <p className="auth-success">{emailUpdatedMessage}</p>}
               {errorMessage && <p className="auth-error">{errorMessage}</p>}
               {resetMessage && <p className="auth-success">{resetMessage}</p>}
               <button type="submit" className="btn btn-primary auth-submit">
