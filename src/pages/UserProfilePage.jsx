@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import InlineLoginForm from "../components/InlineLoginForm";
 import { useHosts } from "../hooks/useHosts";
 import { supabase } from "../lib/supabase";
 import { getProfileAge } from "../utils/profileAge";
@@ -79,7 +80,7 @@ const getHistoryGalleryPhotos = (historyItems) => {
   );
 };
 
-const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
+const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const [activeTab, setActiveTab] = useState("guest");
   const [recommendationsPage, setRecommendationsPage] = useState(0);
   const [guestPhotosPage, setGuestPhotosPage] = useState(0);
@@ -276,11 +277,12 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout }) => {
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
           <main className="middle-section simple-page">
-            <h1>Please log in</h1>
-            <p>You need to log in to view your profile.</p>
-            <Link to="/login" className="btn btn-primary">
-              Go to Login
-            </Link>
+            <InlineLoginForm
+              onEmailLogin={onEmailLogin}
+              onForgotPassword={onForgotPassword}
+              title="Please log in"
+              description="You need to log in to view this profile."
+            />
           </main>
           <SiteFooter />
         </div>

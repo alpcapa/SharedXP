@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import InlineLoginForm from "../components/InlineLoginForm";
 import { supabase } from "../lib/supabase";
 import { sendNotification } from "../utils/sendNotification";
 
-const DisputeResponsePage = ({ currentUser, onLogout }) => {
+const DisputeResponsePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword }) => {
   const { disputeId } = useParams();
 
   const [dispute, setDispute] = useState(null);
@@ -76,15 +77,17 @@ const DisputeResponsePage = ({ currentUser, onLogout }) => {
   };
 
   if (!currentUser) {
-    sessionStorage.setItem("postAuthRedirect", `/dispute-response/${disputeId}`);
     return (
       <div className="home-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
-            <h1>Please log in</h1>
-            <p>You need to log in to submit your dispute response.</p>
-            <Link to="/login" className="btn btn-primary">Log in</Link>
+            <InlineLoginForm
+              onEmailLogin={onEmailLogin}
+              onForgotPassword={onForgotPassword}
+              title="Please log in"
+              description="You need to log in to submit your dispute response."
+            />
           </main>
           <SiteFooter />
         </div>

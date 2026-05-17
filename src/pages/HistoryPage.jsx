@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
+import InlineLoginForm from "../components/InlineLoginForm";
 import HistoryCard from "../components/history/HistoryCard";
 import PendingBookingCard from "../components/history/PendingBookingCard";
 import HistoryPhotoGallery from "../components/history/HistoryPhotoGallery";
@@ -58,6 +59,8 @@ const HistoryPage = ({
   currentUser,
   authLoading,
   onLogout,
+  onEmailLogin,
+  onForgotPassword,
   onSaveHistory,
   onSaveHostHistory,
 }) => {
@@ -401,11 +404,12 @@ const HistoryPage = ({
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
           <main className="middle-section simple-page">
-            <h1>Please log in</h1>
-            <p>You need to log in to view your experience history.</p>
-            <Link to="/login" className="btn btn-primary">
-              Go to Login
-            </Link>
+            <InlineLoginForm
+              onEmailLogin={onEmailLogin}
+              onForgotPassword={onForgotPassword}
+              title="Please log in"
+              description="You need to log in to view your experience history."
+            />
           </main>
           <SiteFooter />
         </div>

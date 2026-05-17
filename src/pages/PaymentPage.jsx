@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import InlineLoginForm from "../components/InlineLoginForm";
 import { supabase } from "../lib/supabase";
 import { COMMISSION_RATE, TAX_RATE, formatCurrency as fmt } from "../utils/pricing";
 import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../utils/cancellationPolicy";
@@ -17,7 +18,7 @@ const fmtTime = (t) =>
   t ? new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit" })
         .format(new Date(`2000-01-01T${t}:00`)) : "";
 
-const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
+const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const { bookingRequestId } = useParams();
   const navigate = useNavigate();
 
@@ -72,8 +73,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout }) => {
         <div className="middle-page-frame">
           <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
-            <h1>Please log in</h1>
-            <Link to="/login" className="btn btn-primary">Go to Login</Link>
+            <InlineLoginForm onEmailLogin={onEmailLogin} onForgotPassword={onForgotPassword} title="Please log in" />
           </main>
           <SiteFooter />
         </div>

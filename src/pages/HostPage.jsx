@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
+import InlineLoginForm from "../components/InlineLoginForm";
 import HostSportTab from "../components/host/HostSportTab";
 import HostPaymentTab from "../components/host/HostPaymentTab";
 import { COUNTRY_OPTIONS } from "../data/countries";
@@ -13,7 +14,7 @@ import {
   validateSportsTab,
 } from "../components/host/hostUtils";
 
-const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosting }) => {
+const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSaveHostProfile, onTogglePauseHosting }) => {
   const location = useLocation();
   const isHostSettingsRoute = location.pathname === "/host-settings";
 
@@ -109,12 +110,13 @@ const HostPage = ({ currentUser, onLogout, onSaveHostProfile, onTogglePauseHosti
           <section className="hero auth-hero">
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
-          <main className="middle-section">
-            <h1>Please log in</h1>
-            <p>You need to log in before becoming a host.</p>
-            <Link to="/login" className="btn btn-primary">
-              Go to Login
-            </Link>
+          <main className="middle-section simple-page">
+            <InlineLoginForm
+              onEmailLogin={onEmailLogin}
+              onForgotPassword={onForgotPassword}
+              title="Please log in"
+              description="You need to log in before becoming a host."
+            />
           </main>
           <SiteFooter />
         </div>
