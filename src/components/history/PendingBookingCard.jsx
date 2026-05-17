@@ -614,11 +614,6 @@ const PendingBookingCard = ({
         {request.status === "completed" && (
           <div className="pending-card-completed">
             <div className="pending-card-actions">
-              <ContactLink
-                requestId={request.id}
-                name={isHost ? requesterName : hostName}
-                unreadCount={unreadCount}
-              />
               {alreadyRated ? (
                 <button
                   type="button"

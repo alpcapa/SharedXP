@@ -88,11 +88,13 @@ const HistoryPage = ({
 
   const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
   const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status));
-  const completedBookingRequests = bookingRequests.filter((r) => r.status === "completed");
+  const completedBookingRequests = bookingRequests.filter((r) =>
+    r.status === "completed" || r.status === "resolved_paid_host"
+  );
   const completedHosted = completedBookingRequests.filter((r) => r.host_id === currentUser?.id);
   const completedAttended = completedBookingRequests.filter((r) => r.requester_id === currentUser?.id);
   const cancelledBookingRequests = bookingRequests.filter((r) =>
-    ["cancelled", "declined", "resolved_refunded", "resolved_paid_host"].includes(r.status)
+    ["cancelled", "declined", "resolved_refunded"].includes(r.status)
   );
   const disputedBookingRequests = bookingRequests.filter((r) =>
     ["disputed", "resolved_refunded", "resolved_paid_host"].includes(r.status)
@@ -433,7 +435,7 @@ const HistoryPage = ({
           >
             {[
               { value: "all", label: "All" },
-              { value: "pending", label: `Ongoing${activeBookingRequests.length ? ` (${activeBookingRequests.length})` : ""}` },
+              { value: "pending", label: `In Progress${activeBookingRequests.length ? ` (${activeBookingRequests.length})` : ""}` },
               { value: "hosted", label: `Hosted${(completedHosted.length + allItems.filter((i) => i.role === "hosted").length) ? ` (${completedHosted.length + allItems.filter((i) => i.role === "hosted").length})` : ""}` },
               { value: "attended", label: `Attended${(completedAttended.length + allItems.filter((i) => i.role === "attended").length) ? ` (${completedAttended.length + allItems.filter((i) => i.role === "attended").length})` : ""}` },
               { value: "cancelled", label: `Cancelled${cancelledBookingRequests.length ? ` (${cancelledBookingRequests.length})` : ""}` },
@@ -548,14 +550,14 @@ const HistoryPage = ({
                 ))}
               </div>
             ) : (
-              <p>No ongoing experiences yet.</p>
+              <p>No in-progress experiences yet.</p>
             )
           ) : (
             <>
-              {/* Active booking requests (only in All tab) */}
-              {selectedRole === "all" && activeBookingRequests.length > 0 && (
+              {/* All booking requests when on the All tab */}
+              {selectedRole === "all" && bookingRequests.length > 0 && (
                 <div className="history-list">
-                  {activeBookingRequests.map((req) => (
+                  {bookingRequests.map((req) => (
                     <PendingBookingCard
                       key={req.id}
                       request={req}
@@ -574,12 +576,10 @@ const HistoryPage = ({
                 </div>
               )}
 
-              {/* Completed booking requests — shown in All / Hosted / Attended */}
+              {/* Completed booking requests — shown in Hosted / Attended tabs only */}
               {(() => {
                 const completedForTab =
-                  selectedRole === "all"
-                    ? completedBookingRequests
-                    : selectedRole === "hosted"
+                  selectedRole === "hosted"
                     ? completedHosted
                     : selectedRole === "attended"
                     ? completedAttended
@@ -624,7 +624,7 @@ const HistoryPage = ({
                     />
                   ))}
                 </div>
-              ) : selectedRole === "all" && (activeBookingRequests.length > 0 || completedBookingRequests.length > 0) ? null : (
+              ) : selectedRole === "all" && bookingRequests.length > 0 ? null : (
                 (() => {
                   if (selectedRole === "hosted")
                     return completedHosted.length === 0 ? <p>No hosted experiences yet.</p> : null;
