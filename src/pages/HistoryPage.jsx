@@ -435,7 +435,7 @@ const HistoryPage = ({
           >
             {[
               { value: "all", label: "All" },
-              { value: "pending", label: `Ongoing${activeBookingRequests.length ? ` (${activeBookingRequests.length})` : ""}` },
+              { value: "pending", label: `In Progress${activeBookingRequests.length ? ` (${activeBookingRequests.length})` : ""}` },
               { value: "hosted", label: `Hosted${(completedHosted.length + allItems.filter((i) => i.role === "hosted").length) ? ` (${completedHosted.length + allItems.filter((i) => i.role === "hosted").length})` : ""}` },
               { value: "attended", label: `Attended${(completedAttended.length + allItems.filter((i) => i.role === "attended").length) ? ` (${completedAttended.length + allItems.filter((i) => i.role === "attended").length})` : ""}` },
               { value: "cancelled", label: `Cancelled${cancelledBookingRequests.length ? ` (${cancelledBookingRequests.length})` : ""}` },
@@ -550,7 +550,7 @@ const HistoryPage = ({
                 ))}
               </div>
             ) : (
-              <p>No ongoing experiences yet.</p>
+              <p>No in-progress experiences yet.</p>
             )
           ) : (
             <>
