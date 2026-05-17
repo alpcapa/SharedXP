@@ -6,7 +6,7 @@ import { computeRefundPct } from "../utils/cancellationPolicy";
 
 export const useBookingRequests = (currentUser) => {
   const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [unreadCounts, setUnreadCounts] = useState({});
 
   const fetchRequests = useCallback(async () => {

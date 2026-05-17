@@ -6691,9 +6691,8 @@ body {
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
   }
 
-  /* Hide top-level nav links and auth buttons — they live in bottom nav on mobile */
-  .site-nav,
-  .auth-actions {
+  /* Hide top-level nav links — they live in bottom nav on mobile */
+  .site-nav {
     display: none;
   }
 
@@ -6739,6 +6738,10 @@ body {
 
   .bottom-nav-tab-active {
     color: #96c93d;
+  }
+
+  .bottom-nav-tab-paused {
+    color: #b91c1c;
   }
 
   .bottom-nav-icon {

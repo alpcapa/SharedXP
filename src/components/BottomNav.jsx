@@ -1,8 +1,4 @@
-import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { supabase } from "../lib/supabase";
-
-const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
 
 const ExploreIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -29,92 +25,50 @@ const EventsIcon = () => (
   </svg>
 );
 
-const HistoryIcon = () => (
+const HostIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="12 8 12 12 14 14" />
-    <path d="M3.05 11a9 9 0 1 0 .5-4" />
-    <polyline points="3 3 3 7 7 7" />
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
 
-const ProfileIcon = ({ currentUser }) => {
-  if (currentUser?.photo) {
-    return (
-      <img
-        src={currentUser.photo}
-        alt={currentUser.fullName || "Profile"}
-        className="bottom-nav-avatar"
-      />
-    );
-  }
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-};
+const TABS = [
+  { to: "/locals",    label: "Explore",  Icon: ExploreIcon },
+  { to: "/the-field", label: "Field",    Icon: FieldIcon },
+  { to: "/events",    label: "Events",   Icon: EventsIcon },
+  { to: "host",       label: "Host",     Icon: HostIcon, isHost: true },
+];
 
 const BottomNav = ({ currentUser }) => {
   const location = useLocation();
-  const [hasActive, setHasActive] = useState(false);
   const path = location.pathname;
 
-  useEffect(() => {
-    if (!currentUser?.id) { setHasActive(false); return; }
-    supabase
-      .from("booking_requests")
-      .select("id")
-      .or(`requester_id.eq.${currentUser.id},host_id.eq.${currentUser.id}`)
-      .in("status", ACTIVE_STATUSES)
-      .limit(1)
-      .then(({ data }) => setHasActive(Boolean(data?.length)));
-  }, [currentUser?.id]);
+  const hostTo = currentUser?.isHost ? "/host-settings" : "/become-a-host";
+  const hostLabel = currentUser?.isHost ? "Host" : "Be a Host";
+  const isHostingPaused = Boolean(currentUser?.isHost && currentUser?.hostProfile?.pauseHosting);
 
-  const tabs = [
-    { to: "/locals",     label: "Explore",  Icon: ExploreIcon },
-    { to: "/the-field",  label: "Field",    Icon: FieldIcon },
-    { to: "/events",     label: "Events",   Icon: EventsIcon },
-    {
-      to: currentUser ? "/history" : "/login",
-      label: "History",
-      Icon: HistoryIcon,
-      badge: hasActive,
-    },
-    {
-      to: currentUser ? "/user-profile" : "/login",
-      label: currentUser ? "Profile" : "Log in",
-      Icon: null,
-      isProfile: true,
-    },
-  ];
-
-  const isActive = (to) => {
-    if (to === "/locals") return path === "/locals";
-    if (to === "/the-field") return path === "/the-field";
-    if (to === "/events") return path === "/events";
-    if (to === "/history" || to === "/login") return path === "/history";
-    if (to === "/user-profile") return path === "/user-profile" || path === "/my-profile";
-    return path === to;
+  const isActive = (tab) => {
+    if (tab.isHost) return path === "/host-settings" || path === "/become-a-host";
+    if (tab.to === "/locals") return path === "/locals";
+    if (tab.to === "/the-field") return path === "/the-field";
+    if (tab.to === "/events") return path === "/events";
+    return false;
   };
 
   return (
     <nav className="bottom-nav" aria-label="Main navigation">
-      {tabs.map(({ to, label, Icon, badge, isProfile }) => {
-        const active = isActive(to);
+      {TABS.map((tab) => {
+        const to = tab.isHost ? hostTo : tab.to;
+        const label = tab.isHost ? hostLabel : tab.label;
+        const active = isActive(tab);
+        const paused = tab.isHost && isHostingPaused;
         return (
           <Link
-            key={to}
+            key={tab.label}
             to={to}
-            className={`bottom-nav-tab${active ? " bottom-nav-tab-active" : ""}`}
+            className={`bottom-nav-tab${active ? " bottom-nav-tab-active" : ""}${paused ? " bottom-nav-tab-paused" : ""}`}
             aria-current={active ? "page" : undefined}
           >
-            <span className="bottom-nav-icon">
-              {isProfile
-                ? <ProfileIcon currentUser={currentUser} />
-                : <Icon />}
-              {badge && <span className="bottom-nav-badge" aria-label="Active bookings" />}
-            </span>
+            <span className="bottom-nav-icon"><tab.Icon /></span>
             <span className="bottom-nav-label">{label}</span>
           </Link>
         );
