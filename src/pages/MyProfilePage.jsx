@@ -156,6 +156,8 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
   const [citySearchValue, setCitySearchValue] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [saveStatus, setSaveStatus] = useState("idle"); // "idle" | "saving" | "saved"
+  const [showEmailConfirmDialog, setShowEmailConfirmDialog] = useState(false);
 
   const selectedCountry = useMemo(() => {
     const search = formValues.country.trim().toLowerCase();
@@ -329,8 +331,6 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
 
   const onSubmit = async (event) => {
     event.preventDefault();
-    if (!window.confirm("Are you sure you want to save these profile changes?"))
-      return;
     if (!selectedCountry) {
       setSuccessMessage("");
       setErrorMessage("Please select a valid country from the list.");
@@ -395,8 +395,10 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
         formValues.agreedToPromotionsAndMarketingEmails,
     };
 
+    setSaveStatus("saving");
     const result = await onUpdateProfile?.(payload);
     if (!result?.success) {
+      setSaveStatus("idle");
       setSuccessMessage("");
       setErrorMessage(
         result?.message ?? "Could not save changes. Please try again."
@@ -404,11 +406,14 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
       return;
     }
     setErrorMessage("");
+    setSaveStatus("saved");
+    setTimeout(() => setSaveStatus("idle"), 2000);
+
+    if (result.emailChangeRequested) {
+      setShowEmailConfirmDialog(true);
+      return;
+    }
     if (result.requiresReauthentication) {
-      setSuccessMessage("");
-      window.alert(
-        "Critical information changed. Please log in again with your updated credentials."
-      );
       navigate("/login");
       return;
     }
@@ -478,12 +483,37 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
             phoneCodeDropdown={phoneCodeDropdown}
             errorMessage={errorMessage}
             successMessage={successMessage}
+            saveStatus={saveStatus}
             onInputChange={onInputChange}
             onLanguageChange={onLanguageChange}
             onSportChange={onSportChange}
             onPhotoSelect={onPhotoSelect}
             onSubmit={onSubmit}
           />
+          {showEmailConfirmDialog && (
+            <div className="modal-backdrop" role="presentation">
+              <div
+                className="modal-box"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="email-confirm-title"
+              >
+                <h3 className="modal-title" id="email-confirm-title">Email confirmation needed</h3>
+                <p className="modal-body-text">
+                  Profile updated. Email confirmation needed for email to be updated. Check your email and confirm please.
+                </p>
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setShowEmailConfirmDialog(false)}
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         <SiteFooter />
