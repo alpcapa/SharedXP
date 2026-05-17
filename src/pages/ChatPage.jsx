@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import InlineLoginForm from "../components/InlineLoginForm";
 import { supabase } from "../lib/supabase";
 import { sendNotification } from "../utils/sendNotification";
 
@@ -24,7 +25,7 @@ const fmtTime = (iso) =>
         .format(new Date(iso))
     : "";
 
-const ChatPage = ({ currentUser, authLoading, onLogout }) => {
+const ChatPage = ({ currentUser, authLoading, onLogout, onEmailLogin }) => {
   const { bookingRequestId } = useParams();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
@@ -161,8 +162,7 @@ const ChatPage = ({ currentUser, authLoading, onLogout }) => {
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
           <main className="middle-section simple-page">
-            <h1>Please log in</h1>
-            <Link to="/login" className="btn btn-primary">Go to Login</Link>
+            <InlineLoginForm onEmailLogin={onEmailLogin} title="Please log in" />
           </main>
           <SiteFooter />
         </div>
