@@ -80,6 +80,7 @@ const HistoryPage = ({
   const {
     requests: bookingRequests,
     loading: requestsLoading,
+    fetchError: bookingFetchError,
     unreadCounts,
     acceptRequest,
     declineRequest,
@@ -536,6 +537,8 @@ const HistoryPage = ({
           ) : selectedRole === "pending" ? (
             requestsLoading ? (
               <p className="history-loading">Loading…</p>
+            ) : bookingFetchError ? (
+              <p className="history-fetch-error">Could not load active bookings: {bookingFetchError}</p>
             ) : activeBookingRequests.length ? (
               <div className="history-list">
                 {activeBookingRequests.map((req) => (
@@ -549,12 +552,19 @@ const HistoryPage = ({
                     onCancel={cancelRequest}
                     onConfirmExperience={confirmExperience}
                     onOpenDispute={openDispute}
+                    onSubmitRating={submitRating}
+                    currentUser={currentUser}
                     editRatingRequestId={queryEditRating}
                   />
                 ))}
               </div>
             ) : (
-              <p>No in-progress experiences yet.</p>
+              <>
+                <p>No in-progress experiences.</p>
+                <p className="history-autoconfirm-note">
+                  Sessions auto-confirm 72 hours after they end. Completed experiences appear in the <strong>All</strong>, <strong>Hosted</strong>, or <strong>Attended</strong> tabs.
+                </p>
+              </>
             )
           ) : (
             <>
