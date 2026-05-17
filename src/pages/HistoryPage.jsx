@@ -554,10 +554,10 @@ const HistoryPage = ({
             )
           ) : (
             <>
-              {/* Active booking requests (only in All tab) */}
-              {selectedRole === "all" && activeBookingRequests.length > 0 && (
+              {/* All booking requests when on the All tab */}
+              {selectedRole === "all" && bookingRequests.length > 0 && (
                 <div className="history-list">
-                  {activeBookingRequests.map((req) => (
+                  {bookingRequests.map((req) => (
                     <PendingBookingCard
                       key={req.id}
                       request={req}
@@ -576,12 +576,10 @@ const HistoryPage = ({
                 </div>
               )}
 
-              {/* Completed booking requests — shown in All / Hosted / Attended */}
+              {/* Completed booking requests — shown in Hosted / Attended tabs only */}
               {(() => {
                 const completedForTab =
-                  selectedRole === "all"
-                    ? completedBookingRequests
-                    : selectedRole === "hosted"
+                  selectedRole === "hosted"
                     ? completedHosted
                     : selectedRole === "attended"
                     ? completedAttended
@@ -626,7 +624,7 @@ const HistoryPage = ({
                     />
                   ))}
                 </div>
-              ) : selectedRole === "all" && (activeBookingRequests.length > 0 || completedBookingRequests.length > 0) ? null : (
+              ) : selectedRole === "all" && bookingRequests.length > 0 ? null : (
                 (() => {
                   if (selectedRole === "hosted")
                     return completedHosted.length === 0 ? <p>No hosted experiences yet.</p> : null;
