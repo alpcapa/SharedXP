@@ -32,7 +32,7 @@ function getLocationHint() {
   }
   if (isStandalonePWA()) {
     if (isIOS) {
-      return "Go to Settings → Privacy & Security → Location Services → SharedXP and select 'While Using'.";
+      return "Go to Settings → Privacy & Security → Location Services → Safari → Allow While Using App, then return to SharedXP.";
     }
     if (isAndroid) {
       return "Go to Settings → Apps → SharedXP → Permissions → Location → Allow.";
