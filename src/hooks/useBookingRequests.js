@@ -7,6 +7,7 @@ import { computeRefundPct } from "../utils/cancellationPolicy";
 export const useBookingRequests = (currentUser) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
 
   const fetchRequests = useCallback(async () => {
@@ -19,6 +20,14 @@ export const useBookingRequests = (currentUser) => {
       .or(`requester_id.eq.${currentUser.id},host_id.eq.${currentUser.id}`)
       .order("created_at", { ascending: false });
 
+    if (error) {
+      console.error("[useBookingRequests] fetch failed:", error);
+      setFetchError(error.message ?? "Failed to load booking requests.");
+      setLoading(false);
+      return;
+    }
+
+    setFetchError(null);
     if (!error) {
       const rows = data ?? [];
 
@@ -357,6 +366,7 @@ export const useBookingRequests = (currentUser) => {
   return {
     requests,
     loading,
+    fetchError,
     unreadCounts,
     fetchRequests,
     acceptRequest,

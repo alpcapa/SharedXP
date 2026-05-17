@@ -4593,6 +4593,25 @@ body {
   padding: 20px 0;
 }
 
+.history-fetch-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.history-autoconfirm-note {
+  font-size: 13px;
+  color: #596164;
+  background: #f0f4e8;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 8px;
+}
+
 /* ════════════════════════════════════════════════════
    PENDING BOOKING CARDS
    ════════════════════════════════════════════════════ */
