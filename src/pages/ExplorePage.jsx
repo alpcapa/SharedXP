@@ -106,14 +106,28 @@ const ExplorePage = ({ currentUser, onLogout }) => {
         }
       },
       (err) => {
-        // On mobile in-app browsers/WebViews, PERMISSION_DENIED (code 1) fires
-        // immediately without ever showing the system prompt. Only treat it as
-        // "denied" when the Permissions API confirmed the user already denied.
-        if (err.code === 1 && knownPermState === "denied") {
-          setGeoStatus("denied");
-        } else {
-          setGeoStatus("unavailable");
-        }
+        (async () => {
+          if (err.code === 1) {
+            if (knownPermState === "denied") {
+              setGeoStatus("denied");
+              return;
+            }
+            // Re-query: if the user just tapped "Don't Allow" in the dialog the
+            // state changes from "prompt" → "denied". In-app browsers that block
+            // silently leave it as "prompt", so we can tell the two cases apart.
+            let currentState = knownPermState;
+            if (navigator.permissions) {
+              try {
+                const result = await navigator.permissions.query({ name: "geolocation" });
+                currentState = result.state;
+                setPermissionState(result.state);
+              } catch { }
+            }
+            setGeoStatus(currentState === "denied" ? "denied" : "unavailable");
+          } else {
+            setGeoStatus("unavailable");
+          }
+        })();
       },
       { timeout: 15000, enableHighAccuracy: false }
     );
