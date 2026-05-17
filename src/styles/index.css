@@ -6691,8 +6691,9 @@ body {
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
   }
 
-  /* Hide top-level nav links — they live in bottom nav on mobile */
-  .site-nav {
+  /* Hide top-level nav links and auth buttons — they live in bottom nav on mobile */
+  .site-nav,
+  .auth-actions {
     display: none;
   }
 
