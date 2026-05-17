@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef } from "react";
+import BottomNav from "./components/BottomNav";
 import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
 import FieldPage from "./pages/FieldPage";
@@ -96,6 +97,7 @@ function App() {
   }, [navigate]);
 
   return (
+    <>
     <Routes>
       <Route path="/" element={<HomePage {...authActions} />} />
       <Route path="/locals" element={<ExplorePage {...authActions} />} />
@@ -138,6 +140,8 @@ function App() {
       <Route path="/reset-password" element={<ResetPasswordPage {...authActions} />} />
       <Route path="*" element={<NotFoundPage {...authActions} />} />
     </Routes>
+    <BottomNav currentUser={authActions.currentUser} />
+    </>
   );
 }
 

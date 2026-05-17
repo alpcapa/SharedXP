@@ -6672,3 +6672,109 @@ body {
   margin: 0;
   color: #374151;
 }
+
+/* ── Mobile / Capacitor ──────────────────────────── */
+
+/* Safe-area padding for notch/home-indicator devices */
+body {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Bottom nav — hidden on desktop */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* Make room for bottom nav */
+  body {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+
+  /* Hide top-level nav links — they live in bottom nav on mobile */
+  .site-nav {
+    display: none;
+  }
+
+  /* Shrink header brand on mobile */
+  .site-header {
+    padding: 12px 16px;
+    border-radius: 0;
+  }
+
+  .brand {
+    font-size: 28px;
+  }
+
+  /* Bottom navigation bar */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.97);
+    border-top: 1px solid #e6e7e2;
+    padding-bottom: env(safe-area-inset-bottom);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .bottom-nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px 6px;
+    text-decoration: none;
+    color: #6b7280;
+    gap: 3px;
+    min-height: 56px;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s;
+  }
+
+  .bottom-nav-tab-active {
+    color: #96c93d;
+  }
+
+  .bottom-nav-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+  }
+
+  .bottom-nav-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid transparent;
+  }
+
+  .bottom-nav-tab-active .bottom-nav-avatar {
+    border-color: #96c93d;
+  }
+
+  .bottom-nav-badge {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: 2px solid #fff;
+  }
+
+  .bottom-nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+  }
+}
