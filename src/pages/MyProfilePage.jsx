@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
+import InlineLoginForm from "../components/InlineLoginForm";
 import MyProfileForm from "../components/profile/MyProfileForm";
 import { COUNTRY_OPTIONS } from "../data/countries";
 import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
@@ -134,7 +135,7 @@ const getInitialFormValues = (user) => {
   };
 };
 
-const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
+const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onUpdateProfile }) => {
   const navigate = useNavigate();
   const photoInputRef = useRef(null);
   const countryDropdownRef = useRef(null);
@@ -267,12 +268,12 @@ const MyProfilePage = ({ currentUser, onLogout, onUpdateProfile }) => {
           <section className="hero auth-hero">
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           </section>
-          <main className="middle-section">
-            <h1>Please log in</h1>
-            <p>You need to log in to see your profile.</p>
-            <Link to="/login" className="btn btn-primary">
-              Go to Login
-            </Link>
+          <main className="middle-section simple-page">
+            <InlineLoginForm
+              onEmailLogin={onEmailLogin}
+              title="Please log in"
+              description="You need to log in to see your profile."
+            />
           </main>
           <SiteFooter />
         </div>

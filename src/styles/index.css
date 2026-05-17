@@ -1450,6 +1450,16 @@ body {
   text-decoration: underline;
 }
 
+.inline-login-wrap {
+  width: min(420px, 100%);
+  margin-inline: auto;
+}
+.inline-login-wrap h1 { margin-bottom: 8px; }
+.inline-login-desc { color: #6b7280; margin-bottom: 20px; }
+.inline-login-form { margin-bottom: 16px; }
+.inline-login-alt { font-size: 14px; color: #6b7280; text-align: center; }
+.inline-login-alt a { color: #4f7c3f; }
+
 .simple-page {
   width: min(760px, 100%);
   margin-inline: auto;
