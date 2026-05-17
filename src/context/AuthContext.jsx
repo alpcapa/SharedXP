@@ -975,7 +975,10 @@ if (profileUpdates.languages || profileUpdates.sports) {
 
 if (emailChanged) {
   // Queue the email change in Supabase auth — sends a confirmation link to the new address.
-  await supabase.auth.updateUser({ email: nextEmail });
+  const { error: updateError } = await supabase.auth.updateUser({ email: nextEmail });
+  if (updateError) {
+    return { success: false, message: updateError.message };
+  }
   const {
     data: { user: authUser },
   } = await supabase.auth.getUser();
