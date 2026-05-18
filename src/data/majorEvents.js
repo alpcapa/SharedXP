@@ -756,12 +756,14 @@ export const majorEvents = [
     title: "EuroLeague Final Four 2026",
     sport: "Basketball",
     category: "Championship",
-    country: "TBD",
-    city: "TBD",
-    venue: "TBD",
+    country: "Greece",
+    city: "Athens",
+    venue: "Telekom Center",
     startsAt: "2026-05-22T00:00:00Z",
     endsAt: "2026-05-24T23:59:59Z",
     url: "https://www.euroleague.net/",
+    imageUrl: "/EuroleagueFinalFour.png",
+    imageStyle: "contain",
     description: "The season-ending Final Four of Europe's premier basketball club competition."
   },
   {
