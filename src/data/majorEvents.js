@@ -139,7 +139,8 @@ export const majorEvents = [
     startsAt: "2026-11-01T00:00:00Z",
     endsAt: "2026-11-01T23:59:59Z",
     url: "https://www.nyrr.org/tcsnycmarathon",
-    imageUrl: IMG.marathon,
+    imageUrl: "/NewYorkMarathon.png",
+    imageStyle: "contain",
     description:
       "The world's largest marathon, crossing all five boroughs from the Verrazzano Bridge to Central Park."
   },
