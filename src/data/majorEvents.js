@@ -579,7 +579,8 @@ export const majorEvents = [
     startsAt: "2026-05-30T00:00:00Z",
     endsAt: "2026-05-30T23:59:59Z",
     url: "https://www.uefa.com/uefachampionsleague/",
-    imageUrl: IMG.football,
+    imageUrl: "/ucl-logo.svg",
+    imageStyle: "contain",
     description: "European club football's showpiece final, hosted at the Puskás Aréna."
   },
   {
