@@ -39,13 +39,21 @@ const XpInfoPopup = ({ onClose }) => (
   </div>
 );
 
-const isRefundedInvoice = (invoice) =>
-  invoice.bookingStatus === "cancelled" || invoice.bookingStatus === "resolved_refunded";
+const getStatusInfo = (inv) => {
+  if (inv.released_at)                              return { label: "Released",              cls: "released"   };
+  if (inv.bookingStatus === "resolved_paid_host")   return { label: "Disputed · Resolved",   cls: "released"   };
+  if (inv.bookingStatus === "resolved_refunded")    return { label: "Disputed · Refunded",   cls: "refunded"   };
+  if (inv.bookingStatus === "disputed")             return { label: "In dispute",             cls: "disputed"   };
+  if (inv.bookingStatus === "cancelled") {
+    if (inv.refundPct === 0)                        return { label: "Cancelled · No refund", cls: "no-refund"  };
+    return                                                 { label: "Cancelled · Refunded",  cls: "refunded"   };
+  }
+  return                                                   { label: "Paid",                  cls: "paid"       };
+};
 
 const InvoiceDetailModal = ({ invoice, onClose }) => {
   const sym = CURRENCY_SYMBOLS[invoice.currency] ?? invoice.currency;
-  const isReleased = Boolean(invoice.released_at);
-  const isRefunded = isRefundedInvoice(invoice);
+  const { label: statusLabel, cls: statusCls } = getStatusInfo(invoice);
   const isHosted = invoice.role === "hosted";
 
   return (
@@ -62,10 +70,8 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
             <span className={`invoice-role-badge invoice-role-badge--${isHosted ? "hosted" : "booked"}`}>
               {isHosted ? "Hosted" : "Booked"}
             </span>
-            <span
-              className={`invoice-status invoice-status--${isReleased ? "released" : isRefunded ? "refunded" : "paid"}`}
-            >
-              {isReleased ? "Released" : isRefunded ? "Refunded" : "Paid"}
+            <span className={`invoice-status invoice-status--${statusCls}`}>
+              {statusLabel}
             </span>
           </div>
         </div>
@@ -203,11 +209,11 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
       const [guestResult, hostResult] = await Promise.all([
         supabase
           .from("booking_requests")
-          .select("id, sport, requested_date, requested_time, status, host_id")
+          .select("id, sport, requested_date, requested_time, status, refund_pct, host_id")
           .eq("requester_id", currentUser.id),
         supabase
           .from("booking_requests")
-          .select("id, sport, requested_date, requested_time, status, requester_id")
+          .select("id, sport, requested_date, requested_time, status, refund_pct, requester_id")
           .eq("host_id", currentUser.id),
       ]);
 
@@ -274,6 +280,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
           hostName: isHosted ? null : (profileMap[br?.host_id]?.full_name ?? "Host"),
           guestName: isHosted ? (profileMap[br?.requester_id]?.full_name ?? "Guest") : null,
           // Use DB value when explicitly set (null = pre-migration, 0 = reclaimed after refund).
+          refundPct: br?.refund_pct ?? null,
           xpEarned: inv.xp_earned != null ? inv.xp_earned : toNSU(inv.gross_amount, inv.currency),
         };
       });
@@ -292,7 +299,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const hasBooked = invoices.some((i) => i.role === "booked");
 
   const isRefunded = (inv) =>
-    inv.bookingStatus === "cancelled" || inv.bookingStatus === "resolved_refunded";
+    inv.bookingStatus === "cancelled" || inv.bookingStatus === "resolved_refunded" || inv.bookingStatus === "resolved_paid_host";
 
   const filtered = invoices.filter((inv) => {
     if (filterSport && inv.sport !== filterSport) return false;
@@ -527,11 +534,10 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                     <span className={`invoice-role-badge invoice-role-badge--${inv.role}`}>
                       {inv.role === "hosted" ? "Hosted" : "Booked"}
                     </span>
-                    <span
-                      className={`invoice-status invoice-status--${inv.released_at ? "released" : isRefunded(inv) ? "refunded" : "paid"}`}
-                    >
-                      {inv.released_at ? "Released" : isRefunded(inv) ? "Refunded" : "Paid"}
-                    </span>
+                    {(() => {
+                      const { label, cls } = getStatusInfo(inv);
+                      return <span className={`invoice-status invoice-status--${cls}`}>{label}</span>;
+                    })()}
                   </div>
                   <span className="invoice-card-chevron" aria-hidden="true">
                     <span className="invoice-card-chevron-label">INVOICE</span>
