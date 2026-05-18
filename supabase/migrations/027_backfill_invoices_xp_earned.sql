@@ -61,4 +61,4 @@ SET xp_earned = CEIL(
     ELSE 1
   END
 )::integer
-WHERE xp_earned = 0 AND gross_amount > 0;
+WHERE xp_earned IS NULL AND gross_amount > 0;
