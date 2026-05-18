@@ -682,6 +682,8 @@ export const majorEvents = [
     startsAt: "2026-11-07T21:00:00Z",
     endsAt: "2026-11-07T23:00:00Z",
     url: "https://www.conmebol.com/",
+    imageUrl: "/CopaLibertadores.png",
+    imageStyle: "contain",
     description: "The final of South America's premier club football competition."
   },
 
