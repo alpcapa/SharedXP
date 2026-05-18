@@ -203,7 +203,8 @@ export const majorEvents = [
     startsAt: "2026-05-25T00:00:00Z",
     endsAt: "2026-06-07T23:59:59Z",
     url: "https://www.rolandgarros.com/",
-    imageUrl: IMG.tennis,
+    imageUrl: "/roland-garros-logo.svg",
+    imageStyle: "contain",
     description:
       "The clay-court Grand Slam in Paris — two weeks of grueling baseline tennis at Stade Roland Garros."
   },
