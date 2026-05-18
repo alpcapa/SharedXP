@@ -40,15 +40,15 @@ const XpInfoPopup = ({ onClose }) => (
 );
 
 const getStatusInfo = (inv) => {
-  if (inv.released_at)                              return { label: "Released",              cls: "released"   };
-  if (inv.bookingStatus === "resolved_paid_host")   return { label: "Disputed · Resolved",   cls: "released"   };
-  if (inv.bookingStatus === "resolved_refunded")    return { label: "Disputed · Refunded",   cls: "refunded"   };
-  if (inv.bookingStatus === "disputed")             return { label: "In dispute",             cls: "disputed"   };
+  if (inv.released_at)                              return { label: "XP Earned — Released",          cls: "released"   };
+  if (inv.bookingStatus === "resolved_paid_host")   return { label: "XP Earned — Dispute Resolved",  cls: "released"   };
+  if (inv.bookingStatus === "resolved_refunded")    return { label: "XP Reclaimed — Disputed",        cls: "refunded"   };
+  if (inv.bookingStatus === "disputed")             return { label: "XP On Hold — In Dispute",        cls: "disputed"   };
   if (inv.bookingStatus === "cancelled") {
-    if (inv.refundPct === 0)                        return { label: "Cancelled · No refund", cls: "no-refund"  };
-    return                                                 { label: "Cancelled · Refunded",  cls: "refunded"   };
+    if (inv.refundPct === 0)                        return { label: "XP Earned — Cancelled",          cls: "no-refund"  };
+    return                                                 { label: "XP Reclaimed — Cancelled",       cls: "refunded"   };
   }
-  return                                                   { label: "Paid",                  cls: "paid"       };
+  return                                                   { label: "XP In Progress — Awaiting Release", cls: "paid"   };
 };
 
 const InvoiceDetailModal = ({ invoice, onClose }) => {
