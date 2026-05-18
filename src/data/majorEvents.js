@@ -661,12 +661,14 @@ export const majorEvents = [
     title: "UEFA Europa League Final 2026",
     sport: "Football",
     category: "Cup Final",
-    country: "TBD",
-    city: "TBD",
-    venue: "TBD",
+    country: "Turkey",
+    city: "Istanbul",
+    venue: "Beşiktaş Park",
     startsAt: "2026-05-20T19:00:00Z",
     endsAt: "2026-05-20T21:00:00Z",
     url: "https://www.uefa.com/uefaeuropaleague/",
+    imageUrl: "/EuropaCupFinal.jpeg",
+    imageStyle: "contain",
     description: "The final of UEFA's second-tier European club competition."
   },
   {
