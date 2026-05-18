@@ -4,6 +4,7 @@ export const SPORT_OPTIONS = [
   "Badminton",
   "Baseball",
   "Basketball",
+  "Beach Volley",
   "BMX",
   "Boating",
   "Bouldering",
