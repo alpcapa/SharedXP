@@ -942,12 +942,14 @@ export const majorEvents = [
     title: "European Archery Championships 2026",
     sport: "Archery",
     category: "Continental Championship",
-    country: "TBD",
-    city: "TBD",
+    country: "Turkey",
+    city: "Antalya",
     venue: "TBD",
     startsAt: "2026-05-18T00:00:00Z",
     endsAt: "2026-05-24T23:59:59Z",
     url: "https://www.worldarchery.sport/",
+    imageUrl: "/EuropeanArchery.png",
+    imageStyle: "contain",
     description: "The biennial continental championship for European archery nations."
   },
 
