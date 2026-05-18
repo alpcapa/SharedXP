@@ -338,7 +338,7 @@ export const majorEvents = [
     startsAt: "2026-07-04T00:00:00Z",
     endsAt: "2026-07-26T23:59:59Z",
     url: "https://www.letour.fr/",
-    imageUrl: "/tour-de-france-logo.svg",
+    imageUrl: "/Tourdefrance_logo.png",
     imageStyle: "contain",
     description:
       "La Grande Boucle — cycling's biggest stage race, finishing on the Champs-Élysées."
