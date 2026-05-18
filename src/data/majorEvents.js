@@ -221,7 +221,7 @@ export const majorEvents = [
     startsAt: "2026-06-29T00:00:00Z",
     endsAt: "2026-07-12T23:59:59Z",
     url: "https://www.wimbledon.com/",
-    imageUrl: "/wimbledon-logo.svg",
+    imageUrl: "/Wimbledon_logo.png",
     imageStyle: "contain",
     description:
       "The oldest tennis tournament in the world. Grass courts, white kits and strawberries with cream."
