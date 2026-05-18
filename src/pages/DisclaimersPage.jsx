@@ -13,7 +13,7 @@ const DisclaimersPage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Disclaimers Notice</h1>
-            <p className="legal-last-updated">Last updated: April 19, 2026</p>
+            <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               This notice consolidates key legal disclaimers relevant to using SharedXP. It is designed to clarify the
               platform role and limits of responsibility for marketplace interactions, payments, safety outcomes, and
@@ -110,6 +110,9 @@ const DisclaimersPage = ({ currentUser, onLogout }) => {
                 <li>
                   Content and Intellectual Property Policy:{" "}
                   <Link to="/content-and-intellectual-property-policy">/content-and-intellectual-property-policy</Link>
+                </li>
+                <li>
+                  Cancellation Policy: <Link to="/cancellation-policy">/cancellation-policy</Link>
                 </li>
               </ul>
             </section>

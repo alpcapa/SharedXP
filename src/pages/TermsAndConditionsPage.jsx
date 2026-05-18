@@ -13,7 +13,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Terms &amp; Conditions</h1>
-            <p className="legal-last-updated">Last updated: May 10, 2026</p>
+            <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               These Terms &amp; Conditions (&quot;Terms&quot;) govern your access to and use of the SharedXP platform
               (the &quot;Platform&quot;), including the website, product features, and related services. By using
@@ -70,7 +70,39 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                   SharedXP may provide confirmation and history tools, but users remain responsible for attending
                   agreed sessions and honoring commitments.
                 </li>
+                <li>
+                  Each host selects a cancellation policy (Flexible, Moderate, or Strict) for their offering. The
+                  applicable policy is displayed to guests before checkout and governs refund entitlement in the
+                  event of cancellation.
+                </li>
               </ul>
+            </section>
+
+            <section className="legal-section">
+              <h2>4a. Cancellation Policy</h2>
+              <p>
+                Guests may cancel a confirmed booking through the platform. The refund amount depends on the
+                host's chosen cancellation policy and the time remaining before the session:
+              </p>
+              <ul>
+                <li>
+                  <strong>Flexible:</strong> full refund if cancelled more than 24 hours before the session; no
+                  refund within 24 hours.
+                </li>
+                <li>
+                  <strong>Moderate:</strong> full refund if cancelled more than 5 days before; 50% refund if
+                  cancelled 1–5 days before; no refund within 24 hours.
+                </li>
+                <li>
+                  <strong>Strict:</strong> 50% refund if cancelled more than 7 days before; no refund within 7
+                  days.
+                </li>
+              </ul>
+              <p>
+                If the host cancels a confirmed booking, the guest receives a full refund regardless of tier. Full
+                details are available at{" "}
+                <Link to="/cancellation-policy">/cancellation-policy</Link>.
+              </p>
             </section>
 
             <section className="legal-section">
@@ -156,6 +188,34 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                 <li>Follow host instructions and local rules during experiences.</li>
                 <li>Treat hosts, other users, and property with respect.</li>
               </ul>
+            </section>
+
+            <section className="legal-section">
+              <h2>8a. Dispute Resolution</h2>
+              <p>
+                If a guest believes a completed session was materially different from what was agreed, or if either
+                party has an unresolved concern about a booking, a dispute may be opened through the platform after
+                the session is completed. The following process applies:
+              </p>
+              <ul>
+                <li>The disputing party submits details and supporting evidence via the dispute form.</li>
+                <li>
+                  The host is notified and given a response window to provide their account of events and any
+                  counter-evidence.
+                </li>
+                <li>
+                  SharedXP administrators review the submission and determine an outcome, which may include a full
+                  or partial refund, XP adjustment, or no change to the original settlement.
+                </li>
+                <li>
+                  Parties must cooperate honestly and provide accurate information. Submitting false or misleading
+                  evidence may result in account suspension.
+                </li>
+              </ul>
+              <p>
+                SharedXP's determination is final within platform processes. External legal remedies are not
+                affected by these internal dispute mechanisms.
+              </p>
             </section>
 
             <section className="legal-section">

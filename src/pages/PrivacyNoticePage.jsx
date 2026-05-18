@@ -12,7 +12,7 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Privacy Notice</h1>
-            <p className="legal-last-updated">Last updated: May 10, 2026</p>
+            <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               This Privacy Notice explains how SharedXP collects and uses personal data for account access, host
               onboarding, booking workflows, support, and platform security. It is drafted using GDPR transparency
@@ -41,6 +41,16 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
                   amounts (earned both as a guest paying for experiences and as a host delivering them), earning
                   history linked to your invoices, and usage of the Payment History feature. This data is used
                   to operate and display the SharedXP Loyalty Program.
+                </li>
+                <li>
+                  <strong>Dispute data:</strong> submissions, evidence, communications, and outcomes related to
+                  booking disputes opened by either guests or hosts. This data is retained to administer dispute
+                  resolution, maintain audit records, and detect patterns of abuse.
+                </li>
+                <li>
+                  <strong>Cancellation data:</strong> the cancellation policy selected by a host for each
+                  offering, cancellation events, refund amounts, and timestamps. This data is used to process
+                  refunds and enforce the applicable cancellation terms.
                 </li>
               </ul>
             </section>

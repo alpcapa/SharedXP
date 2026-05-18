@@ -13,7 +13,7 @@ const SafetyAndRiskPolicyPage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Safety and Risk Policy</h1>
-            <p className="legal-last-updated">Last updated: April 19, 2026</p>
+            <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               SharedXP promotes safer experiences by defining minimum safety expectations for hosts and participants.
               Because activities may involve physical risk, users remain responsible for informed participation,
@@ -100,6 +100,13 @@ const SafetyAndRiskPolicyPage = ({ currentUser, onLogout }) => {
                 </li>
                 <li>
                   Disclaimers Notice: <Link to="/disclaimers">/disclaimers</Link>
+                </li>
+                <li>
+                  Cancellation Policy: <Link to="/cancellation-policy">/cancellation-policy</Link>
+                </li>
+                <li>
+                  Payments and Payout Terms (including dispute process):{" "}
+                  <Link to="/payments-and-payout-terms">/payments-and-payout-terms</Link>
                 </li>
               </ul>
             </section>

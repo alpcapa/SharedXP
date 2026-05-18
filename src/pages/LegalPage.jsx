@@ -13,7 +13,7 @@ const LegalPage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Legal Center</h1>
-            <p className="legal-last-updated">Last updated: May 10, 2026</p>
+            <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <section className="legal-section">
               <h2>1. Scope of this Legal Center</h2>
               <p>
@@ -52,6 +52,12 @@ const LegalPage = ({ currentUser, onLogout }) => {
                 <li>
                   <strong>Disclaimers Notice</strong>: consolidates marketplace role, risk, insurance, and warranty
                   disclaimers. Read at <Link to="/disclaimers">/disclaimers</Link>.
+                </li>
+                <li>
+                  <strong>Cancellation Policy</strong>: documents the three host-selectable cancellation tiers
+                  (Flexible, Moderate, Strict), refund thresholds, host-cancellation rules, and XP implications for
+                  cancelled bookings. Read at{" "}
+                  <Link to="/cancellation-policy">/cancellation-policy</Link>.
                 </li>
               </ul>
             </section>
@@ -143,9 +149,15 @@ const LegalPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>8. Disputes, Claims, and Cooperation</h2>
               <p>
-                SharedXP may provide reporting and evidence tools but cannot guarantee outcomes in disputes between users.
-                Parties must cooperate in good faith, provide accurate records, and follow the applicable dispute process
-                defined in governing terms.
+                SharedXP provides a structured dispute process for unresolved booking issues. Either party may open a
+                dispute after a session is marked completed. Hosts receive a response window to submit their account of
+                events and supporting evidence. SharedXP administrators review the record and make a determination, which
+                may result in full or partial refunds, XP adjustments, or other remedial actions.
+              </p>
+              <p>
+                Parties must cooperate in good faith, provide accurate records, and follow the dispute process defined in
+                the Payments and Payout Terms. SharedXP cannot guarantee outcomes but aims to resolve disputes fairly
+                based on the available evidence.
               </p>
             </section>
 
