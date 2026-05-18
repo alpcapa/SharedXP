@@ -170,14 +170,16 @@ const EventsPage = ({ currentUser, onLogout }) => {
             No events match those filters yet. Try a different sport, country, or month.
           </p>
         ) : (
-          <div className="events-feed">
-            {visibleEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-          {visibleCount < filteredEvents.length && (
-            <div ref={sentinelRef} style={{ height: 1 }} />
-          )}
+          <>
+            <div className="events-feed">
+              {visibleEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+            {visibleCount < filteredEvents.length && (
+              <div ref={sentinelRef} style={{ height: 1 }} />
+            )}
+          </>
         )}
 
         <p className="events-attribution">
