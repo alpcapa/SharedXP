@@ -3714,6 +3714,11 @@ body {
   display: block;
 }
 
+.event-card-image--contain {
+  object-fit: contain;
+  background: #fff;
+}
+
 .event-card-badge {
   position: absolute;
   top: 12px;
