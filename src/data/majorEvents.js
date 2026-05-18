@@ -220,7 +220,8 @@ export const majorEvents = [
     startsAt: "2026-06-29T00:00:00Z",
     endsAt: "2026-07-12T23:59:59Z",
     url: "https://www.wimbledon.com/",
-    imageUrl: IMG.tennis,
+    imageUrl: "/wimbledon-logo.svg",
+    imageStyle: "contain",
     description:
       "The oldest tennis tournament in the world. Grass courts, white kits and strawberries with cream."
   },
@@ -236,7 +237,8 @@ export const majorEvents = [
     startsAt: "2026-08-31T00:00:00Z",
     endsAt: "2026-09-13T23:59:59Z",
     url: "https://www.usopen.org/",
-    imageUrl: IMG.tennis,
+    imageUrl: "/us-open-tennis-logo.svg",
+    imageStyle: "contain",
     description:
       "The final Grand Slam of the year — hard courts under the lights of Arthur Ashe Stadium."
   },
@@ -335,7 +337,8 @@ export const majorEvents = [
     startsAt: "2026-07-04T00:00:00Z",
     endsAt: "2026-07-26T23:59:59Z",
     url: "https://www.letour.fr/",
-    imageUrl: IMG.cyclingRoad,
+    imageUrl: "/tour-de-france-logo.svg",
+    imageStyle: "contain",
     description:
       "La Grande Boucle — cycling's biggest stage race, finishing on the Champs-Élysées."
   },
@@ -351,7 +354,8 @@ export const majorEvents = [
     startsAt: "2026-08-22T00:00:00Z",
     endsAt: "2026-09-13T23:59:59Z",
     url: "https://www.lavuelta.es/",
-    imageUrl: IMG.cyclingRoad,
+    imageUrl: "/vuelta-logo.svg",
+    imageStyle: "contain",
     description:
       "Three weeks of climbing under the Spanish sun for the red Maillot Rojo."
   },
@@ -648,7 +652,8 @@ export const majorEvents = [
     startsAt: "2026-10-10T00:00:00Z",
     endsAt: "2026-10-10T23:59:59Z",
     url: "https://www.ironman.com/",
-    imageUrl: IMG.running,
+    imageUrl: "/ironman-logo.svg",
+    imageStyle: "contain",
     description: "The full-distance Ironman world title, contested on the Big Island lava fields."
   },
 
