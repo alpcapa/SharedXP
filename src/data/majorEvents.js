@@ -790,13 +790,15 @@ export const majorEvents = [
     title: "European Rugby Champions Cup Final 2026",
     sport: "Rugby Union",
     category: "Cup Final",
-    country: "TBD",
-    city: "TBD",
-    venue: "TBD",
-    startsAt: "2026-05-23T15:00:00Z",
+    country: "Spain",
+    city: "Bilbao",
+    venue: "San Mamés",
+    startsAt: "2026-05-23T14:45:00Z",
     endsAt: "2026-05-23T17:00:00Z",
     url: "https://www.epcrugby.com/champions-cup/",
-    description: "The final of Europe's premier club rugby union competition."
+    description: "The final of Europe's premier club rugby union competition.",
+    imageUrl: "/RugbyFinal.png",
+    imageStyle: "contain"
   },
 
   // ── American Football ───────────────────────────────────────────────
