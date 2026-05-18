@@ -190,6 +190,8 @@ export const majorEvents = [
     startsAt: "2026-09-13T09:00:00Z",
     endsAt: "2026-09-13T18:00:00Z",
     url: "https://www.greatrun.org/great-north-run/",
+    imageUrl: "/GreatNorthRun.jpeg",
+    imageStyle: "contain",
     description: "The world's largest half marathon from Newcastle city centre to South Shields."
   },
 
