@@ -40,15 +40,15 @@ const XpInfoPopup = ({ onClose }) => (
 );
 
 const getStatusInfo = (inv) => {
-  if (inv.released_at)                              return { label: "XP Earned — Released",          cls: "released"   };
-  if (inv.bookingStatus === "resolved_paid_host")   return { label: "XP Earned — Dispute Resolved",  cls: "released"   };
-  if (inv.bookingStatus === "resolved_refunded")    return { label: "XP Reclaimed — Disputed",        cls: "refunded"   };
-  if (inv.bookingStatus === "disputed")             return { label: "XP On Hold — In Dispute",        cls: "disputed"   };
+  if (inv.released_at)                              return { label: "Experience Completed — Payment Released",  cls: "released"  };
+  if (inv.bookingStatus === "resolved_paid_host")   return { label: "Experience Completed — Dispute Resolved", cls: "released"  };
+  if (inv.bookingStatus === "resolved_refunded")    return { label: "Experience Disputed — Refunded",          cls: "refunded"  };
+  if (inv.bookingStatus === "disputed")             return { label: "Experience Disputed — In Progress",       cls: "disputed"  };
   if (inv.bookingStatus === "cancelled") {
-    if (inv.refundPct === 0)                        return { label: "XP Earned — Cancelled",          cls: "no-refund"  };
-    return                                                 { label: "XP Reclaimed — Cancelled",       cls: "refunded"   };
+    if (inv.refundPct === 0)                        return { label: "Experience Cancelled — No Refund",        cls: "no-refund" };
+    return                                                 { label: "Experience Cancelled — Refunded",         cls: "refunded"  };
   }
-  return                                                   { label: "XP In Progress — Awaiting Release", cls: "paid"   };
+  return                                                   { label: "Experience In Progress — Awaiting Release", cls: "paid"  };
 };
 
 const InvoiceDetailModal = ({ invoice, onClose }) => {
