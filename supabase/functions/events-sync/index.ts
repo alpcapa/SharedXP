@@ -213,11 +213,23 @@ async function syncAll(): Promise<{
     return { inserted: 0, bySource, errors };
   }
 
+  // Fetch existing image_url values so manually-set logos are not overwritten.
+  const { data: existingRows } = await supabase
+    .from("external_events")
+    .select("source, source_id, image_url");
+  const existingImageMap = new Map<string, string>();
+  for (const row of existingRows ?? []) {
+    if (row.image_url) {
+      existingImageMap.set(`${row.source}:${row.source_id}`, row.image_url);
+    }
+  }
+
   // Upsert in chunks of 100 to keep payloads small.
   let inserted = 0;
   for (let i = 0; i < collected.length; i += 100) {
     const chunk = collected.slice(i, i + 100).map((e) => ({
       ...e,
+      image_url: existingImageMap.get(`${e.source}:${e.source_id}`) ?? e.image_url,
       last_synced_at: new Date().toISOString()
     }));
     const { error } = await supabase
