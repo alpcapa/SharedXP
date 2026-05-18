@@ -374,7 +374,8 @@ export const majorEvents = [
     startsAt: "2026-10-10T00:00:00Z",
     endsAt: "2026-10-10T23:59:59Z",
     url: "https://www.ilombardia.it/",
-    imageUrl: IMG.cyclingRoad,
+    imageUrl: "/IlLombardia.png",
+    imageStyle: "contain",
     description:
       "The Race of the Falling Leaves — closing Monument of the season around Lake Como."
   },
