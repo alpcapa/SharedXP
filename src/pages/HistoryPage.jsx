@@ -22,6 +22,12 @@ import {
 import { saveFieldPost } from "../utils/fieldPosts";
 import { useBookingRequests } from "../hooks/useBookingRequests";
 
+const getRequestSortTs = (req) => {
+  const ts = Date.parse(req.requested_date || req.created_at || "");
+  return Number.isFinite(ts) ? ts : 0;
+};
+const sortByTs = (a, b) => getRequestSortTs(b) - getRequestSortTs(a);
+
 const buildFieldPost = (item, currentUser, caption) => {
   const realPhotos = (item.photoGallery ?? []).filter(
     (p) => p && p !== FALLBACK_EVENT_PHOTO
@@ -91,18 +97,18 @@ const HistoryPage = ({
   } = useBookingRequests(currentUser);
 
   const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
-  const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status));
+  const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status)).sort(sortByTs);
   const completedBookingRequests = bookingRequests.filter((r) =>
     r.status === "completed" || r.status === "resolved_paid_host"
   );
-  const completedHosted = completedBookingRequests.filter((r) => r.host_id === currentUser?.id);
-  const completedAttended = completedBookingRequests.filter((r) => r.requester_id === currentUser?.id);
+  const completedHosted = completedBookingRequests.filter((r) => r.host_id === currentUser?.id).sort(sortByTs);
+  const completedAttended = completedBookingRequests.filter((r) => r.requester_id === currentUser?.id).sort(sortByTs);
   const cancelledBookingRequests = bookingRequests.filter((r) =>
     ["cancelled", "declined", "resolved_refunded"].includes(r.status)
-  );
+  ).sort(sortByTs);
   const disputedBookingRequests = bookingRequests.filter((r) =>
     ["disputed", "resolved_refunded", "resolved_paid_host"].includes(r.status)
-  );
+  ).sort(sortByTs);
 
   // Sync tab from URL (e.g. after booking submission redirect)
   useEffect(() => {
@@ -170,15 +176,29 @@ const HistoryPage = ({
     [allItems]
   );
 
-  const visibleItems = useMemo(
-    () =>
-      allItems.filter(
-        (item) =>
-          (selectedSport === "All" || item.sport === selectedSport) &&
-          (selectedRole === "all" || item.role === selectedRole)
-      ),
-    [allItems, selectedSport, selectedRole]
-  );
+  const mergedAllItems = useMemo(() => {
+    const brItems = bookingRequests.map((req) => ({ kind: "request", data: req, ts: getRequestSortTs(req) }));
+    const legacyItems = allItems
+      .filter((item) => selectedSport === "All" || item.sport === selectedSport)
+      .map((item) => ({ kind: "legacy", data: item, ts: item.sortKey ?? 0 }));
+    return [...brItems, ...legacyItems].sort((a, b) => b.ts - a.ts);
+  }, [bookingRequests, allItems, selectedSport]);
+
+  const mergedHostedItems = useMemo(() => {
+    const brItems = completedHosted.map((req) => ({ kind: "request", data: req, ts: getRequestSortTs(req) }));
+    const legacyItems = allItems
+      .filter((item) => item.role === "hosted" && (selectedSport === "All" || item.sport === selectedSport))
+      .map((item) => ({ kind: "legacy", data: item, ts: item.sortKey ?? 0 }));
+    return [...brItems, ...legacyItems].sort((a, b) => b.ts - a.ts);
+  }, [completedHosted, allItems, selectedSport]);
+
+  const mergedAttendedItems = useMemo(() => {
+    const brItems = completedAttended.map((req) => ({ kind: "request", data: req, ts: getRequestSortTs(req) }));
+    const legacyItems = allItems
+      .filter((item) => item.role === "attended" && (selectedSport === "All" || item.sport === selectedSport))
+      .map((item) => ({ kind: "legacy", data: item, ts: item.sortKey ?? 0 }));
+    return [...brItems, ...legacyItems].sort((a, b) => b.ts - a.ts);
+  }, [completedAttended, allItems, selectedSport]);
 
   const updateItem = useCallback((itemId, fieldName, fieldValue) => {
     setAllItems((prev) =>
@@ -568,87 +588,54 @@ const HistoryPage = ({
             )
           ) : (
             <>
-              {/* All booking requests when on the All tab */}
-              {selectedRole === "all" && bookingRequests.length > 0 && (
-                <div className="history-list">
-                  {bookingRequests.map((req) => (
-                    <PendingBookingCard
-                      key={req.id}
-                      request={req}
-                      currentUserId={currentUser.id}
-                      unreadCount={unreadCounts[req.id] ?? 0}
-                      onAccept={acceptRequest}
-                      onDecline={declineRequest}
-                      onCancel={cancelRequest}
-                      onConfirmExperience={confirmExperience}
-                      onOpenDispute={openDispute}
-                      onSubmitRating={submitRating}
-                      currentUser={currentUser}
-                      editRatingRequestId={queryEditRating}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Completed booking requests — shown in Hosted / Attended tabs only */}
               {(() => {
-                const completedForTab =
-                  selectedRole === "hosted"
-                    ? completedHosted
-                    : selectedRole === "attended"
-                    ? completedAttended
-                    : [];
-                return completedForTab.length > 0 ? (
-                  <div className="history-list">
-                    {completedForTab.map((req) => (
-                      <PendingBookingCard
-                        key={req.id}
-                        request={req}
-                        currentUserId={currentUser.id}
-                        unreadCount={unreadCounts[req.id] ?? 0}
-                        onAccept={acceptRequest}
-                        onDecline={declineRequest}
-                        onCancel={cancelRequest}
-                        onConfirmExperience={confirmExperience}
-                        onOpenDispute={openDispute}
-                        onSubmitRating={submitRating}
-                        currentUser={currentUser}
-                        editRatingRequestId={queryEditRating}
-                      />
-                    ))}
-                  </div>
-                ) : null;
-              })()}
+                const merged =
+                  selectedRole === "all" ? mergedAllItems :
+                  selectedRole === "hosted" ? mergedHostedItems :
+                  mergedAttendedItems;
 
-              {/* Legacy bookings-table history (HistoryCards) */}
-              {visibleItems.length > 0 ? (
-                <div className="history-list">
-                  {visibleItems.map((item) => (
-                    <HistoryCard
-                      key={item.id}
-                      item={item}
-                      isDirty={dirtyIds.has(item.id)}
-                      onUpdateField={updateItem}
-                      onUpdateHostRating={updateHostRating}
-                      onSaveItem={saveItem}
-                      onConfirmCompletion={confirmCompletion}
-                      onOpenGallery={openGallery}
-                      onUploadPhotos={handlePhotoUpload}
-                      onDeletePhoto={handlePhotoDelete}
-                    />
-                  ))}
-                </div>
-              ) : selectedRole === "all" && bookingRequests.length > 0 ? null : (
-                (() => {
-                  if (selectedRole === "hosted")
-                    return completedHosted.length === 0 ? <p>No hosted experiences yet.</p> : null;
-                  if (selectedRole === "attended")
-                    return completedAttended.length === 0 ? <p>No attended experiences yet.</p> : null;
-                  return completedHosted.length === 0 && completedAttended.length === 0 ? (
-                    <p>{allItems.length ? "No experiences for this sport yet." : "No experiences yet."}</p>
-                  ) : null;
-                })()
-              )}
+                if (merged.length === 0) {
+                  if (selectedRole === "hosted") return <p>No hosted experiences yet.</p>;
+                  if (selectedRole === "attended") return <p>No attended experiences yet.</p>;
+                  return <p>{allItems.length ? "No experiences for this sport yet." : "No experiences yet."}</p>;
+                }
+
+                return (
+                  <div className="history-list">
+                    {merged.map(({ kind, data }) =>
+                      kind === "request" ? (
+                        <PendingBookingCard
+                          key={data.id}
+                          request={data}
+                          currentUserId={currentUser.id}
+                          unreadCount={unreadCounts[data.id] ?? 0}
+                          onAccept={acceptRequest}
+                          onDecline={declineRequest}
+                          onCancel={cancelRequest}
+                          onConfirmExperience={confirmExperience}
+                          onOpenDispute={openDispute}
+                          onSubmitRating={submitRating}
+                          currentUser={currentUser}
+                          editRatingRequestId={queryEditRating}
+                        />
+                      ) : (
+                        <HistoryCard
+                          key={data.id}
+                          item={data}
+                          isDirty={dirtyIds.has(data.id)}
+                          onUpdateField={updateItem}
+                          onUpdateHostRating={updateHostRating}
+                          onSaveItem={saveItem}
+                          onConfirmCompletion={confirmCompletion}
+                          onOpenGallery={openGallery}
+                          onUploadPhotos={handlePhotoUpload}
+                          onDeletePhoto={handlePhotoDelete}
+                        />
+                      )
+                    )}
+                  </div>
+                );
+              })()}
             </>
           )}
 
