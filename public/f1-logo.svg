@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225">
+  <!-- Background -->
+  <rect width="400" height="225" fill="#15151E"/>
+
+  <!-- Red top accent -->
+  <rect x="0" y="0" width="400" height="6" fill="#E10600"/>
+
+  <!-- FORMULA wordmark -->
+  <text x="200" y="112" text-anchor="middle"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="900" font-size="50" letter-spacing="14" fill="#FFFFFF">FORMULA</text>
+
+  <!-- Large 1 -->
+  <text x="200" y="196" text-anchor="middle"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="900" font-size="88" fill="#E10600">1</text>
+</svg>

@@ -28,8 +28,6 @@ const IMG = {
     "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1400&q=80",
   cyclingRoad:
     "https://images.unsplash.com/photo-1541625602330-2277a4c46182?auto=format&fit=crop&w=1400&q=80",
-  formula1:
-    "https://images.unsplash.com/photo-1504707748692-419802cf939d?auto=format&fit=crop&w=1400&q=80",
   football:
     "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1400&q=80",
   americanFootball:
@@ -386,7 +384,8 @@ export const majorEvents = [
     startsAt: "2026-03-08T00:00:00Z",
     endsAt: "2026-03-08T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "Season opener under the desert lights at Sakhir."
   },
   {
@@ -401,7 +400,8 @@ export const majorEvents = [
     startsAt: "2026-03-22T00:00:00Z",
     endsAt: "2026-03-22T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "Round through the parklands of Melbourne's Albert Park."
   },
   {
@@ -416,7 +416,8 @@ export const majorEvents = [
     startsAt: "2026-04-12T00:00:00Z",
     endsAt: "2026-04-12T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "The drivers' favourite — Suzuka's flowing figure-eight layout."
   },
   {
@@ -431,7 +432,8 @@ export const majorEvents = [
     startsAt: "2026-05-24T00:00:00Z",
     endsAt: "2026-05-24T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "The crown jewel of the F1 calendar through the streets of Monte Carlo."
   },
   {
@@ -446,7 +448,8 @@ export const majorEvents = [
     startsAt: "2026-06-14T00:00:00Z",
     endsAt: "2026-06-14T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "Île Notre-Dame's Wall of Champions makes Montreal a perennial classic."
   },
   {
@@ -461,7 +464,8 @@ export const majorEvents = [
     startsAt: "2026-07-05T00:00:00Z",
     endsAt: "2026-07-05T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "The home of British motorsport — high-speed sweepers at Silverstone."
   },
   {
@@ -476,7 +480,8 @@ export const majorEvents = [
     startsAt: "2026-08-30T00:00:00Z",
     endsAt: "2026-08-30T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "Eau Rouge, Raidillon and Ardennes weather make Spa unmistakable."
   },
   {
@@ -491,7 +496,8 @@ export const majorEvents = [
     startsAt: "2026-09-06T00:00:00Z",
     endsAt: "2026-09-06T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "The Temple of Speed — a tifosi-fueled cathedral of slipstreams."
   },
   {
@@ -506,7 +512,8 @@ export const majorEvents = [
     startsAt: "2026-09-20T00:00:00Z",
     endsAt: "2026-09-20T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "The original night race — a humid 23-corner street circuit around Marina Bay."
   },
   {
@@ -521,7 +528,8 @@ export const majorEvents = [
     startsAt: "2026-10-25T00:00:00Z",
     endsAt: "2026-10-25T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "Texan hospitality and a layout inspired by the world's best corners."
   },
   {
@@ -536,7 +544,8 @@ export const majorEvents = [
     startsAt: "2026-11-21T00:00:00Z",
     endsAt: "2026-11-21T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "A Saturday-night Strip race past the Sphere, Bellagio and Caesars."
   },
   {
@@ -551,7 +560,8 @@ export const majorEvents = [
     startsAt: "2026-12-06T00:00:00Z",
     endsAt: "2026-12-06T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: IMG.formula1,
+    imageUrl: "/f1-logo.svg",
+    imageStyle: "contain",
     description: "The traditional season finale at Yas Marina — twilight to night under the lights."
   },
 
