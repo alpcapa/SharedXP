@@ -307,6 +307,8 @@ export const majorEvents = [
     startsAt: "2026-11-21T00:00:00Z",
     endsAt: "2026-11-29T23:59:59Z",
     url: "https://www.daviscupfinals.com/",
+    imageUrl: "/DavisCup.png",
+    imageStyle: "contain",
     description: "The World Cup of Tennis — 16 nations compete for the oldest team trophy in the sport."
   },
 
