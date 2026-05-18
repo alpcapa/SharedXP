@@ -169,7 +169,8 @@ export const majorEvents = [
     startsAt: "2026-06-14T00:00:00Z",
     endsAt: "2026-06-14T23:59:59Z",
     url: "https://www.comrades.com/",
-    imageUrl: IMG.running,
+    imageUrl: "/Comrades_Marathon_Logo.png",
+    imageStyle: "contain",
     description:
       "An iconic 87-89 km ultramarathon between Pietermaritzburg and Durban, alternating direction each year."
   },
