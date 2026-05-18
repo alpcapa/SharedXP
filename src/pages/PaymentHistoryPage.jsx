@@ -105,7 +105,7 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
           </span>
         </div>
 
-        {isReleased && (
+        {invoice.released_at && (
           <div className="invoice-detail-row">
             <span className="invoice-detail-label">Released on</span>
             <span className="invoice-detail-value">
