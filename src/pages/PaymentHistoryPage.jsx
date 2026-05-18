@@ -299,14 +299,15 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const hasBooked = invoices.some((i) => i.role === "booked");
 
   const isRefunded = (inv) =>
-    inv.bookingStatus === "cancelled" || inv.bookingStatus === "resolved_refunded" || inv.bookingStatus === "resolved_paid_host";
+    inv.bookingStatus === "resolved_refunded" ||
+    (inv.bookingStatus === "cancelled" && inv.refundPct !== 0);
 
   const filtered = invoices.filter((inv) => {
     if (filterSport && inv.sport !== filterSport) return false;
     if (filterCurrency && inv.currency !== filterCurrency) return false;
     if (filterRole !== "all" && inv.role !== filterRole) return false;
     if (filterStatus === "released" && !inv.released_at) return false;
-    if (filterStatus === "paid" && (inv.released_at || isRefunded(inv))) return false;
+    if (filterStatus === "paid" && (inv.released_at || isRefunded(inv) || inv.bookingStatus === "cancelled")) return false;
     if (filterStatus === "refunded" && !isRefunded(inv)) return false;
     if (filterFrom && inv.paid_at && inv.paid_at < filterFrom) return false;
     if (filterTo && inv.paid_at && inv.paid_at > filterTo + "T23:59:59") return false;
