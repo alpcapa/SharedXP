@@ -445,6 +445,20 @@ export const majorEvents = [
     description:
       "The Race of the Falling Leaves — closing Monument of the season around Lake Como."
   },
+  {
+    id: "giro-ditalia-women-2026",
+    source: "manual",
+    title: "Giro d'Italia Women 2026",
+    sport: "Cycling",
+    category: "Stage Race",
+    country: "Italy",
+    city: "Multiple",
+    venue: "Across Italy",
+    startsAt: "2026-05-30T00:00:00Z",
+    endsAt: "2026-06-07T23:59:59Z",
+    url: "https://www.giroditalia.it/",
+    description: "The premier women's stage race in cycling, riding the same iconic Italian roads as the men's Giro."
+  },
 
   // ── Formula 1 (2026 calendar — provisional dates) ───────────────────
   {
@@ -642,6 +656,50 @@ export const majorEvents = [
 
   // ── Football / Soccer ───────────────────────────────────────────────
   {
+    id: "uefa-europa-league-final-2026",
+    source: "manual",
+    title: "UEFA Europa League Final 2026",
+    sport: "Football",
+    category: "Cup Final",
+    country: "Turkey",
+    city: "Istanbul",
+    venue: "Beşiktaş Park",
+    startsAt: "2026-05-20T19:00:00Z",
+    endsAt: "2026-05-20T21:00:00Z",
+    url: "https://www.uefa.com/uefaeuropaleague/",
+    imageUrl: "/EuropaCupFinal.jpeg",
+    imageStyle: "contain",
+    description: "The final of UEFA's second-tier European club competition."
+  },
+  {
+    id: "uefa-womens-cl-final-2026",
+    source: "manual",
+    title: "UEFA Women's Champions League Final 2026",
+    sport: "Football",
+    category: "Cup Final",
+    country: "TBD",
+    city: "TBD",
+    venue: "TBD",
+    startsAt: "2026-05-23T17:00:00Z",
+    endsAt: "2026-05-23T19:00:00Z",
+    url: "https://www.uefa.com/womenschampionsleague/",
+    description: "The showpiece final of European women's club football."
+  },
+  {
+    id: "uefa-conference-league-final-2026",
+    source: "manual",
+    title: "UEFA Conference League Final 2026",
+    sport: "Football",
+    category: "Cup Final",
+    country: "Germany",
+    city: "Leipzig",
+    venue: "Red Bull Arena",
+    startsAt: "2026-05-27T19:00:00Z",
+    endsAt: "2026-05-27T21:00:00Z",
+    url: "https://www.uefa.com/uefaconferenceleague/",
+    description: "The final of UEFA's third-tier European club competition."
+  },
+  {
     id: "ucl-final-2026",
     source: "thesportsdb",
     title: "UEFA Champions League Final 2026",
@@ -693,6 +751,22 @@ export const majorEvents = [
 
   // ── Basketball ──────────────────────────────────────────────────────
   {
+    id: "euroleague-final-four-2026",
+    source: "manual",
+    title: "EuroLeague Final Four 2026",
+    sport: "Basketball",
+    category: "Championship",
+    country: "Greece",
+    city: "Athens",
+    venue: "Telekom Center",
+    startsAt: "2026-05-22T00:00:00Z",
+    endsAt: "2026-05-24T23:59:59Z",
+    url: "https://www.euroleague.net/",
+    imageUrl: "/EuroleagueFinalFour.png",
+    imageStyle: "contain",
+    description: "The season-ending Final Four of Europe's premier basketball club competition."
+  },
+  {
     id: "nba-finals-2026",
     source: "manual",
     title: "NBA Finals 2026",
@@ -707,6 +781,22 @@ export const majorEvents = [
     imageUrl: "/NbaFinals.png",
     imageStyle: "contain",
     description: "The best-of-seven championship series of the National Basketball Association."
+  },
+
+  // ── Rugby ───────────────────────────────────────────────────────────
+  {
+    id: "european-rugby-champions-cup-final-2026",
+    source: "manual",
+    title: "European Rugby Champions Cup Final 2026",
+    sport: "Rugby Union",
+    category: "Cup Final",
+    country: "TBD",
+    city: "TBD",
+    venue: "TBD",
+    startsAt: "2026-05-23T15:00:00Z",
+    endsAt: "2026-05-23T17:00:00Z",
+    url: "https://www.epcrugby.com/champions-cup/",
+    description: "The final of Europe's premier club rugby union competition."
   },
 
   // ── American Football ───────────────────────────────────────────────
@@ -759,6 +849,64 @@ export const majorEvents = [
     description: "The third golf major of the year — one of the toughest tests in championship golf."
   },
 
+  // ── Motorsport (MotoGP / Endurance) ────────────────────────────────
+  {
+    id: "motogp-hungarian-gp-2026",
+    source: "manual",
+    title: "Hungarian Motorcycle Grand Prix 2026",
+    sport: "Motorcycle Racing",
+    category: "MotoGP",
+    country: "Hungary",
+    city: "Budapest",
+    venue: "Hungaroring",
+    startsAt: "2026-06-07T13:00:00Z",
+    endsAt: "2026-06-07T15:00:00Z",
+    url: "https://www.motogp.com/",
+    description: "Round 8 of the MotoGP World Championship at the Hungaroring."
+  },
+  {
+    id: "le-mans-24h-2026",
+    source: "manual",
+    title: "24 Hours of Le Mans 2026",
+    sport: "Endurance Racing",
+    category: "WEC",
+    country: "France",
+    city: "Le Mans",
+    venue: "Circuit de la Sarthe",
+    startsAt: "2026-06-13T10:00:00Z",
+    endsAt: "2026-06-14T10:00:00Z",
+    url: "https://www.lemans.org/",
+    description: "The world's oldest active sports car endurance race — 24 hours at the Circuit de la Sarthe."
+  },
+  {
+    id: "motogp-czech-gp-2026",
+    source: "manual",
+    title: "Czech Republic Motorcycle Grand Prix 2026",
+    sport: "Motorcycle Racing",
+    category: "MotoGP",
+    country: "Czech Republic",
+    city: "Brno",
+    venue: "Automotodrom Brno",
+    startsAt: "2026-06-21T13:00:00Z",
+    endsAt: "2026-06-21T15:00:00Z",
+    url: "https://www.motogp.com/",
+    description: "Round 9 of the MotoGP World Championship at Automotodrom Brno."
+  },
+  {
+    id: "motogp-dutch-tt-2026",
+    source: "manual",
+    title: "Dutch TT 2026",
+    sport: "Motorcycle Racing",
+    category: "MotoGP",
+    country: "Netherlands",
+    city: "Assen",
+    venue: "TT Circuit Assen",
+    startsAt: "2026-06-28T13:00:00Z",
+    endsAt: "2026-06-28T15:00:00Z",
+    url: "https://www.motogp.com/",
+    description: "Round 10 of the MotoGP World Championship — the Cathedral of Motorsport at Assen."
+  },
+
   // ── Triathlon ───────────────────────────────────────────────────────
   {
     id: "ironman-kona-2026",
@@ -775,6 +923,38 @@ export const majorEvents = [
     imageUrl: "/IronmanKona.png",
     imageStyle: "contain",
     description: "The full-distance Ironman world title, contested on the Big Island lava fields."
+  },
+  {
+    id: "ironman-european-2026",
+    source: "manual",
+    title: "Ironman European Championship 2026",
+    sport: "Triathlon",
+    category: "World Championship Series",
+    country: "Germany",
+    city: "Frankfurt",
+    venue: "Frankfurt am Main",
+    startsAt: "2026-06-28T06:00:00Z",
+    endsAt: "2026-06-28T23:59:59Z",
+    url: "https://www.ironman.com/",
+    description: "The European Championship of full-distance triathlon held in Frankfurt."
+  },
+
+  // ── Archery ─────────────────────────────────────────────────────────
+  {
+    id: "european-archery-championships-2026",
+    source: "manual",
+    title: "European Archery Championships 2026",
+    sport: "Archery",
+    category: "Continental Championship",
+    country: "Turkey",
+    city: "Antalya",
+    venue: "",
+    startsAt: "2026-05-18T00:00:00Z",
+    endsAt: "2026-05-24T23:59:59Z",
+    url: "https://www.worldarchery.sport/",
+    imageUrl: "/EuropeanArchery.png",
+    imageStyle: "contain",
+    description: "The biennial continental championship for European archery nations."
   },
 
   // ── Olympics ────────────────────────────────────────────────────────
