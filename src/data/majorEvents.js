@@ -866,6 +866,8 @@ export const majorEvents = [
     startsAt: "2026-06-07T13:00:00Z",
     endsAt: "2026-06-07T15:00:00Z",
     url: "https://www.motogp.com/",
+    imageUrl: "/MotoGP.png",
+    imageStyle: "contain",
     description: "Round 8 of the MotoGP World Championship at the Hungaroring."
   },
   {
@@ -894,6 +896,8 @@ export const majorEvents = [
     startsAt: "2026-06-21T13:00:00Z",
     endsAt: "2026-06-21T15:00:00Z",
     url: "https://www.motogp.com/",
+    imageUrl: "/MotoGP.png",
+    imageStyle: "contain",
     description: "Round 9 of the MotoGP World Championship at Automotodrom Brno."
   },
   {
@@ -908,6 +912,8 @@ export const majorEvents = [
     startsAt: "2026-06-28T13:00:00Z",
     endsAt: "2026-06-28T15:00:00Z",
     url: "https://www.motogp.com/",
+    imageUrl: "/MotoGP.png",
+    imageStyle: "contain",
     description: "Round 10 of the MotoGP World Championship — the Cathedral of Motorsport at Assen."
   },
 
