@@ -944,7 +944,7 @@ export const majorEvents = [
     category: "Continental Championship",
     country: "Turkey",
     city: "Antalya",
-    venue: "TBD",
+    venue: "",
     startsAt: "2026-05-18T00:00:00Z",
     endsAt: "2026-05-24T23:59:59Z",
     url: "https://www.worldarchery.sport/",
