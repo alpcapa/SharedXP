@@ -6746,7 +6746,7 @@ body {
   /* Shrink header brand on mobile */
   .site-header {
     padding: 12px 16px;
-    border-radius: 0;
+    border-radius: 14px;
   }
 
   .brand {
