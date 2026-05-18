@@ -744,6 +744,8 @@ export const majorEvents = [
     startsAt: "2026-06-18T00:00:00Z",
     endsAt: "2026-06-21T23:59:59Z",
     url: "https://www.usopen.com/",
+    imageUrl: "/USOpen.png",
+    imageStyle: "contain",
     description: "The third golf major of the year — one of the toughest tests in championship golf."
   },
 
