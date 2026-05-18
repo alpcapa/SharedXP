@@ -6313,6 +6313,11 @@ body {
   color: #92400e;
 }
 
+.invoice-status--refunded {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 .invoice-role-badge {
   display: inline-block;
   padding: 2px 10px;

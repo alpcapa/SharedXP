@@ -39,9 +39,13 @@ const XpInfoPopup = ({ onClose }) => (
   </div>
 );
 
+const isRefundedInvoice = (invoice) =>
+  invoice.bookingStatus === "cancelled" || invoice.bookingStatus === "resolved_refunded";
+
 const InvoiceDetailModal = ({ invoice, onClose }) => {
   const sym = CURRENCY_SYMBOLS[invoice.currency] ?? invoice.currency;
   const isReleased = Boolean(invoice.released_at);
+  const isRefunded = isRefundedInvoice(invoice);
   const isHosted = invoice.role === "hosted";
 
   return (
@@ -59,9 +63,9 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
               {isHosted ? "Hosted" : "Booked"}
             </span>
             <span
-              className={`invoice-status invoice-status--${isReleased ? "released" : "paid"}`}
+              className={`invoice-status invoice-status--${isReleased ? "released" : isRefunded ? "refunded" : "paid"}`}
             >
-              {isReleased ? "Released" : "Paid"}
+              {isReleased ? "Released" : isRefunded ? "Refunded" : "Paid"}
             </span>
           </div>
         </div>
@@ -286,12 +290,16 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const hasHosted = invoices.some((i) => i.role === "hosted");
   const hasBooked = invoices.some((i) => i.role === "booked");
 
+  const isRefunded = (inv) =>
+    inv.bookingStatus === "cancelled" || inv.bookingStatus === "resolved_refunded";
+
   const filtered = invoices.filter((inv) => {
     if (filterSport && inv.sport !== filterSport) return false;
     if (filterCurrency && inv.currency !== filterCurrency) return false;
     if (filterRole !== "all" && inv.role !== filterRole) return false;
     if (filterStatus === "released" && !inv.released_at) return false;
-    if (filterStatus === "paid" && inv.released_at) return false;
+    if (filterStatus === "paid" && (inv.released_at || isRefunded(inv))) return false;
+    if (filterStatus === "refunded" && !isRefunded(inv)) return false;
     if (filterFrom && inv.paid_at && inv.paid_at < filterFrom) return false;
     if (filterTo && inv.paid_at && inv.paid_at > filterTo + "T23:59:59") return false;
     return true;
@@ -417,6 +425,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                 <option value="all">All</option>
                 <option value="released">Payment released</option>
                 <option value="paid">Awaiting release</option>
+                <option value="refunded">Refunded</option>
               </select>
             </div>
 
@@ -518,9 +527,9 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                       {inv.role === "hosted" ? "Hosted" : "Booked"}
                     </span>
                     <span
-                      className={`invoice-status invoice-status--${inv.released_at ? "released" : "paid"}`}
+                      className={`invoice-status invoice-status--${inv.released_at ? "released" : isRefunded(inv) ? "refunded" : "paid"}`}
                     >
-                      {inv.released_at ? "Released" : "Paid"}
+                      {inv.released_at ? "Released" : isRefunded(inv) ? "Refunded" : "Paid"}
                     </span>
                   </div>
                   <span className="invoice-card-chevron" aria-hidden="true">
