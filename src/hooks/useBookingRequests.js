@@ -169,14 +169,31 @@ export const useBookingRequests = (currentUser) => {
       .from("booking_requests")
       .update({ status: "cancelled", refund_pct: refundPct, updated_at: new Date().toISOString() })
       .eq("id", requestId);
-    if (!error) {
-      const emailType = isPrePayment
-        ? "booking_cancelled_pre_payment_to_host"
-        : "booking_cancelled_post_payment_to_host";
-      await sendNotification(emailType, requestId);
-      fetchRequests();
+    if (error) return { ok: false, refundPct };
+
+    // Reduce XP proportionally to the amount NOT refunded.
+    // Full refund (100%) → xp_earned = 0. No refund (0%) → xp_earned unchanged.
+    if (!isPrePayment && refundPct > 0) {
+      const { data: inv } = await supabase
+        .from("invoices")
+        .select("xp_earned")
+        .eq("booking_request_id", requestId)
+        .maybeSingle();
+      if (inv) {
+        const newXp = Math.round((inv.xp_earned ?? 0) * (1 - refundPct / 100));
+        await supabase
+          .from("invoices")
+          .update({ xp_earned: newXp })
+          .eq("booking_request_id", requestId);
+      }
     }
-    return { ok: !error, refundPct };
+
+    const emailType = isPrePayment
+      ? "booking_cancelled_pre_payment_to_host"
+      : "booking_cancelled_post_payment_to_host";
+    await sendNotification(emailType, requestId);
+    fetchRequests();
+    return { ok: true, refundPct };
   }, [fetchRequests]);
 
   const confirmExperience = useCallback(async (requestId) => {
@@ -348,6 +365,11 @@ export const useBookingRequests = (currentUser) => {
         .is("released_at", null);
       await sendNotification("dispute_resolved_paid_host", dispute.booking_request_id);
     } else {
+      // Refund resolution — guest gets money back, so XP is reclaimed from both parties.
+      await supabase
+        .from("invoices")
+        .update({ xp_earned: 0 })
+        .eq("booking_request_id", dispute.booking_request_id);
       await sendNotification("dispute_resolved_refund", dispute.booking_request_id);
     }
 

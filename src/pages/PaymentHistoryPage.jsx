@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
-import { CURRENCY_SYMBOLS, toNSU } from "../utils/pricing";
+import { CURRENCY_SYMBOLS } from "../utils/pricing";
 
 const fmt = (sym, cur, amount) =>
   `${sym ?? cur}${Number(amount || 0).toFixed(2)}`;
@@ -269,8 +269,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
           role: isHosted ? "hosted" : "booked",
           hostName: isHosted ? null : (profileMap[br?.host_id]?.full_name ?? "Host"),
           guestName: isHosted ? (profileMap[br?.requester_id]?.full_name ?? "Guest") : null,
-          // Hosts earn the same XP as guests — 1 XP per Normalized Spending Unit
-          xpEarned: toNSU(inv.gross_amount, inv.currency),
+          xpEarned: inv.xp_earned ?? 0,
         };
       });
 
