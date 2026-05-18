@@ -656,7 +656,7 @@ export const majorEvents = [
     startsAt: "2026-10-10T00:00:00Z",
     endsAt: "2026-10-10T23:59:59Z",
     url: "https://www.ironman.com/",
-    imageUrl: "/ironman-logo.svg",
+    imageUrl: "/IronmanKona.png",
     imageStyle: "contain",
     description: "The full-distance Ironman world title, contested on the Big Island lava fields."
   },
