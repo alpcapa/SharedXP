@@ -153,7 +153,8 @@ export const majorEvents = [
     startsAt: "2026-08-30T00:00:00Z",
     endsAt: "2026-08-30T23:59:59Z",
     url: "https://www.sydneymarathon.com/",
-    imageUrl: IMG.marathon,
+    imageUrl: "/SydneyMarathon.png",
+    imageStyle: "contain",
     description:
       "The newest member of the Abbott World Marathon Majors, finishing at the Opera House."
   },
