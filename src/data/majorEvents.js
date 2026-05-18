@@ -595,7 +595,8 @@ export const majorEvents = [
     startsAt: "2026-06-11T00:00:00Z",
     endsAt: "2026-07-19T23:59:59Z",
     url: "https://www.fifa.com/fifaplus/en/tournaments/mens/worldcup/canadamexicousa2026",
-    imageUrl: IMG.football,
+    imageUrl: "/fifa-worldcup-2026-logo.png",
+    imageStyle: "contain",
     description:
       "The first 48-team World Cup, co-hosted by the United States, Canada and Mexico across 16 cities."
   },
