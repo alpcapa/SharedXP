@@ -694,6 +694,8 @@ export const majorEvents = [
     startsAt: "2026-06-04T00:00:00Z",
     endsAt: "2026-06-21T23:59:59Z",
     url: "https://www.nba.com/",
+    imageUrl: "/NbaFinals.png",
+    imageStyle: "contain",
     description: "The best-of-seven championship series of the National Basketball Association."
   },
 
