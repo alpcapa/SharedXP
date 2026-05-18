@@ -275,6 +275,8 @@ export const majorEvents = [
     startsAt: "2026-10-25T00:00:00Z",
     endsAt: "2026-11-01T23:59:59Z",
     url: "https://www.wtatennis.com/",
+    imageUrl: "/WTAFinals.webp",
+    imageStyle: "contain",
     description: "Season-ending championship for the top eight women's singles players and doubles teams."
   },
   {
