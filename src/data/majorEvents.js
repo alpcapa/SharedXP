@@ -677,13 +677,15 @@ export const majorEvents = [
     title: "UEFA Women's Champions League Final 2026",
     sport: "Football",
     category: "Cup Final",
-    country: "TBD",
-    city: "TBD",
-    venue: "TBD",
+    country: "Norway",
+    city: "Oslo",
+    venue: "Ullevaal Stadion",
     startsAt: "2026-05-23T17:00:00Z",
     endsAt: "2026-05-23T19:00:00Z",
     url: "https://www.uefa.com/womenschampionsleague/",
-    description: "The showpiece final of European women's club football."
+    description: "The showpiece final of European women's club football.",
+    imageUrl: "/WomensCLFinal.webp",
+    imageStyle: "contain"
   },
   {
     id: "uefa-conference-league-final-2026",
@@ -790,13 +792,15 @@ export const majorEvents = [
     title: "European Rugby Champions Cup Final 2026",
     sport: "Rugby Union",
     category: "Cup Final",
-    country: "TBD",
-    city: "TBD",
-    venue: "TBD",
-    startsAt: "2026-05-23T15:00:00Z",
+    country: "Spain",
+    city: "Bilbao",
+    venue: "San Mamés",
+    startsAt: "2026-05-23T14:45:00Z",
     endsAt: "2026-05-23T17:00:00Z",
     url: "https://www.epcrugby.com/champions-cup/",
-    description: "The final of Europe's premier club rugby union competition."
+    description: "The final of Europe's premier club rugby union competition.",
+    imageUrl: "/RugbyFinal.png",
+    imageStyle: "contain"
   },
 
   // ── American Football ───────────────────────────────────────────────

@@ -9,12 +9,20 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December"
 ];
 
+function getPageSize() {
+  const cols = window.innerWidth < 768 ? 1 : window.innerWidth < 1024 ? 2 : 3;
+  const approxCardHeight = 360;
+  const rows = Math.max(3, Math.ceil(window.innerHeight / approxCardHeight));
+  return cols * rows;
+}
+
 const EventsPage = ({ currentUser, onLogout }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState("All");
   const [selectedCountry, setSelectedCountry] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(getPageSize);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,7 +64,7 @@ const EventsPage = ({ currentUser, onLogout }) => {
     ];
   }, [events]);
 
-  const visibleEvents = useMemo(() => {
+  const filteredEvents = useMemo(() => {
     return events.filter((event) => {
       const matchesSport = selectedSport === "All" || event.sport === selectedSport;
       const matchesCountry = selectedCountry === "All" || event.country === selectedCountry;
@@ -68,6 +76,31 @@ const EventsPage = ({ currentUser, onLogout }) => {
       return matchesSport && matchesCountry && matchesMonth;
     });
   }, [events, selectedSport, selectedCountry, selectedMonth]);
+
+  useEffect(() => {
+    setVisibleCount(getPageSize());
+  }, [selectedSport, selectedCountry, selectedMonth]);
+
+  useEffect(() => {
+    if (visibleCount >= filteredEvents.length) return;
+
+    // If the rendered content doesn't fill the viewport, load the next batch immediately
+    if (document.documentElement.scrollHeight <= window.innerHeight) {
+      setVisibleCount((c) => c + getPageSize());
+      return;
+    }
+
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      if (scrollTop + clientHeight >= scrollHeight - 300) {
+        setVisibleCount((c) => c + getPageSize());
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [filteredEvents.length, visibleCount]);
+
+  const visibleEvents = filteredEvents.slice(0, visibleCount);
 
   return (
     <div className="home-page">
