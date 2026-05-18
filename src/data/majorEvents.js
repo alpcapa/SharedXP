@@ -291,6 +291,8 @@ export const majorEvents = [
     startsAt: "2026-11-09T00:00:00Z",
     endsAt: "2026-11-16T23:59:59Z",
     url: "https://www.atptour.com/en/atp-tour/nitto-atp-finals",
+    imageUrl: "/ATPFinals.png",
+    imageStyle: "contain",
     description: "Season-ending championship for the top eight ATP singles players of the year."
   },
   {
