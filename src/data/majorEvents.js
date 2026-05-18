@@ -178,6 +178,22 @@ export const majorEvents = [
     description:
       "An iconic 87-89 km ultramarathon between Pietermaritzburg and Durban, alternating direction each year."
   },
+  {
+    id: "great-north-run-2026",
+    source: "manual",
+    title: "Great North Run 2026",
+    sport: "Running",
+    category: "Half Marathon",
+    country: "United Kingdom",
+    city: "Newcastle",
+    venue: "Newcastle to South Shields",
+    startsAt: "2026-09-13T09:00:00Z",
+    endsAt: "2026-09-13T18:00:00Z",
+    url: "https://www.greatrun.org/great-north-run/",
+    imageUrl: "/GreatNorthRun.jpeg",
+    imageStyle: "contain",
+    description: "The world's largest half marathon from Newcastle city centre to South Shields."
+  },
 
   // ── Tennis Grand Slams ──────────────────────────────────────────────
   {
@@ -246,6 +262,54 @@ export const majorEvents = [
     imageStyle: "contain",
     description:
       "The final Grand Slam of the year — hard courts under the lights of Arthur Ashe Stadium."
+  },
+  {
+    id: "wta-finals-2026",
+    source: "manual",
+    title: "WTA Finals 2026",
+    sport: "Tennis",
+    category: "Year-End Championship",
+    country: "Saudi Arabia",
+    city: "Riyadh",
+    venue: "King Saud University Indoor Arena",
+    startsAt: "2026-10-25T00:00:00Z",
+    endsAt: "2026-11-01T23:59:59Z",
+    url: "https://www.wtatennis.com/",
+    imageUrl: "/WTAFinals.webp",
+    imageStyle: "contain",
+    description: "Season-ending championship for the top eight women's singles players and doubles teams."
+  },
+  {
+    id: "atp-finals-2026",
+    source: "manual",
+    title: "ATP Finals 2026",
+    sport: "Tennis",
+    category: "Year-End Championship",
+    country: "Italy",
+    city: "Turin",
+    venue: "Pala Alpitour",
+    startsAt: "2026-11-09T00:00:00Z",
+    endsAt: "2026-11-16T23:59:59Z",
+    url: "https://www.atptour.com/en/atp-tour/nitto-atp-finals",
+    imageUrl: "/ATPFinals.png",
+    imageStyle: "contain",
+    description: "Season-ending championship for the top eight ATP singles players of the year."
+  },
+  {
+    id: "davis-cup-finals-2026",
+    source: "manual",
+    title: "Davis Cup Finals 2026",
+    sport: "Tennis",
+    category: "Team Competition",
+    country: "Spain",
+    city: "Malaga",
+    venue: "Palacio de Deportes Martin Carpena",
+    startsAt: "2026-11-21T00:00:00Z",
+    endsAt: "2026-11-29T23:59:59Z",
+    url: "https://www.daviscupfinals.com/",
+    imageUrl: "/DavisCup.png",
+    imageStyle: "contain",
+    description: "The World Cup of Tennis — 16 nations compete for the oldest team trophy in the sport."
   },
 
   // ── Cycling: Grand Tours + Monuments ────────────────────────────────
@@ -610,6 +674,40 @@ export const majorEvents = [
     description:
       "The first 48-team World Cup, co-hosted by the United States, Canada and Mexico across 16 cities."
   },
+  {
+    id: "copa-libertadores-final-2026",
+    source: "manual",
+    title: "Copa Libertadores Final 2026",
+    sport: "Football",
+    category: "Club Final",
+    country: "South America",
+    city: "TBD",
+    venue: "TBD",
+    startsAt: "2026-11-07T21:00:00Z",
+    endsAt: "2026-11-07T23:00:00Z",
+    url: "https://www.conmebol.com/",
+    imageUrl: "/CopaLibertadores.png",
+    imageStyle: "contain",
+    description: "The final of South America's premier club football competition."
+  },
+
+  // ── Basketball ──────────────────────────────────────────────────────
+  {
+    id: "nba-finals-2026",
+    source: "manual",
+    title: "NBA Finals 2026",
+    sport: "Basketball",
+    category: "Championship",
+    country: "United States",
+    city: "Multiple",
+    venue: "TBD",
+    startsAt: "2026-06-04T00:00:00Z",
+    endsAt: "2026-06-21T23:59:59Z",
+    url: "https://www.nba.com/",
+    imageUrl: "/NbaFinals.png",
+    imageStyle: "contain",
+    description: "The best-of-seven championship series of the National Basketball Association."
+  },
 
   // ── American Football ───────────────────────────────────────────────
   {
@@ -643,6 +741,22 @@ export const majorEvents = [
     url: "https://www.masters.com/",
     imageUrl: IMG.golf,
     description: "Azaleas, Amen Corner and the green jacket — golf's first Major of the year."
+  },
+  {
+    id: "us-open-golf-2026",
+    source: "manual",
+    title: "US Open Golf 2026",
+    sport: "Golf",
+    category: "Major",
+    country: "United States",
+    city: "TBD",
+    venue: "TBD",
+    startsAt: "2026-06-18T00:00:00Z",
+    endsAt: "2026-06-21T23:59:59Z",
+    url: "https://www.usopen.com/",
+    imageUrl: "/USOpen.png",
+    imageStyle: "contain",
+    description: "The third golf major of the year — one of the toughest tests in championship golf."
   },
 
   // ── Triathlon ───────────────────────────────────────────────────────
