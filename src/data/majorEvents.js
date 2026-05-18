@@ -28,8 +28,6 @@ const IMG = {
     "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1400&q=80",
   cyclingRoad:
     "https://images.unsplash.com/photo-1541625602330-2277a4c46182?auto=format&fit=crop&w=1400&q=80",
-  giroLogo:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Giro_d%27Italia_-_Logo_2018.svg/400px-Giro_d%27Italia_-_Logo_2018.svg.png",
   formula1:
     "https://images.unsplash.com/photo-1504707748692-419802cf939d?auto=format&fit=crop&w=1400&q=80",
   football:
@@ -321,7 +319,8 @@ export const majorEvents = [
     startsAt: "2026-05-08T00:00:00Z",
     endsAt: "2026-05-31T23:59:59Z",
     url: "https://www.giroditalia.it/",
-    imageUrl: IMG.giroLogo,
+    imageUrl: "/giro-ditalia-logo.svg",
+    imageStyle: "contain",
     description:
       "Three weeks of racing for the Maglia Rosa across Italy's mountains, coastlines and cobbles."
   },

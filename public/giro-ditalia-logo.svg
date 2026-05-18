@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 260">
+  <rect width="380" height="260" fill="white"/>
+
+  <!-- Infinity / cyclist symbol -->
+  <path d="M 65,100
+           C 65,60 102,37 138,52
+           C 164,63 183,98 190,100
+           C 197,102 216,63 242,52
+           C 278,37 315,60 315,100
+           C 315,140 278,163 242,148
+           C 216,137 197,102 190,100
+           C 183,98 164,137 138,148
+           C 102,163 65,140 65,100 Z"
+    fill="none" stroke="#111111" stroke-width="24" stroke-linejoin="round"/>
+
+  <!-- Pink speed stripes -->
+  <polygon points="193,38 224,38 272,162 241,162" fill="#E4006B"/>
+  <polygon points="221,38 252,38 300,162 269,162" fill="#E4006B" opacity="0.6"/>
+
+  <!-- Giro d'Italia text -->
+  <text x="190" y="232" text-anchor="middle"
+    font-family="Georgia, 'Palatino Linotype', serif"
+    font-weight="bold" font-size="46" fill="#111111">Giro d&#8217;Italia</text>
+</svg>

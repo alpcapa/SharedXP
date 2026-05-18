@@ -13,7 +13,11 @@ const EventCard = ({ event, compact = false }) => {
           className="event-card-image-link"
           aria-label={`Open ${event.title}`}
         >
-          <img src={event.imageUrl} alt="" className="event-card-image" />
+          <img
+            src={event.imageUrl}
+            alt=""
+            className={`event-card-image${event.imageStyle === "contain" ? " event-card-image--contain" : ""}`}
+          />
           {event.category && (
             <span className="event-card-badge">{event.category}</span>
           )}
