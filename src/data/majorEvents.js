@@ -105,7 +105,8 @@ export const majorEvents = [
     startsAt: "2026-09-27T00:00:00Z",
     endsAt: "2026-09-27T23:59:59Z",
     url: "https://www.bmw-berlin-marathon.com/en/",
-    imageUrl: IMG.marathon,
+    imageUrl: "/BerlinMarathon.png",
+    imageStyle: "contain",
     description:
       "The fastest course on the World Marathon Majors circuit and frequent home of world records."
   },
