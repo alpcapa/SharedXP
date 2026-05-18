@@ -12,7 +12,7 @@ const ContentAndIntellectualPropertyPolicyPage = ({ currentUser, onLogout }) => 
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Content and Intellectual Property Policy</h1>
-            <p className="legal-last-updated">Last updated: April 19, 2026</p>
+            <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               This policy explains how SharedXP handles user-generated content, platform intellectual property, and
               notice-and-action requests. It is designed to align with EU transparency and rights-protection principles.

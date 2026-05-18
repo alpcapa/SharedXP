@@ -39,9 +39,21 @@ const XpInfoPopup = ({ onClose }) => (
   </div>
 );
 
+const getStatusInfo = (inv) => {
+  if (inv.released_at)                              return { label: "Experience Completed — Payment Released",  cls: "released"  };
+  if (inv.bookingStatus === "resolved_paid_host")   return { label: "Experience Completed — Dispute Resolved", cls: "released"  };
+  if (inv.bookingStatus === "resolved_refunded")    return { label: "Experience Disputed — Refunded",          cls: "refunded"  };
+  if (inv.bookingStatus === "disputed")             return { label: "Experience Disputed — In Progress",       cls: "disputed"  };
+  if (inv.bookingStatus === "cancelled") {
+    if (inv.refundPct === 0)                        return { label: "Experience Cancelled — No Refund",        cls: "no-refund" };
+    return                                                 { label: "Experience Cancelled — Refunded",         cls: "refunded"  };
+  }
+  return                                                   { label: "Experience In Progress — Awaiting Release", cls: "paid"  };
+};
+
 const InvoiceDetailModal = ({ invoice, onClose }) => {
   const sym = CURRENCY_SYMBOLS[invoice.currency] ?? invoice.currency;
-  const isReleased = Boolean(invoice.released_at);
+  const { label: statusLabel, cls: statusCls } = getStatusInfo(invoice);
   const isHosted = invoice.role === "hosted";
 
   return (
@@ -58,10 +70,8 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
             <span className={`invoice-role-badge invoice-role-badge--${isHosted ? "hosted" : "booked"}`}>
               {isHosted ? "Hosted" : "Booked"}
             </span>
-            <span
-              className={`invoice-status invoice-status--${isReleased ? "released" : "paid"}`}
-            >
-              {isReleased ? "Released" : "Paid"}
+            <span className={`invoice-status invoice-status--${statusCls}`}>
+              {statusLabel}
             </span>
           </div>
         </div>
@@ -95,7 +105,7 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
           </span>
         </div>
 
-        {isReleased && (
+        {invoice.released_at && (
           <div className="invoice-detail-row">
             <span className="invoice-detail-label">Released on</span>
             <span className="invoice-detail-value">
@@ -199,11 +209,11 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
       const [guestResult, hostResult] = await Promise.all([
         supabase
           .from("booking_requests")
-          .select("id, sport, requested_date, requested_time, status, host_id")
+          .select("id, sport, requested_date, requested_time, status, refund_pct, host_id")
           .eq("requester_id", currentUser.id),
         supabase
           .from("booking_requests")
-          .select("id, sport, requested_date, requested_time, status, requester_id")
+          .select("id, sport, requested_date, requested_time, status, refund_pct, requester_id")
           .eq("host_id", currentUser.id),
       ]);
 
@@ -269,8 +279,9 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
           role: isHosted ? "hosted" : "booked",
           hostName: isHosted ? null : (profileMap[br?.host_id]?.full_name ?? "Host"),
           guestName: isHosted ? (profileMap[br?.requester_id]?.full_name ?? "Guest") : null,
-          // Hosts earn the same XP as guests — 1 XP per Normalized Spending Unit
-          xpEarned: toNSU(inv.gross_amount, inv.currency),
+          // Use DB value when explicitly set (null = pre-migration, 0 = reclaimed after refund).
+          refundPct: br?.refund_pct ?? null,
+          xpEarned: inv.xp_earned != null ? inv.xp_earned : toNSU(inv.gross_amount, inv.currency),
         };
       });
 
@@ -287,12 +298,17 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const hasHosted = invoices.some((i) => i.role === "hosted");
   const hasBooked = invoices.some((i) => i.role === "booked");
 
+  const isRefunded = (inv) =>
+    inv.bookingStatus === "resolved_refunded" ||
+    (inv.bookingStatus === "cancelled" && inv.refundPct !== 0);
+
   const filtered = invoices.filter((inv) => {
     if (filterSport && inv.sport !== filterSport) return false;
     if (filterCurrency && inv.currency !== filterCurrency) return false;
     if (filterRole !== "all" && inv.role !== filterRole) return false;
     if (filterStatus === "released" && !inv.released_at) return false;
-    if (filterStatus === "paid" && inv.released_at) return false;
+    if (filterStatus === "paid" && (inv.released_at || isRefunded(inv) || inv.bookingStatus === "cancelled")) return false;
+    if (filterStatus === "refunded" && !isRefunded(inv)) return false;
     if (filterFrom && inv.paid_at && inv.paid_at < filterFrom) return false;
     if (filterTo && inv.paid_at && inv.paid_at > filterTo + "T23:59:59") return false;
     return true;
@@ -418,6 +434,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                 <option value="all">All</option>
                 <option value="released">Payment released</option>
                 <option value="paid">Awaiting release</option>
+                <option value="refunded">Refunded</option>
               </select>
             </div>
 
@@ -518,11 +535,10 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                     <span className={`invoice-role-badge invoice-role-badge--${inv.role}`}>
                       {inv.role === "hosted" ? "Hosted" : "Booked"}
                     </span>
-                    <span
-                      className={`invoice-status invoice-status--${inv.released_at ? "released" : "paid"}`}
-                    >
-                      {inv.released_at ? "Released" : "Paid"}
-                    </span>
+                    {(() => {
+                      const { label, cls } = getStatusInfo(inv);
+                      return <span className={`invoice-status invoice-status--${cls}`}>{label}</span>;
+                    })()}
                   </div>
                   <span className="invoice-card-chevron" aria-hidden="true">
                     <span className="invoice-card-chevron-label">INVOICE</span>

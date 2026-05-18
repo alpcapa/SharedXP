@@ -6313,6 +6313,21 @@ body {
   color: #92400e;
 }
 
+.invoice-status--refunded {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.invoice-status--disputed {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.invoice-status--no-refund {
+  background: #f3f4f6;
+  color: #374151;
+}
+
 .invoice-role-badge {
   display: inline-block;
   padding: 2px 10px;
@@ -6746,7 +6761,7 @@ body {
   /* Shrink header brand on mobile */
   .site-header {
     padding: 12px 16px;
-    border-radius: 0;
+    border-radius: 14px;
   }
 
   .brand {

@@ -12,7 +12,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
         <main className="middle-section legal-content">
           <article className="simple-page legal-page">
             <h1>Payments and Payout Terms</h1>
-            <p className="legal-last-updated">Last updated: May 10, 2026</p>
+            <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               These terms explain how SharedXP handles participant payments, host payouts, fee disclosures, and payment
               risk controls. They reflect common EU marketplace practices and should be read together with the Terms
@@ -75,19 +75,60 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>7. Refunds, Cancellations, and Reversals</h2>
               <p>
-                Refund handling is based on booking status, applicable cancellation rules, evidence submitted by
-                participants/hosts, and mandatory consumer rights. Reversed or refunded transactions may reduce current or
-                future host payouts.
+                Refund entitlement is determined by the host's chosen cancellation policy tier and the time of
+                cancellation relative to the scheduled session start. The three available tiers are:
+              </p>
+              <ul>
+                <li>
+                  <strong>Flexible:</strong> 100% refund if cancelled more than 24 hours before the session; 0%
+                  within 24 hours.
+                </li>
+                <li>
+                  <strong>Moderate:</strong> 100% refund if cancelled more than 5 days (120 hours) before; 50%
+                  refund if cancelled 1–5 days (24–120 hours) before; 0% within 24 hours.
+                </li>
+                <li>
+                  <strong>Strict:</strong> 50% refund if cancelled more than 7 days (168 hours) before; 0% within
+                  7 days.
+                </li>
+              </ul>
+              <p>
+                If the host cancels a confirmed booking, the guest receives a full refund regardless of the
+                selected policy tier. Reversed or refunded transactions may reduce current or future host payouts.
+                Consumer rights mandated by applicable law are not limited by these tiers. Full policy details are
+                available at{" "}
+                <a href="/cancellation-policy">/cancellation-policy</a>.
               </p>
             </section>
 
             <section className="legal-section">
-              <h2>8. Chargebacks and Disputes</h2>
+              <h2>8. Chargebacks and Platform Disputes</h2>
               <p>
-                If a cardholder initiates a chargeback, SharedXP may request booking records and communications from both
-                parties. Chargeback amounts, fees, and related liabilities may be deducted from host balances where
-                permitted by law and contract.
+                If a cardholder initiates a chargeback, SharedXP may request booking records and communications
+                from both parties. Chargeback amounts, fees, and related liabilities may be deducted from host
+                balances where permitted by law and contract.
               </p>
+              <p>
+                SharedXP also provides an internal dispute process for completed bookings:
+              </p>
+              <ul>
+                <li>
+                  Either party may open a dispute after a session is marked completed by submitting details and
+                  evidence through the platform.
+                </li>
+                <li>
+                  The host receives a notification and a response window to provide their account of events and
+                  supporting documentation.
+                </li>
+                <li>
+                  SharedXP administrators review the submission and may issue a full refund, partial refund, or
+                  uphold the original settlement. Decisions may include XP adjustments.
+                </li>
+                <li>
+                  Both parties must submit accurate, honest information. Misrepresentation may result in account
+                  action.
+                </li>
+              </ul>
             </section>
 
             <section className="legal-section">

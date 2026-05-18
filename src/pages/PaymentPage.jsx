@@ -4,7 +4,7 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import InlineLoginForm from "../components/InlineLoginForm";
 import { supabase } from "../lib/supabase";
-import { COMMISSION_RATE, TAX_RATE, formatCurrency as fmt } from "../utils/pricing";
+import { COMMISSION_RATE, TAX_RATE, toNSU, formatCurrency as fmt } from "../utils/pricing";
 import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../utils/cancellationPolicy";
 
 const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours assumed
@@ -154,6 +154,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
       net_amount: net,
       currency: booking.currency,
       paid_at: now.toISOString(),
+      xp_earned: toNSU(gross, booking.currency),
     });
 
     setPaid(true);
