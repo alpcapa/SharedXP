@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import EventCard from "../components/EventCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
@@ -15,6 +15,8 @@ const EventsPage = ({ currentUser, onLogout }) => {
   const [selectedSport, setSelectedSport] = useState("All");
   const [selectedCountry, setSelectedCountry] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(9);
+  const sentinelRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,7 +58,7 @@ const EventsPage = ({ currentUser, onLogout }) => {
     ];
   }, [events]);
 
-  const visibleEvents = useMemo(() => {
+  const filteredEvents = useMemo(() => {
     return events.filter((event) => {
       const matchesSport = selectedSport === "All" || event.sport === selectedSport;
       const matchesCountry = selectedCountry === "All" || event.country === selectedCountry;
@@ -68,6 +70,27 @@ const EventsPage = ({ currentUser, onLogout }) => {
       return matchesSport && matchesCountry && matchesMonth;
     });
   }, [events, selectedSport, selectedCountry, selectedMonth]);
+
+  useEffect(() => {
+    setVisibleCount(9);
+  }, [selectedSport, selectedCountry, selectedMonth]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + 9);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filteredEvents]);
+
+  const visibleEvents = filteredEvents.slice(0, visibleCount);
 
   return (
     <div className="home-page">
@@ -152,6 +175,9 @@ const EventsPage = ({ currentUser, onLogout }) => {
               <EventCard key={event.id} event={event} />
             ))}
           </div>
+          {visibleCount < filteredEvents.length && (
+            <div ref={sentinelRef} style={{ height: 1 }} />
+          )}
         )}
 
         <p className="events-attribution">

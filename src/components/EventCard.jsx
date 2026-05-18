@@ -16,6 +16,7 @@ const EventCard = ({ event, compact = false }) => {
           <img
             src={event.imageUrl}
             alt=""
+            loading="lazy"
             className={`event-card-image${event.imageStyle === "contain" ? " event-card-image--contain" : ""}`}
           />
           {event.category && (
