@@ -122,7 +122,8 @@ export const majorEvents = [
     startsAt: "2026-10-11T00:00:00Z",
     endsAt: "2026-10-11T23:59:59Z",
     url: "https://www.chicagomarathon.com/",
-    imageUrl: IMG.marathon,
+    imageUrl: "/ChicagoMarathon.jpeg",
+    imageStyle: "contain",
     description:
       "A flat, fast loop through 29 Chicago neighborhoods — one of the six Abbott World Marathon Majors."
   },
