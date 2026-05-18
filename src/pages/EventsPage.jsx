@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import EventCard from "../components/EventCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
@@ -9,14 +9,15 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December"
 ];
 
+const PAGE_SIZE = 9;
+
 const EventsPage = ({ currentUser, onLogout }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState("All");
   const [selectedCountry, setSelectedCountry] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState("All");
-  const [visibleCount, setVisibleCount] = useState(9);
-  const sentinelRef = useRef(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,23 +73,27 @@ const EventsPage = ({ currentUser, onLogout }) => {
   }, [events, selectedSport, selectedCountry, selectedMonth]);
 
   useEffect(() => {
-    setVisibleCount(9);
+    setVisibleCount(PAGE_SIZE);
   }, [selectedSport, selectedCountry, selectedMonth]);
 
   useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setVisibleCount((prev) => prev + 9);
-        }
-      },
-      { rootMargin: "200px" }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [filteredEvents]);
+    if (visibleCount >= filteredEvents.length) return;
+
+    // If the rendered content doesn't fill the viewport, load the next batch immediately
+    if (document.documentElement.scrollHeight <= window.innerHeight) {
+      setVisibleCount((c) => c + PAGE_SIZE);
+      return;
+    }
+
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      if (scrollTop + clientHeight >= scrollHeight - 300) {
+        setVisibleCount((c) => c + PAGE_SIZE);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [filteredEvents.length, visibleCount]);
 
   const visibleEvents = filteredEvents.slice(0, visibleCount);
 
@@ -170,16 +175,11 @@ const EventsPage = ({ currentUser, onLogout }) => {
             No events match those filters yet. Try a different sport, country, or month.
           </p>
         ) : (
-          <>
-            <div className="events-feed">
-              {visibleEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
-            {visibleCount < filteredEvents.length && (
-              <div ref={sentinelRef} style={{ height: 1 }} />
-            )}
-          </>
+          <div className="events-feed">
+            {visibleEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
         )}
 
         <p className="events-attribution">
