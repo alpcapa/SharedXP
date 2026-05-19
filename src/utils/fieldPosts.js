@@ -245,22 +245,35 @@ export const fetchFieldPosts = async () => {
     }
     const mergedPosts = mergeRemoteAndLocalPosts(data);
 
-    const posterIds = [...new Set(mergedPosts.map((p) => p.posterId).filter(Boolean))];
-    let profileMap = {};
-    if (posterIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, rating, attendee_rating")
-        .in("id", posterIds);
-      for (const p of profiles ?? []) profileMap[p.id] = p;
-    }
+    const hostedIds = [...new Set(mergedPosts.filter((p) => p.role === "hosted").map((p) => p.posterId).filter(Boolean))];
+    const attendedIds = [...new Set(mergedPosts.filter((p) => p.role !== "hosted").map((p) => p.posterId).filter(Boolean))];
+
+    const [hostedRatingsResult, attendedRatingsResult] = await Promise.all([
+      hostedIds.length > 0
+        ? supabase.from("booking_requests").select("host_id, guest_rating").in("host_id", hostedIds).eq("status", "completed").gt("guest_rating", 0)
+        : Promise.resolve({ data: [] }),
+      attendedIds.length > 0
+        ? supabase.from("booking_requests").select("requester_id, host_rating").in("requester_id", attendedIds).eq("status", "completed").gt("host_rating", 0)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const avgByKey = (rows, keyField, valueField) => {
+      const acc = {};
+      for (const row of rows ?? []) {
+        const k = row[keyField];
+        if (!acc[k]) acc[k] = { sum: 0, count: 0 };
+        acc[k].sum += Number(row[valueField]);
+        acc[k].count += 1;
+      }
+      return Object.fromEntries(Object.entries(acc).map(([k, { sum, count }]) => [k, sum / count]));
+    };
+
+    const hostedAvg = avgByKey(hostedRatingsResult.data, "host_id", "guest_rating");
+    const attendedAvg = avgByKey(attendedRatingsResult.data, "requester_id", "host_rating");
 
     return mergedPosts.map((post) => {
-      const profile = profileMap[post.posterId];
-      const posterRating = post.role === "hosted"
-        ? Number(profile?.rating ?? 0)
-        : Number(profile?.attendee_rating ?? 0);
-      return { ...post, posterRating };
+      const avg = post.role === "hosted" ? hostedAvg[post.posterId] : attendedAvg[post.posterId];
+      return { ...post, posterRating: avg ? Math.round(avg * 10) / 10 : 0 };
     });
   } catch (e) {
     console.error("[fieldPosts] fetch exception:", e);
