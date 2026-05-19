@@ -172,12 +172,11 @@ const mergeRemoteAndLocalPosts = (remoteRows) => {
 const resolveBookingRequestRating = (post, request) => {
   if (!request) return 0;
   if (post.role === "hosted") {
-    // `guest_rating` is canonical for completed booking_requests; keep
-    // `guest_host_ratings.overall` as compatibility fallback.
-    return Number(request.guest_rating ?? request.guest_host_ratings?.overall ?? 0);
+    // Host rated the guest — stored as host_rating.
+    return Number(request.host_rating ?? 0);
   }
-  // `host_rating` is the canonical and only persisted guest-side score.
-  return Number(request.host_rating ?? 0);
+  // Guest rated the host — stored as guest_rating / guest_host_ratings.overall.
+  return Number(request.guest_rating ?? request.guest_host_ratings?.overall ?? 0);
 };
 
 const hasRatingSourceRequest = (post) => !!post.sourceRequestId;
