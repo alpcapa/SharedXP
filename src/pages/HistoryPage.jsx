@@ -98,11 +98,6 @@ const HistoryPage = ({
 
   const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
   const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status)).sort(sortByTs);
-  const completedBookingRequests = bookingRequests.filter((r) =>
-    r.status === "completed" || r.status === "resolved_paid_host"
-  );
-  const completedHosted = completedBookingRequests.filter((r) => r.host_id === currentUser?.id).sort(sortByTs);
-  const completedAttended = completedBookingRequests.filter((r) => r.requester_id === currentUser?.id).sort(sortByTs);
   const cancelledBookingRequests = bookingRequests.filter((r) =>
     ["cancelled", "declined", "resolved_refunded"].includes(r.status)
   ).sort(sortByTs);
@@ -185,20 +180,30 @@ const HistoryPage = ({
   }, [bookingRequests, allItems, selectedSport]);
 
   const mergedHostedItems = useMemo(() => {
-    const brItems = completedHosted.map((req) => ({ kind: "request", data: req, ts: getRequestSortTs(req) }));
+    // All booking requests where user is host (completed + in_progress), not just completed
+    const brItems = bookingRequests
+      .filter((r) => r.host_id === currentUser?.id &&
+        ["completed", "resolved_paid_host", "in_progress"].includes(r.status))
+      .sort(sortByTs)
+      .map((req) => ({ kind: "request", data: req, ts: getRequestSortTs(req) }));
     const legacyItems = allItems
       .filter((item) => item.role === "hosted" && (selectedSport === "All" || item.sport === selectedSport))
       .map((item) => ({ kind: "legacy", data: item, ts: item.sortKey ?? 0 }));
     return [...brItems, ...legacyItems].sort((a, b) => b.ts - a.ts);
-  }, [completedHosted, allItems, selectedSport]);
+  }, [bookingRequests, currentUser?.id, allItems, selectedSport]);
 
   const mergedAttendedItems = useMemo(() => {
-    const brItems = completedAttended.map((req) => ({ kind: "request", data: req, ts: getRequestSortTs(req) }));
+    // All booking requests where user is requester (completed + in_progress), not just completed
+    const brItems = bookingRequests
+      .filter((r) => r.requester_id === currentUser?.id &&
+        ["completed", "resolved_paid_host", "in_progress"].includes(r.status))
+      .sort(sortByTs)
+      .map((req) => ({ kind: "request", data: req, ts: getRequestSortTs(req) }));
     const legacyItems = allItems
       .filter((item) => item.role === "attended" && (selectedSport === "All" || item.sport === selectedSport))
       .map((item) => ({ kind: "legacy", data: item, ts: item.sortKey ?? 0 }));
     return [...brItems, ...legacyItems].sort((a, b) => b.ts - a.ts);
-  }, [completedAttended, allItems, selectedSport]);
+  }, [bookingRequests, currentUser?.id, allItems, selectedSport]);
 
   const updateItem = useCallback((itemId, fieldName, fieldValue) => {
     setAllItems((prev) =>
@@ -461,8 +466,8 @@ const HistoryPage = ({
             {[
               { value: "all", label: "All" },
               { value: "pending", label: `In Progress${activeBookingRequests.length ? ` (${activeBookingRequests.length})` : ""}` },
-              { value: "hosted", label: `Hosted${(completedHosted.length + allItems.filter((i) => i.role === "hosted").length) ? ` (${completedHosted.length + allItems.filter((i) => i.role === "hosted").length})` : ""}` },
-              { value: "attended", label: `Attended${(completedAttended.length + allItems.filter((i) => i.role === "attended").length) ? ` (${completedAttended.length + allItems.filter((i) => i.role === "attended").length})` : ""}` },
+              { value: "hosted", label: `Hosted${mergedHostedItems.length ? ` (${mergedHostedItems.length})` : ""}` },
+              { value: "attended", label: `Attended${mergedAttendedItems.length ? ` (${mergedAttendedItems.length})` : ""}` },
               { value: "cancelled", label: `Cancelled${cancelledBookingRequests.length ? ` (${cancelledBookingRequests.length})` : ""}` },
               { value: "disputes", label: `Disputed${disputedBookingRequests.length ? ` (${disputedBookingRequests.length})` : ""}` },
             ].map((tab) => (
