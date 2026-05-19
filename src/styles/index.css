@@ -6481,11 +6481,11 @@ body {
   margin-bottom: 18px;
 }
 
-.invoice-detail-tags {
+.invoice-detail-title-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .invoice-detail-sport {
