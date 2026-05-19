@@ -457,6 +457,8 @@ export const majorEvents = [
     startsAt: "2026-05-30T00:00:00Z",
     endsAt: "2026-06-07T23:59:59Z",
     url: "https://www.giroditalia.it/",
+    imageUrl: "/GiroWomen.jpeg",
+    imageStyle: "contain",
     description: "The premier women's stage race in cycling, riding the same iconic Italian roads as the men's Giro."
   },
 
