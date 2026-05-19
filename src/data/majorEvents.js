@@ -952,6 +952,8 @@ export const majorEvents = [
     startsAt: "2026-06-28T06:00:00Z",
     endsAt: "2026-06-28T23:59:59Z",
     url: "https://www.ironman.com/",
+    imageUrl: "/IMFrankfurt.webp",
+    imageStyle: "contain",
     description: "The European Championship of full-distance triathlon held in Frankfurt."
   },
 
