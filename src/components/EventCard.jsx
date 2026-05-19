@@ -5,7 +5,7 @@ const EventCard = ({ event, compact = false }) => {
   const location = [event.city, event.country].filter(Boolean).join(", ");
   return (
     <article className={`event-card${compact ? " event-card-compact" : ""}`}>
-      {event.imageUrl && (
+      {event.imageUrl && !compact && (
         <a
           href={event.url || "#"}
           target={event.url ? "_blank" : undefined}
