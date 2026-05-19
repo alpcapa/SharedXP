@@ -3556,7 +3556,6 @@ body {
 }
 
 .field-host-rating {
-  color: #92400e;
   font-size: 13px;
   font-weight: 600;
 }
@@ -6475,18 +6474,17 @@ body {
 
 .invoice-detail-header {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 18px;
 }
 
-.invoice-detail-header-right {
+.invoice-detail-title-row {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .invoice-detail-sport {

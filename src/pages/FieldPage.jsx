@@ -186,7 +186,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
               {visiblePosts.map((post) => {
                 const isOwner = post.posterId != null && post.posterId === currentUser?.id;
                 const postLocation = [post.city, post.country].filter(Boolean).join(", ");
-                const postRating = Number(post.rating ?? 0);
+                const postRating = Number(post.posterRating ?? 0);
                 const profilePath =
                   post.posterId && String(post.posterId).trim() !== ""
                     ? `/user/${post.posterId}`

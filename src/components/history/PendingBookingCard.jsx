@@ -306,8 +306,8 @@ const PendingBookingCard = ({
     setShareCaptionError(false);
     const fieldPostRating = clampRating(
       isHost
-        ? (request.guest_rating ?? request.guest_host_ratings?.overall ?? 0)
-        : (request.host_rating ?? 0)
+        ? (request.host_rating ?? 0)
+        : (request.guest_rating ?? request.guest_host_ratings?.overall ?? 0)
     );
     const posterCity = currentUser?.city ?? currentUser?.hostProfile?.city ?? "";
     const posterCountry = currentUser?.country ?? currentUser?.hostProfile?.country ?? "";

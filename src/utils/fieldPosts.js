@@ -172,12 +172,11 @@ const mergeRemoteAndLocalPosts = (remoteRows) => {
 const resolveBookingRequestRating = (post, request) => {
   if (!request) return 0;
   if (post.role === "hosted") {
-    // `guest_rating` is canonical for completed booking_requests; keep
-    // `guest_host_ratings.overall` as compatibility fallback.
-    return Number(request.guest_rating ?? request.guest_host_ratings?.overall ?? 0);
+    // Host rated the guest — stored as host_rating.
+    return Number(request.host_rating ?? 0);
   }
-  // `host_rating` is the canonical and only persisted guest-side score.
-  return Number(request.host_rating ?? 0);
+  // Guest rated the host — stored as guest_rating / guest_host_ratings.overall.
+  return Number(request.guest_rating ?? request.guest_host_ratings?.overall ?? 0);
 };
 
 const hasRatingSourceRequest = (post) => !!post.sourceRequestId;
@@ -245,7 +244,37 @@ export const fetchFieldPosts = async () => {
       return [];
     }
     const mergedPosts = mergeRemoteAndLocalPosts(data);
-    return hydrateMissingRatingsFromBookingRequests(mergedPosts);
+
+    const hostedIds = [...new Set(mergedPosts.filter((p) => p.role === "hosted").map((p) => p.posterId).filter(Boolean))];
+    const attendedIds = [...new Set(mergedPosts.filter((p) => p.role !== "hosted").map((p) => p.posterId).filter(Boolean))];
+
+    const [hostedRatingsResult, attendedRatingsResult] = await Promise.all([
+      hostedIds.length > 0
+        ? supabase.from("booking_requests").select("host_id, guest_rating").in("host_id", hostedIds).eq("status", "completed").gt("guest_rating", 0)
+        : Promise.resolve({ data: [] }),
+      attendedIds.length > 0
+        ? supabase.from("booking_requests").select("requester_id, host_rating").in("requester_id", attendedIds).eq("status", "completed").gt("host_rating", 0)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const avgByKey = (rows, keyField, valueField) => {
+      const acc = {};
+      for (const row of rows ?? []) {
+        const k = row[keyField];
+        if (!acc[k]) acc[k] = { sum: 0, count: 0 };
+        acc[k].sum += Number(row[valueField]);
+        acc[k].count += 1;
+      }
+      return Object.fromEntries(Object.entries(acc).map(([k, { sum, count }]) => [k, sum / count]));
+    };
+
+    const hostedAvg = avgByKey(hostedRatingsResult.data, "host_id", "guest_rating");
+    const attendedAvg = avgByKey(attendedRatingsResult.data, "requester_id", "host_rating");
+
+    return mergedPosts.map((post) => {
+      const avg = post.role === "hosted" ? hostedAvg[post.posterId] : attendedAvg[post.posterId];
+      return { ...post, posterRating: avg ? Math.round(avg * 10) / 10 : 0 };
+    });
   } catch (e) {
     console.error("[fieldPosts] fetch exception:", e);
     return sortPostsByPostedAt(readLocalFallbackPosts().map(mapFallbackRow));

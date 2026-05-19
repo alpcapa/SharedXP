@@ -60,20 +60,18 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-box invoice-detail-box" onClick={(e) => e.stopPropagation()}>
         <div className="invoice-detail-header">
-          <div>
+          <div className="invoice-detail-title-row">
             <h3 className="invoice-detail-sport">{invoice.sport || "Experience"}</h3>
-            <p className="invoice-detail-host">
-              {isHosted ? `guest: ${invoice.guestName}` : `with ${invoice.hostName}`}
-            </p>
-          </div>
-          <div className="invoice-detail-header-right">
             <span className={`invoice-role-badge invoice-role-badge--${isHosted ? "hosted" : "booked"}`}>
               {isHosted ? "Hosted" : "Booked"}
             </span>
-            <span className={`invoice-status invoice-status--${statusCls}`}>
-              {statusLabel}
-            </span>
           </div>
+          <span className={`invoice-status invoice-status--${statusCls}`}>
+            {statusLabel}
+          </span>
+          <p className="invoice-detail-host">
+            {isHosted ? `Guest: ${invoice.guestName}` : `Host: ${invoice.hostName}`}
+          </p>
         </div>
 
         {(invoice.requestedDate || invoice.requestedTime) && (
@@ -510,12 +508,12 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                   type="button"
                   className="payment-invoice-card"
                   onClick={() => setSelectedInvoice(inv)}
-                  aria-label={`View invoice for ${inv.sport || "experience"} — ${inv.role === "hosted" ? `guest: ${inv.guestName}` : `with ${inv.hostName}`}`}
+                  aria-label={`View invoice for ${inv.sport || "experience"} — ${inv.role === "hosted" ? `Guest: ${inv.guestName}` : `Host: ${inv.hostName}`}`}
                 >
                   <div className="invoice-card-left">
                     <p className="invoice-sport">{inv.sport || "Experience"}</p>
                     <p className="invoice-host">
-                      {inv.role === "hosted" ? `guest: ${inv.guestName}` : `with ${inv.hostName}`}
+                      {inv.role === "hosted" ? `Guest: ${inv.guestName}` : `Host: ${inv.hostName}`}
                     </p>
                     <p className="invoice-date">
                       {inv.requestedDate
