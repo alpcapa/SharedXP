@@ -216,6 +216,47 @@ const hydrateMissingRatingsFromBookingRequests = async (posts) => {
   }
 };
 
+const avgByKey = (rows, keyField, valueField) => {
+  const acc = {};
+  for (const row of rows ?? []) {
+    const k = row[keyField];
+    if (!acc[k]) acc[k] = { sum: 0, count: 0 };
+    acc[k].sum += Number(row[valueField]);
+    acc[k].count += 1;
+  }
+  return Object.fromEntries(Object.entries(acc).map(([k, { sum, count }]) => [k, sum / count]));
+};
+
+// Returns a map of "role:posterId" → average rating. Isolated so failures
+// here never prevent posts from displaying.
+const fetchPosterRatings = async (posts) => {
+  try {
+    const hostedIds = [...new Set(posts.filter((p) => p.role === "hosted").map((p) => p.posterId).filter(Boolean))];
+    const attendedIds = [...new Set(posts.filter((p) => p.role !== "hosted").map((p) => p.posterId).filter(Boolean))];
+
+    const [hostedResult, attendedResult] = await Promise.all([
+      hostedIds.length > 0
+        ? supabase.from("booking_requests").select("host_id, guest_rating").in("host_id", hostedIds).eq("status", "completed").gt("guest_rating", 0)
+        : Promise.resolve({ data: [] }),
+      attendedIds.length > 0
+        ? supabase.from("booking_requests").select("requester_id, host_rating").in("requester_id", attendedIds).eq("status", "completed").gt("host_rating", 0)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const result = {};
+    for (const [id, avg] of Object.entries(avgByKey(hostedResult.data, "host_id", "guest_rating"))) {
+      result[`hosted:${id}`] = avg;
+    }
+    for (const [id, avg] of Object.entries(avgByKey(attendedResult.data, "requester_id", "host_rating"))) {
+      result[`attended:${id}`] = avg;
+    }
+    return result;
+  } catch (e) {
+    console.error("[fieldPosts] poster rating fetch error:", e);
+    return {};
+  }
+};
+
 /**
  * Fetch all field posts from Supabase, newest first.
  * Returns an array of camelCase post objects ready for display.
@@ -245,34 +286,10 @@ export const fetchFieldPosts = async () => {
     }
     const mergedPosts = mergeRemoteAndLocalPosts(data);
 
-    const hostedIds = [...new Set(mergedPosts.filter((p) => p.role === "hosted").map((p) => p.posterId).filter(Boolean))];
-    const attendedIds = [...new Set(mergedPosts.filter((p) => p.role !== "hosted").map((p) => p.posterId).filter(Boolean))];
-
-    const [hostedRatingsResult, attendedRatingsResult] = await Promise.all([
-      hostedIds.length > 0
-        ? supabase.from("booking_requests").select("host_id, guest_rating").in("host_id", hostedIds).eq("status", "completed").gt("guest_rating", 0)
-        : Promise.resolve({ data: [] }),
-      attendedIds.length > 0
-        ? supabase.from("booking_requests").select("requester_id, host_rating").in("requester_id", attendedIds).eq("status", "completed").gt("host_rating", 0)
-        : Promise.resolve({ data: [] }),
-    ]);
-
-    const avgByKey = (rows, keyField, valueField) => {
-      const acc = {};
-      for (const row of rows ?? []) {
-        const k = row[keyField];
-        if (!acc[k]) acc[k] = { sum: 0, count: 0 };
-        acc[k].sum += Number(row[valueField]);
-        acc[k].count += 1;
-      }
-      return Object.fromEntries(Object.entries(acc).map(([k, { sum, count }]) => [k, sum / count]));
-    };
-
-    const hostedAvg = avgByKey(hostedRatingsResult.data, "host_id", "guest_rating");
-    const attendedAvg = avgByKey(attendedRatingsResult.data, "requester_id", "host_rating");
+    const posterRatings = await fetchPosterRatings(mergedPosts);
 
     return mergedPosts.map((post) => {
-      const avg = post.role === "hosted" ? hostedAvg[post.posterId] : attendedAvg[post.posterId];
+      const avg = posterRatings[`${post.role}:${post.posterId}`];
       return { ...post, posterRating: avg ? Math.round(avg * 10) / 10 : 0 };
     });
   } catch (e) {
