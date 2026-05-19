@@ -180,10 +180,9 @@ const HistoryPage = ({
   }, [bookingRequests, allItems, selectedSport]);
 
   const mergedHostedItems = useMemo(() => {
-    // All booking requests where user is host (completed + in_progress), not just completed
     const brItems = bookingRequests
       .filter((r) => r.host_id === currentUser?.id &&
-        ["completed", "resolved_paid_host", "in_progress"].includes(r.status))
+        ["completed", "resolved_paid_host"].includes(r.status))
       .sort(sortByTs)
       .map((req) => ({ kind: "request", data: req, ts: getRequestSortTs(req) }));
     const legacyItems = allItems
@@ -193,10 +192,9 @@ const HistoryPage = ({
   }, [bookingRequests, currentUser?.id, allItems, selectedSport]);
 
   const mergedAttendedItems = useMemo(() => {
-    // All booking requests where user is requester (completed + in_progress), not just completed
     const brItems = bookingRequests
       .filter((r) => r.requester_id === currentUser?.id &&
-        ["completed", "resolved_paid_host", "in_progress"].includes(r.status))
+        ["completed", "resolved_paid_host"].includes(r.status))
       .sort(sortByTs)
       .map((req) => ({ kind: "request", data: req, ts: getRequestSortTs(req) }));
     const legacyItems = allItems
