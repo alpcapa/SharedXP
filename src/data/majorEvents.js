@@ -457,6 +457,8 @@ export const majorEvents = [
     startsAt: "2026-05-30T00:00:00Z",
     endsAt: "2026-06-07T23:59:59Z",
     url: "https://www.giroditalia.it/",
+    imageUrl: "/GiroWomen.jpeg",
+    imageStyle: "contain",
     description: "The premier women's stage race in cycling, riding the same iconic Italian roads as the men's Giro."
   },
 
@@ -699,6 +701,8 @@ export const majorEvents = [
     startsAt: "2026-05-27T19:00:00Z",
     endsAt: "2026-05-27T21:00:00Z",
     url: "https://www.uefa.com/uefaconferenceleague/",
+    imageUrl: "/ConfLeagueFinal.png",
+    imageStyle: "contain",
     description: "The final of UEFA's third-tier European club competition."
   },
   {
@@ -866,6 +870,8 @@ export const majorEvents = [
     startsAt: "2026-06-07T13:00:00Z",
     endsAt: "2026-06-07T15:00:00Z",
     url: "https://www.motogp.com/",
+    imageUrl: "/MotoGP.png",
+    imageStyle: "contain",
     description: "Round 8 of the MotoGP World Championship at the Hungaroring."
   },
   {
@@ -880,6 +886,8 @@ export const majorEvents = [
     startsAt: "2026-06-13T10:00:00Z",
     endsAt: "2026-06-14T10:00:00Z",
     url: "https://www.lemans.org/",
+    imageUrl: "/24LeMans.png",
+    imageStyle: "contain",
     description: "The world's oldest active sports car endurance race — 24 hours at the Circuit de la Sarthe."
   },
   {
@@ -894,6 +902,8 @@ export const majorEvents = [
     startsAt: "2026-06-21T13:00:00Z",
     endsAt: "2026-06-21T15:00:00Z",
     url: "https://www.motogp.com/",
+    imageUrl: "/MotoGP.png",
+    imageStyle: "contain",
     description: "Round 9 of the MotoGP World Championship at Automotodrom Brno."
   },
   {
@@ -908,6 +918,8 @@ export const majorEvents = [
     startsAt: "2026-06-28T13:00:00Z",
     endsAt: "2026-06-28T15:00:00Z",
     url: "https://www.motogp.com/",
+    imageUrl: "/MotoGP.png",
+    imageStyle: "contain",
     description: "Round 10 of the MotoGP World Championship — the Cathedral of Motorsport at Assen."
   },
 
@@ -940,6 +952,8 @@ export const majorEvents = [
     startsAt: "2026-06-28T06:00:00Z",
     endsAt: "2026-06-28T23:59:59Z",
     url: "https://www.ironman.com/",
+    imageUrl: "/IMFrankfurt.webp",
+    imageStyle: "contain",
     description: "The European Championship of full-distance triathlon held in Frankfurt."
   },
 
