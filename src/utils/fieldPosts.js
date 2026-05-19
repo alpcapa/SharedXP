@@ -244,7 +244,24 @@ export const fetchFieldPosts = async () => {
       return [];
     }
     const mergedPosts = mergeRemoteAndLocalPosts(data);
-    return hydrateMissingRatingsFromBookingRequests(mergedPosts);
+
+    const posterIds = [...new Set(mergedPosts.map((p) => p.posterId).filter(Boolean))];
+    let profileMap = {};
+    if (posterIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, rating, attendee_rating")
+        .in("id", posterIds);
+      for (const p of profiles ?? []) profileMap[p.id] = p;
+    }
+
+    return mergedPosts.map((post) => {
+      const profile = profileMap[post.posterId];
+      const posterRating = post.role === "hosted"
+        ? Number(profile?.rating ?? 0)
+        : Number(profile?.attendee_rating ?? 0);
+      return { ...post, posterRating };
+    });
   } catch (e) {
     console.error("[fieldPosts] fetch exception:", e);
     return sortPostsByPostedAt(readLocalFallbackPosts().map(mapFallbackRow));

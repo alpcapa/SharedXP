@@ -186,7 +186,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
               {visiblePosts.map((post) => {
                 const isOwner = post.posterId != null && post.posterId === currentUser?.id;
                 const postLocation = [post.city, post.country].filter(Boolean).join(", ");
-                const postRating = Number(post.rating ?? 0);
+                const postRating = Number(post.posterRating ?? 0);
                 const profilePath =
                   post.posterId && String(post.posterId).trim() !== ""
                     ? `/user/${post.posterId}`
@@ -227,7 +227,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
                             <span className="field-host-name">{post.hostName}</span>
                           )}
                           <span className="field-host-rating">
-                            {" · "}⭐ {postRating > 0 ? postRating.toFixed(1) : "Not rated"}
+                            {" · "}⭐ {postRating > 0 ? postRating.toFixed(1) : "No rating yet"}
                           </span>
                          {postLocation && (
                            <span className="field-host-city"> · {postLocation}</span>
