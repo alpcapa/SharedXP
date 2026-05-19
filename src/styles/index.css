@@ -6475,18 +6475,17 @@ body {
 
 .invoice-detail-header {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 18px;
 }
 
-.invoice-detail-header-right {
+.invoice-detail-tags {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
-  flex-shrink: 0;
 }
 
 .invoice-detail-sport {

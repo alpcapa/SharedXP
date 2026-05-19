@@ -60,13 +60,8 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-box invoice-detail-box" onClick={(e) => e.stopPropagation()}>
         <div className="invoice-detail-header">
-          <div>
-            <h3 className="invoice-detail-sport">{invoice.sport || "Experience"}</h3>
-            <p className="invoice-detail-host">
-              {isHosted ? `guest: ${invoice.guestName}` : `with ${invoice.hostName}`}
-            </p>
-          </div>
-          <div className="invoice-detail-header-right">
+          <h3 className="invoice-detail-sport">{invoice.sport || "Experience"}</h3>
+          <div className="invoice-detail-tags">
             <span className={`invoice-role-badge invoice-role-badge--${isHosted ? "hosted" : "booked"}`}>
               {isHosted ? "Hosted" : "Booked"}
             </span>
@@ -74,6 +69,9 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
               {statusLabel}
             </span>
           </div>
+          <p className="invoice-detail-host">
+            {isHosted ? `guest: ${invoice.guestName}` : `with ${invoice.hostName}`}
+          </p>
         </div>
 
         {(invoice.requestedDate || invoice.requestedTime) && (
