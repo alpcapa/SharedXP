@@ -886,6 +886,8 @@ export const majorEvents = [
     startsAt: "2026-06-13T10:00:00Z",
     endsAt: "2026-06-14T10:00:00Z",
     url: "https://www.lemans.org/",
+    imageUrl: "/24LeMans.png",
+    imageStyle: "contain",
     description: "The world's oldest active sports car endurance race — 24 hours at the Circuit de la Sarthe."
   },
   {
