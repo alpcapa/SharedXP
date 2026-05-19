@@ -424,28 +424,23 @@ export const deleteFieldPost = async (postId) => {
  */
 export const lookupFieldPostId = async (sourceRequestId, posterId) => {
   if (!sourceRequestId || !posterId) return null;
-  const local = readLocalFallbackPosts().find(
-    (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
-  );
-  if (local?.id) return local.id;
   try {
     const { data, error } = await supabase
       .from("field_posts")
       .select("id")
       .eq("source_request_id", sourceRequestId)
       .eq("poster_id", posterId)
-      // Keep lookup resilient if duplicate rows exist by taking the latest post.
-      // `limit(1)` returns an array, so we read from data[0] below.
       .order("created_at", { ascending: false })
       .limit(1);
+    if (!error && data?.[0]?.id) return data[0].id;
     if (error && isFieldPostsUnavailableError(error)) {
+      const local = readLocalFallbackPosts().find(
+        (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
+      );
       return local?.id ?? null;
     }
-    if (error) {
-      console.error("[fieldPosts] lookup id error:", error);
-      return null;
-    }
-    return data?.[0]?.id ?? null;
+    if (error) console.error("[fieldPosts] lookup id error:", error);
+    return null;
   } catch (error) {
     console.error("[fieldPosts] lookup id exception:", error);
     return null;
