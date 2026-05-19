@@ -289,7 +289,7 @@ const PendingBookingCard = ({
           sport: request.sport,
           photoGallery: photosForShare,
         });
-        setShareCaption(previousCaption ?? "");
+        setShareCaption(previousCaption || ratingReview || "");
         setShareCaptionError(false);
         setSharePosting(false);
         setSharePosted(false);
