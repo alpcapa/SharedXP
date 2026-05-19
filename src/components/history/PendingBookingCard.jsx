@@ -359,15 +359,16 @@ const PendingBookingCard = ({
     request.status === "in_progress" ? request.auto_confirm_at : null,
   );
 
-  const experienceEnded =
-    request.status === "in_progress" &&
-    request.experience_ends_at &&
-    new Date(request.experience_ends_at).getTime() <= Date.now();
-
   const sessionStarted =
     request.requested_date &&
     request.requested_time &&
     new Date(`${request.requested_date}T${request.requested_time}:00`).getTime() <= Date.now();
+
+  const experienceEnded =
+    request.status === "in_progress" && (
+      (request.experience_ends_at && new Date(request.experience_ends_at).getTime() <= Date.now()) ||
+      (!request.experience_ends_at && sessionStarted)
+    );
 
   const handleAccept = async () => {
     setActionLoading(true);

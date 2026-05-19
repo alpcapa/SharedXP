@@ -595,6 +595,8 @@ const HistoryPage = ({
                   mergedAttendedItems;
 
                 if (merged.length === 0) {
+                  if (requestsLoading) return <p className="history-loading">Loading…</p>;
+                  if (bookingFetchError) return <p className="history-fetch-error">Could not load bookings: {bookingFetchError}</p>;
                   if (selectedRole === "hosted") return <p>No hosted experiences yet.</p>;
                   if (selectedRole === "attended") return <p>No attended experiences yet.</p>;
                   return <p>{allItems.length ? "No experiences for this sport yet." : "No experiences yet."}</p>;
