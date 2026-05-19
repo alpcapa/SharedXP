@@ -523,10 +523,6 @@ export const toggleFieldPostLike = async (postId, userId, currentLikeCount) => {
  */
 export const lookupFieldPost = async (sourceRequestId, posterId) => {
   if (!sourceRequestId || !posterId) return null;
-  const local = readLocalFallbackPosts()
-    .map(mapFallbackRow)
-    .find((p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId);
-  if (local) return local;
   try {
     const { data, error } = await supabase
       .from("field_posts")
@@ -535,18 +531,17 @@ export const lookupFieldPost = async (sourceRequestId, posterId) => {
       )
       .eq("source_request_id", sourceRequestId)
       .eq("poster_id", posterId)
-      // Keep lookup resilient if duplicate rows exist by taking the latest post.
-      // `limit(1)` returns an array, so we read from data[0] below.
       .order("created_at", { ascending: false })
       .limit(1);
+    if (!error && data?.[0]) return mapStorageRow(data[0]);
     if (error && isFieldPostsUnavailableError(error)) {
+      const local = readLocalFallbackPosts()
+        .map(mapFallbackRow)
+        .find((p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId);
       return local ?? null;
     }
-    if (error) {
-      console.error("[fieldPosts] lookup error:", error);
-      return null;
-    }
-    return data?.[0] ? mapStorageRow(data[0]) : null;
+    if (error) console.error("[fieldPosts] lookup error:", error);
+    return null;
   } catch (error) {
     console.error("[fieldPosts] lookup exception:", error);
     return null;
