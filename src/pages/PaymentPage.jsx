@@ -7,8 +7,7 @@ import { supabase } from "../lib/supabase";
 import { COMMISSION_RATE, TAX_RATE, toNSU, formatCurrency as fmt } from "../utils/pricing";
 import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../utils/cancellationPolicy";
 
-const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours assumed
-const AUTO_CONFIRM_MS = 72 * 60 * 60 * 1000;     // 72 hours
+const AUTO_CONFIRM_MS = 72 * 60 * 60 * 1000; // 72 hours after midnight
 
 const fmtDate = (d) =>
   d ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" })
@@ -126,9 +125,10 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
     setError("");
 
     const now = new Date();
-    const sessionStart = new Date(`${booking.requested_date}T${booking.requested_time}:00`);
-    const experienceEndsAt = new Date(sessionStart.getTime() + SESSION_DURATION_MS).toISOString();
-    const autoConfirmAt = new Date(sessionStart.getTime() + SESSION_DURATION_MS + AUTO_CONFIRM_MS).toISOString();
+    const midnight = new Date(`${booking.requested_date}T00:00:00`);
+    midnight.setDate(midnight.getDate() + 1);
+    const experienceEndsAt = midnight.toISOString();
+    const autoConfirmAt = new Date(midnight.getTime() + AUTO_CONFIRM_MS).toISOString();
 
     const { error: brError } = await supabase
       .from("booking_requests")
