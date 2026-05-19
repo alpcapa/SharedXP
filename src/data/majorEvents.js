@@ -699,6 +699,8 @@ export const majorEvents = [
     startsAt: "2026-05-27T19:00:00Z",
     endsAt: "2026-05-27T21:00:00Z",
     url: "https://www.uefa.com/uefaconferenceleague/",
+    imageUrl: "/ConfLeagueFinal.png",
+    imageStyle: "contain",
     description: "The final of UEFA's third-tier European club competition."
   },
   {
