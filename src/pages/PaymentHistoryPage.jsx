@@ -70,7 +70,7 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
             {statusLabel}
           </span>
           <p className="invoice-detail-host">
-            {isHosted ? `guest: ${invoice.guestName}` : `with ${invoice.hostName}`}
+            {isHosted ? `Guest: ${invoice.guestName}` : `Host: ${invoice.hostName}`}
           </p>
         </div>
 
@@ -508,12 +508,12 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                   type="button"
                   className="payment-invoice-card"
                   onClick={() => setSelectedInvoice(inv)}
-                  aria-label={`View invoice for ${inv.sport || "experience"} — ${inv.role === "hosted" ? `guest: ${inv.guestName}` : `with ${inv.hostName}`}`}
+                  aria-label={`View invoice for ${inv.sport || "experience"} — ${inv.role === "hosted" ? `Guest: ${inv.guestName}` : `Host: ${inv.hostName}`}`}
                 >
                   <div className="invoice-card-left">
                     <p className="invoice-sport">{inv.sport || "Experience"}</p>
                     <p className="invoice-host">
-                      {inv.role === "hosted" ? `guest: ${inv.guestName}` : `with ${inv.hostName}`}
+                      {inv.role === "hosted" ? `Guest: ${inv.guestName}` : `Host: ${inv.hostName}`}
                     </p>
                     <p className="invoice-date">
                       {inv.requestedDate
