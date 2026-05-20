@@ -6,6 +6,7 @@ import InlineLoginForm from "../components/InlineLoginForm";
 import { supabase } from "../lib/supabase";
 import { COMMISSION_RATE, TAX_RATE, toNSU, formatCurrency as fmt } from "../utils/pricing";
 import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../utils/cancellationPolicy";
+import { sendNotification } from "../utils/sendNotification";
 
 const AUTO_CONFIRM_MS = 72 * 60 * 60 * 1000; // 72 hours after midnight
 
@@ -156,6 +157,8 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
       paid_at: now.toISOString(),
       xp_earned: toNSU(gross, booking.currency),
     });
+
+    await sendNotification("experience_completed_to_requester", booking.id);
 
     setPaid(true);
     setPaying(false);
