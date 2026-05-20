@@ -223,6 +223,30 @@ function buildExperienceConfirmedToHost(
   };
 }
 
+function buildExperienceCompletedToRequester(
+  booking: Record<string, unknown>,
+  requester: Record<string, unknown>,
+  host: Record<string, unknown>,
+): { to: string; subject: string; html: string } {
+  const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
+  const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "your host");
+  const ctaUrl = `${APP_URL}/history?tab=pending`;
+  return {
+    to: String(requester.email),
+    subject: `How was your ${booking.sport} experience with ${hostName}? Please confirm`,
+    html: emailHtml(
+      `How was your experience?`,
+      [
+        `Hi ${reqName}! We hope your <strong>${booking.sport}</strong> session with <strong>${hostName}</strong> on ${booking.requested_date} went great.`,
+        `Please head to your booking history to confirm the experience took place and leave a rating for your host.`,
+        `Please note that if you do not confirm the experience, it will be automatically confirmed after 72 hours.`,
+      ],
+      ctaUrl,
+      "Confirm & Rate Your Host",
+    ),
+  };
+}
+
 function buildDisputeOpenedToHost(
   booking: Record<string, unknown>,
   requester: Record<string, unknown>,
@@ -364,7 +388,6 @@ function buildCancelledPostPaymentToHost(
   host: Record<string, unknown>,
   invoice: Record<string, unknown>,
 ): { to: string; subject: string; html: string } {
-<<<<<<< HEAD
   const reqName = String((requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim()) || "A guest");
   const hostName = String((host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim()) || "Host");
 
@@ -632,6 +655,11 @@ serve(async (req: Request): Promise<Response> => {
       }
       case "experience_confirmed_to_host": {
         const e = buildExperienceConfirmedToHost(booking, requester, host);
+        await sendEmail(e.to, e.subject, e.html);
+        break;
+      }
+      case "experience_completed_to_requester": {
+        const e = buildExperienceCompletedToRequester(booking, requester, host);
         await sendEmail(e.to, e.subject, e.html);
         break;
       }

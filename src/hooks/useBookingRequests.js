@@ -96,15 +96,43 @@ export const useBookingRequests = (currentUser) => {
   useEffect(() => {
     if (!currentUser?.id || !requests.length) return;
     const now = Date.now();
+
     const expired = requests.filter(
       (r) =>
         r.status === "in_progress" &&
         r.auto_confirm_at &&
         new Date(r.auto_confirm_at).getTime() <= now,
     );
-    if (!expired.length) return;
+
+    // Bookings where the event day has passed but the auto-confirm window
+    // hasn't closed yet and the feedback email hasn't been sent.
+    const needsFeedbackEmail = requests.filter(
+      (r) =>
+        r.status === "in_progress" &&
+        r.experience_ends_at &&
+        new Date(r.experience_ends_at).getTime() <= now &&
+        r.auto_confirm_at &&
+        new Date(r.auto_confirm_at).getTime() > now &&
+        !r.feedback_email_sent_at,
+    );
+
+    if (!expired.length && !needsFeedbackEmail.length) return;
 
     (async () => {
+      for (const r of needsFeedbackEmail) {
+        // Flip the column first; only the client that succeeds sends the email.
+        const { data: flagged } = await supabase
+          .from("booking_requests")
+          .update({ feedback_email_sent_at: new Date().toISOString() })
+          .eq("id", r.id)
+          .is("feedback_email_sent_at", null)
+          .select("id");
+
+        if (flagged?.length > 0) {
+          await sendNotification("experience_completed_to_requester", r.id);
+        }
+      }
+
       for (const r of expired) {
         const now = new Date().toISOString();
         await supabase
