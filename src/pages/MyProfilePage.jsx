@@ -461,6 +461,9 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
               <Link to="/user-profile" className="btn btn-primary">
                 My Profile
               </Link>
+              {!currentUser.isHost && (
+                <Link to="/become-a-host" className="btn btn-light">Become Host</Link>
+              )}
             </div>
           </div>
           <div className="profile-name-row">
