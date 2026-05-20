@@ -105,7 +105,7 @@ export const majorEvents = [
     startsAt: "2026-09-27T00:00:00Z",
     endsAt: "2026-09-27T23:59:59Z",
     url: "https://www.bmw-berlin-marathon.com/en/",
-    imageUrl: "/BerlinMarathon.png",
+    imageUrl: "/events/BerlinMarathon.png",
     imageStyle: "contain",
     description:
       "The fastest course on the World Marathon Majors circuit and frequent home of world records."
@@ -122,7 +122,7 @@ export const majorEvents = [
     startsAt: "2026-10-11T00:00:00Z",
     endsAt: "2026-10-11T23:59:59Z",
     url: "https://www.chicagomarathon.com/",
-    imageUrl: "/ChicagoMarathon.jpeg",
+    imageUrl: "/events/ChicagoMarathon.jpeg",
     imageStyle: "contain",
     description:
       "A flat, fast loop through 29 Chicago neighborhoods — one of the six Abbott World Marathon Majors."
@@ -139,7 +139,7 @@ export const majorEvents = [
     startsAt: "2026-11-01T00:00:00Z",
     endsAt: "2026-11-01T23:59:59Z",
     url: "https://www.nyrr.org/tcsnycmarathon",
-    imageUrl: "/NewYorkMarathon.png",
+    imageUrl: "/events/NewYorkMarathon.png",
     imageStyle: "contain",
     description:
       "The world's largest marathon, crossing all five boroughs from the Verrazzano Bridge to Central Park."
@@ -156,7 +156,7 @@ export const majorEvents = [
     startsAt: "2026-08-30T00:00:00Z",
     endsAt: "2026-08-30T23:59:59Z",
     url: "https://www.sydneymarathon.com/",
-    imageUrl: "/SydneyMarathon.png",
+    imageUrl: "/events/SydneyMarathon.png",
     imageStyle: "contain",
     description:
       "The newest member of the Abbott World Marathon Majors, finishing at the Opera House."
@@ -173,7 +173,7 @@ export const majorEvents = [
     startsAt: "2026-06-14T00:00:00Z",
     endsAt: "2026-06-14T23:59:59Z",
     url: "https://www.comrades.com/",
-    imageUrl: "/Comrades_Marathon_Logo.png",
+    imageUrl: "/events/Comrades_Marathon_Logo.png",
     imageStyle: "contain",
     description:
       "An iconic 87-89 km ultramarathon between Pietermaritzburg and Durban, alternating direction each year."
@@ -190,7 +190,7 @@ export const majorEvents = [
     startsAt: "2026-09-13T09:00:00Z",
     endsAt: "2026-09-13T18:00:00Z",
     url: "https://www.greatrun.org/great-north-run/",
-    imageUrl: "/GreatNorthRun.jpeg",
+    imageUrl: "/events/GreatNorthRun.jpeg",
     imageStyle: "contain",
     description: "The world's largest half marathon from Newcastle city centre to South Shields."
   },
@@ -224,7 +224,7 @@ export const majorEvents = [
     startsAt: "2026-05-25T00:00:00Z",
     endsAt: "2026-06-07T23:59:59Z",
     url: "https://www.rolandgarros.com/",
-    imageUrl: "/roland-garros-logo.svg",
+    imageUrl: "/events/roland-garros-logo.svg",
     imageStyle: "contain",
     description:
       "The clay-court Grand Slam in Paris — two weeks of grueling baseline tennis at Stade Roland Garros."
@@ -241,7 +241,7 @@ export const majorEvents = [
     startsAt: "2026-06-29T00:00:00Z",
     endsAt: "2026-07-12T23:59:59Z",
     url: "https://www.wimbledon.com/",
-    imageUrl: "/Wimbledon_logo.png",
+    imageUrl: "/events/Wimbledon_logo.png",
     imageStyle: "contain",
     description:
       "The oldest tennis tournament in the world. Grass courts, white kits and strawberries with cream."
@@ -258,7 +258,7 @@ export const majorEvents = [
     startsAt: "2026-08-31T00:00:00Z",
     endsAt: "2026-09-13T23:59:59Z",
     url: "https://www.usopen.org/",
-    imageUrl: "/us-open-tennis-logo.svg",
+    imageUrl: "/events/us-open-tennis-logo.svg",
     imageStyle: "contain",
     description:
       "The final Grand Slam of the year — hard courts under the lights of Arthur Ashe Stadium."
@@ -275,7 +275,7 @@ export const majorEvents = [
     startsAt: "2026-10-25T00:00:00Z",
     endsAt: "2026-11-01T23:59:59Z",
     url: "https://www.wtatennis.com/",
-    imageUrl: "/WTAFinals.webp",
+    imageUrl: "/events/WTAFinals.webp",
     imageStyle: "contain",
     description: "Season-ending championship for the top eight women's singles players and doubles teams."
   },
@@ -291,7 +291,7 @@ export const majorEvents = [
     startsAt: "2026-11-09T00:00:00Z",
     endsAt: "2026-11-16T23:59:59Z",
     url: "https://www.atptour.com/en/atp-tour/nitto-atp-finals",
-    imageUrl: "/ATPFinals.png",
+    imageUrl: "/events/ATPFinals.png",
     imageStyle: "contain",
     description: "Season-ending championship for the top eight ATP singles players of the year."
   },
@@ -307,7 +307,7 @@ export const majorEvents = [
     startsAt: "2026-11-21T00:00:00Z",
     endsAt: "2026-11-29T23:59:59Z",
     url: "https://www.daviscupfinals.com/",
-    imageUrl: "/DavisCup.png",
+    imageUrl: "/events/DavisCup.png",
     imageStyle: "contain",
     description: "The World Cup of Tennis — 16 nations compete for the oldest team trophy in the sport."
   },
@@ -389,7 +389,7 @@ export const majorEvents = [
     startsAt: "2026-05-08T00:00:00Z",
     endsAt: "2026-05-31T23:59:59Z",
     url: "https://www.giroditalia.it/",
-    imageUrl: "/giro-ditalia-logo.svg",
+    imageUrl: "/events/giro-ditalia-logo.svg",
     imageStyle: "contain",
     description:
       "Three weeks of racing for the Maglia Rosa across Italy's mountains, coastlines and cobbles."
@@ -406,7 +406,7 @@ export const majorEvents = [
     startsAt: "2026-07-04T00:00:00Z",
     endsAt: "2026-07-26T23:59:59Z",
     url: "https://www.letour.fr/",
-    imageUrl: "/Tourdefrance_logo.png",
+    imageUrl: "/events/Tourdefrance_logo.png",
     imageStyle: "contain",
     description:
       "La Grande Boucle — cycling's biggest stage race, finishing on the Champs-Élysées."
@@ -423,7 +423,7 @@ export const majorEvents = [
     startsAt: "2026-08-22T00:00:00Z",
     endsAt: "2026-09-13T23:59:59Z",
     url: "https://www.lavuelta.es/",
-    imageUrl: "/vuelta-logo.svg",
+    imageUrl: "/events/vuelta-logo.svg",
     imageStyle: "contain",
     description:
       "Three weeks of climbing under the Spanish sun for the red Maillot Rojo."
@@ -440,7 +440,7 @@ export const majorEvents = [
     startsAt: "2026-10-10T00:00:00Z",
     endsAt: "2026-10-10T23:59:59Z",
     url: "https://www.ilombardia.it/",
-    imageUrl: "/IlLombardia.png",
+    imageUrl: "/events/IlLombardia.png",
     imageStyle: "contain",
     description:
       "The Race of the Falling Leaves — closing Monument of the season around Lake Como."
@@ -457,7 +457,7 @@ export const majorEvents = [
     startsAt: "2026-05-30T00:00:00Z",
     endsAt: "2026-06-07T23:59:59Z",
     url: "https://www.giroditalia.it/",
-    imageUrl: "/GiroWomen.jpeg",
+    imageUrl: "/events/GiroWomen.jpeg",
     imageStyle: "contain",
     description: "The premier women's stage race in cycling, riding the same iconic Italian roads as the men's Giro."
   },
@@ -475,7 +475,7 @@ export const majorEvents = [
     startsAt: "2026-03-08T00:00:00Z",
     endsAt: "2026-03-08T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "Season opener under the desert lights at Sakhir."
   },
@@ -491,7 +491,7 @@ export const majorEvents = [
     startsAt: "2026-03-22T00:00:00Z",
     endsAt: "2026-03-22T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "Round through the parklands of Melbourne's Albert Park."
   },
@@ -507,7 +507,7 @@ export const majorEvents = [
     startsAt: "2026-04-12T00:00:00Z",
     endsAt: "2026-04-12T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "The drivers' favourite — Suzuka's flowing figure-eight layout."
   },
@@ -523,7 +523,7 @@ export const majorEvents = [
     startsAt: "2026-05-24T00:00:00Z",
     endsAt: "2026-05-24T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "The crown jewel of the F1 calendar through the streets of Monte Carlo."
   },
@@ -539,7 +539,7 @@ export const majorEvents = [
     startsAt: "2026-06-14T00:00:00Z",
     endsAt: "2026-06-14T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "Île Notre-Dame's Wall of Champions makes Montreal a perennial classic."
   },
@@ -555,7 +555,7 @@ export const majorEvents = [
     startsAt: "2026-07-05T00:00:00Z",
     endsAt: "2026-07-05T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "The home of British motorsport — high-speed sweepers at Silverstone."
   },
@@ -571,7 +571,7 @@ export const majorEvents = [
     startsAt: "2026-08-30T00:00:00Z",
     endsAt: "2026-08-30T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "Eau Rouge, Raidillon and Ardennes weather make Spa unmistakable."
   },
@@ -587,7 +587,7 @@ export const majorEvents = [
     startsAt: "2026-09-06T00:00:00Z",
     endsAt: "2026-09-06T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "The Temple of Speed — a tifosi-fueled cathedral of slipstreams."
   },
@@ -603,7 +603,7 @@ export const majorEvents = [
     startsAt: "2026-09-20T00:00:00Z",
     endsAt: "2026-09-20T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "The original night race — a humid 23-corner street circuit around Marina Bay."
   },
@@ -619,7 +619,7 @@ export const majorEvents = [
     startsAt: "2026-10-25T00:00:00Z",
     endsAt: "2026-10-25T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "Texan hospitality and a layout inspired by the world's best corners."
   },
@@ -635,7 +635,7 @@ export const majorEvents = [
     startsAt: "2026-11-21T00:00:00Z",
     endsAt: "2026-11-21T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "A Saturday-night Strip race past the Sphere, Bellagio and Caesars."
   },
@@ -651,7 +651,7 @@ export const majorEvents = [
     startsAt: "2026-12-06T00:00:00Z",
     endsAt: "2026-12-06T23:59:59Z",
     url: "https://www.formula1.com/en/racing/2026.html",
-    imageUrl: "/f1-logo.svg",
+    imageUrl: "/events/f1-logo.svg",
     imageStyle: "contain",
     description: "The traditional season finale at Yas Marina — twilight to night under the lights."
   },
@@ -669,7 +669,7 @@ export const majorEvents = [
     startsAt: "2026-05-20T19:00:00Z",
     endsAt: "2026-05-20T21:00:00Z",
     url: "https://www.uefa.com/uefaeuropaleague/",
-    imageUrl: "/EuropaCupFinal.jpeg",
+    imageUrl: "/events/EuropaCupFinal.jpeg",
     imageStyle: "contain",
     description: "The final of UEFA's second-tier European club competition."
   },
@@ -686,7 +686,7 @@ export const majorEvents = [
     endsAt: "2026-05-23T19:00:00Z",
     url: "https://www.uefa.com/womenschampionsleague/",
     description: "The showpiece final of European women's club football.",
-    imageUrl: "/WomensCLFinal.webp",
+    imageUrl: "/events/WomensCLFinal.webp",
     imageStyle: "contain"
   },
   {
@@ -701,7 +701,7 @@ export const majorEvents = [
     startsAt: "2026-05-27T19:00:00Z",
     endsAt: "2026-05-27T21:00:00Z",
     url: "https://www.uefa.com/uefaconferenceleague/",
-    imageUrl: "/ConfLeagueFinal.png",
+    imageUrl: "/events/ConfLeagueFinal.png",
     imageStyle: "contain",
     description: "The final of UEFA's third-tier European club competition."
   },
@@ -717,7 +717,7 @@ export const majorEvents = [
     startsAt: "2026-05-30T00:00:00Z",
     endsAt: "2026-05-30T23:59:59Z",
     url: "https://www.uefa.com/uefachampionsleague/",
-    imageUrl: "/ucl-logo.svg",
+    imageUrl: "/events/ucl-logo.svg",
     imageStyle: "contain",
     description: "European club football's showpiece final, hosted at the Puskás Aréna."
   },
@@ -733,7 +733,7 @@ export const majorEvents = [
     startsAt: "2026-06-11T00:00:00Z",
     endsAt: "2026-07-19T23:59:59Z",
     url: "https://www.fifa.com/fifaplus/en/tournaments/mens/worldcup/canadamexicousa2026",
-    imageUrl: "/fifa-worldcup-2026-logo.png",
+    imageUrl: "/events/fifa-worldcup-2026-logo.png",
     imageStyle: "contain",
     description:
       "The first 48-team World Cup, co-hosted by the United States, Canada and Mexico across 16 cities."
@@ -750,7 +750,7 @@ export const majorEvents = [
     startsAt: "2026-11-07T21:00:00Z",
     endsAt: "2026-11-07T23:00:00Z",
     url: "https://www.conmebol.com/",
-    imageUrl: "/CopaLibertadores.png",
+    imageUrl: "/events/CopaLibertadores.png",
     imageStyle: "contain",
     description: "The final of South America's premier club football competition."
   },
@@ -768,7 +768,7 @@ export const majorEvents = [
     startsAt: "2026-05-22T00:00:00Z",
     endsAt: "2026-05-24T23:59:59Z",
     url: "https://www.euroleague.net/",
-    imageUrl: "/EuroleagueFinalFour.png",
+    imageUrl: "/events/EuroleagueFinalFour.png",
     imageStyle: "contain",
     description: "The season-ending Final Four of Europe's premier basketball club competition."
   },
@@ -784,7 +784,7 @@ export const majorEvents = [
     startsAt: "2026-06-04T00:00:00Z",
     endsAt: "2026-06-21T23:59:59Z",
     url: "https://www.nba.com/",
-    imageUrl: "/NbaFinals.png",
+    imageUrl: "/events/NbaFinals.png",
     imageStyle: "contain",
     description: "The best-of-seven championship series of the National Basketball Association."
   },
@@ -803,7 +803,7 @@ export const majorEvents = [
     endsAt: "2026-05-23T17:00:00Z",
     url: "https://www.epcrugby.com/champions-cup/",
     description: "The final of Europe's premier club rugby union competition.",
-    imageUrl: "/RugbyFinal.png",
+    imageUrl: "/events/RugbyFinal.png",
     imageStyle: "contain"
   },
 
@@ -852,7 +852,7 @@ export const majorEvents = [
     startsAt: "2026-06-18T00:00:00Z",
     endsAt: "2026-06-21T23:59:59Z",
     url: "https://www.usopen.com/",
-    imageUrl: "/USOpen.png",
+    imageUrl: "/events/USOpen.png",
     imageStyle: "contain",
     description: "The third golf major of the year — one of the toughest tests in championship golf."
   },
@@ -870,7 +870,7 @@ export const majorEvents = [
     startsAt: "2026-06-07T13:00:00Z",
     endsAt: "2026-06-07T15:00:00Z",
     url: "https://www.motogp.com/",
-    imageUrl: "/MotoGP.png",
+    imageUrl: "/events/MotoGP.png",
     imageStyle: "contain",
     description: "Round 8 of the MotoGP World Championship at the Hungaroring."
   },
@@ -886,7 +886,7 @@ export const majorEvents = [
     startsAt: "2026-06-13T10:00:00Z",
     endsAt: "2026-06-14T10:00:00Z",
     url: "https://www.lemans.org/",
-    imageUrl: "/24LeMans.png",
+    imageUrl: "/events/24LeMans.png",
     imageStyle: "contain",
     description: "The world's oldest active sports car endurance race — 24 hours at the Circuit de la Sarthe."
   },
@@ -902,7 +902,7 @@ export const majorEvents = [
     startsAt: "2026-06-21T13:00:00Z",
     endsAt: "2026-06-21T15:00:00Z",
     url: "https://www.motogp.com/",
-    imageUrl: "/MotoGP.png",
+    imageUrl: "/events/MotoGP.png",
     imageStyle: "contain",
     description: "Round 9 of the MotoGP World Championship at Automotodrom Brno."
   },
@@ -918,7 +918,7 @@ export const majorEvents = [
     startsAt: "2026-06-28T13:00:00Z",
     endsAt: "2026-06-28T15:00:00Z",
     url: "https://www.motogp.com/",
-    imageUrl: "/MotoGP.png",
+    imageUrl: "/events/MotoGP.png",
     imageStyle: "contain",
     description: "Round 10 of the MotoGP World Championship — the Cathedral of Motorsport at Assen."
   },
@@ -936,7 +936,7 @@ export const majorEvents = [
     startsAt: "2026-10-10T00:00:00Z",
     endsAt: "2026-10-10T23:59:59Z",
     url: "https://www.ironman.com/",
-    imageUrl: "/IronmanKona.png",
+    imageUrl: "/events/IronmanKona.png",
     imageStyle: "contain",
     description: "The full-distance Ironman world title, contested on the Big Island lava fields."
   },
@@ -952,7 +952,7 @@ export const majorEvents = [
     startsAt: "2026-06-28T06:00:00Z",
     endsAt: "2026-06-28T23:59:59Z",
     url: "https://www.ironman.com/",
-    imageUrl: "/IMFrankfurt.webp",
+    imageUrl: "/events/IMFrankfurt.webp",
     imageStyle: "contain",
     description: "The European Championship of full-distance triathlon held in Frankfurt."
   },
@@ -970,7 +970,7 @@ export const majorEvents = [
     startsAt: "2026-05-18T00:00:00Z",
     endsAt: "2026-05-24T23:59:59Z",
     url: "https://www.worldarchery.sport/",
-    imageUrl: "/EuropeanArchery.png",
+    imageUrl: "/events/EuropeanArchery.png",
     imageStyle: "contain",
     description: "The biennial continental championship for European archery nations."
   },
