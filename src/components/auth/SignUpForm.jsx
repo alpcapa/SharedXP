@@ -47,20 +47,24 @@ const SignUpForm = ({
   cityDropdown,
   phoneCodeDropdown,
   errorMessage,
+  invalidField,
+  onClearError,
   isSubmitting,
   onInputChange,
   onLanguageChange,
   onSportChange,
   onPhotoSelect,
   onSubmit,
-}) => (
-  <form className="auth-form" onSubmit={onSubmit} noValidate>
+}) => {
+  const fi = (id) => (invalidField === id ? "field-invalid" : undefined);
+  return (
+  <form className="auth-form" onSubmit={onSubmit} noValidate onChange={onClearError}>
     <label htmlFor="firstName">First name</label>
     <input
       id="firstName"
       name="firstName"
       type="text"
-      required
+      className={fi("firstName")}
       value={formValues.firstName}
       onChange={onInputChange}
     />
@@ -70,7 +74,7 @@ const SignUpForm = ({
       id="lastName"
       name="lastName"
       type="text"
-      required
+      className={fi("lastName")}
       value={formValues.lastName}
       onChange={onInputChange}
     />
@@ -80,7 +84,7 @@ const SignUpForm = ({
       id="email"
       name="email"
       type="email"
-      required
+      className={fi("email")}
       value={formValues.email}
       onChange={onInputChange}
     />
@@ -90,8 +94,7 @@ const SignUpForm = ({
       id="password"
       name="password"
       type="password"
-      minLength={8}
-      required
+      className={fi("password")}
       value={formValues.password}
       onChange={onInputChange}
     />
@@ -101,8 +104,7 @@ const SignUpForm = ({
       id="confirmPassword"
       name="confirmPassword"
       type="password"
-      minLength={8}
-      required
+      className={fi("confirmPassword")}
       value={formValues.confirmPassword}
       onChange={onInputChange}
     />
@@ -112,7 +114,7 @@ const SignUpForm = ({
       id="addressLine1"
       name="addressLine1"
       type="text"
-      required
+      className={fi("addressLine1")}
       value={formValues.addressLine1}
       onChange={onInputChange}
     />
@@ -132,7 +134,7 @@ const SignUpForm = ({
       <button
         id="country"
         type="button"
-        className="auth-dropdown-trigger"
+        className={`auth-dropdown-trigger${invalidField === "country" ? " field-invalid" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={countryDropdown.isOpen}
         aria-controls="country-listbox"
@@ -183,6 +185,7 @@ const SignUpForm = ({
                       phoneCountryCode: option.code,
                     }));
                     countryDropdown.setIsOpen(false);
+                    onClearError?.();
                   }}
                 >
                   <span>{getCountryFlag(option.code)}</span>
@@ -202,7 +205,7 @@ const SignUpForm = ({
       <button
         id="city-selector"
         type="button"
-        className="auth-dropdown-trigger"
+        className={`auth-dropdown-trigger${invalidField === "city-selector" ? " field-invalid" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={cityDropdown.isOpen}
         aria-controls="city-listbox"
@@ -239,6 +242,7 @@ const SignUpForm = ({
                   onClick={() => {
                     setFormValues((prev) => ({ ...prev, city: option }));
                     cityDropdown.setIsOpen(false);
+                    onClearError?.();
                   }}
                 >
                   <span>{option}</span>
@@ -329,7 +333,7 @@ const SignUpForm = ({
         id="phone"
         name="phone"
         type="tel"
-        required
+        className={fi("phone")}
         value={formValues.phone}
         onChange={onInputChange}
       />
@@ -383,9 +387,9 @@ const SignUpForm = ({
           key={`signup-language-${languageIndex}`}
           id={`signup-language-${languageIndex}`}
           aria-label={`Language ${slotLabel}`}
+          className={languageIndex === 0 ? fi("signup-language-0") : undefined}
           value={formValues.languages[languageIndex] ?? ""}
           onChange={(e) => onLanguageChange(languageIndex, e.target.value)}
-          required={languageIndex === 0}
         >
           <option value="" disabled>
             {slotLabel}
@@ -406,9 +410,9 @@ const SignUpForm = ({
           key={`signup-sport-${sportIndex}`}
           id={`signup-sport-${sportIndex}`}
           aria-label={`Sport ${slotLabel}`}
+          className={sportIndex === 0 ? fi("signup-sport-0") : undefined}
           value={formValues.sports[sportIndex] ?? ""}
           onChange={(e) => onSportChange(sportIndex, e.target.value)}
-          required={sportIndex === 0}
         >
           <option value="" disabled>
             {slotLabel}
@@ -431,6 +435,7 @@ const SignUpForm = ({
           id="agreeTermsAndConditions"
           name="agreeTermsAndConditions"
           type="checkbox"
+          className={fi("agreeTermsAndConditions")}
           checked={formValues.agreeTermsAndConditions}
           onChange={onInputChange}
         />
@@ -468,6 +473,7 @@ const SignUpForm = ({
       {isSubmitting ? "Creating account…" : "Continue"}
     </button>
   </form>
-);
+  );
+};
 
 export default SignUpForm;

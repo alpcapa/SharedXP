@@ -47,6 +47,8 @@ const MyProfileForm = ({
   cityDropdown,
   phoneCodeDropdown,
   errorMessage,
+  invalidField,
+  onClearError,
   successMessage,
   saveStatus,
   onInputChange,
@@ -55,8 +57,9 @@ const MyProfileForm = ({
   onPhotoSelect,
   onSubmit,
 }) => {
+  const fi = (id) => (invalidField === id ? "field-invalid" : undefined);
   return (
-    <form className="auth-form profile-form" onSubmit={onSubmit} noValidate>
+    <form className="auth-form profile-form" onSubmit={onSubmit} noValidate onChange={onClearError}>
       <div className="profile-photo-editor">
         <img
           src={profilePhoto}
@@ -104,7 +107,7 @@ const MyProfileForm = ({
           id="email"
           name="email"
           type="email"
-          required
+          className={fi("email")}
           value={formValues.email}
           onChange={onInputChange}
         />
@@ -119,7 +122,7 @@ const MyProfileForm = ({
           <button
             id="country-selector"
             type="button"
-            className="auth-dropdown-trigger"
+            className={`auth-dropdown-trigger${invalidField === "country-selector" ? " field-invalid" : ""}`}
             aria-haspopup="listbox"
             aria-expanded={countryDropdown.isOpen}
             aria-controls="country-listbox"
@@ -171,6 +174,7 @@ const MyProfileForm = ({
                           phoneCountryCode: option.code,
                         }));
                         countryDropdown.setIsOpen(false);
+                        onClearError?.();
                       }}
                     >
                       <span>{getCountryFlag(option.code)}</span>
@@ -190,7 +194,7 @@ const MyProfileForm = ({
           <button
             id="city-selector"
             type="button"
-            className="auth-dropdown-trigger"
+            className={`auth-dropdown-trigger${invalidField === "city-selector" ? " field-invalid" : ""}`}
             aria-haspopup="listbox"
             aria-expanded={cityDropdown.isOpen}
             aria-controls="city-listbox"
@@ -227,6 +231,7 @@ const MyProfileForm = ({
                       onClick={() => {
                         setFormValues((prev) => ({ ...prev, city: option }));
                         cityDropdown.setIsOpen(false);
+                        onClearError?.();
                       }}
                     >
                       <span>{option}</span>
@@ -317,7 +322,7 @@ const MyProfileForm = ({
             id="phone"
             name="phone"
             type="tel"
-            required
+            className={fi("phone")}
             value={formValues.phone}
             onChange={onInputChange}
           />
@@ -328,7 +333,7 @@ const MyProfileForm = ({
           id="addressLine1"
           name="addressLine1"
           type="text"
-          required
+          className={fi("addressLine1")}
           value={formValues.addressLine1}
           onChange={onInputChange}
         />
@@ -376,9 +381,9 @@ const MyProfileForm = ({
               list="profile-language-options"
               placeholder={slotLabel}
               aria-label={`Language ${slotLabel}`}
+              className={languageIndex === 0 ? fi("profile-language-0") : undefined}
               value={formValues.languages[languageIndex] ?? ""}
               onChange={(e) => onLanguageChange(languageIndex, e.target.value)}
-              required={languageIndex === 0}
             />
           ))}
         </div>
@@ -397,9 +402,9 @@ const MyProfileForm = ({
               list="profile-sport-options"
               placeholder={slotLabel}
               aria-label={`Sport ${slotLabel}`}
+              className={sportIndex === 0 ? fi("profile-sport-0") : undefined}
               value={formValues.sports[sportIndex] ?? ""}
               onChange={(e) => onSportChange(sportIndex, e.target.value)}
-              required={sportIndex === 0}
             />
           ))}
         </div>

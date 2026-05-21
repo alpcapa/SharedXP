@@ -21,11 +21,14 @@ const HostSportTab = ({
   successMessage,
   setErrorMessage,
   setSuccessMessage,
+  invalidField,
+  onClearError,
   countryDropdown,
   cityDropdown,
   onSubmit,
   isSaving,
 }) => {
+  const fi = (id) => (invalidField === id ? "field-invalid" : undefined);
   const activeSport =
     draft.sports[activeSportIndex] ?? createEmptySportConfig();
 
@@ -123,7 +126,7 @@ const HostSportTab = ({
   };
 
   return (
-    <form onSubmit={onSubmit} noValidate>
+    <form onSubmit={onSubmit} noValidate onChange={onClearError}>
 
       {/* ── Sport bio ─────────────────────────────────────────────────── */}
       <section className="host-onboarding-card">
@@ -171,7 +174,7 @@ const HostSportTab = ({
           <label htmlFor="sportType">Sport</label>
           <select
             id="sportType"
-            required
+            className={fi("sportType")}
             value={activeSport.sport}
             onChange={(e) => updateSportField("sport", e.target.value)}
           >
@@ -186,7 +189,7 @@ const HostSportTab = ({
           <label htmlFor="sportDescription">Description</label>
           <textarea
             id="sportDescription"
-            required
+            className={fi("sportDescription")}
             maxLength={50}
             rows={2}
             placeholder="Love coastal rides & coffee stops"
@@ -200,7 +203,7 @@ const HostSportTab = ({
           <label htmlFor="sportAbout">About</label>
           <textarea
             id="sportAbout"
-            required
+            className={fi("sportAbout")}
             rows={4}
             placeholder="Share your bio and hosting style"
             value={activeSport.about}
@@ -226,7 +229,7 @@ const HostSportTab = ({
             <button
               id="host-country-selector"
               type="button"
-              className="auth-dropdown-trigger"
+              className={`auth-dropdown-trigger${invalidField === "host-country-selector" ? " field-invalid" : ""}`}
               aria-haspopup="listbox"
               aria-expanded={countryDropdown.isOpen}
               aria-controls="host-country-listbox"
@@ -275,6 +278,7 @@ const HostSportTab = ({
                             city: nextCities[0] ?? "",
                           }));
                           countryDropdown.setIsOpen(false);
+                          onClearError?.();
                         }}
                       >
                         <span>{getCountryFlag(option.code)}</span>
@@ -294,7 +298,7 @@ const HostSportTab = ({
             <button
               id="host-city-selector"
               type="button"
-              className="auth-dropdown-trigger"
+              className={`auth-dropdown-trigger${invalidField === "host-city-selector" ? " field-invalid" : ""}`}
               aria-haspopup="listbox"
               aria-expanded={cityDropdown.isOpen}
               aria-controls="host-city-listbox"
@@ -331,6 +335,7 @@ const HostSportTab = ({
                         onClick={() => {
                           setDraft((prev) => ({ ...prev, city: option }));
                           cityDropdown.setIsOpen(false);
+                          onClearError?.();
                         }}
                       >
                         <span>{option}</span>
@@ -364,17 +369,18 @@ const HostSportTab = ({
           <div className="host-price-row">
             <input
               id="sportPricing"
+              className={fi("sportPricing")}
               type="number"
               min="1"
               step="1"
-              required
               placeholder="How much do you charge per session?"
               value={activeSport.pricing}
               onChange={(e) => updateSportField("pricing", e.target.value)}
             />
             <select
+              id="sportPricingCurrency"
               aria-label="Pricing currency"
-              required
+              className={fi("sportPricingCurrency")}
               value={activeSport.pricingCurrency}
               onChange={(e) =>
                 updateSportField("pricingCurrency", e.target.value)
@@ -392,7 +398,7 @@ const HostSportTab = ({
           <label htmlFor="sportLevel">Level</label>
           <select
             id="sportLevel"
-            required
+            className={fi("sportLevel")}
             value={activeSport.level}
             onChange={(e) => updateSportField("level", e.target.value)}
           >
@@ -435,6 +441,7 @@ const HostSportTab = ({
           <label htmlFor="equipmentDetails">Equipment Details</label>
           <textarea
             id="equipmentDetails"
+            className={fi("equipmentDetails")}
             rows={3}
             placeholder="List the equipment you will provide"
             value={activeSport.equipmentDetails}
@@ -449,7 +456,7 @@ const HostSportTab = ({
         <div className="host-availability-block">
           <h3>Availability</h3>
           <p>Select weekly availability and a preferred time range.</p>
-          <div className="host-availability-days">
+          <div id="host-availability-days" className={`host-availability-days${invalidField === "host-availability-days" ? " field-invalid" : ""}`}>
             {AVAILABILITY_DAYS.map((day) => (
               <label key={day}>
                 <input
@@ -466,7 +473,7 @@ const HostSportTab = ({
               <label htmlFor="availabilityStart">From</label>
               <select
                 id="availabilityStart"
-                required
+                className={fi("availabilityStart")}
                 value={activeSport.availability.startTime}
                 onChange={(e) =>
                   updateAvailabilityTime("startTime", e.target.value)
@@ -484,7 +491,7 @@ const HostSportTab = ({
               <label htmlFor="availabilityEnd">To</label>
               <select
                 id="availabilityEnd"
-                required
+                className={fi("availabilityEnd")}
                 value={activeSport.availability.endTime}
                 onChange={(e) =>
                   updateAvailabilityTime("endTime", e.target.value)
@@ -600,6 +607,7 @@ const HostSportTab = ({
             <input
               id="hostAgreeTermsAndConditions"
               type="checkbox"
+              className={fi("hostAgreeTermsAndConditions")}
               checked={draft.consents?.agreeTermsAndConditions ?? false}
               onChange={(e) =>
                 updateConsentField("agreeTermsAndConditions", e.target.checked)
@@ -617,6 +625,7 @@ const HostSportTab = ({
             <input
               id="hostAgreeHostingRelatedEmailsAndCalls"
               type="checkbox"
+              className={fi("hostAgreeHostingRelatedEmailsAndCalls")}
               checked={
                 draft.consents?.agreeHostingRelatedEmailsAndCalls ?? false
               }

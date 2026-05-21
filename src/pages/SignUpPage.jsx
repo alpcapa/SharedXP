@@ -65,6 +65,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
   const location = useLocation();
   const [formValues, setFormValues] = useState(initialForm);
   const [errorMessage, setErrorMessage] = useState("");
+  const [invalidField, setInvalidField] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
@@ -213,54 +214,19 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
 
   const onEmailSubmit = async (event) => {
     event.preventDefault();
-    if (!formValues.firstName.trim()) {
-      setErrorMessage("Please enter your first name.");
-      return;
-    }
-    if (!formValues.lastName.trim()) {
-      setErrorMessage("Please enter your last name.");
-      return;
-    }
-    if (!formValues.email.trim()) {
-      setErrorMessage("Please enter your email address.");
-      return;
-    }
-    if (formValues.password.length < 8) {
-      setErrorMessage("Password must be at least 8 characters.");
-      return;
-    }
-    if (formValues.password !== formValues.confirmPassword) {
-      setErrorMessage("Password confirmation does not match.");
-      return;
-    }
-    if (!formValues.addressLine1.trim()) {
-      setErrorMessage("Please enter your address.");
-      return;
-    }
-    if (!selectedCountry) {
-      setErrorMessage("Please select a valid country from the list.");
-      return;
-    }
-    if (!formValues.city.trim()) {
-      setErrorMessage("Please select a valid city from the list.");
-      return;
-    }
-    if (!formValues.phone.trim()) {
-      setErrorMessage("Please enter your phone number.");
-      return;
-    }
-    if (!formValues.languages[0].trim()) {
-      setErrorMessage("Please select your native language.");
-      return;
-    }
-    if (!formValues.sports[0].trim()) {
-      setErrorMessage("Please select your favorite sport.");
-      return;
-    }
-    if (!formValues.agreeTermsAndConditions) {
-      setErrorMessage("Please agree to Terms & Conditions to continue.");
-      return;
-    }
+    const err = (msg, field) => { setErrorMessage(msg); setInvalidField(field); };
+    if (!formValues.firstName.trim()) return err("Please enter your first name.", "firstName");
+    if (!formValues.lastName.trim()) return err("Please enter your last name.", "lastName");
+    if (!formValues.email.trim()) return err("Please enter your email address.", "email");
+    if (formValues.password.length < 8) return err("Password must be at least 8 characters.", "password");
+    if (formValues.password !== formValues.confirmPassword) return err("Password confirmation does not match.", "confirmPassword");
+    if (!formValues.addressLine1.trim()) return err("Please enter your address.", "addressLine1");
+    if (!selectedCountry) return err("Please select a valid country from the list.", "country");
+    if (!formValues.city.trim()) return err("Please select a valid city from the list.", "city-selector");
+    if (!formValues.phone.trim()) return err("Please enter your phone number.", "phone");
+    if (!formValues.languages[0].trim()) return err("Please select your native language.", "signup-language-0");
+    if (!formValues.sports[0].trim()) return err("Please select your favorite sport.", "signup-sport-0");
+    if (!formValues.agreeTermsAndConditions) return err("Please agree to Terms & Conditions to continue.", "agreeTermsAndConditions");
 
     const firstName = formValues.firstName.trim();
     const lastName = formValues.lastName.trim();
@@ -268,22 +234,17 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     const dialCountry = formValues.phoneCountryCode
       ? COUNTRY_OPTIONS.find((c) => c.code === formValues.phoneCountryCode)
       : selectedCountry;
-    if (!dialCountry) {
-      setErrorMessage("Please select a valid phone area code.");
-      return;
-    }
+    if (!dialCountry) return err("Please select a valid phone area code.", "phone");
     const phoneDigits = formValues.phone.trim().replace(/\D/g, "");
     const dialDigits = dialCountry.dialCode.replace(/\D/g, "");
     const localDigits = phoneDigits.startsWith(dialDigits)
       ? phoneDigits.slice(dialDigits.length)
       : phoneDigits;
     const normalizedBirthday = normalizeBirthdayInput(formValues.birthday);
-    if (normalizedBirthday && !isValidBirthday(normalizedBirthday)) {
-      setErrorMessage("Please enter a valid birthday in DD/MM/YYYY format.");
-      return;
-    }
+    if (normalizedBirthday && !isValidBirthday(normalizedBirthday)) return err("Please enter a valid birthday in DD/MM/YYYY format.", "birthday");
 
     setErrorMessage("");
+    setInvalidField("");
     setIsSubmitting(true);
     let result;
     try {
@@ -378,6 +339,8 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
                 cityDropdown={cityDropdown}
                 phoneCodeDropdown={phoneCodeDropdown}
                 errorMessage={errorMessage}
+                invalidField={invalidField}
+                onClearError={() => { setErrorMessage(""); setInvalidField(""); }}
                 isSubmitting={isSubmitting}
                 onInputChange={onInputChange}
                 onLanguageChange={onLanguageChange}

@@ -26,6 +26,7 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
   const [activeSportIndex, setActiveSportIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [invalidField, setInvalidField] = useState("");
   const [pauseWarning, setPauseWarning] = useState("");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearchValue, setCountrySearchValue] = useState("");
@@ -132,15 +133,17 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
   const isSportsTabComplete = validateSportsTab(hostProfileDraft).message === "";
   const isPaymentTabComplete = hostProfileDraft.bankDetailsComplete === true;
 
+  const onClearError = () => { setErrorMessage(""); setInvalidField(""); };
+
   const onSaveSports = async (event) => {
     event.preventDefault();
     if (isSaving) return;
-    const { message: validationError, sportIndex } = validateSportsTab(hostProfileDraft);
+    const { message: validationError, sportIndex, fieldId } = validateSportsTab(hostProfileDraft);
     if (validationError) {
       if (sportIndex !== null) setActiveSportIndex(sportIndex);
       setErrorMessage(validationError);
+      setInvalidField(fieldId ?? "");
       setSuccessMessage("");
-      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     setIsSaving(true);
@@ -165,9 +168,10 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
 
   const onSavePayment = async (event) => {
     event.preventDefault();
-    const validationError = validatePaymentTab(hostProfileDraft);
+    const { message: validationError, fieldId } = validatePaymentTab(hostProfileDraft);
     if (validationError) {
       setErrorMessage(validationError);
+      setInvalidField(fieldId ?? "");
       setSuccessMessage("");
       return;
     }
@@ -180,6 +184,7 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
     }
     setHostProfileDraft((prev) => ({ ...prev, bankDetailsComplete: true }));
     setErrorMessage("");
+    setInvalidField("");
     setSuccessMessage("Payment details saved successfully.");
   };
 
@@ -248,6 +253,7 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
               onClick={() => {
                 setActiveTab("sports");
                 setErrorMessage("");
+                setInvalidField("");
                 setSuccessMessage("");
               }}
             >
@@ -278,6 +284,7 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
               onClick={() => {
                 setActiveTab("payment");
                 setErrorMessage("");
+                setInvalidField("");
                 setSuccessMessage("");
               }}
             >
@@ -354,6 +361,8 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
               successMessage={successMessage}
               setErrorMessage={setErrorMessage}
               setSuccessMessage={setSuccessMessage}
+              invalidField={invalidField}
+              onClearError={onClearError}
               countryDropdown={countryDropdown}
               cityDropdown={cityDropdown}
               onSubmit={onSaveSports}
@@ -368,6 +377,8 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
               isPaymentTabComplete={isPaymentTabComplete}
               errorMessage={errorMessage}
               successMessage={successMessage}
+              invalidField={invalidField}
+              onClearError={onClearError}
               onSubmit={onSavePayment}
             />
           )}
