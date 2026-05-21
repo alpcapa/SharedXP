@@ -148,8 +148,12 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
               >
                 {navHostLabel}
               </Link>
+              {currentUser.isAdmin && (
+                <Link to="/admin/disputes" className="user-dropdown-link user-dropdown-admin" role="menuitem">
+                  Admin Panel
+                </Link>
+              )}
               <button
-
                 type="button"
                 className="user-dropdown-link user-dropdown-logout"
                 onClick={() => {

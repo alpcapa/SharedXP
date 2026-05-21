@@ -96,22 +96,44 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
       ? (profile.full_name || `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "Unknown")
       : "Unknown";
 
-  return (
-    <div className="admin-page">
-      <div className="middle-page-frame">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-      </div>
-      <main className="admin-main">
-        <h1 className="admin-title">Dispute Dashboard</h1>
-        <p className="admin-subtitle">Customer service view — all open and resolved disputes.</p>
+  const [activeTab, setActiveTab] = useState("disputes");
 
-        {loading ? (
-          <p>Loading disputes…</p>
-        ) : disputes.length === 0 ? (
-          <p>No disputes found.</p>
-        ) : (
-          <div className="admin-dispute-list">
-            {disputes.map((d) => {
+  return (
+    <div className="home-page">
+      <div className="middle-page-frame">
+        <section className="hero auth-hero">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </section>
+        <main className="middle-section admin-main">
+        <h1 className="admin-title">Admin Panel</h1>
+
+        <div className="admin-tabs">
+          <button
+            type="button"
+            className={`admin-tab${activeTab === "disputes" ? " admin-tab-active" : ""}`}
+            onClick={() => setActiveTab("disputes")}
+          >
+            Dispute Management
+          </button>
+          <button
+            type="button"
+            className={`admin-tab${activeTab === "cm" ? " admin-tab-active" : ""}`}
+            onClick={() => setActiveTab("cm")}
+          >
+            CM Management
+          </button>
+        </div>
+
+        {activeTab === "disputes" && (
+          <>
+            <p className="admin-subtitle">Customer service view — all open and resolved disputes.</p>
+            {loading ? (
+              <p>Loading disputes…</p>
+            ) : disputes.length === 0 ? (
+              <p>No disputes found.</p>
+            ) : (
+              <div className="admin-dispute-list">
+                {disputes.map((d) => {
               const br = d.booking_request;
               const requesterName = br ? getName(br.requester) : "—";
               const hostName = br ? getName(br.host) : "—";
@@ -190,10 +212,15 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
                 </article>
               );
             })}
-          </div>
+              </div>
+            )}
+          </>
         )}
-      </main>
-      <div className="middle-page-frame">
+
+        {activeTab === "cm" && (
+          <p className="admin-subtitle" style={{ marginTop: 28 }}>CM Management coming soon.</p>
+        )}
+        </main>
         <SiteFooter />
       </div>
     </div>
