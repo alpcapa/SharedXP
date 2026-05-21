@@ -99,13 +99,12 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
   const [activeTab, setActiveTab] = useState("disputes");
 
   return (
-    <div className="admin-page">
+    <div className="home-page">
       <div className="middle-page-frame">
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
-      </div>
-      <main className="admin-main">
+        <main className="admin-main">
         <h1 className="admin-title">Admin Panel</h1>
 
         <div className="admin-tabs">
@@ -221,8 +220,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
         {activeTab === "cm" && (
           <p className="admin-subtitle" style={{ marginTop: 28 }}>CM Management coming soon.</p>
         )}
-      </main>
-      <div className="middle-page-frame">
+        </main>
         <SiteFooter />
       </div>
     </div>

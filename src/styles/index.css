@@ -5651,6 +5651,11 @@ body {
   width: 100%;
 }
 
+.auth-hero + .admin-main {
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
 .admin-title {
   font-size: 26px;
   font-weight: 800;
