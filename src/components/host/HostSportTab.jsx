@@ -123,7 +123,7 @@ const HostSportTab = ({
   };
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit} noValidate>
 
       {/* ── Sport bio ─────────────────────────────────────────────────── */}
       <section className="host-onboarding-card">

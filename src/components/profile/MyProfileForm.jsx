@@ -56,7 +56,7 @@ const MyProfileForm = ({
   onSubmit,
 }) => {
   return (
-    <form className="auth-form profile-form" onSubmit={onSubmit}>
+    <form className="auth-form profile-form" onSubmit={onSubmit} noValidate>
       <div className="profile-photo-editor">
         <img
           src={profilePhoto}

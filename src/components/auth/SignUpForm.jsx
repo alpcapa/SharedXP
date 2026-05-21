@@ -54,7 +54,7 @@ const SignUpForm = ({
   onPhotoSelect,
   onSubmit,
 }) => (
-  <form className="auth-form" onSubmit={onSubmit}>
+  <form className="auth-form" onSubmit={onSubmit} noValidate>
     <label htmlFor="firstName">First name</label>
     <input
       id="firstName"
