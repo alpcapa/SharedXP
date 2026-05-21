@@ -161,6 +161,7 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
       setSuccessMessage("");
     } else {
       setErrorMessage("");
+      setInvalidField("");
       setSuccessMessage("Sport settings saved successfully.");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }

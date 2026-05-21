@@ -20,7 +20,7 @@ const HostPaymentTab = ({
   };
 
   return (
-    <form onSubmit={onSubmit} noValidate onChange={onClearError}>
+    <form onSubmit={onSubmit} noValidate>
       {!isPaymentTabComplete && (
         <div className="host-payment-warning" role="alert">
           <span className="host-payment-warning-icon" aria-hidden="true">

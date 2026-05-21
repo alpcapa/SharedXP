@@ -59,7 +59,7 @@ const MyProfileForm = ({
 }) => {
   const fi = (id) => (invalidField === id ? "field-invalid" : undefined);
   return (
-    <form className="auth-form profile-form" onSubmit={onSubmit} noValidate onChange={onClearError}>
+    <form className="auth-form profile-form" onSubmit={onSubmit} noValidate>
       <div className="profile-photo-editor">
         <img
           src={profilePhoto}

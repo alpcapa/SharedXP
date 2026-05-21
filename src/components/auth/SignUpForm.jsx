@@ -58,7 +58,7 @@ const SignUpForm = ({
 }) => {
   const fi = (id) => (invalidField === id ? "field-invalid" : undefined);
   return (
-  <form className="auth-form" onSubmit={onSubmit} noValidate onChange={onClearError}>
+  <form className="auth-form" onSubmit={onSubmit} noValidate>
     <label htmlFor="firstName">First name</label>
     <input
       id="firstName"

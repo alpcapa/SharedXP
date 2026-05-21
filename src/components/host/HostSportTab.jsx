@@ -126,7 +126,7 @@ const HostSportTab = ({
   };
 
   return (
-    <form onSubmit={onSubmit} noValidate onChange={onClearError}>
+    <form onSubmit={onSubmit} noValidate>
 
       {/* ── Sport bio ─────────────────────────────────────────────────── */}
       <section className="host-onboarding-card">
@@ -370,9 +370,8 @@ const HostSportTab = ({
             <input
               id="sportPricing"
               className={fi("sportPricing")}
-              type="number"
-              min="1"
-              step="1"
+              type="text"
+              inputMode="numeric"
               placeholder="How much do you charge per session?"
               value={activeSport.pricing}
               onChange={(e) => updateSportField("pricing", e.target.value)}
