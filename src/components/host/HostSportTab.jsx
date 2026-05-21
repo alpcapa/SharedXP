@@ -659,19 +659,20 @@ const HostSportTab = ({
         </div>
       </section>
 
-      {errorMessage && (
-        <p className="auth-error" role="alert">
-          <span aria-hidden="true">⚠</span>
-          {errorMessage}
-        </p>
-      )}
-      {successMessage && (
-        <p className="host-success-message">{successMessage}</p>
-      )}
-
-      <button type="submit" className="btn btn-primary" disabled={isSaving}>
-        {isSaving ? "Saving..." : "Save Sport Settings"}
-      </button>
+      <div style={{ marginTop: "32px" }}>
+        {errorMessage && (
+          <p className="auth-error" role="alert">
+            <span aria-hidden="true">⚠</span>
+            {errorMessage}
+          </p>
+        )}
+        {successMessage && (
+          <p className="host-success-message">{successMessage}</p>
+        )}
+        <button type="submit" className="btn btn-primary" style={{ marginTop: "8px" }} disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save Sport Settings"}
+        </button>
+      </div>
     </form>
   );
 };

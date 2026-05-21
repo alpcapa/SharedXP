@@ -138,19 +138,20 @@ const HostPaymentTab = ({
         </div>
       </section>
 
-      {errorMessage && (
-        <p className="auth-error" role="alert">
-          <span aria-hidden="true">⚠</span>
-          {errorMessage}
-        </p>
-      )}
-      {successMessage && (
-        <p className="host-success-message">{successMessage}</p>
-      )}
-
-      <button type="submit" className="btn btn-primary">
-        Save Payment Details
-      </button>
+      <div style={{ marginTop: "32px" }}>
+        {errorMessage && (
+          <p className="auth-error" role="alert">
+            <span aria-hidden="true">⚠</span>
+            {errorMessage}
+          </p>
+        )}
+        {successMessage && (
+          <p className="host-success-message">{successMessage}</p>
+        )}
+        <button type="submit" className="btn btn-primary" style={{ marginTop: "8px" }}>
+          Save Payment Details
+        </button>
+      </div>
     </form>
   );
 };
