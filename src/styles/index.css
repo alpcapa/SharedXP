@@ -73,7 +73,8 @@ body {
 }
 
 .auth-hero + .middle-section.simple-page,
-.auth-hero + .middle-section.auth-page {
+.auth-hero + .middle-section.auth-page,
+.auth-hero + .middle-section.admin-main {
   padding-top: 20px;
   margin-top: 10px;
 }
