@@ -6,7 +6,7 @@ import InlineLoginForm from "../components/InlineLoginForm";
 import { supabase } from "../lib/supabase";
 import { sendNotification } from "../utils/sendNotification";
 
-const DisputeResponsePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword }) => {
+const DisputeResponsePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const { disputeId } = useParams();
 
   const [dispute, setDispute] = useState(null);
@@ -77,6 +77,19 @@ const DisputeResponsePage = ({ currentUser, onLogout, onEmailLogin, onForgotPass
   };
 
   if (!currentUser) {
+    if (authLoading) {
+      return (
+        <div className="home-page">
+          <div className="middle-page-frame">
+            <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
+            <main className="middle-section simple-page">
+              <p>Loading…</p>
+            </main>
+            <SiteFooter />
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="home-page">
         <div className="middle-page-frame">

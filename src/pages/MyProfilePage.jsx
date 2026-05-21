@@ -135,7 +135,7 @@ const getInitialFormValues = (user) => {
   };
 };
 
-const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onUpdateProfile }) => {
+const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onUpdateProfile }) => {
   const navigate = useNavigate();
   const photoInputRef = useRef(null);
   const countryDropdownRef = useRef(null);
@@ -265,6 +265,21 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
   }, [isPhoneCodeDropdownOpen, selectedPhoneCodeCountry]);
 
   if (!currentUser) {
+    if (authLoading) {
+      return (
+        <div className="home-page">
+          <div className="middle-page-frame">
+            <section className="hero auth-hero">
+              <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+            </section>
+            <main className="middle-section simple-page">
+              <p>Loading…</p>
+            </main>
+            <SiteFooter />
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="home-page">
         <div className="middle-page-frame">

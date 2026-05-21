@@ -14,7 +14,7 @@ import {
   validateSportsTab,
 } from "../components/host/hostUtils";
 
-const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSaveHostProfile, onTogglePauseHosting }) => {
+const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onSaveHostProfile, onTogglePauseHosting }) => {
   const location = useLocation();
   const isHostSettingsRoute = location.pathname === "/host-settings";
 
@@ -105,6 +105,21 @@ const HostPage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onSav
   }, [isCountryDropdownOpen, isCityDropdownOpen]);
 
   if (!currentUser) {
+    if (authLoading) {
+      return (
+        <div className="home-page">
+          <div className="middle-page-frame">
+            <section className="hero auth-hero">
+              <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+            </section>
+            <main className="middle-section simple-page">
+              <p>Loading…</p>
+            </main>
+            <SiteFooter />
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="home-page">
         <div className="middle-page-frame">
