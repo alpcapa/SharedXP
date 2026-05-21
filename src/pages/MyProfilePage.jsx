@@ -135,7 +135,7 @@ const getInitialFormValues = (user) => {
   };
 };
 
-const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, onUpdateProfile }) => {
+const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onUpdateProfile }) => {
   const navigate = useNavigate();
   const photoInputRef = useRef(null);
   const countryDropdownRef = useRef(null);
@@ -155,6 +155,7 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [citySearchValue, setCitySearchValue] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [invalidField, setInvalidField] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle"); // "idle" | "saving" | "saved"
   const [showEmailConfirmDialog, setShowEmailConfirmDialog] = useState(false);
@@ -264,6 +265,21 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
   }, [isPhoneCodeDropdownOpen, selectedPhoneCodeCountry]);
 
   if (!currentUser) {
+    if (authLoading) {
+      return (
+        <div className="home-page">
+          <div className="middle-page-frame">
+            <section className="hero auth-hero">
+              <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+            </section>
+            <main className="middle-section simple-page">
+              <p>Loading…</p>
+            </main>
+            <SiteFooter />
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="home-page">
         <div className="middle-page-frame">
@@ -331,24 +347,18 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
 
   const onSubmit = async (event) => {
     event.preventDefault();
-    if (!selectedCountry) {
-      setSuccessMessage("");
-      setErrorMessage("Please select a valid country from the list.");
-      return;
-    }
-    if (!formValues.city.trim()) {
-      setSuccessMessage("");
-      setErrorMessage("Please select a valid city from the list.");
-      return;
-    }
+    const err = (msg, field) => { setSuccessMessage(""); setErrorMessage(msg); setInvalidField(field); };
+    if (!formValues.email.trim()) return err("Please enter your email address.", "email");
+    if (!formValues.addressLine1.trim()) return err("Please enter your address.", "addressLine1");
+    if (!selectedCountry) return err("Please select a valid country from the list.", "country-selector");
+    if (!formValues.city.trim()) return err("Please select a valid city from the list.", "city-selector");
+    if (!formValues.phone.trim()) return err("Please enter your phone number.", "phone");
+    if (!formValues.languages[0].trim()) return err("Please select your native language.", "profile-language-0");
+    if (!formValues.sports[0].trim()) return err("Please select your favorite sport.", "profile-sport-0");
     const dialCountry = formValues.phoneCountryCode
       ? COUNTRY_OPTIONS.find((c) => c.code === formValues.phoneCountryCode)
       : selectedCountry;
-    if (!dialCountry) {
-      setSuccessMessage("");
-      setErrorMessage("Please select a valid phone area code.");
-      return;
-    }
+    if (!dialCountry) return err("Please select a valid phone area code.", "phone");
 
     let nextPhoto = formValues.photo;
     if (selectedPhotoFile) {
@@ -406,6 +416,7 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
       return;
     }
     setErrorMessage("");
+    setInvalidField("");
     setSaveStatus("saved");
     setTimeout(() => setSaveStatus("idle"), 2000);
 
@@ -485,6 +496,8 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
             cityDropdown={cityDropdown}
             phoneCodeDropdown={phoneCodeDropdown}
             errorMessage={errorMessage}
+            invalidField={invalidField}
+            onClearError={() => { setErrorMessage(""); setInvalidField(""); }}
             successMessage={successMessage}
             saveStatus={saveStatus}
             onInputChange={onInputChange}

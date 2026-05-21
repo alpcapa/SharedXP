@@ -126,55 +126,52 @@ export const getInitialHostProfile = (user) => {
 // failing sport (null for non-sport errors). Callers can auto-switch to the
 // failing sport tab and scroll to the error.
 export const validateSportsTab = (draft) => {
-  if (!draft.country.trim()) return { message: "Please choose your host country.", sportIndex: null };
-  if (!draft.city.trim()) return { message: "Please choose your host city.", sportIndex: null };
+  if (!draft.country.trim()) return { message: "Please choose your host country.", sportIndex: null, fieldId: "host-country-selector" };
+  if (!draft.city.trim()) return { message: "Please choose your host city.", sportIndex: null, fieldId: "host-city-selector" };
   const missingConsent = REQUIRED_HOST_CONSENTS.find(
     (c) => !draft.consents?.[c.field]
   );
-  if (missingConsent) return { message: missingConsent.message, sportIndex: null };
+  if (missingConsent) return { message: missingConsent.message, sportIndex: null, fieldId: missingConsent.field === "agreeTermsAndConditions" ? "hostAgreeTermsAndConditions" : "hostAgreeHostingRelatedEmailsAndCalls" };
 
   const empty = createEmptySportConfig().availability;
-  const invalidIndex = draft.sports.findIndex((s) => {
+  for (let i = 0; i < draft.sports.length; i++) {
+    const s = draft.sports[i];
+    const label = s.sport || `Sport ${i + 1}`;
     const availability = s.availability ?? empty;
-    return (
-      !s.sport.trim() ||
-      !s.description.trim() ||
-      !s.about.trim() ||
-      !s.pricing ||
-      Number(s.pricing) < 1 ||
-      !s.pricingCurrency.trim() ||
-      !s.level.trim() ||
-      (s.equipmentAvailable && !s.equipmentDetails.trim()) ||
-      availability.days.length === 0 ||
-      !availability.startTime ||
-      !availability.endTime
-    );
-  });
-  if (invalidIndex !== -1)
-    return { message: `Complete all required fields for Sport ${invalidIndex + 1}.`, sportIndex: invalidIndex };
+    if (!s.sport.trim()) return { message: `Please select a sport for Sport ${i + 1}.`, sportIndex: i, fieldId: "sportType" };
+    if (!s.description.trim()) return { message: `Please add a description for ${label}.`, sportIndex: i, fieldId: "sportDescription" };
+    if (!s.about.trim()) return { message: `Please add an "About" bio for ${label}.`, sportIndex: i, fieldId: "sportAbout" };
+    if (!s.pricing || Number(s.pricing) < 1) return { message: `Please set a price (at least 1) for ${label}.`, sportIndex: i, fieldId: "sportPricing" };
+    if (!s.pricingCurrency.trim()) return { message: `Please select a pricing currency for ${label}.`, sportIndex: i, fieldId: "sportPricingCurrency" };
+    if (!s.level.trim()) return { message: `Please select a level for ${label}.`, sportIndex: i, fieldId: "sportLevel" };
+    if (s.equipmentAvailable && !s.equipmentDetails.trim()) return { message: `Please describe the equipment you provide for ${label}.`, sportIndex: i, fieldId: "equipmentDetails" };
+    if (availability.days.length === 0) return { message: `Please select at least one availability day for ${label}.`, sportIndex: i, fieldId: "host-availability-days" };
+    if (!availability.startTime) return { message: `Please set an availability start time for ${label}.`, sportIndex: i, fieldId: "availabilityStart" };
+    if (!availability.endTime) return { message: `Please set an availability end time for ${label}.`, sportIndex: i, fieldId: "availabilityEnd" };
+  }
 
   const missingPhotoIndex = draft.sports.findIndex(
     (s) => s.images.length === 0
   );
   if (missingPhotoIndex !== -1)
-    return { message: `Please add at least one photo for Sport ${missingPhotoIndex + 1}.`, sportIndex: missingPhotoIndex };
+    return { message: `Please add at least one photo for Sport ${missingPhotoIndex + 1}.`, sportIndex: missingPhotoIndex, fieldId: "hostPhotoUpload" };
 
-  return { message: "", sportIndex: null };
+  return { message: "", sportIndex: null, fieldId: null };
 };
 
 export const validatePaymentTab = (draft) => {
-  const fields = [
-    draft.stripe.stripeEmail,
-    draft.stripe.accountHolderName,
-    draft.stripe.citizenIdNumber,
-    draft.stripe.taxNumber,
-    draft.stripe.bankName,
-    draft.stripe.accountNumber,
-    draft.stripe.routingNumber,
-    draft.stripe.payoutCurrency,
+  const checks = [
+    [draft.stripe.stripeEmail, "Please enter your Stripe email.", "stripeEmail"],
+    [draft.stripe.accountHolderName, "Please enter the account holder name.", "accountHolderName"],
+    [draft.stripe.citizenIdNumber, "Please enter your citizen ID number.", "citizenIdNumber"],
+    [draft.stripe.taxNumber, "Please enter your tax number.", "taxNumber"],
+    [draft.stripe.bankName, "Please enter your bank name.", "bankName"],
+    [draft.stripe.accountNumber, "Please enter your account number / IBAN.", "accountNumber"],
+    [draft.stripe.routingNumber, "Please enter your routing number / SWIFT.", "routingNumber"],
+    [draft.stripe.payoutCurrency, "Please select a payout currency.", "payoutCurrency"],
   ];
-  if (fields.some((value) => !String(value ?? "").trim())) {
-    return "Please complete all bank detail fields.";
+  for (const [value, message, fieldId] of checks) {
+    if (!String(value ?? "").trim()) return { message, fieldId };
   }
-  return "";
+  return { message: "", fieldId: null };
 };
