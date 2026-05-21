@@ -104,7 +104,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
-        <main className="admin-main">
+        <main className="middle-section admin-main">
         <h1 className="admin-title">Admin Panel</h1>
 
         <div className="admin-tabs">
