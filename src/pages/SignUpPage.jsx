@@ -213,8 +213,28 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
 
   const onEmailSubmit = async (event) => {
     event.preventDefault();
+    if (!formValues.firstName.trim()) {
+      setErrorMessage("Please enter your first name.");
+      return;
+    }
+    if (!formValues.lastName.trim()) {
+      setErrorMessage("Please enter your last name.");
+      return;
+    }
+    if (!formValues.email.trim()) {
+      setErrorMessage("Please enter your email address.");
+      return;
+    }
+    if (formValues.password.length < 8) {
+      setErrorMessage("Password must be at least 8 characters.");
+      return;
+    }
     if (formValues.password !== formValues.confirmPassword) {
       setErrorMessage("Password confirmation does not match.");
+      return;
+    }
+    if (!formValues.addressLine1.trim()) {
+      setErrorMessage("Please enter your address.");
       return;
     }
     if (!selectedCountry) {
@@ -223,6 +243,18 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     }
     if (!formValues.city.trim()) {
       setErrorMessage("Please select a valid city from the list.");
+      return;
+    }
+    if (!formValues.phone.trim()) {
+      setErrorMessage("Please enter your phone number.");
+      return;
+    }
+    if (!formValues.languages[0].trim()) {
+      setErrorMessage("Please select your native language.");
+      return;
+    }
+    if (!formValues.sports[0].trim()) {
+      setErrorMessage("Please select your favorite sport.");
       return;
     }
     if (!formValues.agreeTermsAndConditions) {

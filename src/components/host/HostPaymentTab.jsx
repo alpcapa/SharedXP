@@ -135,7 +135,12 @@ const HostPaymentTab = ({
         </div>
       </section>
 
-      {errorMessage && <p className="auth-error">{errorMessage}</p>}
+      {errorMessage && (
+        <p className="auth-error" role="alert">
+          <span aria-hidden="true">⚠</span>
+          {errorMessage}
+        </p>
+      )}
       {successMessage && (
         <p className="host-success-message">{successMessage}</p>
       )}

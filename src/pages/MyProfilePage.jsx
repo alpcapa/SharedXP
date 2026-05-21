@@ -331,6 +331,16 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
 
   const onSubmit = async (event) => {
     event.preventDefault();
+    if (!formValues.email.trim()) {
+      setSuccessMessage("");
+      setErrorMessage("Please enter your email address.");
+      return;
+    }
+    if (!formValues.addressLine1.trim()) {
+      setSuccessMessage("");
+      setErrorMessage("Please enter your address.");
+      return;
+    }
     if (!selectedCountry) {
       setSuccessMessage("");
       setErrorMessage("Please select a valid country from the list.");
@@ -339,6 +349,21 @@ const MyProfilePage = ({ currentUser, onLogout, onEmailLogin, onForgotPassword, 
     if (!formValues.city.trim()) {
       setSuccessMessage("");
       setErrorMessage("Please select a valid city from the list.");
+      return;
+    }
+    if (!formValues.phone.trim()) {
+      setSuccessMessage("");
+      setErrorMessage("Please enter your phone number.");
+      return;
+    }
+    if (!formValues.languages[0].trim()) {
+      setSuccessMessage("");
+      setErrorMessage("Please select your native language.");
+      return;
+    }
+    if (!formValues.sports[0].trim()) {
+      setSuccessMessage("");
+      setErrorMessage("Please select your favorite sport.");
       return;
     }
     const dialCountry = formValues.phoneCountryCode

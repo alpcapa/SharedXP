@@ -1421,9 +1421,17 @@ body {
 }
 
 .auth-error {
-  margin: 2px 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
   color: #b91c1c;
   font-size: 13px;
+  line-height: 1.5;
 }
 
 .auth-success {
