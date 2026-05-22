@@ -56,7 +56,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
   if (!currentUser) {
     if (authLoading) {
       return (
-        <div className="home-page">
+        <div className="home-page payment-page">
           <div className="middle-page-frame">
             <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
             <p className="payment-loading">Loading…</p>
@@ -66,7 +66,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
       );
     }
     return (
-      <div className="home-page">
+      <div className="home-page payment-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
@@ -80,7 +80,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
 
   if (loading) {
     return (
-      <div className="home-page">
+      <div className="home-page payment-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <p className="payment-loading">Loading booking details…</p>
@@ -92,7 +92,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
 
   if (!booking) {
     return (
-      <div className="home-page">
+      <div className="home-page payment-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="payment-main">
@@ -157,7 +157,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
 
   if (paid) {
     return (
-      <div className="home-page">
+      <div className="home-page payment-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="payment-main">
@@ -184,7 +184,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
   }
 
   return (
-    <div className="home-page">
+    <div className="home-page payment-page">
       <div className="middle-page-frame">
         <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
         <main className="payment-main">
