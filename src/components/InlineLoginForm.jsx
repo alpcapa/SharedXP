@@ -40,10 +40,10 @@ const InlineLoginForm = ({ onEmailLogin, onForgotPassword, title, description })
   };
 
   return (
-    <div className="inline-login-wrap">
-      <h1>{title ?? "Please log in"}</h1>
-      {description && <p className="inline-login-desc">{description}</p>}
-      <form className="auth-form inline-login-form" onSubmit={handleSubmit}>
+    <section className="auth-content">
+      <h1>{resetMode ? "Forgot Password?" : (title ?? "Log in")}</h1>
+      {!resetMode && <p>{description ?? "Log in with your email account."}</p>}
+      <form className="auth-form" onSubmit={handleSubmit}>
         <label htmlFor="il-email">Email</label>
         <input
           id="il-email"
@@ -72,19 +72,19 @@ const InlineLoginForm = ({ onEmailLogin, onForgotPassword, title, description })
           {loading ? (resetMode ? "Sending…" : "Logging in…") : (resetMode ? "Send reset link" : "Log in")}
         </button>
       </form>
-      <div className="inline-login-footer">
+      <div className="auth-footnote auth-footnote-row">
         <button
           type="button"
           className="auth-text-link"
           onClick={() => { setResetMode((m) => !m); setError(""); setResetMessage(""); }}
         >
-          {resetMode ? "Back to log in" : "Forgot password?"}
+          {resetMode ? "Back to Log in" : "Forgot Password?"}
         </button>
-        <p className="inline-login-alt">
-          Don't have an account? <Link to="/signup">Sign up</Link>
+        <p className="auth-footnote-signup">
+          Need an account? <Link to="/signup">Sign up</Link>
         </p>
       </div>
-    </div>
+    </section>
   );
 };
 
