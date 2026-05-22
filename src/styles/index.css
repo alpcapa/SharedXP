@@ -5072,9 +5072,8 @@ body {
 }
 
 .payment-main {
-  flex: 1;
   max-width: 1000px;
-  margin: 0 auto;
+  margin: 20px auto 0;
   padding: 24px 20px 60px;
   width: 100%;
 }
