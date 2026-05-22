@@ -61,8 +61,8 @@ const LegalPage = ({ currentUser, onLogout }) => {
                 </li>
                 <li>
                   <strong>Community Manager Policy</strong>: governs participation in the SharedXP Community Manager
-                  Program, including eligibility, responsibilities, invite code rules, commission structure (5% of
-                  gross booking value), payment process, prohibited conduct, and status changes. Read at{" "}
+                  Program, including eligibility, responsibilities, invite code rules, commission structure,
+                  payment process, prohibited conduct, and status changes. Read at{" "}
                   <Link to="/community-manager-policy">/community-manager-policy</Link>.
                 </li>
               </ul>
