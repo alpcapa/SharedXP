@@ -7095,3 +7095,420 @@ body {
     font-family: inherit;
   }
 }
+
+/* ── Community Manager system ─────────────────────────────────────────────── */
+
+/* Sign-up optional label hint */
+.auth-optional {
+  font-size: 12px;
+  color: #aaa;
+  font-weight: 400;
+}
+
+/* CM apply banner in Host Settings */
+.cm-host-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #f5f5f2;
+  border: 1px solid #e0e0d8;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-top: 32px;
+}
+.cm-host-banner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cm-host-banner-info strong {
+  font-size: 15px;
+  color: #1a1a1a;
+}
+.cm-host-banner-info span {
+  font-size: 13px;
+  color: #666;
+}
+
+/* CM application modal */
+.cm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.cm-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.cm-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px;
+}
+.cm-modal-intro {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
+.cm-application-form label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+.cm-application-form textarea,
+.cm-application-form input[type="text"] {
+  width: 100%;
+  border: 1px solid #d8d8d0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  color: #1a1a1a;
+}
+.cm-application-form textarea:focus,
+.cm-application-form input[type="text"]:focus {
+  outline: none;
+  border-color: #1a1a1a;
+}
+.cm-form-error {
+  color: #e53e3e;
+  font-size: 13px;
+  margin-top: 12px;
+}
+.cm-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+.cm-modal-success {
+  text-align: center;
+  padding: 16px 0;
+}
+.cm-modal-success p {
+  font-size: 15px;
+  color: #2d7d2d;
+  margin-bottom: 20px;
+}
+
+/* CM Dashboard */
+.cm-dashboard {
+  max-width: 820px;
+}
+.cm-dashboard-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #1a1a1a;
+}
+.cm-dashboard-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 28px;
+}
+.cm-invite-card {
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 32px;
+}
+.cm-invite-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+  margin: 0 0 10px;
+}
+.cm-invite-code-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cm-invite-code {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+}
+.cm-copy-btn {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cm-copy-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+.cm-invite-hint {
+  font-size: 12px;
+  color: #aaa;
+  margin: 12px 0 0;
+  line-height: 1.5;
+}
+.cm-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.cm-stat-card {
+  background: #f5f5f2;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+}
+.cm-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 4px;
+}
+.cm-stat-label {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+.cm-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: #1a1a1a;
+}
+.cm-empty {
+  color: #888;
+  font-size: 14px;
+}
+.cm-commission-table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e8e9e4;
+}
+.cm-commission-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.cm-commission-table th {
+  background: #f5f5f2;
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #444;
+  border-bottom: 1px solid #e8e9e4;
+  white-space: nowrap;
+}
+.cm-commission-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #e8e9e4;
+  color: #1a1a1a;
+}
+.cm-commission-table tr:last-child td {
+  border-bottom: none;
+}
+.cm-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.cm-status-pending { background: #fff8e1; color: #b45309; }
+.cm-status-approved { background: #e8f5e9; color: #2e7d32; }
+.cm-status-paid { background: #e3f2fd; color: #1565c0; }
+
+/* Admin CM panel */
+.cm-admin-panel {
+  margin-top: 24px;
+}
+.cm-admin-subtabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.cm-admin-card {
+  background: #fff;
+  border: 1px solid #e8e9e4;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.cm-admin-card-closed {
+  background: #fafafa;
+  opacity: 0.85;
+}
+.cm-admin-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.cm-admin-card-header strong {
+  display: block;
+  font-size: 15px;
+  color: #1a1a1a;
+  margin-bottom: 2px;
+}
+.cm-admin-email {
+  display: block;
+  font-size: 12px;
+  color: #888;
+}
+.cm-admin-location {
+  display: block;
+  font-size: 12px;
+  color: #888;
+}
+.cm-admin-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cm-badge-pending { background: #fff8e1; color: #b45309; }
+.cm-badge-interview { background: #e8f4ff; color: #1565c0; }
+.cm-badge-accepted { background: #e8f5e9; color: #2e7d32; }
+.cm-badge-declined { background: #fdecea; color: #c62828; }
+.cm-admin-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.cm-admin-fields p {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+}
+.cm-admin-notes-row {
+  margin-bottom: 14px;
+}
+.cm-admin-notes-row label {
+  display: block;
+  margin-bottom: 6px;
+}
+.cm-admin-notes {
+  width: 100%;
+  border: 1px solid #d8d8d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.cm-admin-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e53e3e;
+  color: #fff;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  margin-left: 6px;
+  line-height: 1.4;
+}
+.cm-admin-stats-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 14px;
+}
+.cm-admin-stats-row strong { color: #1a1a1a; }
+.cm-invite-code-pill {
+  display: inline-block;
+  background: #f5f5f2;
+  border: 1px solid #d8d8d0;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+.cm-admin-pending-comms {
+  background: #fffbf0;
+  border: 1px solid #f0e0b0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+.cm-pending-comm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0e0b0;
+  font-size: 14px;
+}
+.cm-pending-comm-row:last-child { border-bottom: none; }
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+.cm-admin-closed {
+  margin-top: 20px;
+}
+.cm-admin-closed summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  padding: 8px 0;
+  user-select: none;
+}
+.cm-admin-note-preview {
+  font-size: 13px;
+  color: #888;
+  margin: 6px 0 0;
+  font-style: italic;
+}
+
+@media (max-width: 600px) {
+  .cm-host-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cm-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .cm-invite-code {
+    font-size: 22px;
+  }
+  .cm-modal {
+    padding: 24px 20px;
+  }
+  .cm-admin-card-header {
+    flex-direction: column;
+  }
+}

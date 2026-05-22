@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import InlineLoginForm from "../components/InlineLoginForm";
@@ -14,7 +14,7 @@ import {
   validateSportsTab,
 } from "../components/host/hostUtils";
 
-const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onSaveHostProfile, onTogglePauseHosting }) => {
+const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onSaveHostProfile, onTogglePauseHosting, onSubmitCmApplication }) => {
   const location = useLocation();
   const isHostSettingsRoute = location.pathname === "/host-settings";
 
@@ -222,6 +222,42 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
     filteredOptions: filteredCityOptions,
   };
 
+  const navigate = useNavigate();
+  const [showCmModal, setShowCmModal] = useState(false);
+  const [cmForm, setCmForm] = useState({ sportsBackground: "", motivation: "", contactTimes: "" });
+  const [cmError, setCmError] = useState("");
+  const [cmSubmitting, setCmSubmitting] = useState(false);
+  const [cmSuccess, setCmSuccess] = useState(false);
+
+  const hostedCount = currentUser?.hostHistory?.length ?? 0;
+  const cmEligible = currentUser?.isHost && hostedCount >= 3;
+
+  const onCmFormChange = (e) => {
+    const { name, value } = e.target;
+    setCmForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const onCmSubmit = async (e) => {
+    e.preventDefault();
+    if (!cmForm.sportsBackground.trim()) { setCmError("Please describe your sports background."); return; }
+    if (!cmForm.motivation.trim()) { setCmError("Please share your motivation."); return; }
+    setCmError("");
+    setCmSubmitting(true);
+    const result = await onSubmitCmApplication?.({
+      city: currentUser?.city || "",
+      country: currentUser?.country || "",
+      sportsBackground: cmForm.sportsBackground.trim(),
+      motivation: cmForm.motivation.trim(),
+      contactTimes: cmForm.contactTimes.trim(),
+    });
+    setCmSubmitting(false);
+    if (result?.success === false) {
+      setCmError(result.message || "Submission failed. Please try again.");
+    } else {
+      setCmSuccess(true);
+    }
+  };
+
   return (
     <div className="home-page">
       <div className="middle-page-frame">
@@ -397,6 +433,83 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
               onClearError={onClearError}
               onSubmit={onSavePayment}
             />
+          )}
+
+          {currentUser?.isCm ? (
+            <div className="cm-host-banner">
+              <div className="cm-host-banner-info">
+                <strong>Community Manager</strong>
+                <span>Your invite code is active. View your dashboard for stats and commissions.</span>
+              </div>
+              <button type="button" className="btn btn-primary" onClick={() => navigate("/cm-dashboard")}>
+                CM Dashboard
+              </button>
+            </div>
+          ) : cmEligible ? (
+            <div className="cm-host-banner">
+              <div className="cm-host-banner-info">
+                <strong>Become a Community Manager</strong>
+                <span>You have {hostedCount} completed hosting experience{hostedCount !== 1 ? "s" : ""}. You're eligible to apply!</span>
+              </div>
+              <button type="button" className="btn btn-primary" onClick={() => setShowCmModal(true)}>
+                Apply Now
+              </button>
+            </div>
+          ) : null}
+
+          {showCmModal && (
+            <div className="cm-modal-backdrop" onClick={() => setShowCmModal(false)}>
+              <div className="cm-modal" onClick={(e) => e.stopPropagation()}>
+                <h2 className="cm-modal-title">Apply to Become a Community Manager</h2>
+                <p className="cm-modal-intro">
+                  Tell us about yourself and why you'd be a great SharedXP ambassador.
+                  We'll review your application and get back to you within 5 business days.
+                </p>
+                {cmSuccess ? (
+                  <div className="cm-modal-success">
+                    <p>Your application has been submitted. We'll be in touch soon!</p>
+                    <button type="button" className="btn btn-primary" onClick={() => setShowCmModal(false)}>Close</button>
+                  </div>
+                ) : (
+                  <form onSubmit={onCmSubmit} className="cm-application-form">
+                    <label htmlFor="cm-sports-bg">Your sports background</label>
+                    <textarea
+                      id="cm-sports-bg"
+                      name="sportsBackground"
+                      rows={3}
+                      placeholder="Describe your sports experience, disciplines you practice, and your community involvement…"
+                      value={cmForm.sportsBackground}
+                      onChange={onCmFormChange}
+                    />
+                    <label htmlFor="cm-motivation">Why do you want to be a CM?</label>
+                    <textarea
+                      id="cm-motivation"
+                      name="motivation"
+                      rows={3}
+                      placeholder="Tell us what motivates you to grow the SharedXP community…"
+                      value={cmForm.motivation}
+                      onChange={onCmFormChange}
+                    />
+                    <label htmlFor="cm-contact">Best times to contact you <span className="auth-optional">(optional)</span></label>
+                    <input
+                      id="cm-contact"
+                      name="contactTimes"
+                      type="text"
+                      placeholder="e.g. Weekday evenings after 6 pm CET"
+                      value={cmForm.contactTimes}
+                      onChange={onCmFormChange}
+                    />
+                    {cmError && <p className="cm-form-error" role="alert">{cmError}</p>}
+                    <div className="cm-modal-actions">
+                      <button type="button" className="btn btn-secondary" onClick={() => setShowCmModal(false)}>Cancel</button>
+                      <button type="submit" className="btn btn-primary" disabled={cmSubmitting}>
+                        {cmSubmitting ? "Submitting…" : "Submit Application"}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
           )}
         </main>
 

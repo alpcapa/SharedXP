@@ -426,6 +426,17 @@ const SignUpForm = ({
       ))}
     </div>
 
+    <label htmlFor="inviteCode">Invite code <span className="auth-optional">(optional)</span></label>
+    <input
+      id="inviteCode"
+      name="inviteCode"
+      type="text"
+      placeholder="SXP-BCN-X7K2"
+      className={fi("inviteCode")}
+      value={formValues.inviteCode}
+      onChange={onInputChange}
+    />
+
     <div className="form-consent-group">
       <label
         className="form-consent-option"

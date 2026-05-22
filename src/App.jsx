@@ -33,6 +33,7 @@ import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import CancellationPolicyPage from "./pages/CancellationPolicyPage";
 import CommunityManagerPolicyPage from "./pages/CommunityManagerPolicyPage";
+import CMDashboardPage from "./pages/CMDashboardPage";
 import AuthConfirmPage from "./pages/AuthConfirmPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { hasRecoveryType } from "./utils/recoveryLink";
@@ -139,6 +140,7 @@ function App() {
       <Route path="/disclaimers" element={<DisclaimersPage {...authActions} />} />
       <Route path="/cancellation-policy" element={<CancellationPolicyPage {...authActions} />} />
       <Route path="/community-manager-policy" element={<CommunityManagerPolicyPage {...authActions} />} />
+      <Route path="/cm-dashboard" element={<CMDashboardPage {...authActions} />} />
       <Route path="/about" element={<AboutPage {...authActions} />} />
       <Route path="/events" element={<EventsPage {...authActions} />} />
       <Route path="/auth/confirm" element={<AuthConfirmPage />} />

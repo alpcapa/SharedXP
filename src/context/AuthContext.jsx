@@ -189,6 +189,18 @@ const { error: insError } = await supabase.from("bookings").insert(rows);
 if (insError) console.error("[auth] syncBookings insert:", insError);
 };
 
+const buildCmProfileObject = (cmProfile) => {
+if (!cmProfile) return null;
+return {
+id: cmProfile.id,
+inviteCode: cmProfile.invite_code || "",
+status: cmProfile.status || "active",
+city: cmProfile.city || "",
+country: cmProfile.country || "",
+createdAt: cmProfile.created_at || "",
+};
+};
+
 const buildUserObject = (
 authUser,
 profile,
@@ -196,7 +208,8 @@ languages,
 sports,
 hostProfile,
 hostSports,
-bookings
+bookings,
+cmProfile
 ) => {
 if (!authUser) return null;
 const p = profile || {};
@@ -233,7 +246,9 @@ sports: normalizeSports(
 signedUpAt: p.signed_up_at || authUser.created_at || new Date().toISOString(),
 isHost: p.is_host || false,
 isAdmin: p.is_admin || false,
+isCm: !!(cmProfile && cmProfile.status === "active"),
 hostProfile: buildHostProfileObject(hostProfile, hostSports),
+cmProfile: buildCmProfileObject(cmProfile),
 history: bookings?.history ?? [],
 hostHistory: bookings?.hostHistory ?? [],
 agreedToTermsAndConditions: p.agreed_to_terms || false,
@@ -295,6 +310,21 @@ if (!profile) {
     const { langRows, sportRows } = await upsertLanguagesAndSports(authUser.id, meta.languages || [], meta.sports || []);
     languagesData = langRows;
     sportsData = sportRows;
+    // Process invite code if provided at sign-up.
+    if (meta.inviteCode) {
+      const { data: cmRow } = await supabase
+        .from("cm_profiles")
+        .select("id")
+        .eq("invite_code", meta.inviteCode.trim().toUpperCase())
+        .eq("status", "active")
+        .maybeSingle();
+      if (cmRow) {
+        await supabase.from("cm_referrals").insert({
+          cm_id: cmRow.id,
+          referred_user_id: authUser.id,
+        });
+      }
+    }
   } else {
     // OAuth sign-in (Google / Apple) — seed profile from provider metadata
     const om = authUser.user_metadata || {};
@@ -356,6 +386,12 @@ hostSports = hs || [];
 }
 }
 
+const { data: cmProfileRow } = await supabase
+  .from("cm_profiles")
+  .select("*")
+  .eq("user_id", authUser.id)
+  .maybeSingle();
+
 return buildUserObject(
 authUser,
 profile,
@@ -363,7 +399,8 @@ languagesData,
 sportsData,
 hostProfile,
 hostSports,
-bookings
+bookings,
+cmProfileRow
 );
 };
 
@@ -1014,6 +1051,40 @@ setCurrentUser((prev) =>
 prev ? { ...prev, hostHistory: items } : null
 );
 syncBookings(currentUser.id, "hosted", items);
+},
+
+onSubmitCmApplication: async (formData) => {
+if (!currentUser) return { success: false, message: "Not logged in." };
+const { data: existing } = await supabase
+  .from("cm_applications")
+  .select("id, status")
+  .eq("user_id", currentUser.id)
+  .maybeSingle();
+if (existing) {
+  return {
+    success: false,
+    message: existing.status === "declined"
+      ? "Your previous application was declined. Please contact support if you believe this is an error."
+      : "You already have an application on file.",
+  };
+}
+const { error } = await supabase.from("cm_applications").insert({
+  user_id: currentUser.id,
+  city: formData.city || currentUser.city || "",
+  country: formData.country || currentUser.country || "",
+  sports_background: formData.sportsBackground || "",
+  motivation: formData.motivation || "",
+  contact_times: formData.contactTimes || "",
+});
+if (error) {
+  console.error("[auth] onSubmitCmApplication:", error);
+  return { success: false, message: error.message || "Submission failed. Please try again." };
+}
+// Fire-and-forget confirmation email.
+supabase.functions.invoke("booking-notify", {
+  body: { emailType: "cm_application_received", userId: currentUser.id },
+}).catch((e) => console.error("[auth] cm application email:", e));
+return { success: true };
 },
 }),
 [currentUser, authLoading]
