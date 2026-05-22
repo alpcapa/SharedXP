@@ -59,6 +59,12 @@ const LegalPage = ({ currentUser, onLogout }) => {
                   cancelled bookings. Read at{" "}
                   <Link to="/cancellation-policy">/cancellation-policy</Link>.
                 </li>
+                <li>
+                  <strong>Community Manager Policy</strong>: governs participation in the SharedXP Community Manager
+                  Program, including eligibility, responsibilities, invite code rules, commission structure,
+                  payment process, prohibited conduct, and status changes. Read at{" "}
+                  <Link to="/community-manager-policy">/community-manager-policy</Link>.
+                </li>
               </ul>
             </section>
 
