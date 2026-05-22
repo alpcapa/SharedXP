@@ -6,6 +6,7 @@ import InlineLoginForm from "../components/InlineLoginForm";
 import { supabase } from "../lib/supabase";
 import { COMMISSION_RATE, TAX_RATE, toNSU, formatCurrency as fmt } from "../utils/pricing";
 import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../utils/cancellationPolicy";
+import { sendNotification } from "../utils/sendNotification";
 
 const AUTO_CONFIRM_MS = 72 * 60 * 60 * 1000; // 72 hours after midnight
 
@@ -56,19 +57,17 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
   if (!currentUser) {
     if (authLoading) {
       return (
-        <div className="payment-page">
+        <div className="home-page payment-page">
           <div className="middle-page-frame">
-            <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-          </div>
-          <p className="payment-loading">Loading…</p>
-          <div className="middle-page-frame">
+            <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
+            <p className="payment-loading">Loading…</p>
             <SiteFooter />
           </div>
         </div>
       );
     }
     return (
-      <div className="home-page">
+      <div className="home-page payment-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
@@ -82,12 +81,10 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
 
   if (loading) {
     return (
-      <div className="payment-page">
+      <div className="home-page payment-page">
         <div className="middle-page-frame">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-        </div>
-        <p className="payment-loading">Loading booking details…</p>
-        <div className="middle-page-frame">
+          <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
+          <p className="payment-loading">Loading booking details…</p>
           <SiteFooter />
         </div>
       </div>
@@ -96,16 +93,14 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
 
   if (!booking) {
     return (
-      <div className="payment-page">
+      <div className="home-page payment-page">
         <div className="middle-page-frame">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-        </div>
-        <main className="payment-main">
-          <h1>Booking not found</h1>
-          <p>This booking may not exist, may already be paid, or you may not have permission to view it.</p>
-          <Link to="/history?tab=pending" className="btn btn-primary">Back to History</Link>
-        </main>
-        <div className="middle-page-frame">
+          <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
+          <main className="payment-main">
+            <h1>Booking not found</h1>
+            <p>This booking may not exist, may already be paid, or you may not have permission to view it.</p>
+            <Link to="/history?tab=pending" className="btn btn-primary">Back to History</Link>
+          </main>
           <SiteFooter />
         </div>
       </div>
@@ -157,34 +152,34 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
       xp_earned: toNSU(gross, booking.currency),
     });
 
+    sendNotification("payment_processed_to_host", booking.id);
+
     setPaid(true);
     setPaying(false);
   };
 
   if (paid) {
     return (
-      <div className="payment-page">
+      <div className="home-page payment-page">
         <div className="middle-page-frame">
-          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-        </div>
-        <main className="payment-main">
-          <div className="payment-success">
-            <div className="payment-success-icon">✓</div>
-            <h1>Payment confirmed!</h1>
-            <p>Your <strong>{booking.sport}</strong> experience with <strong>{hostName}</strong> on {fmtDate(booking.requested_date)} at {fmtTime(booking.requested_time)} is now confirmed.</p>
-            <p className="payment-booking-ref">Booking ref: #{booking.id.slice(0, 8).toUpperCase()}</p>
-            <p className="payment-success-sub">You can message the host directly for meeting details.</p>
-            <div className="payment-success-actions">
-              <Link to={`/chat/${booking.id}`} className="find-button">
-                Message {hostName}
-              </Link>
-              <Link to="/history?tab=pending" className="btn btn-light">
-                View History
-              </Link>
+          <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
+          <main className="payment-main">
+            <div className="payment-success">
+              <div className="payment-success-icon">✓</div>
+              <h1>Payment confirmed!</h1>
+              <p>Your <strong>{booking.sport}</strong> experience with <strong>{hostName}</strong> on {fmtDate(booking.requested_date)} at {fmtTime(booking.requested_time)} is now confirmed.</p>
+              <p className="payment-booking-ref">Booking ref: #{booking.id.slice(0, 8).toUpperCase()}</p>
+              <p className="payment-success-sub">You can message the host directly for meeting details.</p>
+              <div className="payment-success-actions">
+                <Link to={`/chat/${booking.id}`} className="find-button">
+                  Message {hostName}
+                </Link>
+                <Link to="/history?tab=pending" className="btn btn-light">
+                  View History
+                </Link>
+              </div>
             </div>
-          </div>
-        </main>
-        <div className="middle-page-frame">
+          </main>
           <SiteFooter />
         </div>
       </div>
@@ -192,11 +187,10 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
   }
 
   return (
-    <div className="payment-page">
+    <div className="home-page payment-page">
       <div className="middle-page-frame">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-      </div>
-      <main className="payment-main">
+        <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
+        <main className="payment-main">
         <div className="payment-back-row">
           <Link to="/history?tab=pending" className="back-link">← Back to History</Link>
         </div>
@@ -317,8 +311,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
             </p>
           </section>
         </div>
-      </main>
-      <div className="middle-page-frame">
+        </main>
         <SiteFooter />
       </div>
     </div>
