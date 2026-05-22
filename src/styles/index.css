@@ -73,8 +73,8 @@ body {
 }
 
 .auth-hero + .middle-section.simple-page {
-  width: 100%;
-  margin: 10px 0 0;
+  width: auto;
+  margin: 10px 10px 0;
   padding: 36px 28px 40px;
   background: #fff;
   border-radius: 16px;
@@ -82,8 +82,8 @@ body {
 }
 
 .auth-hero + .middle-section.admin-main {
-  width: 100%;
-  margin: 10px 0 0;
+  width: auto;
+  margin: 10px 10px 0;
   padding: 28px 28px 48px;
   background: #fff;
   border-radius: 16px;
@@ -91,8 +91,8 @@ body {
 }
 
 .auth-hero + .middle-section.auth-page {
-  width: 100%;
-  margin: 10px 0 0;
+  width: auto;
+  margin: 10px 10px 0;
   padding: 36px 28px 40px;
   background: #fff;
   border-radius: 16px;
