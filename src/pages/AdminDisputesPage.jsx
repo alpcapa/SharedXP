@@ -13,6 +13,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
+  const [activeTab, setActiveTab] = useState("disputes");
   const { resolveDispute } = useBookingRequests(currentUser);
 
   const fetchDisputes = useCallback(async () => {
@@ -95,8 +96,6 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
     profile
       ? (profile.full_name || `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "Unknown")
       : "Unknown";
-
-  const [activeTab, setActiveTab] = useState("disputes");
 
   return (
     <div className="home-page">

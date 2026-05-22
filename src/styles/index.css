@@ -73,8 +73,11 @@ body {
 }
 
 .auth-hero + .middle-section.simple-page {
-  padding-top: 20px;
-  margin-top: 10px;
+  margin: 10px 10px 0;
+  padding: 36px 28px 40px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .auth-hero + .middle-section.admin-main {
@@ -1508,7 +1511,7 @@ body {
 }
 
 .inline-login-wrap {
-  width: min(420px, 100%);
+  width: min(560px, 100%);
   margin-inline: auto;
 }
 .inline-login-wrap h1 { margin-bottom: 8px; }
