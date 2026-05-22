@@ -42,9 +42,9 @@ BEGIN
   -- Was this host referred by an active CM?
   SELECT r.cm_id INTO v_cm_id
   FROM public.cm_referrals r
-  JOIN public.cm_profiles p ON p.id = r.cm_id
+  JOIN public.cm_profiles cp ON cp.id = r.cm_id
   WHERE r.referred_user_id = v_host_id
-    AND p.status = 'active';
+    AND cp.status = 'active';
 
   IF v_cm_id IS NULL THEN
     RETURN NEW;
