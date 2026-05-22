@@ -142,7 +142,7 @@ const ChatPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
   if (!currentUser) {
     if (authLoading) {
       return (
-        <div className="home-page">
+        <div className="home-page chat-page">
           <div className="middle-page-frame">
             <section className="hero auth-hero">
               <SiteHeader currentUser={currentUser} onLogout={onLogout} />
@@ -156,7 +156,7 @@ const ChatPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
       );
     }
     return (
-      <div className="home-page">
+      <div className="home-page chat-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero">
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
@@ -172,7 +172,7 @@ const ChatPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
 
   if (loading) {
     return (
-      <div className="home-page">
+      <div className="home-page chat-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero">
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
@@ -188,7 +188,7 @@ const ChatPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
 
   if (!booking) {
     return (
-      <div className="home-page">
+      <div className="home-page chat-page">
         <div className="middle-page-frame">
           <section className="hero auth-hero">
             <SiteHeader currentUser={currentUser} onLogout={onLogout} />
@@ -210,7 +210,7 @@ const ChatPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
   const myName = currentUser.fullName || currentUser.firstName || "You";
 
   return (
-    <div className="home-page">
+    <div className="home-page chat-page">
       <div className="middle-page-frame">
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
