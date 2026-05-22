@@ -5072,8 +5072,9 @@ body {
 
 .payment-main {
   flex: 1;
-  padding: 24px 0 60px;
+  padding: 24px 20px 60px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .payment-back-row {
@@ -5091,7 +5092,6 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 24px;
-  max-width: 960px;
 }
 
 @media (min-width: 640px) {
