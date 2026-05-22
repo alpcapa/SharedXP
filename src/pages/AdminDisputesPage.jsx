@@ -95,14 +95,22 @@ const CMManagementPanel = () => {
       .maybeSingle();
     if (clash) inviteCode = generateInviteCode(city);
 
-    await supabase.from("cm_applications").update({ status: "accepted" }).eq("id", app.id);
-    await supabase.from("cm_profiles").insert({
+    // Insert the CM profile first so the application is only marked accepted
+    // if the profile row was actually created. A failure here leaves the
+    // application in its prior state so the admin can retry.
+    const { error: profileErr } = await supabase.from("cm_profiles").insert({
       user_id: app.user_id,
       invite_code: inviteCode,
       status: "active",
       city: app.city || app.applicant?.city || "",
       country: app.country || app.applicant?.country || "",
     });
+    if (profileErr) {
+      console.error("[cm-admin] failed to create CM profile:", profileErr);
+      setActionBusy(null);
+      return;
+    }
+    await supabase.from("cm_applications").update({ status: "accepted" }).eq("id", app.id);
     await sendCmEmail("cm_accepted", app.user_id, { inviteCode, adminNotes: getNote(app.id) });
     await fetchAll();
     setActionBusy(null);
