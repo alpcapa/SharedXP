@@ -40,11 +40,12 @@ BEGIN
   END IF;
 
   -- Was this host referred by an active CM?
-  SELECT r.cm_id INTO v_cm_id
-  FROM public.cm_referrals r
-  JOIN public.cm_profiles cp ON cp.id = r.cm_id
-  WHERE r.referred_user_id = v_host_id
-    AND cp.status = 'active';
+  SELECT cm_id INTO v_cm_id
+  FROM public.cm_referrals
+  WHERE referred_user_id = v_host_id
+    AND cm_id IN (
+      SELECT id FROM public.cm_profiles WHERE status = 'active'
+    );
 
   IF v_cm_id IS NULL THEN
     RETURN NEW;
