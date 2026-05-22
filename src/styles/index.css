@@ -5058,11 +5058,10 @@ body {
    PAYMENT PAGE
    ════════════════════════════════════════════════════ */
 
-.payment-page {
+.payment-page .middle-page-frame {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f5f2;
 }
 
 .payment-loading {
@@ -5072,6 +5071,7 @@ body {
 }
 
 .payment-main {
+  flex: 1;
   max-width: 1000px;
   margin: 20px auto 0;
   padding: 24px 20px 60px;
