@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import InlineLoginForm from "../components/InlineLoginForm";
 import { supabase } from "../lib/supabase";
 import { useBookingRequests } from "../hooks/useBookingRequests";
 
@@ -358,7 +359,7 @@ const fmtDate = (iso) =>
   iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" })
           .format(new Date(iso)) : "—";
 
-const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
+const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
@@ -401,11 +402,9 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
         <div className="home-page">
           <div className="middle-page-frame">
             <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
-            <main className="middle-section simple-page">
-              <p>Loading…</p>
-            </main>
+            <main className="middle-section simple-page"><p>Loading…</p></main>
+            <SiteFooter />
           </div>
-          <SiteFooter />
         </div>
       );
     }
@@ -414,8 +413,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout }) => {
         <div className="middle-page-frame">
           <section className="hero auth-hero"><SiteHeader currentUser={currentUser} onLogout={onLogout} /></section>
           <main className="middle-section simple-page">
-            <h1>Please log in</h1>
-            <Link to="/login" className="btn btn-primary">Log in</Link>
+            <InlineLoginForm onEmailLogin={onEmailLogin} onForgotPassword={onForgotPassword} />
           </main>
           <SiteFooter />
         </div>
