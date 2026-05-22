@@ -73,10 +73,17 @@ body {
 }
 
 .auth-hero + .middle-section.simple-page,
-.auth-hero + .middle-section.auth-page,
 .auth-hero + .middle-section.admin-main {
   padding-top: 20px;
   margin-top: 10px;
+}
+
+.auth-hero + .middle-section.auth-page {
+  margin-top: 10px;
+  padding: 36px 28px 40px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .auth-hero + .middle-section.legal-content {
@@ -1206,10 +1213,6 @@ body {
 .auth-content {
   width: min(560px, 100%);
   margin-inline: auto;
-  background: #fff;
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .auth-content h1 {
