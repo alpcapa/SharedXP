@@ -507,6 +507,162 @@ function buildDisputeResolvedPaidHost(
   ];
 }
 
+// ── CM email builders ──────────────────────────────────────────────────────
+
+function buildCmApplicationReceived(
+  applicant: Record<string, unknown>,
+): { to: string; subject: string; html: string } {
+  const name = String(applicant.full_name ?? `${applicant.first_name ?? ""} ${applicant.last_name ?? ""}`.trim() ?? "there");
+  return {
+    to: String(applicant.email),
+    subject: "We received your CM application — SharedXP",
+    html: emailHtml(
+      `Application received, ${name}!`,
+      [
+        `Thank you for applying to become a SharedXP Community Manager.`,
+        `Our team will review your application and get back to you within 5 business days.`,
+        `In the meantime, keep sharing your love of sport and check out our Community Manager Policy for more details.`,
+      ],
+      `${APP_URL}/community-manager-policy`,
+      "Read CM Policy",
+    ),
+  };
+}
+
+function buildCmInterview(
+  applicant: Record<string, unknown>,
+  adminNotes: string,
+): { to: string; subject: string; html: string } {
+  const name = String(applicant.full_name ?? `${applicant.first_name ?? ""} ${applicant.last_name ?? ""}`.trim() ?? "there");
+  return {
+    to: String(applicant.email),
+    subject: "You've been shortlisted — SharedXP CM interview",
+    html: emailHtml(
+      `Great news, ${name}!`,
+      [
+        `Your application to become a SharedXP Community Manager has been shortlisted.`,
+        `Our team would like to have a brief chat with you to learn more about your experience and how you'd grow the SharedXP community.`,
+        ...(adminNotes ? [`<strong>Message from the team:</strong> ${adminNotes}`] : []),
+        `We'll be in touch via email to schedule a call. Keep an eye on your inbox!`,
+      ],
+      `${APP_URL}/community-manager-policy`,
+      "Learn More",
+    ),
+  };
+}
+
+function buildCmAccepted(
+  applicant: Record<string, unknown>,
+  inviteCode: string,
+  adminNotes: string,
+): { to: string; subject: string; html: string } {
+  const name = String(applicant.full_name ?? `${applicant.first_name ?? ""} ${applicant.last_name ?? ""}`.trim() ?? "there");
+  return {
+    to: String(applicant.email),
+    subject: "Welcome to the team — you're a SharedXP Community Manager!",
+    html: emailHtml(
+      `Welcome aboard, ${name}!`,
+      [
+        `Congratulations! You've been accepted as a SharedXP Community Manager.`,
+        `Your personal invite code is:`,
+        `<div style="text-align:center;margin:20px 0;"><span style="font-size:24px;font-weight:700;letter-spacing:2px;background:#f5f5f2;padding:12px 24px;border-radius:8px;border:2px solid #1a1a1a;">${inviteCode}</span></div>`,
+        `Share this code with athletes and sports enthusiasts. Anyone who signs up using your code becomes your permanent referral, and you earn 5% commission on every completed booking they make.`,
+        ...(adminNotes ? [`<strong>Message from the team:</strong> ${adminNotes}`] : []),
+        `Log in to your SharedXP account to access your CM Dashboard and track your referrals and commissions.`,
+      ],
+      `${APP_URL}/cm-dashboard`,
+      "Go to CM Dashboard",
+    ),
+  };
+}
+
+function buildCmDeclined(
+  applicant: Record<string, unknown>,
+  adminNotes: string,
+): { to: string; subject: string; html: string } {
+  const name = String(applicant.full_name ?? `${applicant.first_name ?? ""} ${applicant.last_name ?? ""}`.trim() ?? "there");
+  return {
+    to: String(applicant.email),
+    subject: "Your CM application — SharedXP",
+    html: emailHtml(
+      `Application update, ${name}`,
+      [
+        `Thank you for your interest in becoming a SharedXP Community Manager.`,
+        `After careful review, we're unable to move forward with your application at this time.`,
+        ...(adminNotes ? [`<strong>Feedback from our team:</strong> ${adminNotes}`] : []),
+        `We encourage you to continue enjoying SharedXP as a host or guest. You're welcome to reapply in the future.`,
+      ],
+      `${APP_URL}/locals`,
+      "Explore SharedXP",
+    ),
+  };
+}
+
+function buildCmCommissionApproved(
+  cm: Record<string, unknown>,
+  commissionAmount: number,
+  currency: string,
+  bookingDetails: string,
+): { to: string; subject: string; html: string } {
+  const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
+  const fmt = (n: number) => Number(n).toFixed(2);
+  return {
+    to: String(cm.email),
+    subject: `Commission approved — ${currency} ${fmt(commissionAmount)} — SharedXP`,
+    html: emailHtml(
+      `Commission approved, ${name}!`,
+      [
+        `Great news! A commission has been approved for your CM account.`,
+        `<strong>Booking:</strong> ${bookingDetails}`,
+        `<strong>Commission amount:</strong> ${currency} ${fmt(commissionAmount)}`,
+        `Payment will be made via bank transfer within 10 business days. View your full commission history on your CM Dashboard.`,
+      ],
+      `${APP_URL}/cm-dashboard`,
+      "View CM Dashboard",
+    ),
+  };
+}
+
+function buildCmStatusChange(
+  cm: Record<string, unknown>,
+  emailType: string,
+): { to: string; subject: string; html: string } {
+  const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
+  const configs: Record<string, { heading: string; lines: string[]; label: string }> = {
+    cm_paused: {
+      heading: `Your CM account has been paused`,
+      lines: [
+        `Hi ${name}, your SharedXP Community Manager account has been temporarily paused.`,
+        `While paused, your invite code will not be active and no new referrals will be attributed. Existing commissions are not affected.`,
+        `Contact us at support@sharedxp.com if you have any questions.`,
+      ],
+      label: "Contact Support",
+    },
+    cm_reactivated: {
+      heading: `Your CM account is active again, ${name}!`,
+      lines: [
+        `Great news! Your SharedXP Community Manager account has been re-activated.`,
+        `Your invite code is live again — start sharing and earning commissions!`,
+      ],
+      label: "Go to CM Dashboard",
+    },
+    cm_revoked: {
+      heading: `Your CM status has been revoked`,
+      lines: [
+        `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
+        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you believe this is an error.`,
+      ],
+      label: "Contact Support",
+    },
+  };
+  const cfg = configs[emailType] ?? configs.cm_paused;
+  return {
+    to: String(cm.email),
+    subject: `${cfg.heading} — SharedXP`,
+    html: emailHtml(cfg.heading, cfg.lines, `${APP_URL}/help`, cfg.label),
+  };
+}
+
 // ── Resend sender ──────────────────────────────────────────────────────────
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
@@ -544,11 +700,15 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { emailType, bookingRequestId, disputeId, senderId } = body as {
+  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId } = body as {
     emailType: string;
     bookingRequestId?: string;
     disputeId?: string;
     senderId?: string;
+    userId?: string;
+    adminNotes?: string;
+    inviteCode?: string;
+    commissionId?: string;
   };
 
   if (!emailType) {
@@ -559,6 +719,94 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+  // ── CM emails (no booking data required) ──────────────────────────────────
+  if (emailType.startsWith("cm_")) {
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "userId required for CM emails" }), {
+        status: 400,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+    const { data: userProfile } = await db
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!userProfile) {
+      return new Response(JSON.stringify({ error: "User not found" }), {
+        status: 404,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+    try {
+      switch (emailType) {
+        case "cm_application_received": {
+          const e = buildCmApplicationReceived(userProfile);
+          await sendEmail(e.to, e.subject, e.html);
+          break;
+        }
+        case "cm_interview": {
+          const e = buildCmInterview(userProfile, adminNotes ?? "");
+          await sendEmail(e.to, e.subject, e.html);
+          break;
+        }
+        case "cm_accepted": {
+          const e = buildCmAccepted(userProfile, inviteCode ?? "", adminNotes ?? "");
+          await sendEmail(e.to, e.subject, e.html);
+          break;
+        }
+        case "cm_declined": {
+          const e = buildCmDeclined(userProfile, adminNotes ?? "");
+          await sendEmail(e.to, e.subject, e.html);
+          break;
+        }
+        case "cm_commission_approved": {
+          let commAmount = 0;
+          let currency = "EUR";
+          let bookingDetails = "";
+          if (commissionId) {
+            const { data: comm } = await db
+              .from("cm_commissions")
+              .select("*, booking_request:booking_requests(sport, requested_date)")
+              .eq("id", commissionId)
+              .maybeSingle();
+            if (comm) {
+              commAmount = Number(comm.commission_amount);
+              currency = String(comm.currency);
+              bookingDetails = `${comm.booking_request?.sport ?? ""} on ${comm.booking_request?.requested_date ?? ""}`;
+            }
+          }
+          const e = buildCmCommissionApproved(userProfile, commAmount, currency, bookingDetails);
+          await sendEmail(e.to, e.subject, e.html);
+          break;
+        }
+        case "cm_paused":
+        case "cm_reactivated":
+        case "cm_revoked": {
+          const e = buildCmStatusChange(userProfile, emailType);
+          await sendEmail(e.to, e.subject, e.html);
+          break;
+        }
+        default:
+          return new Response(JSON.stringify({ error: `Unknown CM emailType: ${emailType}` }), {
+            status: 400,
+            headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+          });
+      }
+    } catch (e) {
+      console.error("[booking-notify] CM email error:", e);
+      return new Response(JSON.stringify({ error: "Internal error" }), {
+        status: 500,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
+  // ── End CM emails ──────────────────────────────────────────────────────────
 
   // Fetch booking request + both profiles
   let booking: Record<string, unknown> | null = null;
