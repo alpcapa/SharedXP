@@ -16,7 +16,7 @@ AS $$
 DECLARE
   v_host_id          UUID;
   v_cm_id            UUID;
-  v_commission_rate  NUMERIC CONSTANT := 0.05;
+  v_commission_rate  CONSTANT NUMERIC := 0.05;
 BEGIN
   -- Only act when released_at transitions NULL → non-NULL
   IF NEW.released_at IS NULL OR OLD.released_at IS NOT NULL THEN
