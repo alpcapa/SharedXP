@@ -7137,3 +7137,21 @@ body {
     font-family: inherit;
   }
 }
+
+/* ── Mobile landscape orientation fixes ──── */
+@media (max-width: 900px) and (orientation: landscape) {
+  /* Desktop nav wraps to a second header row at ≤1100px — hide it in
+     mobile landscape just as we do in portrait, since bottom nav handles routing */
+  .site-nav {
+    display: none;
+  }
+  .site-header {
+    flex-wrap: nowrap;
+  }
+
+  /* Restore 3-column locals grid — the ≤900px rule collapses it to 1fr
+     but iPhone landscape (~844px) is wide enough for the full grid */
+  .locals-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
