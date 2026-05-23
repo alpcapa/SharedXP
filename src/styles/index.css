@@ -6855,6 +6855,13 @@ body {
     font-size: 28px;
   }
 
+  /* Compact auth buttons in portrait mobile header */
+  .auth-actions .btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
   /* Bottom navigation bar */
   .bottom-nav {
     display: flex;
@@ -7142,14 +7149,27 @@ body {
 @media (max-width: 900px) and (orientation: landscape) {
   /* The ≤1100px breakpoint sets flex-wrap:wrap and gives .site-nav order:3/width:100%,
      pushing it onto a second header row. In landscape the nav links should stay
-     inline — reset those rules so everything fits on one row. */
+     inline — reset those rules so everything fits on one row.
+     Reduce horizontal padding so brand + 4 nav links + 2 auth buttons fit at ~844px. */
   .site-header {
     flex-wrap: nowrap;
+    padding: 8px 16px;
   }
   .site-nav {
     order: unset;
     width: auto;
-    gap: 18px;
+    gap: 14px;
+  }
+  .site-nav-link,
+  .nav-link-button {
+    white-space: nowrap;
+  }
+
+  /* Compact auth buttons so they don't get squeezed and wrap text in the tight header */
+  .auth-actions .btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    white-space: nowrap;
   }
 
   /* Restore 3-column locals grid — the ≤900px rule collapses it to 1fr
