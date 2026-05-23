@@ -7140,13 +7140,16 @@ body {
 
 /* ── Mobile landscape orientation fixes ──── */
 @media (max-width: 900px) and (orientation: landscape) {
-  /* Desktop nav wraps to a second header row at ≤1100px — hide it in
-     mobile landscape just as we do in portrait, since bottom nav handles routing */
-  .site-nav {
-    display: none;
-  }
+  /* The ≤1100px breakpoint sets flex-wrap:wrap and gives .site-nav order:3/width:100%,
+     pushing it onto a second header row. In landscape the nav links should stay
+     inline — reset those rules so everything fits on one row. */
   .site-header {
     flex-wrap: nowrap;
+  }
+  .site-nav {
+    order: unset;
+    width: auto;
+    gap: 18px;
   }
 
   /* Restore 3-column locals grid — the ≤900px rule collapses it to 1fr
