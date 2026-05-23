@@ -39,11 +39,16 @@
   --footer-trust-panel-ratio: 1.08fr;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   color: #141a1f;
   background: #f5f5f2;
+  overflow-x: hidden;
 }
 
 .middle-page-frame {
@@ -1814,6 +1819,9 @@ body {
   font-family: inherit;
   min-height: 46px;
   background: #fff;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .host-form-grid textarea {
@@ -1968,6 +1976,8 @@ body {
   font-family: inherit;
   background: #fff;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .host-availability-time > div {
@@ -4433,10 +4443,12 @@ body {
 @media (max-width: 720px) {
   .host-tab-actions-row {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .host-tab-actions-row .host-tab-bar {
     flex: unset;
+    width: 100%;
   }
 }
 
@@ -4466,6 +4478,16 @@ body {
   border-bottom: 3px solid transparent;
   margin-bottom: -2px;
   transition: color 0.15s, border-color 0.15s;
+}
+
+@media (max-width: 720px) {
+  .host-tab-btn {
+    flex: 1;
+    padding: 12px 10px;
+    font-size: 13px;
+    justify-content: center;
+    white-space: normal;
+  }
 }
 
 .host-tab-btn:hover {
@@ -6729,8 +6751,8 @@ body {
 
 .cancel-policy-rules {
   width: 100%;
-  margin: 4px 0 0 24px;
-  padding: 0;
+  margin: 4px 0 0 0;
+  padding: 0 0 0 24px;
   font-size: 13px;
   color: #6b7280;
   list-style: disc;
@@ -7113,5 +7135,26 @@ body {
     font-weight: 700;
     cursor: pointer;
     font-family: inherit;
+  }
+}
+
+/* ── Mobile landscape orientation fixes ──── */
+@media (max-width: 900px) and (orientation: landscape) {
+  /* The ≤1100px breakpoint sets flex-wrap:wrap and gives .site-nav order:3/width:100%,
+     pushing it onto a second header row. In landscape the nav links should stay
+     inline — reset those rules so everything fits on one row. */
+  .site-header {
+    flex-wrap: nowrap;
+  }
+  .site-nav {
+    order: unset;
+    width: auto;
+    gap: 18px;
+  }
+
+  /* Restore 3-column locals grid — the ≤900px rule collapses it to 1fr
+     but iPhone landscape (~844px) is wide enough for the full grid */
+  .locals-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
