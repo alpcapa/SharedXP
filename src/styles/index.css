@@ -4435,10 +4435,19 @@ body {
 @media (max-width: 720px) {
   .host-tab-actions-row {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .host-tab-actions-row .host-tab-bar {
     flex: unset;
+    width: 100%;
+  }
+
+  .host-tab-btn {
+    flex: 1;
+    padding: 12px 10px;
+    font-size: 13px;
+    justify-content: center;
   }
 }
 
