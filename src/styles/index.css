@@ -6855,6 +6855,13 @@ body {
     font-size: 28px;
   }
 
+  /* Compact auth buttons in portrait mobile header */
+  .auth-actions .btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
   /* Bottom navigation bar */
   .bottom-nav {
     display: flex;
