@@ -39,11 +39,16 @@
   --footer-trust-panel-ratio: 1.08fr;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   color: #141a1f;
   background: #f5f5f2;
+  overflow-x: hidden;
 }
 
 .middle-page-frame {
@@ -1814,6 +1819,9 @@ body {
   font-family: inherit;
   min-height: 46px;
   background: #fff;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .host-form-grid textarea {
