@@ -4442,13 +4442,6 @@ body {
     flex: unset;
     width: 100%;
   }
-
-  .host-tab-btn {
-    flex: 1;
-    padding: 12px 10px;
-    font-size: 13px;
-    justify-content: center;
-  }
 }
 
 .host-tab-actions-row .host-tab-bar {
@@ -4477,6 +4470,16 @@ body {
   border-bottom: 3px solid transparent;
   margin-bottom: -2px;
   transition: color 0.15s, border-color 0.15s;
+}
+
+@media (max-width: 720px) {
+  .host-tab-btn {
+    flex: 1;
+    padding: 12px 10px;
+    font-size: 13px;
+    justify-content: center;
+    white-space: normal;
+  }
 }
 
 .host-tab-btn:hover {
