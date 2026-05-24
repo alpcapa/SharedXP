@@ -323,7 +323,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
             .order("completed_at", { ascending: false }),
           supabase
             .from("booking_requests")
-            .select("requester_id, guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
+            .select("requester_id, requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
             .eq("host_id", userId)
             .eq("status", "completed")
             .gt("guest_rating", 0)
@@ -337,30 +337,43 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
         }
 
         const legacyHostRevs = (legacyHostResult.data ?? []).map((r) => ({
-          author: r.counterparty_name || "Guest",
+          author: r.counterparty_name || "",
           overall: r.attendee_rating,
           sport: r.sport,
           date: r.completed_at,
         }));
 
         const brRows = brHostResult.data ?? [];
-        const requesterIds = [...new Set(brRows.map((r) => r.requester_id).filter(Boolean))];
-        const profileMap = {};
-        if (requesterIds.length > 0) {
-          const { data: profileRows } = await supabase
+
+        // Fallback fetch for rows where the embedded join returned no name
+        // (can happen when the guest profile is not readable in the current auth context)
+        const missingIds = [...new Set(
+          brRows
+            .filter((r) => {
+              const p = r.requester_profile;
+              return !p || !(p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim());
+            })
+            .map((r) => r.requester_id)
+            .filter(Boolean)
+        )];
+        const fallbackMap = {};
+        if (missingIds.length > 0) {
+          const { data: fallbackProfiles } = await supabase
             .from("profiles")
             .select("id, full_name, first_name, last_name")
-            .in("id", requesterIds);
-          (profileRows ?? []).forEach((p) => { profileMap[p.id] = p; });
+            .in("id", missingIds);
+          (fallbackProfiles ?? []).forEach((p) => { fallbackMap[p.id] = p; });
         }
 
         if (cancelled) return;
 
         const brHostRevs = brRows.map((r) => {
-          const p = profileMap[r.requester_id];
+          const p = r.requester_profile?.full_name || `${r.requester_profile?.first_name ?? ""} ${r.requester_profile?.last_name ?? ""}`.trim()
+            ? r.requester_profile
+            : (fallbackMap[r.requester_id] ?? null);
           const author = p
-            ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Guest")
-            : "Guest";
+            ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim())
+            : "";
           const bd = r.guest_host_ratings ?? {};
           return {
             author,
@@ -937,8 +950,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                     {visibleHostReviews.map((r, i) => (
                       <article key={i} className="review-card">
                         <p>
-                          <strong>{r.author}</strong>
-                          {' · '}⭐ {r.overall != null ? Number(r.overall).toFixed(1) : '0.0'}
+                          {r.author && <><strong>{r.author}</strong>{' · '}</>}⭐ {r.overall != null ? Number(r.overall).toFixed(1) : '0.0'}
                           {r.date && <span className="review-date"> · {fmtMonthYear(r.date)}</span>}
                         </p>
                         {r.overall != null && (
