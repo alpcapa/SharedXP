@@ -3894,11 +3894,6 @@ body {
   color: #596164;
 }
 
-.review-breakdown span::before {
-  content: "·";
-  margin-right: 6px;
-  color: #596164;
-}
 
 .review-photos {
   display: flex;
@@ -6070,6 +6065,12 @@ body {
 .review-date {
   font-size: 13px;
   color: #6b7280;
+  font-weight: 400;
+}
+
+.review-rating-inline {
+  font-size: 12px;
+  color: #596164;
   font-weight: 400;
 }
 

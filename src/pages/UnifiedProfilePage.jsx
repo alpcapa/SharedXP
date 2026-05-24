@@ -406,7 +406,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
     });
 
     return () => { cancelled = true; };
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset booking state when switching sports
   useEffect(() => {
@@ -950,7 +950,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                     {visibleHostReviews.map((r, i) => (
                       <article key={i} className="review-card">
                         <p>
-                          <strong>{r.author}</strong>{' · '}⭐ {r.overall != null ? Number(r.overall).toFixed(1) : '0.0'}
+                          <strong>{r.author}</strong>{' · '}<span className="review-rating-inline">⭐ {r.overall != null ? Number(r.overall).toFixed(1) : '0.0'}</span>
                           {r.date && <span className="review-date"> · {fmtMonthYear(r.date)}</span>}
                         </p>
                         {r.overall != null && (
