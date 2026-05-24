@@ -323,7 +323,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
             .order("completed_at", { ascending: false }),
           supabase
             .from("booking_requests")
-            .select("requester_id, requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
+            .select("requester_id, guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
             .eq("host_id", userId)
             .eq("status", "completed")
             .gt("guest_rating", 0)
@@ -345,32 +345,22 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
 
         const brRows = brHostResult.data ?? [];
 
-        // Fallback fetch for rows where the embedded join returned no name
-        // (can happen when the guest profile is not readable in the current auth context)
-        const missingIds = [...new Set(
-          brRows
-            .filter((r) => {
-              const p = r.requester_profile;
-              return !p || !(p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim());
-            })
-            .map((r) => r.requester_id)
-            .filter(Boolean)
-        )];
-        const fallbackMap = {};
-        if (missingIds.length > 0) {
-          const { data: fallbackProfiles } = await supabase
-            .from("profiles")
+        // Fetch reviewer names from the public profile_names view, which is
+        // readable by all visitors regardless of auth state.
+        const requesterIds = [...new Set(brRows.map((r) => r.requester_id).filter(Boolean))];
+        const nameMap = {};
+        if (requesterIds.length > 0) {
+          const { data: nameRows } = await supabase
+            .from("profile_names")
             .select("id, full_name, first_name, last_name")
-            .in("id", missingIds);
-          (fallbackProfiles ?? []).forEach((p) => { fallbackMap[p.id] = p; });
+            .in("id", requesterIds);
+          (nameRows ?? []).forEach((p) => { nameMap[p.id] = p; });
         }
 
         if (cancelled) return;
 
         const brHostRevs = brRows.map((r) => {
-          const p = r.requester_profile?.full_name || `${r.requester_profile?.first_name ?? ""} ${r.requester_profile?.last_name ?? ""}`.trim()
-            ? r.requester_profile
-            : (fallbackMap[r.requester_id] ?? null);
+          const p = nameMap[r.requester_id] ?? null;
           const author = p
             ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Guest")
             : "Guest";
@@ -406,7 +396,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
     });
 
     return () => { cancelled = true; };
-  }, [userId, currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset booking state when switching sports
   useEffect(() => {
