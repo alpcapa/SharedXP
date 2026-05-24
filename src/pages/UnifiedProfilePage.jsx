@@ -934,11 +934,13 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                     {visibleHostReviews.map((r, i) => (
                       <article key={i} className="review-card">
                         <p>
-                          <strong>{r.author}</strong> · ⭐ {r.overall}
+                          <strong>{r.author}</strong>
+                          {r.overall != null && <> · ⭐ {r.overall}</>}
                           {r.date && <span className="review-date"> · {fmtMonthYear(r.date)}</span>}
                         </p>
                         {r.overall != null && (
                           <div className="review-breakdown">
+                            <span>Overall {getStars(Math.round(r.overall))}</span>
                             {r.punctuality != null && <span>Punctuality {getStars(r.punctuality)}</span>}
                             {r.equipmentQuality != null && <span>Equipment {getStars(r.equipmentQuality)}</span>}
                             {r.localKnowledge != null && <span>Local knowledge {getStars(r.localKnowledge)}</span>}
