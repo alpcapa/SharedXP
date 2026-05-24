@@ -323,23 +323,11 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
             .order("completed_at", { ascending: false }),
           supabase
             .from("booking_requests")
-            .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
+            .select("requester_id, guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
             .eq("host_id", userId)
             .eq("status", "completed")
             .gt("guest_rating", 0)
-            .order("guest_rated_at", { ascending: false })
-            .then(async (res) => {
-              if (res.error) {
-                return supabase
-                  .from("booking_requests")
-                  .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, sport, guest_rated_at")
-                  .eq("host_id", userId)
-                  .eq("status", "completed")
-                  .gt("guest_rating", 0)
-                  .order("guest_rated_at", { ascending: false });
-              }
-              return res;
-            }),
+            .order("guest_rated_at", { ascending: false }),
         ]);
 
         if (cancelled) return;
@@ -349,15 +337,30 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
         }
 
         const legacyHostRevs = (legacyHostResult.data ?? []).map((r) => ({
-          author: r.counterparty_name || "Attendee",
+          author: r.counterparty_name || "Guest",
           overall: r.attendee_rating,
           sport: r.sport,
           date: r.completed_at,
         }));
 
-        const brHostRevs = (brHostResult.data ?? []).map((r) => {
-          const p = r.requester_profile;
-          const author = p ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Attendee") : "Attendee";
+        const brRows = brHostResult.data ?? [];
+        const requesterIds = [...new Set(brRows.map((r) => r.requester_id).filter(Boolean))];
+        const profileMap = {};
+        if (requesterIds.length > 0) {
+          const { data: profileRows } = await supabase
+            .from("profiles")
+            .select("id, full_name, first_name, last_name")
+            .in("id", requesterIds);
+          (profileRows ?? []).forEach((p) => { profileMap[p.id] = p; });
+        }
+
+        if (cancelled) return;
+
+        const brHostRevs = brRows.map((r) => {
+          const p = profileMap[r.requester_id];
+          const author = p
+            ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Guest")
+            : "Guest";
           const bd = r.guest_host_ratings ?? {};
           return {
             author,

@@ -3881,10 +3881,10 @@ body {
 
 /* ── Review breakdown (ProfilePage) ──────── */
 .review-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 4px 0 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px 12px;
+  margin: 6px 0 10px;
 }
 
 .review-breakdown span {
@@ -3896,7 +3896,7 @@ body {
 
 .review-breakdown span::before {
   content: "·";
-  margin-right: 8px;
+  margin-right: 6px;
   color: #596164;
 }
 
