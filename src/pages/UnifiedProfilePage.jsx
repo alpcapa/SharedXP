@@ -935,7 +935,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                       <article key={i} className="review-card">
                         <p>
                           <strong>{r.author}</strong>
-                          {r.overall != null && <> · ⭐ {r.overall}</>}
+                          {' · '}⭐ {r.overall != null ? Number(r.overall).toFixed(1) : '0.0'}
                           {r.date && <span className="review-date"> · {fmtMonthYear(r.date)}</span>}
                         </p>
                         {r.overall != null && (
