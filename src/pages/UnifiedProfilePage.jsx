@@ -337,7 +337,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
         }
 
         const legacyHostRevs = (legacyHostResult.data ?? []).map((r) => ({
-          author: r.counterparty_name || "",
+          author: r.counterparty_name || "Guest",
           overall: r.attendee_rating,
           sport: r.sport,
           date: r.completed_at,
@@ -372,8 +372,8 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
             ? r.requester_profile
             : (fallbackMap[r.requester_id] ?? null);
           const author = p
-            ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim())
-            : "";
+            ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Guest")
+            : "Guest";
           const bd = r.guest_host_ratings ?? {};
           return {
             author,
@@ -950,7 +950,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                     {visibleHostReviews.map((r, i) => (
                       <article key={i} className="review-card">
                         <p>
-                          {r.author && <><strong>{r.author}</strong>{' · '}</>}⭐ {r.overall != null ? Number(r.overall).toFixed(1) : '0.0'}
+                          <strong>{r.author}</strong>{' · '}⭐ {r.overall != null ? Number(r.overall).toFixed(1) : '0.0'}
                           {r.date && <span className="review-date"> · {fmtMonthYear(r.date)}</span>}
                         </p>
                         {r.overall != null && (
