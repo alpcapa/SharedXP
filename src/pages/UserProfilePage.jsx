@@ -207,12 +207,12 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
   // Reviews received as a host (from guests), sorted newest first
   const overallGuestReviews = useMemo(() => {
     const legacy = (Array.isArray(currentUser?.hostHistory) ? currentUser.hostHistory : [])
-      .filter((item) => item && Number(item.rating) > 0)
+      .filter((item) => item && Number(item.attendeeRating) > 0)
       .map((item, index) => ({
         id: `legacy-host-${item.participantName ?? "Guest"}-${index}`,
         guestName: String(item.participantName ?? "Guest").trim() || "Guest",
         eventName: String(item.sport ?? item.eventName ?? "").trim(),
-        rating: Number(item.rating),
+        rating: Number(item.attendeeRating),
         review: item.review || null,
         completedAt: item.completedAt || null,
       }));
