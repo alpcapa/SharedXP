@@ -11,7 +11,9 @@ let _lastInsertError = null;
 export const getLastFieldPostInsertError = () => _lastInsertError;
 
 const isMissingRatingColumnError = (error) => {
-  return error?.code === "42703";
+  // 42703 = PostgreSQL "undefined_column"; PGRST204 = PostgREST schema-cache miss.
+  // Both indicate the `rating` column doesn't exist yet (migration 022 not run).
+  return error?.code === "42703" || error?.code === "PGRST204";
 };
 
 const isUpdateNotAllowedError = (error) => {
