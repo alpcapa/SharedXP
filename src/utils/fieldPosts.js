@@ -6,8 +6,11 @@ import { supabase } from "../lib/supabase";
 const LOCAL_FALLBACK_KEY = "sharedxp:field_posts_fallback";
 const MAX_RATING = 5;
 
+
 const isMissingRatingColumnError = (error) => {
-  return error?.code === "42703";
+  // 42703 = PostgreSQL "undefined_column"; PGRST204 = PostgREST schema-cache miss.
+  // Both indicate the `rating` column doesn't exist yet (migration 022 not run).
+  return error?.code === "42703" || error?.code === "PGRST204";
 };
 
 const isUpdateNotAllowedError = (error) => {
@@ -340,8 +343,17 @@ export const saveFieldPost = async (post) => {
           .single());
       }
       if (error) {
-        console.error("[fieldPosts] insert error; falling back to local post storage:", error);
-        return upsertLocalFallbackPost(post);
+        // Table doesn't exist yet (migration not run) — use localStorage so the
+        // post at least survives the session.
+        if (isFieldPostsUnavailableError(error)) {
+          console.warn("[fieldPosts] field_posts table unavailable; using local storage:", error.code);
+          return upsertLocalFallbackPost(post);
+        }
+        // Any other error (RLS/permission, FK constraint, etc.) means the post
+        // will NOT be persisted. Log clearly so it's visible in the console, and
+        // return null so the caller can surface the failure to the user.
+        console.error("[fieldPosts] INSERT failed (code %s):", error.code, error.message, error);
+        return null;
       }
       if (data?.id) return data.id;
       console.warn("[fieldPosts] insert returned no id; falling back to local post storage");

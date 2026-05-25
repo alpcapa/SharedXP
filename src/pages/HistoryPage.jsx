@@ -32,17 +32,12 @@ const buildFieldPost = (item, currentUser, caption) => {
   const realPhotos = (item.photoGallery ?? []).filter(
     (p) => p && p !== FALLBACK_EVENT_PHOTO
   );
-  const id =
-    typeof globalThis.crypto?.randomUUID === "function"
-      ? `user-${globalThis.crypto.randomUUID()}`
-      : `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const fieldPostRating = Number(
     item.role === "hosted"
       ? (item.attendeeRating ?? item.rating ?? 0)
       : (item.hostRatings?.overall ?? item.rating ?? 0)
   );
   return {
-    id,
     posterId: currentUser?.id ?? null,
     role: item.role ?? null,
     hostId: null,
@@ -57,7 +52,7 @@ const buildFieldPost = (item, currentUser, caption) => {
     postedAt: new Date().toISOString(),
     likes: 0,
     rating: fieldPostRating,
-    sourceRequestId: item.id ?? null,
+    sourceRequestId: null,
   };
 };
 
