@@ -6,9 +6,6 @@ import { supabase } from "../lib/supabase";
 const LOCAL_FALLBACK_KEY = "sharedxp:field_posts_fallback";
 const MAX_RATING = 5;
 
-// Stores the last INSERT error so callers can surface it to the user.
-let _lastInsertError = null;
-export const getLastFieldPostInsertError = () => _lastInsertError;
 
 const isMissingRatingColumnError = (error) => {
   // 42703 = PostgreSQL "undefined_column"; PGRST204 = PostgREST schema-cache miss.
@@ -355,7 +352,6 @@ export const saveFieldPost = async (post) => {
         // Any other error (RLS/permission, FK constraint, etc.) means the post
         // will NOT be persisted. Log clearly so it's visible in the console, and
         // return null so the caller can surface the failure to the user.
-        _lastInsertError = error;
         console.error("[fieldPosts] INSERT failed (code %s):", error.code, error.message, error);
         return null;
       }

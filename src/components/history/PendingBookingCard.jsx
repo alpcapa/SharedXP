@@ -4,7 +4,7 @@ import DeclineModal from "./DeclineModal";
 import DeclineConfirmationModal from "./DeclineConfirmationModal";
 import ShareToFieldModal from "./ShareToFieldModal";
 import { HOST_RATING_FIELDS, clampRating, FALLBACK_EVENT_PHOTO } from "../../utils/historyItem";
-import { deleteFieldPost, getLastFieldPostInsertError, lookupFieldPost, saveFieldPost } from "../../utils/fieldPosts";
+import { deleteFieldPost, lookupFieldPost, saveFieldPost } from "../../utils/fieldPosts";
 import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../../utils/cancellationPolicy";
 
 const CURRENCY_SYMBOLS = {
@@ -331,9 +331,7 @@ const PendingBookingCard = ({
         setExistingFieldCaption(shareCaption.trim());
         setSharePosted(true);
       } else {
-        const err = getLastFieldPostInsertError();
-        const detail = err ? `\n\nError: ${err.code} — ${err.message}` : "";
-        window.alert(`Could not post to The Field right now. Please try again.${detail}`);
+        window.alert("Could not post to The Field right now. Please try again.");
       }
   };
 
