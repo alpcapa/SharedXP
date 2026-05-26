@@ -13,10 +13,10 @@ const NotFoundPage = ({ currentUser, onLogout }) => (
           </h1>
           <p>The page you requested does not exist or has moved.</p>
           <div style={{ display: "flex", gap: "12px", marginTop: "20px", flexWrap: "wrap" }}>
-            <Link to="/" className="find-button" style={{ textDecoration: "none" }}>
+            <Link to="/" className="find-button">
               Go home
             </Link>
-            <Link to="/locals" className="find-button" style={{ textDecoration: "none" }}>
+            <Link to="/locals" className="find-button">
               Browse locals
             </Link>
           </div>

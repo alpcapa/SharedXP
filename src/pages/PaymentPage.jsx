@@ -171,7 +171,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
               <p className="payment-booking-ref">Booking ref: #{booking.id.slice(0, 8).toUpperCase()}</p>
               <p className="payment-success-sub">You can message the host directly for meeting details.</p>
               <div className="payment-success-actions">
-                <Link to={`/chat/${booking.id}`} className="find-button">
+                <Link to={`/chat/${booking.id}`} className="btn btn-primary">
                   Message {hostName}
                 </Link>
                 <Link to="/history?tab=pending" className="btn btn-light">
