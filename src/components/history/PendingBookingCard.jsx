@@ -384,8 +384,8 @@ const PendingBookingCard = ({
 
   const handleCancel = async () => {
     let message;
-    if (request.status === "accepted") {
-      message = "Cancel this booking?\n\nNo payment has been taken — you'll receive a full refund.";
+    if (request.status === "pending" || request.status === "accepted") {
+      message = "Cancel this booking?\n\nNo payment has been taken — you will not be charged.";
     } else {
       const policy = request.cancellation_policy || "flexible";
       const refundPct = computeRefundPct(policy, request.requested_date, request.requested_time);
