@@ -219,7 +219,10 @@ export const useBookingRequests = (currentUser) => {
     const emailType = isPrePayment
       ? "booking_cancelled_pre_payment_to_host"
       : "booking_cancelled_post_payment_to_host";
-    await sendNotification(emailType, requestId);
+    await Promise.all([
+      sendNotification(emailType, requestId),
+      sendNotification("booking_cancelled_to_requester", requestId),
+    ]);
     fetchRequests();
     return { ok: true, refundPct };
   }, [fetchRequests]);

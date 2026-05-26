@@ -152,7 +152,10 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
       xp_earned: toNSU(gross, booking.currency),
     });
 
-    sendNotification("payment_processed_to_host", booking.id);
+    await Promise.all([
+      sendNotification("payment_processed_to_host", booking.id),
+      sendNotification("payment_confirmation_to_requester", booking.id),
+    ]);
 
     setPaid(true);
     setPaying(false);

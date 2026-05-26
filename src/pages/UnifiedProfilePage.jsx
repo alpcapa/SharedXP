@@ -608,7 +608,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
       setIsSubmitting(false);
       return;
     }
-    sendNotification("booking_request_to_host", bookingRequest.id);
+    await sendNotification("booking_request_to_host", bookingRequest.id);
     setIsSubmitting(false);
     setIsRequestSubmitted(true);
   };

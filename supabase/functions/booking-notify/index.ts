@@ -430,6 +430,105 @@ function buildCancelledPostPaymentToHost(
   };
 }
 
+function buildPaymentConfirmationToRequester(
+  booking: Record<string, unknown>,
+  requester: Record<string, unknown>,
+  host: Record<string, unknown>,
+): { to: string; subject: string; html: string } {
+  const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
+  const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "your host");
+  const ctaUrl = `${APP_URL}/chat/${booking.id}`;
+  return {
+    to: String(requester.email),
+    subject: `Booking confirmed — ${booking.sport} with ${hostName} on ${booking.requested_date}`,
+    html: emailHtml(
+      `Booking confirmed, ${reqName}!`,
+      [
+        `Your payment for the <strong>${booking.sport}</strong> session with <strong>${hostName}</strong> on <strong>${booking.requested_date}</strong> at <strong>${booking.requested_time}</strong> is confirmed.`,
+        `<strong>Amount charged:</strong> ${booking.currency} ${Number(booking.price).toFixed(2)}`,
+        `Message ${hostName} directly to arrange meeting details.`,
+      ],
+      ctaUrl,
+      `Message ${hostName}`,
+    ),
+  };
+}
+
+function buildCancelledToRequester(
+  booking: Record<string, unknown>,
+  requester: Record<string, unknown>,
+  host: Record<string, unknown>,
+  invoice: Record<string, unknown> | null,
+): { to: string; subject: string; html: string } {
+  const reqName = String((requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim()) || "there");
+  const hostName = String((host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim()) || "your host");
+
+  if (!invoice) {
+    return {
+      to: String(requester.email),
+      subject: `Booking cancelled — ${booking.sport} on ${booking.requested_date}`,
+      html: emailHtml(
+        `Booking cancelled`,
+        [
+          `Your <strong>${booking.sport}</strong> booking with <strong>${hostName}</strong> on <strong>${booking.requested_date}</strong> has been cancelled.`,
+          `No payment was taken — you have not been charged.`,
+        ],
+        `${APP_URL}/locals`,
+        "Find Another Host",
+      ),
+    };
+  }
+
+  const refundPct = Number(booking.refund_pct ?? 0);
+  const policyLabel = POLICY_LABELS[String(booking.cancellation_policy ?? "flexible")] ?? "Flexible";
+  const gross = Number(invoice.gross_amount);
+  const currency = String(invoice.currency);
+  const fmt = (n: number) => n.toFixed(2);
+  const guestRefundAmt = gross * refundPct / 100;
+
+  const refundLine =
+    refundPct === 100
+      ? `Under the <strong>${policyLabel}</strong> cancellation policy, you are entitled to a <strong>full refund</strong> of ${currency} ${fmt(guestRefundAmt)}. Please allow 5–7 business days.`
+      : refundPct === 0
+      ? `Under the <strong>${policyLabel}</strong> cancellation policy, <strong>no refund</strong> is due for this cancellation.`
+      : `Under the <strong>${policyLabel}</strong> cancellation policy, you will receive a <strong>${refundPct}% refund</strong> of ${currency} ${fmt(guestRefundAmt)}. Please allow 5–7 business days.`;
+
+  return {
+    to: String(requester.email),
+    subject: `Booking cancelled — ${booking.sport} on ${booking.requested_date}`,
+    html: emailHtml(
+      `Booking cancelled`,
+      [
+        `Your <strong>${booking.sport}</strong> booking with <strong>${hostName}</strong> on <strong>${booking.requested_date}</strong> has been cancelled.`,
+        refundLine,
+      ],
+      `${APP_URL}/history`,
+      "View History",
+    ),
+  };
+}
+
+function buildDisputeOpenedToRequester(
+  booking: Record<string, unknown>,
+  requester: Record<string, unknown>,
+): { to: string; subject: string; html: string } {
+  const reqName = String((requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim()) || "there");
+  return {
+    to: String(requester.email),
+    subject: `Dispute received — we're reviewing your case — SharedXP`,
+    html: emailHtml(
+      `Dispute received, ${reqName}`,
+      [
+        `We've received your dispute for the <strong>${booking.sport}</strong> session on <strong>${booking.requested_date}</strong>.`,
+        `Our team will review both accounts and get back to you within 24–48 hours. The host has been notified and given the opportunity to respond.`,
+        `In the meantime, you can view the status of your booking in your history.`,
+      ],
+      `${APP_URL}/history?tab=pending`,
+      "View Your Booking",
+    ),
+  };
+}
+
 function buildDisputeResolvedRefund(
   booking: Record<string, unknown>,
   requester: Record<string, unknown>,
@@ -914,9 +1013,11 @@ serve(async (req: Request): Promise<Response> => {
       case "dispute_opened": {
         if (!dispute) break;
         const toHost = buildDisputeOpenedToHost(booking, requester, host, dispute);
+        const toRequesterDispute = buildDisputeOpenedToRequester(booking, requester);
         const toCS = buildDisputeEmergencyToCS(booking, requester, host, invoice, dispute);
         await Promise.all([
           sendEmail(toHost.to, toHost.subject, toHost.html),
+          sendEmail(toRequesterDispute.to, toRequesterDispute.subject, toRequesterDispute.html),
           sendEmail(toCS.to, toCS.subject, toCS.html),
         ]);
         break;
@@ -944,6 +1045,16 @@ serve(async (req: Request): Promise<Response> => {
       case "booking_cancelled_post_payment_to_host": {
         if (!invoice) break;
         const e = buildCancelledPostPaymentToHost(booking, requester, host, invoice);
+        await sendEmail(e.to, e.subject, e.html);
+        break;
+      }
+      case "booking_cancelled_to_requester": {
+        const e = buildCancelledToRequester(booking, requester, host, invoice);
+        await sendEmail(e.to, e.subject, e.html);
+        break;
+      }
+      case "payment_confirmation_to_requester": {
+        const e = buildPaymentConfirmationToRequester(booking, requester, host);
         await sendEmail(e.to, e.subject, e.html);
         break;
       }
