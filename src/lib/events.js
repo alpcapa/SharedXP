@@ -3,13 +3,14 @@ import { supabase } from "./supabase";
 
 const FETCH_LIMIT = 200;
 
-const isUpcomingOrRecent = (event) => {
+export const isUpcomingOrRecent = (event) => {
   const start = new Date(event.startsAt ?? event.starts_at);
   if (Number.isNaN(start.getTime())) return false;
-  // keep events that haven't ended more than 7 days ago
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const end = new Date(event.endsAt ?? event.ends_at ?? event.startsAt ?? event.starts_at);
-  return (Number.isFinite(end.getTime()) ? end.getTime() : start.getTime()) >= cutoff;
+  const lastDay = Number.isFinite(end.getTime()) ? end : start;
+  // Expire at 00:00 UTC on the day after the event's last day
+  const expiry = Date.UTC(lastDay.getUTCFullYear(), lastDay.getUTCMonth(), lastDay.getUTCDate() + 1);
+  return Date.now() < expiry;
 };
 
 const sortByStartAscending = (a, b) => {
