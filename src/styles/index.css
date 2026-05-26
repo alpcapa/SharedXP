@@ -4817,6 +4817,7 @@ body {
   font-size: 14px;
   padding: 10px 20px;
   text-decoration: none;
+  align-self: flex-start;
 }
 
 /* ── In-progress panel ───────────────────────────── */
