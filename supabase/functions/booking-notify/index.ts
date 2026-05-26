@@ -204,21 +204,23 @@ function buildExperienceConfirmedToHost(
   booking: Record<string, unknown>,
   requester: Record<string, unknown>,
   host: Record<string, unknown>,
+  invoice: Record<string, unknown> | null,
 ): { to: string; subject: string; html: string } {
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "Your guest");
   const ctaUrl = `${APP_URL}/history?tab=pending`;
   return {
     to: String(host.email),
-    subject: `${reqName} confirmed your experience — leave a review`,
+    subject: `${reqName} confirmed your experience — payment released`,
     html: emailHtml(
-      `Experience confirmed!`,
+      `Experience confirmed — payment released!`,
       [
         `<strong>${reqName}</strong> has confirmed that your <strong>${booking.sport}</strong> experience on ${booking.requested_date} took place.`,
-        `Payment has been processed. Please check your history and leave a review for your guest.`,
+        `Your payment has been released. Please allow 3–5 business days for the funds to appear in your registered bank account.`,
       ],
       ctaUrl,
       "Leave a Review",
+      invoice ? invoiceTable(invoice) : "",
     ),
   };
 }
@@ -1001,7 +1003,7 @@ serve(async (req: Request): Promise<Response> => {
         break;
       }
       case "experience_confirmed_to_host": {
-        const e = buildExperienceConfirmedToHost(booking, requester, host);
+        const e = buildExperienceConfirmedToHost(booking, requester, host, invoice);
         await sendEmail(e.to, e.subject, e.html);
         break;
       }
