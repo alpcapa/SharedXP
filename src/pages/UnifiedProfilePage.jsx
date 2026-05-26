@@ -608,7 +608,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
       setIsSubmitting(false);
       return;
     }
-    sendNotification("booking_request_to_host", bookingRequest.id);
+    await sendNotification("booking_request_to_host", bookingRequest.id);
     setIsSubmitting(false);
     setIsRequestSubmitted(true);
   };
@@ -997,7 +997,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                 {submitError && <p className="booking-modal-error" role="alert">{submitError}</p>}
                 <div className="booking-modal-actions">
                   <button type="button" className="btn btn-light" onClick={() => setIsConfirmationOpen(false)} disabled={isSubmitting}>Back</button>
-                  <button type="button" className="find-button booking-confirm-button" onClick={handleFinalConfirmation} disabled={isSubmitting}>
+                  <button type="button" className="btn btn-primary" onClick={handleFinalConfirmation} disabled={isSubmitting}>
                     {isSubmitting ? "Sending…" : "Final Confirmation"}
                   </button>
                 </div>
@@ -1008,7 +1008,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                 <p>Your request has been sent to {displayName}. You'll receive an email when they respond.</p>
                 <div className="booking-modal-actions">
                   <button type="button" className="btn btn-light" onClick={() => setIsConfirmationOpen(false)}>Stay here</button>
-                  <button type="button" className="find-button booking-confirm-button"
+                  <button type="button" className="btn btn-primary"
                     onClick={() => { setIsConfirmationOpen(false); navigate("/history?tab=pending"); }}>
                     View pending bookings
                   </button>

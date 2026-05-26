@@ -150,7 +150,6 @@ export const useBookingRequests = (currentUser) => {
         // Only the client that actually flipped released_at sends notifications,
         // preventing duplicate emails when both participants are online.
         if (released?.length > 0) {
-          await sendNotification("payment_processed_to_host", r.id);
           await sendNotification("experience_confirmed_to_host", r.id);
         }
       }
@@ -219,7 +218,10 @@ export const useBookingRequests = (currentUser) => {
     const emailType = isPrePayment
       ? "booking_cancelled_pre_payment_to_host"
       : "booking_cancelled_post_payment_to_host";
-    await sendNotification(emailType, requestId);
+    await Promise.all([
+      sendNotification(emailType, requestId),
+      sendNotification("booking_cancelled_to_requester", requestId),
+    ]);
     fetchRequests();
     return { ok: true, refundPct };
   }, [fetchRequests]);
@@ -238,7 +240,6 @@ export const useBookingRequests = (currentUser) => {
       .eq("booking_request_id", requestId)
       .is("released_at", null);
 
-    await sendNotification("payment_processed_to_host", requestId);
     await sendNotification("experience_confirmed_to_host", requestId);
     fetchRequests();
     return true;

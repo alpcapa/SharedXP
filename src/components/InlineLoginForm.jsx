@@ -32,7 +32,7 @@ const InlineLoginForm = ({ onEmailLogin, onForgotPassword, title, description })
 
     try {
       const result = await onEmailLogin?.(email, password);
-      if (result?.error) setError(result.error.message ?? "Login failed. Please try again.");
+      if (!result?.success) setError(result?.message ?? "Login failed. Please try again.");
     } catch {
       setError("Login failed. Please try again.");
     }
