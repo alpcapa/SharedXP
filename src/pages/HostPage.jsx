@@ -272,7 +272,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
 
   const cmBannerVisible = (() => {
     if (!cmEligible || currentUser?.isCm) return false;
-    if (cmAppStatus === "banned") return false;
+    if (currentUser?.cmProfile?.status === "banned") return false;
     if (cmAppStatus === "declined" && cmAppUpdatedAt) {
       const daysSince = (Date.now() - new Date(cmAppUpdatedAt).getTime()) / 86400000;
       return daysSince >= 90;

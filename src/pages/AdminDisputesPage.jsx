@@ -126,14 +126,14 @@ const CMManagementPanel = () => {
     setActionBusy(null);
   };
 
-  const banApplication = async (app) => {
-    if (busy(app.id)) return;
-    if (!confirm("Ban this user from ever applying as a CM? This cannot be undone easily.")) return;
-    setActionBusy(app.id);
-    await supabase
-      .from("cm_applications")
-      .update({ status: "banned", admin_notes: getNote(app.id) || "Banned for illegal activity." })
-      .eq("id", app.id);
+  const banCm = async (cm) => {
+    const reason = getNote(cm.id);
+    if (!reason.trim()) { alert("Please enter a reason for the ban before proceeding."); return; }
+    if (busy(cm.id)) return;
+    if (!confirm("Permanently ban this CM for illegal activity? This cannot be undone easily.")) return;
+    setActionBusy(cm.id);
+    await supabase.from("cm_profiles").update({ status: "banned" }).eq("id", cm.id);
+    await sendCmEmail("cm_banned", cm.user_id, { adminNotes: reason });
     await fetchAll();
     setActionBusy(null);
   };
@@ -162,7 +162,7 @@ const CMManagementPanel = () => {
   };
 
   const pendingApps = applications.filter((a) => ["pending", "interview"].includes(a.status));
-  const closedApps = applications.filter((a) => ["accepted", "declined", "banned"].includes(a.status));
+  const closedApps = applications.filter((a) => ["accepted", "declined"].includes(a.status));
 
   const statusBadge = (status) => {
     const map = {
@@ -170,7 +170,6 @@ const CMManagementPanel = () => {
       interview: "cm-badge-interview",
       accepted: "cm-badge-accepted",
       declined: "cm-badge-declined",
-      banned: "cm-badge-declined",
       active: "cm-badge-accepted",
       paused: "cm-badge-pending",
       revoked: "cm-badge-declined",
@@ -263,14 +262,6 @@ const CMManagementPanel = () => {
                 >
                   {busy(app.id) ? "…" : "Decline"}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  disabled={busy(app.id)}
-                  onClick={() => banApplication(app)}
-                >
-                  {busy(app.id) ? "…" : "Ban"}
-                </button>
               </div>
             </article>
           ))}
@@ -357,7 +348,7 @@ const CMManagementPanel = () => {
                       {busy(cm.id) ? "…" : "Re-activate"}
                     </button>
                   )}
-                  {cm.status !== "revoked" && (
+                  {cm.status !== "revoked" && cm.status !== "banned" && (
                     <button
                       type="button"
                       className="btn btn-danger"
@@ -370,6 +361,28 @@ const CMManagementPanel = () => {
                     >
                       {busy(cm.id) ? "…" : "Revoke"}
                     </button>
+                  )}
+                  {cm.status !== "banned" && (
+                    <div className="cm-ban-row">
+                      <input
+                        type="text"
+                        className="cm-ban-reason-input"
+                        placeholder="Reason for ban (required)"
+                        value={getNote(cm.id)}
+                        onChange={(e) => setNote(cm.id, e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        disabled={busy(cm.id)}
+                        onClick={() => banCm(cm)}
+                      >
+                        {busy(cm.id) ? "…" : "Ban"}
+                      </button>
+                    </div>
+                  )}
+                  {cm.status === "banned" && (
+                    <span className="cm-banned-label">Banned</span>
                   )}
                 </div>
               </article>

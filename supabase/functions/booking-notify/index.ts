@@ -748,6 +748,7 @@ function buildCmCommissionApproved(
 function buildCmStatusChange(
   cm: Record<string, unknown>,
   emailType: string,
+  adminNotes = "",
 ): { to: string; subject: string; html: string } {
   const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
   const configs: Record<string, { heading: string; lines: string[]; label: string }> = {
@@ -757,6 +758,15 @@ function buildCmStatusChange(
         `Hi ${name}, your SharedXP Community Manager account has been temporarily paused.`,
         `While paused, your invite code will not be active and no new referrals will be attributed. Existing commissions are not affected.`,
         `Contact us at support@sharedxp.com if you have any questions.`,
+      ],
+      label: "Contact Support",
+    },
+    cm_banned: {
+      heading: `Your CM account has been banned`,
+      lines: [
+        `Hi ${name}, your SharedXP Community Manager account has been permanently banned due to a violation of our Community Manager Policy.`,
+        ...(adminNotes ? [`<strong>Reason:</strong> ${adminNotes}`] : []),
+        `Any pending approved commissions will still be paid out. If you believe this is an error, please contact us at support@sharedxp.com.`,
       ],
       label: "Contact Support",
     },
@@ -910,8 +920,9 @@ serve(async (req: Request): Promise<Response> => {
         }
         case "cm_paused":
         case "cm_reactivated":
-        case "cm_revoked": {
-          const e = buildCmStatusChange(userProfile, emailType);
+        case "cm_revoked":
+        case "cm_banned": {
+          const e = buildCmStatusChange(userProfile, emailType, adminNotes ?? "");
           await sendEmail(e.to, e.subject, e.html);
           break;
         }

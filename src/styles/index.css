@@ -7302,6 +7302,34 @@ body {
   line-height: 1.6;
   margin: 0 0 20px;
 }
+/* CM ban row in admin active CMs */
+.cm-ban-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+.cm-ban-reason-input {
+  flex: 1;
+  border: 1px solid #e8393980;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1a1a1a;
+}
+.cm-ban-reason-input:focus {
+  outline: none;
+  border-color: #e53e3e;
+}
+.cm-banned-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e53e3e;
+  padding: 6px 0;
+}
+
 .cm-popup-dont-show {
   display: flex;
   align-items: center;

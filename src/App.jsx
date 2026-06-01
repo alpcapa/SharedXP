@@ -133,8 +133,8 @@ function App() {
           .select("status, updated_at")
           .eq("user_id", user.id)
           .maybeSingle();
+        if (user.cmProfile?.status === "banned") return;
         if (app) {
-          if (app.status === "banned") return;
           if (app.status === "pending" || app.status === "interview" || app.status === "accepted") return;
           if (app.status === "declined" && app.updated_at) {
             const daysSince = (Date.now() - new Date(app.updated_at).getTime()) / 86400000;
