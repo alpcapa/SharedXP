@@ -905,7 +905,7 @@ serve(async (req: Request): Promise<Response> => {
         case "cm_paused":
         case "cm_reactivated":
         case "cm_revoked": {
-          const e = buildCmStatusChange(userProfile, emailType, adminNotes ?? "");
+          const e = buildCmStatusChange(userProfile, emailType);
           await sendEmail(e.to, e.subject, e.html);
           break;
         }
