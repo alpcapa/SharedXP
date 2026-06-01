@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import BottomNav from "./components/BottomNav";
 import InstallBanner from "./components/InstallBanner";
 import HomePage from "./pages/HomePage";
@@ -100,6 +100,19 @@ function App() {
     };
   }, [navigate]);
 
+  const [showCmEligiblePopup, setShowCmEligiblePopup] = useState(false);
+
+  useEffect(() => {
+    const user = authActions.currentUser;
+    if (!user || !user.isHost || user.isCm) return;
+    const hostedCount = user.hostHistory?.length ?? 0;
+    if (hostedCount < 3) return;
+    const key = `cm_popup_shown_${user.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    setShowCmEligiblePopup(true);
+  }, [authActions.currentUser]);
+
   return (
     <>
     <Routes>
@@ -147,6 +160,20 @@ function App() {
       <Route path="/reset-password" element={<ResetPasswordPage {...authActions} />} />
       <Route path="*" element={<NotFoundPage {...authActions} />} />
     </Routes>
+    {showCmEligiblePopup && (
+      <div className="cm-eligible-popup-backdrop" onClick={() => setShowCmEligiblePopup(false)}>
+        <div className="cm-eligible-popup" onClick={(e) => e.stopPropagation()}>
+          <button className="cm-eligible-popup-close" type="button" onClick={() => setShowCmEligiblePopup(false)}>&#x2715;</button>
+          <h2 className="cm-eligible-popup-title">You've been selected!</h2>
+          <p className="cm-eligible-popup-body">
+            Congratulations — you've been selected to become our new Community Manager. Click below to learn more and apply.
+          </p>
+          <button type="button" className="btn btn-primary" onClick={() => { setShowCmEligiblePopup(false); navigate("/host-settings"); }}>
+            Learn More &amp; Apply
+          </button>
+        </div>
+      </div>
+    )}
     <InstallBanner />
     <BottomNav currentUser={authActions.currentUser} />
     </>

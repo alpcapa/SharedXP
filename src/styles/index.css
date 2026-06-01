@@ -7171,12 +7171,21 @@ body {
   border: 1px solid #e0e0d8;
   border-radius: 10px;
   padding: 20px 24px;
-  margin-top: 32px;
+  margin-bottom: 20px;
 }
 .cm-host-banner-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.cm-banner-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #1a1a1a;
+  text-decoration: underline;
+  cursor: pointer;
 }
 .cm-host-banner-info strong {
   font-size: 15px;
@@ -7185,6 +7194,113 @@ body {
 .cm-host-banner-info span {
   font-size: 13px;
   color: #666;
+}
+
+/* CM info step */
+.cm-info-benefits {
+  background: #f8f8f6;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.cm-info-benefits h4 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #888;
+  margin: 0 0 12px;
+}
+.cm-info-benefits ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: disc;
+}
+.cm-info-benefits li {
+  font-size: 14px;
+  color: #1a1a1a;
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+
+/* CM form checkboxes — use higher specificity to override .cm-application-form label */
+.cm-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+}
+.cm-checkbox-row + .cm-checkbox-row {
+  margin-top: 6px;
+}
+.cm-checkbox-row input[type="checkbox"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: #1a1a1a;
+}
+.cm-application-form .cm-checkbox-row label {
+  display: inline;
+  font-size: 13px;
+  color: #444;
+  font-weight: 400;
+  margin: 0;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.cm-checkbox-row a {
+  color: #1a1a1a;
+  text-decoration: underline;
+}
+
+/* CM eligible login popup */
+.cm-eligible-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.cm-eligible-popup {
+  background: #fff;
+  border-radius: 14px;
+  padding: 40px 32px 36px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+}
+.cm-eligible-popup-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+}
+.cm-eligible-popup-close:hover {
+  color: #1a1a1a;
+}
+.cm-eligible-popup-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 14px;
+}
+.cm-eligible-popup-body {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.6;
+  margin: 0 0 24px;
 }
 
 /* CM application modal */
