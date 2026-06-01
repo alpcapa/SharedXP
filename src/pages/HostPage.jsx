@@ -478,7 +478,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                   <>
                     <h2 className="cm-modal-title">Become our Community Manager (CM)</h2>
                     <p className="cm-modal-intro">
-                      Community Managers are SharedXP's trusted local ambassadors. As a CM you grow the community in your city by sharing your unique invite code with sports enthusiasts.
+                      Community Managers are SharedXP's trusted local ambassadors. As a CM, your main goal is to grow the community in your city by sharing your unique invite code with sports enthusiasts. The more people you engage, the more you earn. That simple.
                     </p>
                     <div className="cm-info-benefits">
                       <h4>Benefits</h4>
