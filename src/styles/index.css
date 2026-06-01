@@ -7323,12 +7323,6 @@ body {
   outline: none;
   border-color: #e53e3e;
 }
-.cm-banned-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #e53e3e;
-  padding: 6px 0;
-}
 
 .cm-popup-dont-show {
   display: flex;

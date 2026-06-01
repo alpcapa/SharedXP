@@ -754,14 +754,6 @@ function buildCmStatusChange(
       ],
       label: "Contact Support",
     },
-    cm_banned: {
-      heading: `Your CM account has been revoked`,
-      lines: [
-        `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
-        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you have any questions.`,
-      ],
-      label: "Contact Support",
-    },
     cm_reactivated: {
       heading: `Your CM account is active again, ${name}!`,
       lines: [
@@ -912,8 +904,7 @@ serve(async (req: Request): Promise<Response> => {
         }
         case "cm_paused":
         case "cm_reactivated":
-        case "cm_revoked":
-        case "cm_banned": {
+        case "cm_revoked": {
           const e = buildCmStatusChange(userProfile, emailType, adminNotes ?? "");
           await sendEmail(e.to, e.subject, e.html);
           break;

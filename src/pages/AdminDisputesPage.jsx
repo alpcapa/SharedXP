@@ -185,7 +185,6 @@ const CMManagementPanel = () => {
       active: "cm-badge-accepted",
       paused: "cm-badge-pending",
       revoked: "cm-badge-declined",
-      banned: "cm-badge-declined",
     };
     return <span className={`cm-admin-badge ${map[status] ?? ""}`}>{status}</span>;
   };

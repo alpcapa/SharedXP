@@ -133,7 +133,7 @@ function App() {
           .select("status, updated_at")
           .eq("user_id", user.id)
           .maybeSingle();
-        if (user.cmProfile?.status === "revoked" || user.cmProfile?.status === "banned") return;
+        if (user.cmProfile?.status === "revoked") return;
         if (app) {
           if (app.status === "pending" || app.status === "interview" || app.status === "accepted") return;
           if (app.status === "declined" && app.updated_at) {
