@@ -7219,7 +7219,10 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 10px;
+}
+.cm-checkbox-row + .cm-checkbox-row {
+  margin-top: 6px;
 }
 .cm-checkbox-row input[type="checkbox"] {
   margin-top: 3px;

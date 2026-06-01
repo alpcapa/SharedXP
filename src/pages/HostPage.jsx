@@ -479,7 +479,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                   </div>
                 ) : cmStep === "info" ? (
                   <>
-                    <h2 className="cm-modal-title">Become a Community Manager</h2>
+                    <h2 className="cm-modal-title">Become our Community Manager (CM)</h2>
                     <p className="cm-modal-intro">
                       Community Managers are SharedXP's trusted local ambassadors. As a CM you grow the community in your city by sharing your unique invite code with sports enthusiasts.
                     </p>
