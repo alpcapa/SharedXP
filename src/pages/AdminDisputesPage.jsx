@@ -74,11 +74,8 @@ const CMManagementPanel = () => {
     if (busy(app.id)) return;
     if (!confirm("Move this application to interview stage?")) return;
     setActionBusy(app.id);
-    await supabase
-      .from("cm_applications")
-      .update({ status: "interview", admin_notes: getNote(app.id) })
-      .eq("id", app.id);
-    await sendCmEmail("cm_interview", app.user_id, { adminNotes: getNote(app.id) });
+    await supabase.from("cm_applications").update({ status: "interview" }).eq("id", app.id);
+    await sendCmEmail("cm_interview", app.user_id);
     await fetchAll();
     setActionBusy(null);
   };
@@ -108,7 +105,7 @@ const CMManagementPanel = () => {
       return;
     }
     await supabase.from("cm_applications").update({ status: "accepted" }).eq("id", app.id);
-    await sendCmEmail("cm_accepted", app.user_id, { inviteCode, adminNotes: getNote(app.id) });
+    await sendCmEmail("cm_accepted", app.user_id, { inviteCode });
     await fetchAll();
     setActionBusy(null);
   };
@@ -117,11 +114,8 @@ const CMManagementPanel = () => {
     if (busy(app.id)) return;
     if (!confirm("Decline this application?")) return;
     setActionBusy(app.id);
-    await supabase
-      .from("cm_applications")
-      .update({ status: "declined", admin_notes: getNote(app.id) })
-      .eq("id", app.id);
-    await sendCmEmail("cm_declined", app.user_id, { adminNotes: getNote(app.id) });
+    await supabase.from("cm_applications").update({ status: "declined" }).eq("id", app.id);
+    await sendCmEmail("cm_declined", app.user_id);
     await fetchAll();
     setActionBusy(null);
   };
@@ -237,17 +231,6 @@ const CMManagementPanel = () => {
                 <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
                 <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
                 {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
-              </div>
-              <div className="cm-admin-notes-row">
-                <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">Admin notes (sent in email)</label>
-                <textarea
-                  id={`notes-${app.id}`}
-                  className="cm-admin-notes"
-                  rows={2}
-                  placeholder="Optional notes…"
-                  value={getNote(app.id)}
-                  onChange={(e) => setNote(app.id, e.target.value)}
-                />
               </div>
               <div className="admin-dispute-actions">
                 <button
