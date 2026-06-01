@@ -95,26 +95,32 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
   // Fetch reviews and photos from booking_requests for both guest and host roles
   useEffect(() => {
     if (!currentUser?.id) return;
-    Promise.all([
-      // As guest: bookings where the user was the requester
-      supabase
-        .from("booking_requests")
-        .select(
-          "host_rating, host_review, host_rated_at, guest_photos, host_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)"
-        )
-        .eq("requester_id", currentUser.id)
-        .eq("status", "completed")
-        .order("host_rated_at", { ascending: false }),
-      // As host: bookings where the user was the host
-      supabase
-        .from("booking_requests")
-        .select(
-          "guest_rating, guest_review, guest_rated_at, guest_photos, host_photos, sport, requester_profile:profiles!requester_id(full_name, first_name, last_name)"
-        )
-        .eq("host_id", currentUser.id)
-        .eq("status", "completed")
-        .order("guest_rated_at", { ascending: false }),
-    ]).then(([guestResult, hostResult]) => {
+    let cancelled = false;
+
+    (async () => {
+      const [guestResult, hostResult] = await Promise.all([
+        // As guest: bookings where the user was the requester
+        supabase
+          .from("booking_requests")
+          .select(
+            "host_rating, host_review, host_rated_at, guest_photos, host_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)"
+          )
+          .eq("requester_id", currentUser.id)
+          .eq("status", "completed")
+          .order("host_rated_at", { ascending: false }),
+        // As host: bookings where the user was the host
+        supabase
+          .from("booking_requests")
+          .select(
+            "requester_id, guest_rating, guest_review, guest_rated_at, guest_photos, host_photos, sport"
+          )
+          .eq("host_id", currentUser.id)
+          .eq("status", "completed")
+          .order("guest_rated_at", { ascending: false }),
+      ]);
+
+      if (cancelled) return;
+
       // As-guest reviews (reviews host gave about this user)
       if (guestResult.error) {
         console.error("[UserProfilePage] booking_requests (guest) fetch:", guestResult.error);
@@ -148,15 +154,31 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
         setBrGuestPhotos([...new Set(photos)]);
       }
 
-      // As-host reviews (reviews guest gave about this user as host)
+      // As-host reviews: fetch reviewer names from profile_names view so non-host
+      // guest names are visible (the profiles RLS only exposes is_host rows to others).
       if (hostResult.error) {
         console.error("[UserProfilePage] booking_requests (host) fetch:", hostResult.error);
       } else {
         const rows = hostResult.data ?? [];
+
+        const requesterIds = [...new Set(rows.map((r) => r.requester_id).filter(Boolean))];
+        const nameMap = {};
+        if (requesterIds.length > 0) {
+          const { data: nameRows } = await supabase
+            .from("profile_names")
+            .select("id, full_name, first_name, last_name")
+            .in("id", requesterIds);
+          if (!cancelled) {
+            (nameRows ?? []).forEach((p) => { nameMap[p.id] = p; });
+          }
+        }
+
+        if (cancelled) return;
+
         const reviews = rows
           .filter((r) => Number(r.guest_rating) > 0)
           .map((r) => {
-            const p = r.requester_profile;
+            const p = nameMap[r.requester_id] ?? null;
             const guestName = p
               ? p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Guest"
               : "Guest";
@@ -180,7 +202,9 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
           .filter((p) => p && p !== HISTORY_PLACEHOLDER_EVENT_PHOTO);
         setBrHostPhotos([...new Set(photos)]);
       }
-    });
+    })();
+
+    return () => { cancelled = true; };
   }, [currentUser?.id]);
 
   const sportsSelection = (Array.isArray(currentUser?.sports) ? currentUser.sports : [])
@@ -207,12 +231,12 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
   // Reviews received as a host (from guests), sorted newest first
   const overallGuestReviews = useMemo(() => {
     const legacy = (Array.isArray(currentUser?.hostHistory) ? currentUser.hostHistory : [])
-      .filter((item) => item && Number(item.rating) > 0)
+      .filter((item) => item && Number(item.attendeeRating) > 0)
       .map((item, index) => ({
         id: `legacy-host-${item.participantName ?? "Guest"}-${index}`,
         guestName: String(item.participantName ?? "Guest").trim() || "Guest",
         eventName: String(item.sport ?? item.eventName ?? "").trim(),
-        rating: Number(item.rating),
+        rating: Number(item.attendeeRating),
         review: item.review || null,
         completedAt: item.completedAt || null,
       }));

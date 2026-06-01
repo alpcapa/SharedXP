@@ -323,23 +323,11 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
             .order("completed_at", { ascending: false }),
           supabase
             .from("booking_requests")
-            .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
+            .select("requester_id, guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
             .eq("host_id", userId)
             .eq("status", "completed")
             .gt("guest_rating", 0)
-            .order("guest_rated_at", { ascending: false })
-            .then(async (res) => {
-              if (res.error) {
-                return supabase
-                  .from("booking_requests")
-                  .select("requester_profile:profiles!requester_id(full_name, first_name, last_name), guest_rating, guest_host_ratings, guest_review, guest_photos, sport, guest_rated_at")
-                  .eq("host_id", userId)
-                  .eq("status", "completed")
-                  .gt("guest_rating", 0)
-                  .order("guest_rated_at", { ascending: false });
-              }
-              return res;
-            }),
+            .order("guest_rated_at", { ascending: false }),
         ]);
 
         if (cancelled) return;
@@ -349,15 +337,33 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
         }
 
         const legacyHostRevs = (legacyHostResult.data ?? []).map((r) => ({
-          author: r.counterparty_name || "Attendee",
+          author: r.counterparty_name || "Guest",
           overall: r.attendee_rating,
           sport: r.sport,
           date: r.completed_at,
         }));
 
-        const brHostRevs = (brHostResult.data ?? []).map((r) => {
-          const p = r.requester_profile;
-          const author = p ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Attendee") : "Attendee";
+        const brRows = brHostResult.data ?? [];
+
+        // Fetch reviewer names from the public profile_names view, which is
+        // readable by all visitors regardless of auth state.
+        const requesterIds = [...new Set(brRows.map((r) => r.requester_id).filter(Boolean))];
+        const nameMap = {};
+        if (requesterIds.length > 0) {
+          const { data: nameRows } = await supabase
+            .from("profile_names")
+            .select("id, full_name, first_name, last_name")
+            .in("id", requesterIds);
+          (nameRows ?? []).forEach((p) => { nameMap[p.id] = p; });
+        }
+
+        if (cancelled) return;
+
+        const brHostRevs = brRows.map((r) => {
+          const p = nameMap[r.requester_id] ?? null;
+          const author = p
+            ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Guest")
+            : "Guest";
           const bd = r.guest_host_ratings ?? {};
           return {
             author,
@@ -602,7 +608,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
       setIsSubmitting(false);
       return;
     }
-    sendNotification("booking_request_to_host", bookingRequest.id);
+    await sendNotification("booking_request_to_host", bookingRequest.id);
     setIsSubmitting(false);
     setIsRequestSubmitted(true);
   };
@@ -934,11 +940,12 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                     {visibleHostReviews.map((r, i) => (
                       <article key={i} className="review-card">
                         <p>
-                          <strong>{r.author}</strong> · ⭐ {r.overall}
+                          <strong>{r.author}</strong>{' · '}<span className="review-rating-inline">⭐ {r.overall != null ? Number(r.overall).toFixed(1) : '0.0'}</span>
                           {r.date && <span className="review-date"> · {fmtMonthYear(r.date)}</span>}
                         </p>
                         {r.overall != null && (
                           <div className="review-breakdown">
+                            <span>Overall {getStars(Math.round(r.overall))}</span>
                             {r.punctuality != null && <span>Punctuality {getStars(r.punctuality)}</span>}
                             {r.equipmentQuality != null && <span>Equipment {getStars(r.equipmentQuality)}</span>}
                             {r.localKnowledge != null && <span>Local knowledge {getStars(r.localKnowledge)}</span>}
@@ -990,7 +997,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                 {submitError && <p className="booking-modal-error" role="alert">{submitError}</p>}
                 <div className="booking-modal-actions">
                   <button type="button" className="btn btn-light" onClick={() => setIsConfirmationOpen(false)} disabled={isSubmitting}>Back</button>
-                  <button type="button" className="find-button booking-confirm-button" onClick={handleFinalConfirmation} disabled={isSubmitting}>
+                  <button type="button" className="btn btn-primary" onClick={handleFinalConfirmation} disabled={isSubmitting}>
                     {isSubmitting ? "Sending…" : "Final Confirmation"}
                   </button>
                 </div>
@@ -1001,7 +1008,7 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                 <p>Your request has been sent to {displayName}. You'll receive an email when they respond.</p>
                 <div className="booking-modal-actions">
                   <button type="button" className="btn btn-light" onClick={() => setIsConfirmationOpen(false)}>Stay here</button>
-                  <button type="button" className="find-button booking-confirm-button"
+                  <button type="button" className="btn btn-primary"
                     onClick={() => { setIsConfirmationOpen(false); navigate("/history?tab=pending"); }}>
                     View pending bookings
                   </button>

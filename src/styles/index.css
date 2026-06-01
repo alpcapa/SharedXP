@@ -39,11 +39,16 @@
   --footer-trust-panel-ratio: 1.08fr;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   color: #141a1f;
   background: #f5f5f2;
+  overflow-x: hidden;
 }
 
 .middle-page-frame {
@@ -556,6 +561,10 @@ body {
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-light {
@@ -869,6 +878,7 @@ body {
   font-weight: 800;
   padding: 0 24px;
   white-space: nowrap;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -1814,6 +1824,9 @@ body {
   font-family: inherit;
   min-height: 46px;
   background: #fff;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .host-form-grid textarea {
@@ -1968,6 +1981,8 @@ body {
   font-family: inherit;
   background: #fff;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .host-availability-time > div {
@@ -3871,10 +3886,10 @@ body {
 
 /* ── Review breakdown (ProfilePage) ──────── */
 .review-breakdown {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 4px 0 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px 12px;
+  margin: 6px 0 10px;
 }
 
 .review-breakdown span {
@@ -3884,11 +3899,6 @@ body {
   color: #596164;
 }
 
-.review-breakdown span + span::before {
-  content: "·";
-  margin-right: 12px;
-  color: #596164;
-}
 
 .review-photos {
   display: flex;
@@ -4433,10 +4443,12 @@ body {
 @media (max-width: 720px) {
   .host-tab-actions-row {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .host-tab-actions-row .host-tab-bar {
     flex: unset;
+    width: 100%;
   }
 }
 
@@ -4466,6 +4478,16 @@ body {
   border-bottom: 3px solid transparent;
   margin-bottom: -2px;
   transition: color 0.15s, border-color 0.15s;
+}
+
+@media (max-width: 720px) {
+  .host-tab-btn {
+    flex: 1;
+    padding: 12px 10px;
+    font-size: 13px;
+    justify-content: center;
+    white-space: normal;
+  }
 }
 
 .host-tab-btn:hover {
@@ -4795,6 +4817,7 @@ body {
   font-size: 14px;
   padding: 10px 20px;
   text-decoration: none;
+  align-self: flex-start;
 }
 
 /* ── In-progress panel ───────────────────────────── */
@@ -6051,6 +6074,12 @@ body {
   font-weight: 400;
 }
 
+.review-rating-inline {
+  font-size: 12px;
+  color: #596164;
+  font-weight: 400;
+}
+
 /* Guest tab content sections — match the white-card style of host-tab sections */
 .guest-profile-reviews,
 .guest-profile-gallery {
@@ -6729,8 +6758,8 @@ body {
 
 .cancel-policy-rules {
   width: 100%;
-  margin: 4px 0 0 24px;
-  padding: 0;
+  margin: 4px 0 0 0;
+  padding: 0 0 0 24px;
   font-size: 13px;
   color: #6b7280;
   list-style: disc;
@@ -6831,6 +6860,13 @@ body {
 
   .brand {
     font-size: 28px;
+  }
+
+  /* Compact auth buttons in portrait mobile header */
+  .auth-actions .btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    white-space: nowrap;
   }
 
   /* Bottom navigation bar */
@@ -7530,5 +7566,30 @@ body {
   }
   .cm-admin-card-header {
     flex-direction: column;
+  }
+}
+
+/* ── Mobile landscape orientation fixes ──── */
+@media (max-width: 900px) and (orientation: landscape) {
+  .site-header {
+    flex-wrap: nowrap;
+    padding: 8px 16px;
+  }
+  .site-nav {
+    order: unset;
+    width: auto;
+    gap: 14px;
+  }
+  .site-nav-link,
+  .nav-link-button {
+    white-space: nowrap;
+  }
+  .auth-actions .btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .locals-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
