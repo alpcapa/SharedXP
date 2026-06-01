@@ -499,7 +499,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                   </>
                 ) : (
                   <>
-                    <h2 className="cm-modal-title">Apply to Become a Community Manager</h2>
+                    <h2 className="cm-modal-title">Apply to Become our Community Manager</h2>
                     <p className="cm-modal-intro">
                       Tell us about yourself and why you'd be a great SharedXP ambassador. We'll review your application and get back to you within 5 business days.
                     </p>
@@ -540,7 +540,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                           onChange={onCmFormChange}
                         />
                         <label htmlFor="cm-terms">
-                          I have read and agree to the <a href="/community-manager-policy" target="_blank" rel="noopener noreferrer">Community Manager terms</a>
+                          I have read and agreed to the <a href="/community-manager-policy" target="_blank" rel="noopener noreferrer">Community Manager terms</a>
                         </label>
                       </div>
                       <div className="cm-checkbox-row">
@@ -552,12 +552,12 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                           onChange={onCmFormChange}
                         />
                         <label htmlFor="cm-contact-permission">
-                          I agree to be contacted by SharedXP regarding Community Manager matters
+                          I agree to be contacted by SharedXP regarding CM matters
                         </label>
                       </div>
                       {cmError && <p className="cm-form-error" role="alert">{cmError}</p>}
                       <div className="cm-modal-actions">
-                        <button type="button" className="btn btn-secondary" onClick={() => setCmStep("info")}>Back</button>
+                        <button type="button" className="btn btn-light" onClick={() => setCmStep("info")}>Back</button>
                         <button type="submit" className="btn btn-primary" disabled={cmSubmitting}>
                           {cmSubmitting ? "Submitting…" : "Submit Application"}
                         </button>
