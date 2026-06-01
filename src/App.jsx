@@ -101,10 +101,24 @@ function App() {
   }, [navigate]);
 
   const [showCmEligiblePopup, setShowCmEligiblePopup] = useState(false);
+  const [cmPopupDontShow, setCmPopupDontShow] = useState(false);
+  const prevUserIdRef = useRef(null);
 
   useEffect(() => {
     const user = authActions.currentUser;
-    if (!user || !user.isHost || user.isCm) return;
+
+    // User just logged out — clear the per-login session flag so it shows again on next login
+    if (!user) {
+      if (prevUserIdRef.current) {
+        sessionStorage.removeItem(`cm_popup_shown_${prevUserIdRef.current}`);
+      }
+      prevUserIdRef.current = null;
+      return;
+    }
+
+    prevUserIdRef.current = user.id;
+    if (!user.isHost || user.isCm) return;
+    if (localStorage.getItem(`cm_popup_never_${user.id}`)) return;
     const key = `cm_popup_shown_${user.id}`;
     if (sessionStorage.getItem(key)) return;
     supabase
@@ -119,6 +133,14 @@ function App() {
         }
       });
   }, [authActions.currentUser]);
+
+  const handleCmPopupClose = () => {
+    if (cmPopupDontShow && authActions.currentUser) {
+      localStorage.setItem(`cm_popup_never_${authActions.currentUser.id}`, "1");
+    }
+    setCmPopupDontShow(false);
+    setShowCmEligiblePopup(false);
+  };
 
   return (
     <>
@@ -168,15 +190,24 @@ function App() {
       <Route path="*" element={<NotFoundPage {...authActions} />} />
     </Routes>
     {showCmEligiblePopup && (
-      <div className="cm-eligible-popup-backdrop" onClick={() => setShowCmEligiblePopup(false)}>
+      <div className="cm-eligible-popup-backdrop" onClick={handleCmPopupClose}>
         <div className="cm-eligible-popup" onClick={(e) => e.stopPropagation()}>
-          <button className="cm-eligible-popup-close" type="button" onClick={() => setShowCmEligiblePopup(false)}>&#x2715;</button>
+          <button className="cm-eligible-popup-close" type="button" onClick={handleCmPopupClose}>&#x2715;</button>
           <h2 className="cm-eligible-popup-title">You've been selected!</h2>
           <p className="cm-eligible-popup-body">
             Congratulations — you've been selected to become our new Community Manager. Click below to learn more and apply.
           </p>
-          <button type="button" className="btn btn-primary" onClick={() => { setShowCmEligiblePopup(false); navigate("/host-settings"); }}>
-            Learn More &amp; Apply
+          <div className="cm-popup-dont-show">
+            <input
+              type="checkbox"
+              id="cm-dont-show"
+              checked={cmPopupDontShow}
+              onChange={(e) => setCmPopupDontShow(e.target.checked)}
+            />
+            <label htmlFor="cm-dont-show">Don't show me again</label>
+          </div>
+          <button type="button" className="btn btn-primary" onClick={() => { handleCmPopupClose(); navigate("/host-settings"); }}>
+            Continue
           </button>
         </div>
       </div>
