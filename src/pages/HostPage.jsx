@@ -499,7 +499,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                   </>
                 ) : (
                   <>
-                    <h2 className="cm-modal-title">Apply to Become our Community Manager</h2>
+                    <h2 className="cm-modal-title">Apply to become our Community Manager</h2>
                     <p className="cm-modal-intro">
                       Tell us about yourself and why you'd be a great SharedXP ambassador. We'll review your application and get back to you within 5 business days.
                     </p>
