@@ -105,12 +105,19 @@ function App() {
   useEffect(() => {
     const user = authActions.currentUser;
     if (!user || !user.isHost || user.isCm) return;
-    const hostedCount = user.hostHistory?.length ?? 0;
-    if (hostedCount < 3) return;
     const key = `cm_popup_shown_${user.id}`;
     if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, "1");
-    setShowCmEligiblePopup(true);
+    supabase
+      .from("booking_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("host_id", user.id)
+      .eq("status", "completed")
+      .then(({ count }) => {
+        if (count !== null && count >= 3) {
+          sessionStorage.setItem(key, "1");
+          setShowCmEligiblePopup(true);
+        }
+      });
   }, [authActions.currentUser]);
 
   return (
