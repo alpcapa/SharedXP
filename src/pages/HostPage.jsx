@@ -537,7 +537,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                           onChange={onCmFormChange}
                         />
                         <label htmlFor="cm-terms">
-                          I have read and agreed to the <a href="/community-manager-policy" target="_blank" rel="noopener noreferrer">Community Manager terms</a>
+                          I have read and agreed to the <a href="/community-manager-policy" target="_blank" rel="noopener noreferrer">Community Manager Policy</a>
                         </label>
                       </div>
                       <div className="cm-checkbox-row">
