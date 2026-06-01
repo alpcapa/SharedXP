@@ -748,7 +748,6 @@ function buildCmCommissionApproved(
 function buildCmStatusChange(
   cm: Record<string, unknown>,
   emailType: string,
-  adminNotes = "",
 ): { to: string; subject: string; html: string } {
   const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
   const configs: Record<string, { heading: string; lines: string[]; label: string }> = {
@@ -756,9 +755,8 @@ function buildCmStatusChange(
       heading: `Your CM account has been paused`,
       lines: [
         `Hi ${name}, your SharedXP Community Manager account has been temporarily paused.`,
-        ...(adminNotes ? [`<strong>Reason:</strong> ${adminNotes}`] : []),
         `While paused, your invite code will not be active and no new referrals will be attributed. Existing commissions are not affected.`,
-        `Contact us at support@sharedxp.com if you have any questions.`,
+        `If you have any questions, please contact us at support@sharedxp.com.`,
       ],
       label: "Contact Support",
     },
@@ -766,8 +764,7 @@ function buildCmStatusChange(
       heading: `Your CM account has been revoked`,
       lines: [
         `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
-        ...(adminNotes ? [`<strong>Reason:</strong> ${adminNotes}`] : []),
-        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you believe this is an error.`,
+        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you have any questions.`,
       ],
       label: "Contact Support",
     },
@@ -775,7 +772,6 @@ function buildCmStatusChange(
       heading: `Your CM account is active again, ${name}!`,
       lines: [
         `Great news! Your SharedXP Community Manager account has been re-activated.`,
-        ...(adminNotes ? [`<strong>Note from the team:</strong> ${adminNotes}`] : []),
         `Your invite code is live again — start sharing and earning commissions!`,
       ],
       label: "Go to CM Dashboard",
@@ -784,8 +780,7 @@ function buildCmStatusChange(
       heading: `Your CM status has been revoked`,
       lines: [
         `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
-        ...(adminNotes ? [`<strong>Reason:</strong> ${adminNotes}`] : []),
-        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you believe this is an error.`,
+        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you have any questions.`,
       ],
       label: "Contact Support",
     },

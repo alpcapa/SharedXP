@@ -122,33 +122,37 @@ const CMManagementPanel = () => {
 
   // Active CM actions
   const pauseCm = async (cm) => {
+    const note = getNote(cm.id);
+    if (!note.trim()) { alert("Please enter a reason before pausing."); return; }
     if (busy(cm.id)) return;
     if (!confirm("Pause this CM's account?")) return;
     setActionBusy(cm.id);
-    await supabase.from("cm_profiles").update({ status: "paused" }).eq("id", cm.id);
-    await sendCmEmail("cm_paused", cm.user_id, { adminNotes: getNote(cm.id) });
+    await supabase.from("cm_profiles").update({ status: "paused", admin_notes: note }).eq("id", cm.id);
+    await sendCmEmail("cm_paused", cm.user_id);
     await fetchAll();
     setActionBusy(null);
   };
 
   const reactivateCm = async (cm) => {
+    const note = getNote(cm.id);
+    if (!note.trim()) { alert("Please enter a reason before re-activating."); return; }
     if (busy(cm.id)) return;
     if (!confirm("Re-activate this CM's account?")) return;
     setActionBusy(cm.id);
-    await supabase.from("cm_profiles").update({ status: "active" }).eq("id", cm.id);
-    await sendCmEmail("cm_reactivated", cm.user_id, { adminNotes: getNote(cm.id) });
+    await supabase.from("cm_profiles").update({ status: "active", admin_notes: note }).eq("id", cm.id);
+    await sendCmEmail("cm_reactivated", cm.user_id);
     await fetchAll();
     setActionBusy(null);
   };
 
   const revokeCm = async (cm) => {
-    const reason = getNote(cm.id);
-    if (!reason.trim()) { alert("Please enter a reason before revoking."); return; }
+    const note = getNote(cm.id);
+    if (!note.trim()) { alert("Please enter a reason before revoking."); return; }
     if (busy(cm.id)) return;
     if (!confirm("Revoke this CM's access? This cannot be undone easily.")) return;
     setActionBusy(cm.id);
-    await supabase.from("cm_profiles").update({ status: "revoked" }).eq("id", cm.id);
-    await sendCmEmail("cm_revoked", cm.user_id, { adminNotes: reason });
+    await supabase.from("cm_profiles").update({ status: "revoked", admin_notes: note }).eq("id", cm.id);
+    await sendCmEmail("cm_revoked", cm.user_id);
     await fetchAll();
     setActionBusy(null);
   };
@@ -335,7 +339,7 @@ const CMManagementPanel = () => {
                 )}
                 <div className="cm-admin-notes-row">
                   <label htmlFor={`cm-notes-${cm.id}`} className="admin-dispute-label">
-                    Notes / reason (required for Revoke; included in all emails)
+                    Reason (required — saved to record only, not sent in email)
                   </label>
                   <textarea
                     id={`cm-notes-${cm.id}`}
