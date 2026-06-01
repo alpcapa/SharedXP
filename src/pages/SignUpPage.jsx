@@ -5,6 +5,7 @@ import SiteFooter from "../components/SiteFooter";
 import SignUpForm from "../components/auth/SignUpForm";
 import { COUNTRY_OPTIONS } from "../data/countries";
 import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
+import { supabase } from "../lib/supabase";
 
 const BIRTHDAY_PATTERN = new RegExp(
   "^(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
@@ -58,6 +59,7 @@ const initialForm = {
   gender: "Not Sharing",
   agreeTermsAndConditions: false,
   agreePromotionsAndMarketingEmails: false,
+  inviteCode: "",
 };
 
 const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => {
@@ -246,6 +248,26 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
     setErrorMessage("");
     setInvalidField("");
     setIsSubmitting(true);
+
+    // Validate invite code if provided.
+    let resolvedInviteCode = "";
+    const rawCode = formValues.inviteCode.trim().toUpperCase();
+    if (rawCode) {
+      const { data: cmRow } = await supabase
+        .from("cm_profiles")
+        .select("invite_code")
+        .eq("invite_code", rawCode)
+        .eq("status", "active")
+        .maybeSingle();
+      if (!cmRow) {
+        setErrorMessage("Invite code not found or no longer active.");
+        setInvalidField("inviteCode");
+        setIsSubmitting(false);
+        return;
+      }
+      resolvedInviteCode = rawCode;
+    }
+
     let result;
     try {
       result = await onEmailSignUp?.({
@@ -274,6 +296,7 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
         agreedToTermsAndConditions: formValues.agreeTermsAndConditions,
         agreedToPromotionsAndMarketingEmails:
           formValues.agreePromotionsAndMarketingEmails,
+        ...(resolvedInviteCode && { inviteCode: resolvedInviteCode }),
       });
     } catch (e) {
       console.error("[signup] onEmailSignUp:", e);
