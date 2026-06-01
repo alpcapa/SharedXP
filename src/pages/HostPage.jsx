@@ -228,8 +228,18 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
   const [cmError, setCmError] = useState("");
   const [cmSubmitting, setCmSubmitting] = useState(false);
   const [cmSuccess, setCmSuccess] = useState(false);
+  const [hostedCount, setHostedCount] = useState(currentUser?.hostHistory?.length ?? 0);
 
-  const hostedCount = currentUser?.hostHistory?.length ?? 0;
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    supabase
+      .from("booking_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("host_id", currentUser.id)
+      .eq("status", "completed")
+      .then(({ count }) => { if (count !== null) setHostedCount(count); });
+  }, [currentUser?.id]);
+
   const cmEligible = currentUser?.isHost && hostedCount >= 3;
 
   const onCmFormChange = (e) => {
