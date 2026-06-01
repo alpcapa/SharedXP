@@ -71,6 +71,7 @@ const CMManagementPanel = () => {
 
   // Applications actions
   const moveToInterview = async (app) => {
+    if (!getNote(app.id).trim()) { alert("Please enter a reason before moving to interview."); return; }
     if (busy(app.id)) return;
     if (!confirm("Move this application to interview stage?")) return;
     setActionBusy(app.id);
@@ -81,6 +82,7 @@ const CMManagementPanel = () => {
   };
 
   const acceptApplication = async (app) => {
+    if (!getNote(app.id).trim()) { alert("Please enter a reason before accepting."); return; }
     if (busy(app.id)) return;
     if (!confirm("Accept this application and generate an invite code?")) return;
     setActionBusy(app.id);
@@ -111,6 +113,7 @@ const CMManagementPanel = () => {
   };
 
   const declineApplication = async (app) => {
+    if (!getNote(app.id).trim()) { alert("Please enter a reason before declining."); return; }
     if (busy(app.id)) return;
     if (!confirm("Decline this application?")) return;
     setActionBusy(app.id);
@@ -237,7 +240,7 @@ const CMManagementPanel = () => {
                 {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
               </div>
               <div className="cm-admin-notes-row">
-                <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">Internal notes (saved to record, not sent in email)</label>
+                <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">Reason (required — saved to record only, not sent in email)</label>
                 <textarea
                   id={`notes-${app.id}`}
                   className="cm-admin-notes"
