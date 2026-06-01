@@ -7300,7 +7300,48 @@ body {
   font-size: 15px;
   color: #555;
   line-height: 1.6;
-  margin: 0 0 24px;
+  margin: 0 0 20px;
+}
+/* CM ban row in admin active CMs */
+.cm-ban-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+.cm-ban-reason-input {
+  flex: 1;
+  border: 1px solid #e8393980;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1a1a1a;
+}
+.cm-ban-reason-input:focus {
+  outline: none;
+  border-color: #e53e3e;
+}
+
+.cm-popup-dont-show {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.cm-popup-dont-show input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: #1a1a1a;
+  flex-shrink: 0;
+}
+.cm-popup-dont-show label {
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
 }
 
 /* CM application modal */

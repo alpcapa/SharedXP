@@ -230,6 +230,8 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
   const [cmSubmitting, setCmSubmitting] = useState(false);
   const [cmSuccess, setCmSuccess] = useState(false);
   const [hostedCount, setHostedCount] = useState(currentUser?.hostHistory?.length ?? 0);
+  const [cmAppStatus, setCmAppStatus] = useState(null);
+  const [cmAppUpdatedAt, setCmAppUpdatedAt] = useState(null);
 
   useEffect(() => {
     if (!currentUser?.id) return;
@@ -239,6 +241,21 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
       .eq("host_id", currentUser.id)
       .eq("status", "completed")
       .then(({ count }) => { if (count !== null) setHostedCount(count); });
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    supabase
+      .from("cm_applications")
+      .select("status, updated_at")
+      .eq("user_id", currentUser.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setCmAppStatus(data.status);
+          setCmAppUpdatedAt(data.updated_at);
+        }
+      });
   }, [currentUser?.id]);
 
   useEffect(() => {
@@ -252,6 +269,17 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
   }, [hostedCount, currentUser?.id, currentUser?.isHost, currentUser?.isCm]);
 
   const cmEligible = currentUser?.isHost && hostedCount >= 3;
+
+  const cmBannerVisible = (() => {
+    if (!cmEligible || currentUser?.isCm) return false;
+    if (currentUser?.cmProfile?.status === "revoked") return false;
+    if (cmAppStatus === "declined" && cmAppUpdatedAt) {
+      const daysSince = (Date.now() - new Date(cmAppUpdatedAt).getTime()) / 86400000;
+      return daysSince >= 90;
+    }
+    if (cmAppStatus === "pending" || cmAppStatus === "interview" || cmAppStatus === "accepted") return false;
+    return true;
+  })();
 
   const onCmFormChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -292,7 +320,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
           />
         </section>
         <main className="middle-section host-settings-page">
-          {cmEligible && !currentUser?.isCm && (
+          {cmBannerVisible && (
             <div className="cm-host-banner">
               <div className="cm-host-banner-info">
                 <strong>Congratulations! 🎉 You are now eligible to apply.</strong>
@@ -491,7 +519,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                     </div>
                     <div className="cm-modal-actions">
                       <button type="button" className="btn btn-light" onClick={() => { setShowCmModal(false); setCmStep("info"); }}>Cancel</button>
-                      <button type="button" className="btn btn-primary" onClick={() => setCmStep("form")}>Continue</button>
+                      <button type="button" className="btn btn-primary" onClick={() => setCmStep("form")}>Apply</button>
                     </div>
                   </>
                 ) : (

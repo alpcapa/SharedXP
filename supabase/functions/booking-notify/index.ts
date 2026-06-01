@@ -653,7 +653,6 @@ function buildCmApplicationReceived(
 
 function buildCmInterview(
   applicant: Record<string, unknown>,
-  adminNotes: string,
 ): { to: string; subject: string; html: string } {
   const name = String(applicant.full_name ?? `${applicant.first_name ?? ""} ${applicant.last_name ?? ""}`.trim() ?? "there");
   return {
@@ -664,7 +663,6 @@ function buildCmInterview(
       [
         `Your application to become a SharedXP Community Manager has been shortlisted.`,
         `Our team would like to have a brief chat with you to learn more about your experience and how you'd grow the SharedXP community.`,
-        ...(adminNotes ? [`<strong>Message from the team:</strong> ${adminNotes}`] : []),
         `We'll be in touch via email to schedule a call. Keep an eye on your inbox!`,
       ],
       `${APP_URL}/community-manager-policy`,
@@ -676,7 +674,6 @@ function buildCmInterview(
 function buildCmAccepted(
   applicant: Record<string, unknown>,
   inviteCode: string,
-  adminNotes: string,
 ): { to: string; subject: string; html: string } {
   const name = String(applicant.full_name ?? `${applicant.first_name ?? ""} ${applicant.last_name ?? ""}`.trim() ?? "there");
   return {
@@ -689,7 +686,6 @@ function buildCmAccepted(
         `Your personal invite code is:`,
         `<div style="text-align:center;margin:20px 0;"><span style="font-size:24px;font-weight:700;letter-spacing:2px;background:#f5f5f2;padding:12px 24px;border-radius:8px;border:2px solid #1a1a1a;">${inviteCode}</span></div>`,
         `Share this code with athletes and sports enthusiasts. Anyone who signs up using your code becomes your permanent referral, and you earn 5% commission on every completed booking they make.`,
-        ...(adminNotes ? [`<strong>Message from the team:</strong> ${adminNotes}`] : []),
         `Log in to your SharedXP account to access your CM Dashboard and track your referrals and commissions.`,
       ],
       `${APP_URL}/cm-dashboard`,
@@ -700,7 +696,6 @@ function buildCmAccepted(
 
 function buildCmDeclined(
   applicant: Record<string, unknown>,
-  adminNotes: string,
 ): { to: string; subject: string; html: string } {
   const name = String(applicant.full_name ?? `${applicant.first_name ?? ""} ${applicant.last_name ?? ""}`.trim() ?? "there");
   return {
@@ -711,7 +706,6 @@ function buildCmDeclined(
       [
         `Thank you for your interest in becoming a SharedXP Community Manager.`,
         `After careful review, we're unable to move forward with your application at this time.`,
-        ...(adminNotes ? [`<strong>Feedback from our team:</strong> ${adminNotes}`] : []),
         `We encourage you to continue enjoying SharedXP as a host or guest. You're welcome to reapply in the future.`,
       ],
       `${APP_URL}/locals`,
@@ -756,7 +750,7 @@ function buildCmStatusChange(
       lines: [
         `Hi ${name}, your SharedXP Community Manager account has been temporarily paused.`,
         `While paused, your invite code will not be active and no new referrals will be attributed. Existing commissions are not affected.`,
-        `Contact us at support@sharedxp.com if you have any questions.`,
+        `If you have any questions, please contact us at support@sharedxp.com.`,
       ],
       label: "Contact Support",
     },
@@ -772,7 +766,7 @@ function buildCmStatusChange(
       heading: `Your CM status has been revoked`,
       lines: [
         `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
-        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you believe this is an error.`,
+        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you have any questions.`,
       ],
       label: "Contact Support",
     },
@@ -874,17 +868,17 @@ serve(async (req: Request): Promise<Response> => {
           break;
         }
         case "cm_interview": {
-          const e = buildCmInterview(userProfile, adminNotes ?? "");
+          const e = buildCmInterview(userProfile);
           await sendEmail(e.to, e.subject, e.html);
           break;
         }
         case "cm_accepted": {
-          const e = buildCmAccepted(userProfile, inviteCode ?? "", adminNotes ?? "");
+          const e = buildCmAccepted(userProfile, inviteCode ?? "");
           await sendEmail(e.to, e.subject, e.html);
           break;
         }
         case "cm_declined": {
-          const e = buildCmDeclined(userProfile, adminNotes ?? "");
+          const e = buildCmDeclined(userProfile);
           await sendEmail(e.to, e.subject, e.html);
           break;
         }

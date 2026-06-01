@@ -71,30 +71,29 @@ const CMManagementPanel = () => {
 
   // Applications actions
   const moveToInterview = async (app) => {
+    if (!getNote(app.id).trim()) { alert("Please enter a reason before moving to interview."); return; }
     if (busy(app.id)) return;
+    if (!confirm("Move this application to interview stage?")) return;
     setActionBusy(app.id);
-    await supabase
-      .from("cm_applications")
-      .update({ status: "interview", admin_notes: getNote(app.id) })
-      .eq("id", app.id);
-    await sendCmEmail("cm_interview", app.user_id, { adminNotes: getNote(app.id) });
+    await supabase.from("cm_applications").update({ status: "interview", admin_notes: getNote(app.id) }).eq("id", app.id);
+    await sendCmEmail("cm_interview", app.user_id);
     await fetchAll();
     setActionBusy(null);
   };
 
   const acceptApplication = async (app) => {
+    if (!getNote(app.id).trim()) { alert("Please enter a reason before accepting."); return; }
     if (busy(app.id)) return;
+    if (!confirm("Accept this application and generate an invite code?")) return;
     setActionBusy(app.id);
     const city = app.applicant?.city || app.city || "XP";
     let inviteCode = generateInviteCode(city);
-    // Ensure uniqueness (retry once on collision)
     const { data: clash } = await supabase
       .from("cm_profiles")
       .select("id")
       .eq("invite_code", inviteCode)
       .maybeSingle();
     if (clash) inviteCode = generateInviteCode(city);
-
     const { error: profileErr } = await supabase.from("cm_profiles").insert({
       user_id: app.user_id,
       invite_code: inviteCode,
@@ -107,31 +106,56 @@ const CMManagementPanel = () => {
       setActionBusy(null);
       return;
     }
-    await supabase.from("cm_applications").update({ status: "accepted" }).eq("id", app.id);
-    await sendCmEmail("cm_accepted", app.user_id, { inviteCode, adminNotes: getNote(app.id) });
+    await supabase.from("cm_applications").update({ status: "accepted", admin_notes: getNote(app.id) }).eq("id", app.id);
+    await sendCmEmail("cm_accepted", app.user_id, { inviteCode });
     await fetchAll();
     setActionBusy(null);
   };
 
   const declineApplication = async (app) => {
+    if (!getNote(app.id).trim()) { alert("Please enter a reason before declining."); return; }
     if (busy(app.id)) return;
     if (!confirm("Decline this application?")) return;
     setActionBusy(app.id);
-    await supabase
-      .from("cm_applications")
-      .update({ status: "declined", admin_notes: getNote(app.id) })
-      .eq("id", app.id);
-    await sendCmEmail("cm_declined", app.user_id, { adminNotes: getNote(app.id) });
+    await supabase.from("cm_applications").update({ status: "declined", admin_notes: getNote(app.id) }).eq("id", app.id);
+    await sendCmEmail("cm_declined", app.user_id);
     await fetchAll();
     setActionBusy(null);
   };
 
   // Active CM actions
-  const setCmStatus = async (cm, newStatus, emailType) => {
+  const pauseCm = async (cm) => {
+    const note = getNote(cm.id);
+    if (!note.trim()) { alert("Please enter a reason before pausing."); return; }
     if (busy(cm.id)) return;
+    if (!confirm("Pause this CM's account?")) return;
     setActionBusy(cm.id);
-    await supabase.from("cm_profiles").update({ status: newStatus }).eq("id", cm.id);
-    await sendCmEmail(emailType, cm.user_id);
+    await supabase.from("cm_profiles").update({ status: "paused", admin_notes: note }).eq("id", cm.id);
+    await sendCmEmail("cm_paused", cm.user_id);
+    await fetchAll();
+    setActionBusy(null);
+  };
+
+  const reactivateCm = async (cm) => {
+    const note = getNote(cm.id);
+    if (!note.trim()) { alert("Please enter a reason before re-activating."); return; }
+    if (busy(cm.id)) return;
+    if (!confirm("Re-activate this CM's account?")) return;
+    setActionBusy(cm.id);
+    await supabase.from("cm_profiles").update({ status: "active", admin_notes: note }).eq("id", cm.id);
+    await sendCmEmail("cm_reactivated", cm.user_id);
+    await fetchAll();
+    setActionBusy(null);
+  };
+
+  const revokeCm = async (cm) => {
+    const note = getNote(cm.id);
+    if (!note.trim()) { alert("Please enter a reason before revoking."); return; }
+    if (busy(cm.id)) return;
+    if (!confirm("Revoke this CM's access? This cannot be undone easily.")) return;
+    setActionBusy(cm.id);
+    await supabase.from("cm_profiles").update({ status: "revoked", admin_notes: note }).eq("id", cm.id);
+    await sendCmEmail("cm_revoked", cm.user_id);
     await fetchAll();
     setActionBusy(null);
   };
@@ -215,12 +239,12 @@ const CMManagementPanel = () => {
                 {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
               </div>
               <div className="cm-admin-notes-row">
-                <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">Admin notes (sent in email)</label>
+                <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">Reason (required — saved to record only, not sent in email)</label>
                 <textarea
                   id={`notes-${app.id}`}
                   className="cm-admin-notes"
                   rows={2}
-                  placeholder="Optional notes…"
+                  placeholder="Internal notes for this application…"
                   value={getNote(app.id)}
                   onChange={(e) => setNote(app.id, e.target.value)}
                 />
@@ -315,38 +339,37 @@ const CMManagementPanel = () => {
                     ))}
                   </div>
                 )}
+                <div className="cm-admin-notes-row">
+                  <label htmlFor={`cm-notes-${cm.id}`} className="admin-dispute-label">
+                    Reason (required — saved to record only, not sent in email)
+                  </label>
+                  <textarea
+                    id={`cm-notes-${cm.id}`}
+                    className="cm-admin-notes"
+                    rows={2}
+                    placeholder="Enter reason or notes…"
+                    value={getNote(cm.id)}
+                    onChange={(e) => setNote(cm.id, e.target.value)}
+                  />
+                </div>
                 <div className="admin-dispute-actions">
                   {cm.status === "active" && (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      disabled={busy(cm.id)}
-                      onClick={() => setCmStatus(cm, "paused", "cm_paused")}
-                    >
+                    <button type="button" className="btn btn-light" disabled={busy(cm.id)} onClick={() => pauseCm(cm)}>
                       {busy(cm.id) ? "…" : "Pause"}
                     </button>
                   )}
                   {cm.status === "paused" && (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      disabled={busy(cm.id)}
-                      onClick={() => setCmStatus(cm, "active", "cm_reactivated")}
-                    >
+                    <button type="button" className="btn btn-primary" disabled={busy(cm.id)} onClick={() => reactivateCm(cm)}>
+                      {busy(cm.id) ? "…" : "Re-activate"}
+                    </button>
+                  )}
+                  {cm.status === "revoked" && (
+                    <button type="button" className="btn btn-primary" disabled={busy(cm.id)} onClick={() => reactivateCm(cm)}>
                       {busy(cm.id) ? "…" : "Re-activate"}
                     </button>
                   )}
                   {cm.status !== "revoked" && (
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      disabled={busy(cm.id)}
-                      onClick={() => {
-                        if (confirm("Revoke this CM's access? This cannot be undone easily.")) {
-                          setCmStatus(cm, "revoked", "cm_revoked");
-                        }
-                      }}
-                    >
+                    <button type="button" className="btn btn-danger" disabled={busy(cm.id)} onClick={() => revokeCm(cm)}>
                       {busy(cm.id) ? "…" : "Revoke"}
                     </button>
                   )}
