@@ -126,11 +126,23 @@ function App() {
       .select("id", { count: "exact", head: true })
       .eq("host_id", user.id)
       .eq("status", "completed")
-      .then(({ count }) => {
-        if (count !== null && count >= 3) {
-          sessionStorage.setItem(key, "1");
-          setShowCmEligiblePopup(true);
+      .then(async ({ count }) => {
+        if (count === null || count < 3) return;
+        const { data: app } = await supabase
+          .from("cm_applications")
+          .select("status, updated_at")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (app) {
+          if (app.status === "banned") return;
+          if (app.status === "pending" || app.status === "interview" || app.status === "accepted") return;
+          if (app.status === "declined" && app.updated_at) {
+            const daysSince = (Date.now() - new Date(app.updated_at).getTime()) / 86400000;
+            if (daysSince < 90) return;
+          }
         }
+        sessionStorage.setItem(key, "1");
+        setShowCmEligiblePopup(true);
       });
   }, [authActions.currentUser]);
 

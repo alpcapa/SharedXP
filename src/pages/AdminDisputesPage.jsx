@@ -126,6 +126,18 @@ const CMManagementPanel = () => {
     setActionBusy(null);
   };
 
+  const banApplication = async (app) => {
+    if (busy(app.id)) return;
+    if (!confirm("Ban this user from ever applying as a CM? This cannot be undone easily.")) return;
+    setActionBusy(app.id);
+    await supabase
+      .from("cm_applications")
+      .update({ status: "banned", admin_notes: getNote(app.id) || "Banned for illegal activity." })
+      .eq("id", app.id);
+    await fetchAll();
+    setActionBusy(null);
+  };
+
   // Active CM actions
   const setCmStatus = async (cm, newStatus, emailType) => {
     if (busy(cm.id)) return;
@@ -150,7 +162,7 @@ const CMManagementPanel = () => {
   };
 
   const pendingApps = applications.filter((a) => ["pending", "interview"].includes(a.status));
-  const closedApps = applications.filter((a) => ["accepted", "declined"].includes(a.status));
+  const closedApps = applications.filter((a) => ["accepted", "declined", "banned"].includes(a.status));
 
   const statusBadge = (status) => {
     const map = {
@@ -158,6 +170,7 @@ const CMManagementPanel = () => {
       interview: "cm-badge-interview",
       accepted: "cm-badge-accepted",
       declined: "cm-badge-declined",
+      banned: "cm-badge-declined",
       active: "cm-badge-accepted",
       paused: "cm-badge-pending",
       revoked: "cm-badge-declined",
@@ -249,6 +262,14 @@ const CMManagementPanel = () => {
                   onClick={() => declineApplication(app)}
                 >
                   {busy(app.id) ? "…" : "Decline"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  disabled={busy(app.id)}
+                  onClick={() => banApplication(app)}
+                >
+                  {busy(app.id) ? "…" : "Ban"}
                 </button>
               </div>
             </article>
