@@ -610,6 +610,27 @@ function buildDisputeResolvedPaidHost(
 
 // ── CM email builders ──────────────────────────────────────────────────────
 
+function buildCmEligible(
+  user: Record<string, unknown>,
+): { to: string; subject: string; html: string } {
+  const name = String(user.full_name ?? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() ?? "there");
+  return {
+    to: String(user.email),
+    subject: "Congratulations — you've been selected to become our new Community Manager",
+    html: emailHtml(
+      `Congratulations, ${name}!`,
+      [
+        `You've been selected to become our new Community Manager.`,
+        `As a host with an outstanding track record on SharedXP, you're now eligible to apply for the Community Manager programme.`,
+        `Community Managers earn 5% commission on every booking made by users they refer, and get their own unique invite code to share with sports enthusiasts in their city.`,
+        `Click below to learn more and apply.`,
+      ],
+      `${APP_URL}/host-settings`,
+      "Learn More & Apply",
+    ),
+  };
+}
+
 function buildCmApplicationReceived(
   applicant: Record<string, unknown>,
 ): { to: string; subject: string; html: string } {
@@ -842,6 +863,11 @@ serve(async (req: Request): Promise<Response> => {
     }
     try {
       switch (emailType) {
+        case "cm_eligible": {
+          const e = buildCmEligible(userProfile);
+          await sendEmail(e.to, e.subject, e.html);
+          break;
+        }
         case "cm_application_received": {
           const e = buildCmApplicationReceived(userProfile);
           await sendEmail(e.to, e.subject, e.html);

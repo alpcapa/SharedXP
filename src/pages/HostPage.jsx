@@ -224,7 +224,8 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
 
   const navigate = useNavigate();
   const [showCmModal, setShowCmModal] = useState(false);
-  const [cmForm, setCmForm] = useState({ sportsBackground: "", motivation: "", contactTimes: "" });
+  const [cmStep, setCmStep] = useState("info");
+  const [cmForm, setCmForm] = useState({ sportsBackground: "", motivation: "", contactTimes: "", agreedToCmTerms: false, agreedToContact: false });
   const [cmError, setCmError] = useState("");
   const [cmSubmitting, setCmSubmitting] = useState(false);
   const [cmSuccess, setCmSuccess] = useState(false);
@@ -240,17 +241,29 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
       .then(({ count }) => { if (count !== null) setHostedCount(count); });
   }, [currentUser?.id]);
 
+  useEffect(() => {
+    if (!currentUser?.isHost || hostedCount < 3 || currentUser?.isCm) return;
+    const key = `cm_eligible_notified_${currentUser.id}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    supabase.functions.invoke("booking-notify", {
+      body: { emailType: "cm_eligible", userId: currentUser.id },
+    }).catch((e) => console.error("[cm] eligibility email:", e));
+  }, [hostedCount, currentUser?.id, currentUser?.isHost, currentUser?.isCm]);
+
   const cmEligible = currentUser?.isHost && hostedCount >= 3;
 
   const onCmFormChange = (e) => {
-    const { name, value } = e.target;
-    setCmForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setCmForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
   const onCmSubmit = async (e) => {
     e.preventDefault();
     if (!cmForm.sportsBackground.trim()) { setCmError("Please describe your sports background."); return; }
     if (!cmForm.motivation.trim()) { setCmError("Please share your motivation."); return; }
+    if (!cmForm.agreedToCmTerms) { setCmError("Please agree to the Community Manager terms."); return; }
+    if (!cmForm.agreedToContact) { setCmError("Please agree to be contacted about Community Manager matters."); return; }
     setCmError("");
     setCmSubmitting(true);
     const result = await onSubmitCmApplication?.({
@@ -279,6 +292,17 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
           />
         </section>
         <main className="middle-section host-settings-page">
+          {cmEligible && !currentUser?.isCm && (
+            <div className="cm-host-banner">
+              <div className="cm-host-banner-info">
+                <strong>Become a Community Manager</strong>
+                <span>You have {hostedCount} completed hosting experience{hostedCount !== 1 ? "s" : ""}. You're eligible to apply!</span>
+              </div>
+              <button type="button" className="btn btn-primary" onClick={() => { setCmStep("info"); setCmSuccess(false); setShowCmModal(true); }}>
+                Apply Now
+              </button>
+            </div>
+          )}
           <div className="host-settings-top-bar">
             <div>
               <h1
@@ -445,78 +469,101 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
             />
           )}
 
-          {currentUser?.isCm ? (
-            <div className="cm-host-banner">
-              <div className="cm-host-banner-info">
-                <strong>Community Manager</strong>
-                <span>Your invite code is active. View your dashboard for stats and commissions.</span>
-              </div>
-              <button type="button" className="btn btn-primary" onClick={() => navigate("/cm-dashboard")}>
-                CM Dashboard
-              </button>
-            </div>
-          ) : cmEligible ? (
-            <div className="cm-host-banner">
-              <div className="cm-host-banner-info">
-                <strong>Become a Community Manager</strong>
-                <span>You have {hostedCount} completed hosting experience{hostedCount !== 1 ? "s" : ""}. You're eligible to apply!</span>
-              </div>
-              <button type="button" className="btn btn-primary" onClick={() => setShowCmModal(true)}>
-                Apply Now
-              </button>
-            </div>
-          ) : null}
-
           {showCmModal && (
-            <div className="cm-modal-backdrop" onClick={() => setShowCmModal(false)}>
+            <div className="cm-modal-backdrop" onClick={() => { setShowCmModal(false); setCmStep("info"); }}>
               <div className="cm-modal" onClick={(e) => e.stopPropagation()}>
-                <h2 className="cm-modal-title">Apply to Become a Community Manager</h2>
-                <p className="cm-modal-intro">
-                  Tell us about yourself and why you'd be a great SharedXP ambassador.
-                  We'll review your application and get back to you within 5 business days.
-                </p>
                 {cmSuccess ? (
                   <div className="cm-modal-success">
                     <p>Your application has been submitted. We'll be in touch soon!</p>
-                    <button type="button" className="btn btn-primary" onClick={() => setShowCmModal(false)}>Close</button>
+                    <button type="button" className="btn btn-primary" onClick={() => { setShowCmModal(false); setCmStep("info"); }}>Close</button>
                   </div>
-                ) : (
-                  <form onSubmit={onCmSubmit} className="cm-application-form">
-                    <label htmlFor="cm-sports-bg">Your sports background</label>
-                    <textarea
-                      id="cm-sports-bg"
-                      name="sportsBackground"
-                      rows={3}
-                      placeholder="Describe your sports experience, disciplines you practice, and your community involvement…"
-                      value={cmForm.sportsBackground}
-                      onChange={onCmFormChange}
-                    />
-                    <label htmlFor="cm-motivation">Why do you want to be a CM?</label>
-                    <textarea
-                      id="cm-motivation"
-                      name="motivation"
-                      rows={3}
-                      placeholder="Tell us what motivates you to grow the SharedXP community…"
-                      value={cmForm.motivation}
-                      onChange={onCmFormChange}
-                    />
-                    <label htmlFor="cm-contact">Best times to contact you <span className="auth-optional">(optional)</span></label>
-                    <input
-                      id="cm-contact"
-                      name="contactTimes"
-                      type="text"
-                      placeholder="e.g. Weekday evenings after 6 pm CET"
-                      value={cmForm.contactTimes}
-                      onChange={onCmFormChange}
-                    />
-                    {cmError && <p className="cm-form-error" role="alert">{cmError}</p>}
-                    <div className="cm-modal-actions">
-                      <button type="button" className="btn btn-secondary" onClick={() => setShowCmModal(false)}>Cancel</button>
-                      <button type="submit" className="btn btn-primary" disabled={cmSubmitting}>
-                        {cmSubmitting ? "Submitting…" : "Submit Application"}
-                      </button>
+                ) : cmStep === "info" ? (
+                  <>
+                    <h2 className="cm-modal-title">Become a Community Manager</h2>
+                    <p className="cm-modal-intro">
+                      Community Managers are SharedXP's trusted local ambassadors. As a CM you grow the community in your city by sharing your unique invite code with sports enthusiasts.
+                    </p>
+                    <div className="cm-info-benefits">
+                      <h4>Benefits</h4>
+                      <ul>
+                        <li>Earn 5% commission on every booking from users you referred</li>
+                        <li>Your own unique invite code (e.g. SXP-LON-A2K5)</li>
+                        <li>A personal CM Dashboard to track referrals and earnings in real time</li>
+                        <li>Be the face of SharedXP in your city</li>
+                      </ul>
                     </div>
-                  </form>
+                    <div className="cm-modal-actions">
+                      <button type="button" className="btn btn-secondary" onClick={() => { setShowCmModal(false); setCmStep("info"); }}>Cancel</button>
+                      <button type="button" className="btn btn-primary" onClick={() => setCmStep("form")}>Continue</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="cm-modal-title">Apply to Become a Community Manager</h2>
+                    <p className="cm-modal-intro">
+                      Tell us about yourself and why you'd be a great SharedXP ambassador. We'll review your application and get back to you within 5 business days.
+                    </p>
+                    <form onSubmit={onCmSubmit} className="cm-application-form">
+                      <label htmlFor="cm-sports-bg">Your sports background</label>
+                      <textarea
+                        id="cm-sports-bg"
+                        name="sportsBackground"
+                        rows={3}
+                        placeholder="Describe your sports experience, disciplines you practice, and your community involvement…"
+                        value={cmForm.sportsBackground}
+                        onChange={onCmFormChange}
+                      />
+                      <label htmlFor="cm-motivation">Why do you want to be a CM?</label>
+                      <textarea
+                        id="cm-motivation"
+                        name="motivation"
+                        rows={3}
+                        placeholder="Tell us what motivates you to grow the SharedXP community…"
+                        value={cmForm.motivation}
+                        onChange={onCmFormChange}
+                      />
+                      <label htmlFor="cm-contact">Best times to contact you <span className="auth-optional">(optional)</span></label>
+                      <input
+                        id="cm-contact"
+                        name="contactTimes"
+                        type="text"
+                        placeholder="e.g. Weekday evenings after 6 pm CET"
+                        value={cmForm.contactTimes}
+                        onChange={onCmFormChange}
+                      />
+                      <div className="cm-checkbox-row">
+                        <input
+                          type="checkbox"
+                          id="cm-terms"
+                          name="agreedToCmTerms"
+                          checked={cmForm.agreedToCmTerms}
+                          onChange={onCmFormChange}
+                        />
+                        <label htmlFor="cm-terms">
+                          I have read and agree to the <a href="/community-manager-policy" target="_blank" rel="noopener noreferrer">Community Manager terms</a>
+                        </label>
+                      </div>
+                      <div className="cm-checkbox-row">
+                        <input
+                          type="checkbox"
+                          id="cm-contact-permission"
+                          name="agreedToContact"
+                          checked={cmForm.agreedToContact}
+                          onChange={onCmFormChange}
+                        />
+                        <label htmlFor="cm-contact-permission">
+                          I agree to be contacted by SharedXP regarding Community Manager matters
+                        </label>
+                      </div>
+                      {cmError && <p className="cm-form-error" role="alert">{cmError}</p>}
+                      <div className="cm-modal-actions">
+                        <button type="button" className="btn btn-secondary" onClick={() => setCmStep("info")}>Back</button>
+                        <button type="submit" className="btn btn-primary" disabled={cmSubmitting}>
+                          {cmSubmitting ? "Submitting…" : "Submit Application"}
+                        </button>
+                      </div>
+                    </form>
+                  </>
                 )}
               </div>
             </div>
