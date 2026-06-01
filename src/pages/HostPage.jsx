@@ -501,21 +501,21 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                       Tell us about yourself and why you'd be a great SharedXP ambassador. We'll review your application and get back to you within 5 business days.
                     </p>
                     <form onSubmit={onCmSubmit} className="cm-application-form">
-                      <label htmlFor="cm-sports-bg">Your sports background</label>
+                      <label htmlFor="cm-sports-bg">Your bio and sports background</label>
                       <textarea
                         id="cm-sports-bg"
                         name="sportsBackground"
                         rows={3}
-                        placeholder="Describe your sports experience, disciplines you practice, and your community involvement…"
+                        placeholder="Tell us about yourself. Who you are, what sports you do, accomplishments, etc."
                         value={cmForm.sportsBackground}
                         onChange={onCmFormChange}
                       />
-                      <label htmlFor="cm-motivation">Why do you want to be a CM?</label>
+                      <label htmlFor="cm-motivation">How do you plan to grow your community?</label>
                       <textarea
                         id="cm-motivation"
                         name="motivation"
                         rows={3}
-                        placeholder="Tell us what motivates you to grow the SharedXP community…"
+                        placeholder="What do you have in mind? What actions do you plan to take? Tell us about your communication strategy."
                         value={cmForm.motivation}
                         onChange={onCmFormChange}
                       />
