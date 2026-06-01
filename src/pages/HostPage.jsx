@@ -490,7 +490,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                       </ul>
                     </div>
                     <div className="cm-modal-actions">
-                      <button type="button" className="btn btn-secondary" onClick={() => { setShowCmModal(false); setCmStep("info"); }}>Cancel</button>
+                      <button type="button" className="btn btn-light" onClick={() => { setShowCmModal(false); setCmStep("info"); }}>Cancel</button>
                       <button type="button" className="btn btn-primary" onClick={() => setCmStep("form")}>Continue</button>
                     </div>
                   </>
