@@ -7214,7 +7214,7 @@ body {
   margin-bottom: 4px;
 }
 
-/* CM form checkboxes */
+/* CM form checkboxes — use higher specificity to override .cm-application-form label */
 .cm-checkbox-row {
   display: flex;
   align-items: flex-start;
@@ -7222,14 +7222,15 @@ body {
   margin-top: 16px;
 }
 .cm-checkbox-row input[type="checkbox"] {
-  margin-top: 2px;
+  margin-top: 3px;
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   cursor: pointer;
   accent-color: #1a1a1a;
 }
-.cm-checkbox-row label {
+.cm-application-form .cm-checkbox-row label {
+  display: inline;
   font-size: 13px;
   color: #444;
   font-weight: 400;
