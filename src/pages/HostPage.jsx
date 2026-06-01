@@ -295,7 +295,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
           {cmEligible && !currentUser?.isCm && (
             <div className="cm-host-banner">
               <div className="cm-host-banner-info">
-                <strong>Congratulations! 🎉 You are eligible to apply</strong>
+                <strong>Congratulations! 🎉 You are eligible to apply.</strong>
                 <span>You've shown yourself to be an active host to become our Community Manager. Please click to learn more and apply.</span>
               </div>
               <button type="button" className="btn btn-primary" onClick={() => { setCmStep("info"); setCmSuccess(false); setShowCmModal(true); }}>
