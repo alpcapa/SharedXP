@@ -72,6 +72,7 @@ const CMManagementPanel = () => {
   // Applications actions
   const moveToInterview = async (app) => {
     if (busy(app.id)) return;
+    if (!confirm("Move this application to interview stage?")) return;
     setActionBusy(app.id);
     await supabase
       .from("cm_applications")
@@ -84,17 +85,16 @@ const CMManagementPanel = () => {
 
   const acceptApplication = async (app) => {
     if (busy(app.id)) return;
+    if (!confirm("Accept this application and generate an invite code?")) return;
     setActionBusy(app.id);
     const city = app.applicant?.city || app.city || "XP";
     let inviteCode = generateInviteCode(city);
-    // Ensure uniqueness (retry once on collision)
     const { data: clash } = await supabase
       .from("cm_profiles")
       .select("id")
       .eq("invite_code", inviteCode)
       .maybeSingle();
     if (clash) inviteCode = generateInviteCode(city);
-
     const { error: profileErr } = await supabase.from("cm_profiles").insert({
       user_id: app.user_id,
       invite_code: inviteCode,
@@ -126,24 +126,35 @@ const CMManagementPanel = () => {
     setActionBusy(null);
   };
 
-  const banCm = async (cm) => {
-    const reason = getNote(cm.id);
-    if (!reason.trim()) { alert("Please enter a reason for the ban before proceeding."); return; }
+  // Active CM actions
+  const pauseCm = async (cm) => {
     if (busy(cm.id)) return;
-    if (!confirm("Permanently ban this CM for illegal activity? This cannot be undone easily.")) return;
+    if (!confirm("Pause this CM's account?")) return;
     setActionBusy(cm.id);
-    await supabase.from("cm_profiles").update({ status: "banned" }).eq("id", cm.id);
-    await sendCmEmail("cm_banned", cm.user_id, { adminNotes: reason });
+    await supabase.from("cm_profiles").update({ status: "paused" }).eq("id", cm.id);
+    await sendCmEmail("cm_paused", cm.user_id, { adminNotes: getNote(cm.id) });
     await fetchAll();
     setActionBusy(null);
   };
 
-  // Active CM actions
-  const setCmStatus = async (cm, newStatus, emailType) => {
+  const reactivateCm = async (cm) => {
     if (busy(cm.id)) return;
+    if (!confirm("Re-activate this CM's account?")) return;
     setActionBusy(cm.id);
-    await supabase.from("cm_profiles").update({ status: newStatus }).eq("id", cm.id);
-    await sendCmEmail(emailType, cm.user_id);
+    await supabase.from("cm_profiles").update({ status: "active" }).eq("id", cm.id);
+    await sendCmEmail("cm_reactivated", cm.user_id, { adminNotes: getNote(cm.id) });
+    await fetchAll();
+    setActionBusy(null);
+  };
+
+  const revokeCm = async (cm) => {
+    const reason = getNote(cm.id);
+    if (!reason.trim()) { alert("Please enter a reason before revoking."); return; }
+    if (busy(cm.id)) return;
+    if (!confirm("Revoke this CM's access? This cannot be undone easily.")) return;
+    setActionBusy(cm.id);
+    await supabase.from("cm_profiles").update({ status: "revoked" }).eq("id", cm.id);
+    await sendCmEmail("cm_revoked", cm.user_id, { adminNotes: reason });
     await fetchAll();
     setActionBusy(null);
   };
@@ -173,6 +184,7 @@ const CMManagementPanel = () => {
       active: "cm-badge-accepted",
       paused: "cm-badge-pending",
       revoked: "cm-badge-declined",
+      banned: "cm-badge-declined",
     };
     return <span className={`cm-admin-badge ${map[status] ?? ""}`}>{status}</span>;
   };
@@ -327,62 +339,39 @@ const CMManagementPanel = () => {
                     ))}
                   </div>
                 )}
+                <div className="cm-admin-notes-row">
+                  <label htmlFor={`cm-notes-${cm.id}`} className="admin-dispute-label">
+                    Notes / reason (required for Revoke; included in all emails)
+                  </label>
+                  <textarea
+                    id={`cm-notes-${cm.id}`}
+                    className="cm-admin-notes"
+                    rows={2}
+                    placeholder="Enter reason or notes…"
+                    value={getNote(cm.id)}
+                    onChange={(e) => setNote(cm.id, e.target.value)}
+                  />
+                </div>
                 <div className="admin-dispute-actions">
                   {cm.status === "active" && (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      disabled={busy(cm.id)}
-                      onClick={() => setCmStatus(cm, "paused", "cm_paused")}
-                    >
+                    <button type="button" className="btn btn-light" disabled={busy(cm.id)} onClick={() => pauseCm(cm)}>
                       {busy(cm.id) ? "…" : "Pause"}
                     </button>
                   )}
                   {cm.status === "paused" && (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      disabled={busy(cm.id)}
-                      onClick={() => setCmStatus(cm, "active", "cm_reactivated")}
-                    >
+                    <button type="button" className="btn btn-primary" disabled={busy(cm.id)} onClick={() => reactivateCm(cm)}>
                       {busy(cm.id) ? "…" : "Re-activate"}
                     </button>
                   )}
-                  {cm.status !== "revoked" && cm.status !== "banned" && (
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      disabled={busy(cm.id)}
-                      onClick={() => {
-                        if (confirm("Revoke this CM's access? This cannot be undone easily.")) {
-                          setCmStatus(cm, "revoked", "cm_revoked");
-                        }
-                      }}
-                    >
-                      {busy(cm.id) ? "…" : "Revoke"}
+                  {cm.status === "revoked" && (
+                    <button type="button" className="btn btn-primary" disabled={busy(cm.id)} onClick={() => reactivateCm(cm)}>
+                      {busy(cm.id) ? "…" : "Re-activate"}
                     </button>
                   )}
-                  {cm.status !== "banned" && (
-                    <div className="cm-ban-row">
-                      <input
-                        type="text"
-                        className="cm-ban-reason-input"
-                        placeholder="Reason for ban (required)"
-                        value={getNote(cm.id)}
-                        onChange={(e) => setNote(cm.id, e.target.value)}
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-danger"
-                        disabled={busy(cm.id)}
-                        onClick={() => banCm(cm)}
-                      >
-                        {busy(cm.id) ? "…" : "Ban"}
-                      </button>
-                    </div>
-                  )}
-                  {cm.status === "banned" && (
-                    <span className="cm-banned-label">Banned</span>
+                  {cm.status !== "revoked" && (
+                    <button type="button" className="btn btn-danger" disabled={busy(cm.id)} onClick={() => revokeCm(cm)}>
+                      {busy(cm.id) ? "…" : "Revoke"}
+                    </button>
                   )}
                 </div>
               </article>

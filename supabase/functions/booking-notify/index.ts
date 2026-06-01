@@ -756,17 +756,18 @@ function buildCmStatusChange(
       heading: `Your CM account has been paused`,
       lines: [
         `Hi ${name}, your SharedXP Community Manager account has been temporarily paused.`,
+        ...(adminNotes ? [`<strong>Reason:</strong> ${adminNotes}`] : []),
         `While paused, your invite code will not be active and no new referrals will be attributed. Existing commissions are not affected.`,
         `Contact us at support@sharedxp.com if you have any questions.`,
       ],
       label: "Contact Support",
     },
     cm_banned: {
-      heading: `Your CM account has been banned`,
+      heading: `Your CM account has been revoked`,
       lines: [
-        `Hi ${name}, your SharedXP Community Manager account has been permanently banned due to a violation of our Community Manager Policy.`,
+        `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
         ...(adminNotes ? [`<strong>Reason:</strong> ${adminNotes}`] : []),
-        `Any pending approved commissions will still be paid out. If you believe this is an error, please contact us at support@sharedxp.com.`,
+        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you believe this is an error.`,
       ],
       label: "Contact Support",
     },
@@ -774,6 +775,7 @@ function buildCmStatusChange(
       heading: `Your CM account is active again, ${name}!`,
       lines: [
         `Great news! Your SharedXP Community Manager account has been re-activated.`,
+        ...(adminNotes ? [`<strong>Note from the team:</strong> ${adminNotes}`] : []),
         `Your invite code is live again — start sharing and earning commissions!`,
       ],
       label: "Go to CM Dashboard",
@@ -782,6 +784,7 @@ function buildCmStatusChange(
       heading: `Your CM status has been revoked`,
       lines: [
         `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
+        ...(adminNotes ? [`<strong>Reason:</strong> ${adminNotes}`] : []),
         `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you believe this is an error.`,
       ],
       label: "Contact Support",
