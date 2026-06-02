@@ -182,8 +182,7 @@ const CommunityManagerPolicyPage = ({ currentUser, onLogout }) => {
                 including but not limited to: policy review, market restructuring, inactivity, or pending
                 investigation. During a pause, the invite code is deactivated and no new referrals are tracked.
                 Existing commissions already approved continue to be processed. The Community Manager will be
-                notified by email with the reason and expected duration. Status may be reinstated at SharedXP's
-                discretion.
+                notified by email. Status may be reinstated at SharedXP's discretion.
               </p>
               <p>
                 <strong>Revocation:</strong> SharedXP may permanently revoke CM status for serious or repeated
