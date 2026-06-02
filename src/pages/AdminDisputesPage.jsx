@@ -453,7 +453,7 @@ const CMManagementPanel = ({ currentUser }) => {
                         else alert("Welcome email sent.");
                       } catch (e) {
                         setActionBusy(null);
-                        alert(`Network error: ${e.message}`);
+                        alert(`Network error: ${e.message}\nURL tried: ${supabaseUrl}/functions/v1/booking-notify`);
                       }
                     }}
                   >
