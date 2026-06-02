@@ -130,8 +130,8 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
   }, [currentUser?.cmProfile?.id]);
 
   useEffect(() => {
-    if (activeTab === "cm" && currentUser?.isCm && !cmStats) fetchCmData();
-  }, [activeTab, currentUser?.isCm, cmStats, fetchCmData]);
+    if (activeTab === "cm" && currentUser?.cmProfile && !cmStats) fetchCmData();
+  }, [activeTab, currentUser?.cmProfile, cmStats, fetchCmData]);
 
   const copyCmCode = () => {
     navigator.clipboard.writeText(currentUser?.cmProfile?.inviteCode ?? "").then(() => {
@@ -422,7 +422,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
           </div>
 
           {/* ── Role tabs (shown when user is a host or CM) ── */}
-          {(currentUser.isHost || currentUser.isCm) && (
+          {(currentUser.isHost || currentUser.cmProfile) && (
             <div className="host-tab-bar unified-profile-tabs">
               <button
                 type="button"
@@ -446,7 +446,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
                   )}
                 </button>
               )}
-              {currentUser.isCm && (
+              {currentUser.cmProfile && (
                 <button
                   type="button"
                   className={`host-tab-btn${activeTab === "cm" ? " active" : ""}`}
@@ -530,7 +530,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
           )}
 
           {/* ── As CM tab ── */}
-          {activeTab === "cm" && currentUser.isCm && (
+          {activeTab === "cm" && currentUser.cmProfile && (
             <div className="cm-dashboard">
               <div className="cm-invite-card">
                 <p className="cm-invite-label">Your invite code</p>
