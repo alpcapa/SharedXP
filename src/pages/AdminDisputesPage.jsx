@@ -62,32 +62,54 @@ const fmtDateTime = (iso) =>
       }).format(new Date(iso))
     : "";
 
-const NoteHistory = ({ adminNotes }) => {
+const fmtDateLong = (iso) => {
+  if (!iso) return "";
+  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
+};
+
+const NoteHistory = ({ adminNotes, adminName = "Admin", fallbackDate = null }) => {
   const notes = parseNotes(adminNotes);
   if (notes.length === 0) return null;
   return (
     <div className="admin-note-history">
-      {notes.map((n, i) => (
-        <div key={i} className="admin-note-entry">
-          <div className="admin-note-meta">
-            <span className="admin-note-action-label">{NOTE_LABELS[n.action] ?? n.action}</span>
-            {n.at && <span className="admin-note-time">· {fmtDateTime(n.at)} · Admin</span>}
+      {notes.map((n, i) => {
+        const isLegacy = n.action === "note" && !n.at;
+        return (
+          <div key={i} className="admin-note-entry">
+            <div className="admin-note-meta">
+              {isLegacy ? (
+                <>
+                  <span className="admin-note-action-label">{adminName}</span>
+                  {fallbackDate && (
+                    <span className="admin-note-time">· wrote on {fmtDateLong(fallbackDate)}</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="admin-note-action-label">{NOTE_LABELS[n.action] ?? n.action}</span>
+                  <span className="admin-note-time">· {fmtDateTime(n.at)} · {adminName}</span>
+                </>
+              )}
+            </div>
+            <p className="admin-note-text">{n.note}</p>
           </div>
-          <p className="admin-note-text">{n.note}</p>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
 
 // ── Admin CM Management panel ─────────────────────────────────────────────────
-const CMManagementPanel = () => {
+const CMManagementPanel = ({ currentUser }) => {
   const [subTab, setSubTab] = useState("applications");
   const [applications, setApplications] = useState([]);
   const [cmProfiles, setCmProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionNotes, setActionNotes] = useState({});
   const [actionBusy, setActionBusy] = useState(null);
+  const adminName = currentUser?.fullName ||
+    `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() ||
+    "Admin";
   const pendingCommsTotal = cmProfiles.reduce(
     (sum, cm) => sum + (cm.cm_commissions ?? []).filter((c) => c.status === "pending").length,
     0
@@ -316,7 +338,7 @@ const CMManagementPanel = () => {
                 {app.admin_notes && (
                   <div className="cm-admin-notes-row">
                     <p className="admin-dispute-label">Admin note history</p>
-                    <NoteHistory adminNotes={app.admin_notes} />
+                    <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />
                   </div>
                 )}
                 <div className="cm-admin-notes-row">
@@ -378,7 +400,7 @@ const CMManagementPanel = () => {
                     </div>
                     {statusBadge(app.status)}
                   </div>
-                  {app.admin_notes && <NoteHistory adminNotes={app.admin_notes} />}
+                  {app.admin_notes && <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />}
                 </article>
               ))}
             </details>
@@ -430,7 +452,11 @@ const CMManagementPanel = () => {
                 {(cm.admin_notes || cm._application?.admin_notes) && (
                   <div className="cm-admin-notes-row">
                     <p className="admin-dispute-label">Admin note history</p>
-                    <NoteHistory adminNotes={cm.admin_notes || cm._application?.admin_notes} />
+                    <NoteHistory
+                      adminNotes={cm.admin_notes || cm._application?.admin_notes}
+                      adminName={adminName}
+                      fallbackDate={cm._application?.updated_at}
+                    />
                   </div>
                 )}
                 <div className="cm-admin-notes-row">
@@ -710,7 +736,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
           </>
         )}
 
-        {activeTab === "cm" && <CMManagementPanel />}
+        {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} />}
         </main>
         <SiteFooter />
       </div>
