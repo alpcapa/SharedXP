@@ -36,6 +36,10 @@ const CMManagementPanel = () => {
   const [loading, setLoading] = useState(true);
   const [actionNotes, setActionNotes] = useState({});
   const [actionBusy, setActionBusy] = useState(null);
+  const pendingCommsTotal = cmProfiles.reduce(
+    (sum, cm) => sum + (cm.cm_commissions ?? []).filter((c) => c.status === "pending").length,
+    0
+  );
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -215,7 +219,7 @@ const CMManagementPanel = () => {
           className={`admin-tab${subTab === "active" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("active")}
         >
-          Active CMs
+          Active CMs {pendingCommsTotal > 0 && <span className="cm-admin-count">{pendingCommsTotal}</span>}
         </button>
       </div>
 
@@ -392,6 +396,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
   const [activeTab, setActiveTab] = useState("disputes");
+  const [cmCounts, setCmCounts] = useState({ pendingApps: 0, pendingComms: 0 });
   const { resolveDispute } = useBookingRequests(currentUser);
 
   const fetchDisputes = useCallback(async () => {
@@ -411,10 +416,28 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
     setLoading(false);
   }, []);
 
+  const fetchCmCounts = useCallback(async () => {
+    const [appRes, commRes] = await Promise.all([
+      supabase
+        .from("cm_applications")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["pending", "interview"]),
+      supabase
+        .from("cm_commissions")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
+    ]);
+    setCmCounts({ pendingApps: appRes.count ?? 0, pendingComms: commRes.count ?? 0 });
+  }, []);
+
   useEffect(() => {
-    if (currentUser?.isAdmin) fetchDisputes();
-    else setLoading(false);
-  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes]);
+    if (currentUser?.isAdmin) {
+      fetchDisputes();
+      fetchCmCounts();
+    } else {
+      setLoading(false);
+    }
+  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts]);
 
   const handleResolve = async (disputeId, resolution) => {
     if (!confirm(`Resolve as "${resolution}"?`)) return;
@@ -488,6 +511,9 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
             onClick={() => setActiveTab("disputes")}
           >
             Dispute Management
+            {disputes.filter((d) => !d.resolved_at).length > 0 && (
+              <span className="cm-admin-count">{disputes.filter((d) => !d.resolved_at).length}</span>
+            )}
           </button>
           <button
             type="button"
@@ -495,6 +521,9 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
             onClick={() => setActiveTab("cm")}
           >
             CM Management
+            {(cmCounts.pendingApps + cmCounts.pendingComms) > 0 && (
+              <span className="cm-admin-count">{cmCounts.pendingApps + cmCounts.pendingComms}</span>
+            )}
           </button>
         </div>
 
