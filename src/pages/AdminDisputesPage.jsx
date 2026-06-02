@@ -107,6 +107,7 @@ const CMManagementPanel = ({ currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [actionNotes, setActionNotes] = useState({});
   const [actionBusy, setActionBusy] = useState(null);
+  const [cmActionMode, setCmActionMode] = useState(null); // { id, action }
   const adminName = currentUser?.fullName ||
     `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() ||
     "Admin";
@@ -217,12 +218,12 @@ const CMManagementPanel = ({ currentUser }) => {
     const note = getNote(cm.id);
     if (!note.trim()) { alert("Please enter a reason before pausing."); return; }
     if (busy(cm.id)) return;
-    if (!confirm("Pause this CM's account?")) return;
     setActionBusy(cm.id);
     const newNotes = appendNote(cm.admin_notes, "paused", note);
     await supabase.from("cm_profiles").update({ status: "paused", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_paused", cm.user_id);
     setNote(cm.id, "");
+    setCmActionMode(null);
     await fetchAll();
     setActionBusy(null);
   };
@@ -231,12 +232,12 @@ const CMManagementPanel = ({ currentUser }) => {
     const note = getNote(cm.id);
     if (!note.trim()) { alert("Please enter a reason before re-activating."); return; }
     if (busy(cm.id)) return;
-    if (!confirm("Re-activate this CM's account?")) return;
     setActionBusy(cm.id);
     const newNotes = appendNote(cm.admin_notes, "reactivated", note);
     await supabase.from("cm_profiles").update({ status: "active", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_reactivated", cm.user_id);
     setNote(cm.id, "");
+    setCmActionMode(null);
     await fetchAll();
     setActionBusy(null);
   };
@@ -245,12 +246,12 @@ const CMManagementPanel = ({ currentUser }) => {
     const note = getNote(cm.id);
     if (!note.trim()) { alert("Please enter a reason before revoking."); return; }
     if (busy(cm.id)) return;
-    if (!confirm("Revoke this CM's access? This cannot be undone easily.")) return;
     setActionBusy(cm.id);
     const newNotes = appendNote(cm.admin_notes, "revoked", note);
     await supabase.from("cm_profiles").update({ status: "revoked", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_revoked", cm.user_id);
     setNote(cm.id, "");
+    setCmActionMode(null);
     await fetchAll();
     setActionBusy(null);
   };
@@ -459,41 +460,61 @@ const CMManagementPanel = ({ currentUser }) => {
                     />
                   </div>
                 )}
-                <div className="cm-admin-notes-row">
-                  <label htmlFor={`cm-notes-${cm.id}`} className="admin-dispute-label">
-                    Reason (required — saved to record only, not sent in email)
-                  </label>
-                  <textarea
-                    id={`cm-notes-${cm.id}`}
-                    className="cm-admin-notes"
-                    rows={2}
-                    placeholder="Enter reason or notes…"
-                    value={getNote(cm.id)}
-                    onChange={(e) => setNote(cm.id, e.target.value)}
-                  />
-                </div>
-                <div className="admin-dispute-actions">
-                  {cm.status === "active" && (
-                    <button type="button" className="btn btn-light" disabled={busy(cm.id)} onClick={() => pauseCm(cm)}>
-                      {busy(cm.id) ? "…" : "Pause"}
-                    </button>
-                  )}
-                  {cm.status === "paused" && (
-                    <button type="button" className="btn btn-primary" disabled={busy(cm.id)} onClick={() => reactivateCm(cm)}>
-                      {busy(cm.id) ? "…" : "Re-activate"}
-                    </button>
-                  )}
-                  {cm.status === "revoked" && (
-                    <button type="button" className="btn btn-primary" disabled={busy(cm.id)} onClick={() => reactivateCm(cm)}>
-                      {busy(cm.id) ? "…" : "Re-activate"}
-                    </button>
-                  )}
-                  {cm.status !== "revoked" && (
-                    <button type="button" className="btn btn-danger" disabled={busy(cm.id)} onClick={() => revokeCm(cm)}>
-                      {busy(cm.id) ? "…" : "Revoke"}
-                    </button>
-                  )}
-                </div>
+                {cmActionMode?.id === cm.id ? (
+                  <div className="cm-admin-notes-row">
+                    <label htmlFor={`cm-notes-${cm.id}`} className="admin-dispute-label">
+                      Reason for {cmActionMode.action === "pause" ? "pausing" : cmActionMode.action === "revoke" ? "revoking" : "re-activating"} (required)
+                    </label>
+                    <textarea
+                      id={`cm-notes-${cm.id}`}
+                      className="cm-admin-notes"
+                      rows={2}
+                      placeholder="Enter reason…"
+                      value={getNote(cm.id)}
+                      onChange={(e) => setNote(cm.id, e.target.value)}
+                      autoFocus
+                    />
+                    <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                      <button
+                        type="button"
+                        className="btn btn-light"
+                        onClick={() => { setCmActionMode(null); setNote(cm.id, ""); }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn ${cmActionMode.action === "revoke" ? "btn-danger" : "btn-primary"}`}
+                        disabled={busy(cm.id)}
+                        onClick={() => {
+                          if (cmActionMode.action === "pause") pauseCm(cm);
+                          else if (cmActionMode.action === "revoke") revokeCm(cm);
+                          else reactivateCm(cm);
+                        }}
+                      >
+                        {busy(cm.id) ? "…" : "Confirm"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="admin-dispute-actions">
+                    {cm.status === "active" && (
+                      <button type="button" className="btn btn-light" onClick={() => setCmActionMode({ id: cm.id, action: "pause" })}>
+                        Pause
+                      </button>
+                    )}
+                    {(cm.status === "paused" || cm.status === "revoked") && (
+                      <button type="button" className="btn btn-primary" onClick={() => setCmActionMode({ id: cm.id, action: "reactivate" })}>
+                        Re-activate
+                      </button>
+                    )}
+                    {cm.status !== "revoked" && (
+                      <button type="button" className="btn btn-danger" onClick={() => setCmActionMode({ id: cm.id, action: "revoke" })}>
+                        Revoke
+                      </button>
+                    )}
+                  </div>
+                )}
               </article>
             );
           })}
