@@ -133,6 +133,14 @@ const CMManagementPanel = ({ currentUser }) => {
   const [emailSubjects, setEmailSubjects] = useState({});
   const [actionBusy, setActionBusy] = useState(null);
   const [cmActionMode, setCmActionMode] = useState(null); // { id, action }
+  const [expandedIds, setExpandedIds] = useState(new Set());
+
+  const toggleExpand = (id) =>
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   const adminName = currentUser?.fullName ||
     `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() ||
     "Admin";
@@ -376,70 +384,83 @@ const CMManagementPanel = ({ currentUser }) => {
           {pendingApps.length === 0 && <p>No open applications.</p>}
           {pendingApps.map((app) => {
             const isInterview = app.status === "interview";
+            const isExpanded = expandedIds.has(app.id);
             return (
               <article key={app.id} className="cm-admin-card">
-                <div className="cm-admin-card-header">
-                  <div>
+                <button
+                  type="button"
+                  className="cm-admin-card-summary"
+                  onClick={() => toggleExpand(app.id)}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="cm-admin-card-summary-left">
                     <strong>{getName(app.applicant)}</strong>
                     <span className="cm-admin-email">{app.applicant?.email}</span>
                     <span className="cm-admin-location">{app.city}, {app.country}</span>
                   </div>
-                  {statusBadge(app.status)}
-                </div>
-                <div className="cm-admin-fields">
-                  <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
-                  <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
-                  {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
-                </div>
-                {app.admin_notes && (
-                  <div className="cm-admin-notes-row">
-                    <p className="admin-dispute-label">Admin note history</p>
-                    <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />
+                  <div className="cm-admin-card-summary-right">
+                    {statusBadge(app.status)}
+                    <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+                  </div>
+                </button>
+                {isExpanded && (
+                  <div className="cm-admin-card-body">
+                    <div className="cm-admin-fields">
+                      <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
+                      <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
+                      {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
+                    </div>
+                    {app.admin_notes && (
+                      <div className="cm-admin-notes-row">
+                        <p className="admin-dispute-label">Admin note history</p>
+                        <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />
+                      </div>
+                    )}
+                    <div className="cm-admin-notes-row">
+                      <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">
+                        {isInterview
+                          ? "Interview outcome / review (required to accept or decline)"
+                          : "Reason (required — saved to record only, not sent in email)"}
+                      </label>
+                      <textarea
+                        id={`notes-${app.id}`}
+                        className="cm-admin-notes"
+                        rows={2}
+                        placeholder={isInterview
+                          ? "How did the interview go? Note key impressions before accepting or declining…"
+                          : "Internal notes for this application…"}
+                        value={getNote(app.id)}
+                        onChange={(e) => setNote(app.id, e.target.value)}
+                      />
+                    </div>
+                    <div className="admin-dispute-actions">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        disabled={busy(app.id) || isInterview}
+                        onClick={() => moveToInterview(app)}
+                      >
+                        {busy(app.id) ? "…" : "Move to Interview"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={busy(app.id)}
+                        onClick={() => acceptApplication(app)}
+                      >
+                        {busy(app.id) ? "…" : "Accept & Welcome"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        disabled={busy(app.id)}
+                        onClick={() => declineApplication(app)}
+                      >
+                        {busy(app.id) ? "…" : "Decline"}
+                      </button>
+                    </div>
                   </div>
                 )}
-                <div className="cm-admin-notes-row">
-                  <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">
-                    {isInterview
-                      ? "Interview outcome / review (required to accept or decline)"
-                      : "Reason (required — saved to record only, not sent in email)"}
-                  </label>
-                  <textarea
-                    id={`notes-${app.id}`}
-                    className="cm-admin-notes"
-                    rows={2}
-                    placeholder={isInterview
-                      ? "How did the interview go? Note key impressions before accepting or declining…"
-                      : "Internal notes for this application…"}
-                    value={getNote(app.id)}
-                    onChange={(e) => setNote(app.id, e.target.value)}
-                  />
-                </div>
-                <div className="admin-dispute-actions">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    disabled={busy(app.id) || isInterview}
-                    onClick={() => moveToInterview(app)}
-                  >
-                    {busy(app.id) ? "…" : "Move to Interview"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    disabled={busy(app.id)}
-                    onClick={() => acceptApplication(app)}
-                  >
-                    {busy(app.id) ? "…" : "Accept & Welcome"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    disabled={busy(app.id)}
-                    onClick={() => declineApplication(app)}
-                  >
-                    {busy(app.id) ? "…" : "Decline"}
-                  </button>
-                </div>
               </article>
             );
           })}
@@ -471,16 +492,30 @@ const CMManagementPanel = ({ currentUser }) => {
           {cmProfiles.map((cm) => {
             const s = cmStats(cm);
             const pendingComms = (cm.cm_commissions ?? []).filter((c) => c.status === "pending");
+            const isExpanded = expandedIds.has(cm.id);
             return (
               <article key={cm.id} className="cm-admin-card">
-                <div className="cm-admin-card-header">
-                  <div>
+                <button
+                  type="button"
+                  className="cm-admin-card-summary"
+                  onClick={() => toggleExpand(cm.id)}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="cm-admin-card-summary-left">
                     <strong>{getName(cm.owner)}</strong>
                     <span className="cm-admin-email">{cm.owner?.email}</span>
                     <code className="cm-invite-code-pill">{cm.invite_code}</code>
                   </div>
-                  {statusBadge(cm.status)}
-                </div>
+                  <div className="cm-admin-card-summary-right">
+                    {statusBadge(cm.status)}
+                    {pendingComms.length > 0 && (
+                      <span className="cm-admin-count">{pendingComms.length} pending</span>
+                    )}
+                    <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+                  </div>
+                </button>
+                {isExpanded && (
+                  <div className="cm-admin-card-body">
                 <div className="cm-admin-stats-row">
                   <span><strong>{s.referrals}</strong> referrals</span>
                   <span><strong>{s.pending}</strong> pending commission</span>
@@ -635,6 +670,8 @@ const CMManagementPanel = ({ currentUser }) => {
                         Revoke
                       </button>
                     )}
+                  </div>
+                )}
                   </div>
                 )}
               </article>

@@ -7632,8 +7632,55 @@ body {
   background: #fff;
   border: 1px solid #e8e9e4;
   border-radius: 10px;
-  padding: 20px 24px;
-  margin-bottom: 16px;
+  padding: 0;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.cm-admin-card-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cm-admin-card-summary:hover {
+  background: #f9f9f7;
+}
+.cm-admin-card-summary-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cm-admin-card-summary-left strong {
+  font-size: 14px;
+  color: #1a1a1a;
+}
+.cm-admin-card-summary-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cm-admin-chevron {
+  font-size: 16px;
+  color: #888;
+  transition: transform 0.15s ease;
+  display: inline-block;
+  line-height: 1;
+}
+.cm-admin-chevron-open {
+  transform: rotate(180deg);
+}
+.cm-admin-card-body {
+  padding: 0 20px 16px;
+  border-top: 1px solid #f0f0ea;
 }
 .cm-admin-card-closed {
   background: #fafafa;
