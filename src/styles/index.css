@@ -7703,6 +7703,16 @@ body {
   resize: vertical;
   box-sizing: border-box;
 }
+.cm-admin-email-subject {
+  width: 100%;
+  border: 1px solid #d8d8d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
 .cm-admin-count {
   display: inline-flex;
   align-items: center;

@@ -130,6 +130,7 @@ const CMManagementPanel = ({ currentUser }) => {
   const [cmProfiles, setCmProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionNotes, setActionNotes] = useState({});
+  const [emailSubjects, setEmailSubjects] = useState({});
   const [actionBusy, setActionBusy] = useState(null);
   const [cmActionMode, setCmActionMode] = useState(null); // { id, action }
   const adminName = currentUser?.fullName ||
@@ -173,8 +174,38 @@ const CMManagementPanel = ({ currentUser }) => {
 
   const getNote = (id) => actionNotes[id] ?? "";
   const setNote = (id, val) => setActionNotes((prev) => ({ ...prev, [id]: val }));
+  const getSubject = (id) => emailSubjects[id] ?? "";
+  const setSubject = (id, val) => setEmailSubjects((prev) => ({ ...prev, [id]: val }));
 
   const busy = (id) => actionBusy === id;
+
+  const sendAdminEmail = async (cm) => {
+    const subject = getSubject(cm.id).trim();
+    const message = getNote(cm.id).trim();
+    if (!subject) { alert("Please enter a subject."); return; }
+    if (!message) { alert("Please enter a message."); return; }
+    if (busy(`email-${cm.id}`)) return;
+    setActionBusy(`email-${cm.id}`);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ emailType: "cm_admin_message", userId: cm.user_id, subject, message }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        alert(`Failed to send: ${json.error ?? res.status}`);
+      } else {
+        alert("Email sent.");
+        setSubject(cm.id, "");
+        setNote(cm.id, "");
+        setCmActionMode(null);
+      }
+    } catch (e) {
+      alert(`Error: ${e.message}`);
+    }
+    setActionBusy(null);
+  };
 
   // Applications actions
   const moveToInterview = async (app) => {
@@ -510,42 +541,85 @@ const CMManagementPanel = ({ currentUser }) => {
                 )}
                 {cmActionMode?.id === cm.id ? (
                   <div className="cm-admin-notes-row">
-                    <label htmlFor={`cm-notes-${cm.id}`} className="admin-dispute-label">
-                      Reason for {cmActionMode.action === "pause" ? "pausing" : cmActionMode.action === "revoke" ? "revoking" : "re-activating"} (required)
-                    </label>
-                    <textarea
-                      id={`cm-notes-${cm.id}`}
-                      className="cm-admin-notes"
-                      rows={2}
-                      placeholder="Enter reason…"
-                      value={getNote(cm.id)}
-                      onChange={(e) => setNote(cm.id, e.target.value)}
-                      autoFocus
-                    />
-                    <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
-                      <button
-                        type="button"
-                        className="btn btn-light"
-                        onClick={() => { setCmActionMode(null); setNote(cm.id, ""); }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn ${cmActionMode.action === "revoke" ? "btn-danger" : "btn-primary"}`}
-                        disabled={busy(cm.id)}
-                        onClick={() => {
-                          if (cmActionMode.action === "pause") pauseCm(cm);
-                          else if (cmActionMode.action === "revoke") revokeCm(cm);
-                          else reactivateCm(cm);
-                        }}
-                      >
-                        {busy(cm.id) ? "…" : "Confirm"}
-                      </button>
-                    </div>
+                    {cmActionMode.action === "email" ? (
+                      <>
+                        <p className="admin-dispute-label">Email {getName(cm.owner)}</p>
+                        <input
+                          type="text"
+                          className="cm-admin-email-subject"
+                          placeholder="Subject…"
+                          value={getSubject(cm.id)}
+                          onChange={(e) => setSubject(cm.id, e.target.value)}
+                          autoFocus
+                        />
+                        <textarea
+                          className="cm-admin-notes"
+                          rows={4}
+                          placeholder="Message…"
+                          value={getNote(cm.id)}
+                          onChange={(e) => setNote(cm.id, e.target.value)}
+                        />
+                        <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                          <button
+                            type="button"
+                            className="btn btn-light"
+                            onClick={() => { setCmActionMode(null); setSubject(cm.id, ""); setNote(cm.id, ""); }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            disabled={busy(`email-${cm.id}`)}
+                            onClick={() => sendAdminEmail(cm)}
+                          >
+                            {busy(`email-${cm.id}`) ? "Sending…" : "Send Email"}
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <label htmlFor={`cm-notes-${cm.id}`} className="admin-dispute-label">
+                          Reason for {cmActionMode.action === "pause" ? "pausing" : cmActionMode.action === "revoke" ? "revoking" : "re-activating"} (required)
+                        </label>
+                        <textarea
+                          id={`cm-notes-${cm.id}`}
+                          className="cm-admin-notes"
+                          rows={2}
+                          placeholder="Enter reason…"
+                          value={getNote(cm.id)}
+                          onChange={(e) => setNote(cm.id, e.target.value)}
+                          autoFocus
+                        />
+                        <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                          <button
+                            type="button"
+                            className="btn btn-light"
+                            onClick={() => { setCmActionMode(null); setNote(cm.id, ""); }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn ${cmActionMode.action === "revoke" ? "btn-danger" : "btn-primary"}`}
+                            disabled={busy(cm.id)}
+                            onClick={() => {
+                              if (cmActionMode.action === "pause") pauseCm(cm);
+                              else if (cmActionMode.action === "revoke") revokeCm(cm);
+                              else reactivateCm(cm);
+                            }}
+                          >
+                            {busy(cm.id) ? "…" : "Confirm"}
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="admin-dispute-actions">
+                    <button type="button" className="btn btn-light" onClick={() => setCmActionMode({ id: cm.id, action: "email" })}>
+                      Email
+                    </button>
                     {cm.status === "active" && (
                       <button type="button" className="btn btn-light" onClick={() => setCmActionMode({ id: cm.id, action: "pause" })}>
                         Pause

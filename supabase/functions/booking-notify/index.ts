@@ -914,6 +914,18 @@ serve(async (req: Request): Promise<Response> => {
           await sendEmail(e.to, e.subject, e.html);
           break;
         }
+        case "cm_admin_message": {
+          const subject = String(body.subject ?? "Message from SharedXP");
+          const message = String(body.message ?? "");
+          const html = emailHtml(
+            subject,
+            [message],
+            `${APP_URL}/user-profile`,
+            "Go to My Profile",
+          );
+          await sendEmail(String(userProfile.email), subject, html);
+          break;
+        }
         default:
           return new Response(JSON.stringify({ error: `Unknown CM emailType: ${emailType}` }), {
             status: 400,
