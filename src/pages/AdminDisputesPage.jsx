@@ -40,6 +40,28 @@ const parseNotes = (adminNotes) => {
   return [{ action: "note", note: adminNotes, at: null }];
 };
 
+// Merge cm_profiles.admin_notes + cm_applications.admin_notes into one
+// deduplicated, chronologically sorted JSON string. Handles the case where
+// the same notes were written to both tables (e.g. at acceptance time).
+const mergeAdminNotes = (cmNotes, appNotes) => {
+  const arr1 = parseNotes(cmNotes);
+  const arr2 = parseNotes(appNotes);
+  const seen = new Set();
+  const merged = [...arr1, ...arr2].filter((n) => {
+    const key = `${n.action}|${n.at ?? ""}|${n.note}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  merged.sort((a, b) => {
+    if (!a.at && !b.at) return 0;
+    if (!a.at) return -1;
+    if (!b.at) return 1;
+    return new Date(a.at).getTime() - new Date(b.at).getTime();
+  });
+  return merged.length === 0 ? null : JSON.stringify(merged);
+};
+
 const appendNote = (existing, action, noteText) => {
   const notes = parseNotes(existing);
   notes.push({ action, note: noteText.trim(), at: new Date().toISOString() });
@@ -221,8 +243,7 @@ const CMManagementPanel = ({ currentUser }) => {
     if (!note.trim()) { alert("Please enter a reason before pausing."); return; }
     if (busy(cm.id)) return;
     setActionBusy(cm.id);
-    const existingNotes = cm.admin_notes || cm._application?.admin_notes;
-    const newNotes = appendNote(existingNotes, "paused", note);
+    const newNotes = appendNote(mergeAdminNotes(cm.admin_notes, cm._application?.admin_notes), "paused", note);
     await supabase.from("cm_profiles").update({ status: "paused", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_paused", cm.user_id);
     setNote(cm.id, "");
@@ -236,8 +257,7 @@ const CMManagementPanel = ({ currentUser }) => {
     if (!note.trim()) { alert("Please enter a reason before re-activating."); return; }
     if (busy(cm.id)) return;
     setActionBusy(cm.id);
-    const existingNotes = cm.admin_notes || cm._application?.admin_notes;
-    const newNotes = appendNote(existingNotes, "reactivated", note);
+    const newNotes = appendNote(mergeAdminNotes(cm.admin_notes, cm._application?.admin_notes), "reactivated", note);
     await supabase.from("cm_profiles").update({ status: "active", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_reactivated", cm.user_id);
     setNote(cm.id, "");
@@ -251,8 +271,7 @@ const CMManagementPanel = ({ currentUser }) => {
     if (!note.trim()) { alert("Please enter a reason before revoking."); return; }
     if (busy(cm.id)) return;
     setActionBusy(cm.id);
-    const existingNotes = cm.admin_notes || cm._application?.admin_notes;
-    const newNotes = appendNote(existingNotes, "revoked", note);
+    const newNotes = appendNote(mergeAdminNotes(cm.admin_notes, cm._application?.admin_notes), "revoked", note);
     await supabase.from("cm_profiles").update({ status: "revoked", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_revoked", cm.user_id);
     setNote(cm.id, "");
@@ -483,7 +502,7 @@ const CMManagementPanel = ({ currentUser }) => {
                   <div className="cm-admin-notes-row">
                     <p className="admin-dispute-label">Admin note history</p>
                     <NoteHistory
-                      adminNotes={cm.admin_notes || cm._application?.admin_notes}
+                      adminNotes={mergeAdminNotes(cm.admin_notes, cm._application?.admin_notes)}
                       adminName={adminName}
                       fallbackDate={cm._application?.updated_at}
                     />
