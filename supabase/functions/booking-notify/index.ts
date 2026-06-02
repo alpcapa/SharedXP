@@ -858,8 +858,10 @@ serve(async (req: Request): Promise<Response> => {
     try {
       switch (emailType) {
         case "cm_eligible": {
+          if (userProfile.cm_eligible_notified) break;
           const e = buildCmEligible(userProfile);
           await sendEmail(e.to, e.subject, e.html);
+          await db.from("profiles").update({ cm_eligible_notified: true }).eq("id", userId);
           break;
         }
         case "cm_application_received": {

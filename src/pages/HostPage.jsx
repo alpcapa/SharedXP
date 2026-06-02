@@ -143,12 +143,16 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
   useEffect(() => {
     if (!currentUser?.isHost || hostedCount < 3 || currentUser?.isCm) return;
     const key = `cm_eligible_notified_${currentUser.id}`;
+    if (currentUser.cmEligibleNotified) {
+      localStorage.setItem(key, "1");
+      return;
+    }
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, "1");
     supabase.functions.invoke("booking-notify", {
       body: { emailType: "cm_eligible", userId: currentUser.id },
     }).catch((e) => console.error("[cm] eligibility email:", e));
-  }, [hostedCount, currentUser?.id, currentUser?.isHost, currentUser?.isCm]);
+  }, [hostedCount, currentUser?.id, currentUser?.isHost, currentUser?.isCm, currentUser?.cmEligibleNotified]);
 
   if (!currentUser) {
     if (authLoading) {
