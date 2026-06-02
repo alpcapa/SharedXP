@@ -16,15 +16,17 @@ const generateInviteCode = (city) => {
   return `SXP-${cityCode}-${rand}`;
 };
 
-// ── CM email helper (uses booking-notify edge function with userId) ────────────
+// ── CM email helper ───────────────────────────────────────────────────────────
+// Uses text/plain content-type to avoid CORS preflight on the edge function
 const sendCmEmail = async (emailType, userId, extra = {}) => {
   try {
-    const { error } = await supabase.functions.invoke("booking-notify", {
-      body: { emailType, userId, ...extra },
+    await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ emailType, userId, ...extra }),
     });
-    if (error) console.error("[cm-admin] email error:", emailType, error);
   } catch (e) {
-    console.error("[cm-admin] email exception:", e);
+    console.error("[cm-admin] email error:", emailType, e);
   }
 };
 
@@ -438,14 +440,6 @@ const CMManagementPanel = ({ currentUser }) => {
                     onClick={async () => {
                       setActionBusy(`welcome-${cm.id}`);
                       try {
-                        // Step 1: confirm the Supabase domain is reachable at all
-                        let rootOk = false;
-                        try {
-                          const ping = await fetch(supabaseUrl, { method: "GET", mode: "no-cors" });
-                          rootOk = true;
-                        } catch {}
-
-                        // Step 2: try the function
                         const res = await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
                           method: "POST",
                           headers: { "Content-Type": "text/plain" },
@@ -453,13 +447,11 @@ const CMManagementPanel = ({ currentUser }) => {
                         });
                         const json = await res.json();
                         setActionBusy(null);
-                        if (!res.ok) alert(`Failed (${res.status}): ${json.error ?? JSON.stringify(json)}`);
+                        if (!res.ok) alert(`Failed: ${json.error ?? JSON.stringify(json)}`);
                         else alert("Welcome email sent.");
                       } catch (e) {
                         setActionBusy(null);
-                        let rootOk = false;
-                        try { await fetch(supabaseUrl, { method: "GET", mode: "no-cors" }); rootOk = true; } catch {}
-                        alert(`Function fetch failed: ${e.message}\nRoot domain reachable: ${rootOk}\nURL: ${supabaseUrl}/functions/v1/booking-notify`);
+                        alert(`Error: ${e.message}`);
                       }
                     }}
                   >
