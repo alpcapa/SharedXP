@@ -685,7 +685,7 @@ function buildCmAccepted(
         `Congratulations! You've been accepted as a SharedXP Community Manager.`,
         `Your personal invite code is:`,
       ],
-      `${APP_URL}/my-profile?tab=cm`,
+      `${APP_URL}/user-profile?tab=cm`,
       "Go to CM Dashboard",
       `<div style="text-align:center;margin:20px 0 24px;">
         <span style="font-size:24px;font-weight:700;letter-spacing:2px;background:#f5f5f2;padding:12px 24px;border-radius:8px;border:2px solid #1a1a1a;display:inline-block;">${inviteCode}</span>
@@ -735,7 +735,7 @@ function buildCmCommissionApproved(
         `<strong>Commission amount:</strong> ${currency} ${fmt(commissionAmount)}`,
         `Payment will be made via bank transfer within 10 business days. View your full commission history on your CM Dashboard.`,
       ],
-      `${APP_URL}/my-profile?tab=cm`,
+      `${APP_URL}/user-profile?tab=cm`,
       "View CM Dashboard",
     ),
   };
