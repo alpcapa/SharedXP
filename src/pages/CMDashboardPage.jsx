@@ -200,7 +200,7 @@ const CMDashboardPage = ({ currentUser, authLoading, onLogout }) => {
                         <th>Date</th>
                         <th>User</th>
                         <th>Sport</th>
-                        <th>GMV</th>
+                        <th>GBV</th>
                         <th>Commission</th>
                         <th>Status</th>
                       </tr>
