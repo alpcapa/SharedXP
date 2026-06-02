@@ -70,7 +70,7 @@ const fmtDateLong = (iso) => {
 };
 
 const NoteHistory = ({ adminNotes, adminName = "Admin", fallbackDate = null }) => {
-  const notes = parseNotes(adminNotes);
+  const notes = parseNotes(adminNotes).slice().reverse();
   if (notes.length === 0) return null;
   return (
     <div className="admin-note-history">
@@ -221,7 +221,8 @@ const CMManagementPanel = ({ currentUser }) => {
     if (!note.trim()) { alert("Please enter a reason before pausing."); return; }
     if (busy(cm.id)) return;
     setActionBusy(cm.id);
-    const newNotes = appendNote(cm.admin_notes, "paused", note);
+    const existingNotes = cm.admin_notes || cm._application?.admin_notes;
+    const newNotes = appendNote(existingNotes, "paused", note);
     await supabase.from("cm_profiles").update({ status: "paused", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_paused", cm.user_id);
     setNote(cm.id, "");
@@ -235,7 +236,8 @@ const CMManagementPanel = ({ currentUser }) => {
     if (!note.trim()) { alert("Please enter a reason before re-activating."); return; }
     if (busy(cm.id)) return;
     setActionBusy(cm.id);
-    const newNotes = appendNote(cm.admin_notes, "reactivated", note);
+    const existingNotes = cm.admin_notes || cm._application?.admin_notes;
+    const newNotes = appendNote(existingNotes, "reactivated", note);
     await supabase.from("cm_profiles").update({ status: "active", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_reactivated", cm.user_id);
     setNote(cm.id, "");
@@ -249,7 +251,8 @@ const CMManagementPanel = ({ currentUser }) => {
     if (!note.trim()) { alert("Please enter a reason before revoking."); return; }
     if (busy(cm.id)) return;
     setActionBusy(cm.id);
-    const newNotes = appendNote(cm.admin_notes, "revoked", note);
+    const existingNotes = cm.admin_notes || cm._application?.admin_notes;
+    const newNotes = appendNote(existingNotes, "revoked", note);
     await supabase.from("cm_profiles").update({ status: "revoked", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_revoked", cm.user_id);
     setNote(cm.id, "");
