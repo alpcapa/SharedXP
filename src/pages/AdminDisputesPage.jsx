@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import InlineLoginForm from "../components/InlineLoginForm";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseUrl, supabaseAnonKey } from "../lib/supabase";
 import { useBookingRequests } from "../hooks/useBookingRequests";
 
 // ── CM invite code generator ──────────────────────────────────────────────────
@@ -437,12 +437,24 @@ const CMManagementPanel = ({ currentUser }) => {
                     disabled={busy(`welcome-${cm.id}`)}
                     onClick={async () => {
                       setActionBusy(`welcome-${cm.id}`);
-                      const { error } = await supabase.functions.invoke("booking-notify", {
-                        body: { emailType: "cm_accepted", userId: cm.user_id, inviteCode: cm.invite_code },
-                      });
-                      setActionBusy(null);
-                      if (error) alert(`Failed to send: ${error.message}`);
-                      else alert("Welcome email sent.");
+                      try {
+                        const res = await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${supabaseAnonKey}`,
+                            "apikey": supabaseAnonKey,
+                          },
+                          body: JSON.stringify({ emailType: "cm_accepted", userId: cm.user_id, inviteCode: cm.invite_code }),
+                        });
+                        const json = await res.json();
+                        setActionBusy(null);
+                        if (!res.ok) alert(`Failed (${res.status}): ${json.error ?? JSON.stringify(json)}`);
+                        else alert("Welcome email sent.");
+                      } catch (e) {
+                        setActionBusy(null);
+                        alert(`Network error: ${e.message}`);
+                      }
                     }}
                   >
                     {busy(`welcome-${cm.id}`) ? "Sending…" : "Resend Welcome Email"}
