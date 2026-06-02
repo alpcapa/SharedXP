@@ -122,8 +122,8 @@ const CommunityManagerPolicyPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>6. Commission Structure</h2>
               <p>
-                Community Managers earn a commission of <strong>5% of the gross booking value (GMV)</strong> for
-                every completed booking made by a user attributed to their invite code. GMV is the total amount
+                Community Managers earn a commission of <strong>5% of the gross booking value (GBV)</strong> for
+                every completed booking made by a user attributed to their invite code. GBV is the total amount
                 paid by the guest before any platform fees or deductions.
               </p>
               <p>
