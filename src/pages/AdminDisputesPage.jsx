@@ -438,6 +438,14 @@ const CMManagementPanel = ({ currentUser }) => {
                     onClick={async () => {
                       setActionBusy(`welcome-${cm.id}`);
                       try {
+                        // Step 1: confirm the Supabase domain is reachable at all
+                        let rootOk = false;
+                        try {
+                          const ping = await fetch(supabaseUrl, { method: "GET", mode: "no-cors" });
+                          rootOk = true;
+                        } catch {}
+
+                        // Step 2: try the function
                         const res = await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
                           method: "POST",
                           headers: { "Content-Type": "text/plain" },
@@ -449,7 +457,9 @@ const CMManagementPanel = ({ currentUser }) => {
                         else alert("Welcome email sent.");
                       } catch (e) {
                         setActionBusy(null);
-                        alert(`Network error: ${e.message}\nURL tried: ${supabaseUrl}/functions/v1/booking-notify`);
+                        let rootOk = false;
+                        try { await fetch(supabaseUrl, { method: "GET", mode: "no-cors" }); rootOk = true; } catch {}
+                        alert(`Function fetch failed: ${e.message}\nRoot domain reachable: ${rootOk}\nURL: ${supabaseUrl}/functions/v1/booking-notify`);
                       }
                     }}
                   >
