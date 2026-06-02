@@ -104,6 +104,52 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [isCountryDropdownOpen, isCityDropdownOpen]);
 
+  const navigate = useNavigate();
+  const [showCmModal, setShowCmModal] = useState(false);
+  const [cmStep, setCmStep] = useState("info");
+  const [cmForm, setCmForm] = useState({ sportsBackground: "", motivation: "", contactTimes: "", agreedToCmTerms: false, agreedToContact: false });
+  const [cmError, setCmError] = useState("");
+  const [cmSubmitting, setCmSubmitting] = useState(false);
+  const [cmSuccess, setCmSuccess] = useState(false);
+  const [hostedCount, setHostedCount] = useState(currentUser?.hostHistory?.length ?? 0);
+  const [cmAppStatus, setCmAppStatus] = useState(null);
+  const [cmAppUpdatedAt, setCmAppUpdatedAt] = useState(null);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    supabase
+      .from("booking_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("host_id", currentUser.id)
+      .eq("status", "completed")
+      .then(({ count }) => { if (count !== null) setHostedCount(count); });
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    supabase
+      .from("cm_applications")
+      .select("status, updated_at")
+      .eq("user_id", currentUser.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setCmAppStatus(data.status);
+          setCmAppUpdatedAt(data.updated_at);
+        }
+      });
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (!currentUser?.isHost || hostedCount < 3 || currentUser?.isCm) return;
+    const key = `cm_eligible_notified_${currentUser.id}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    supabase.functions.invoke("booking-notify", {
+      body: { emailType: "cm_eligible", userId: currentUser.id },
+    }).catch((e) => console.error("[cm] eligibility email:", e));
+  }, [hostedCount, currentUser?.id, currentUser?.isHost, currentUser?.isCm]);
+
   if (!currentUser) {
     if (authLoading) {
       return (
@@ -221,52 +267,6 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
     setSearchValue: setCitySearchValue,
     filteredOptions: filteredCityOptions,
   };
-
-  const navigate = useNavigate();
-  const [showCmModal, setShowCmModal] = useState(false);
-  const [cmStep, setCmStep] = useState("info");
-  const [cmForm, setCmForm] = useState({ sportsBackground: "", motivation: "", contactTimes: "", agreedToCmTerms: false, agreedToContact: false });
-  const [cmError, setCmError] = useState("");
-  const [cmSubmitting, setCmSubmitting] = useState(false);
-  const [cmSuccess, setCmSuccess] = useState(false);
-  const [hostedCount, setHostedCount] = useState(currentUser?.hostHistory?.length ?? 0);
-  const [cmAppStatus, setCmAppStatus] = useState(null);
-  const [cmAppUpdatedAt, setCmAppUpdatedAt] = useState(null);
-
-  useEffect(() => {
-    if (!currentUser?.id) return;
-    supabase
-      .from("booking_requests")
-      .select("id", { count: "exact", head: true })
-      .eq("host_id", currentUser.id)
-      .eq("status", "completed")
-      .then(({ count }) => { if (count !== null) setHostedCount(count); });
-  }, [currentUser?.id]);
-
-  useEffect(() => {
-    if (!currentUser?.id) return;
-    supabase
-      .from("cm_applications")
-      .select("status, updated_at")
-      .eq("user_id", currentUser.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setCmAppStatus(data.status);
-          setCmAppUpdatedAt(data.updated_at);
-        }
-      });
-  }, [currentUser?.id]);
-
-  useEffect(() => {
-    if (!currentUser?.isHost || hostedCount < 3 || currentUser?.isCm) return;
-    const key = `cm_eligible_notified_${currentUser.id}`;
-    if (localStorage.getItem(key)) return;
-    localStorage.setItem(key, "1");
-    supabase.functions.invoke("booking-notify", {
-      body: { emailType: "cm_eligible", userId: currentUser.id },
-    }).catch((e) => console.error("[cm] eligibility email:", e));
-  }, [hostedCount, currentUser?.id, currentUser?.isHost, currentUser?.isCm]);
 
   const cmEligible = currentUser?.isHost && hostedCount >= 3;
 
