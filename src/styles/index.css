@@ -7679,7 +7679,7 @@ body {
   transform: rotate(180deg);
 }
 .cm-admin-card-body {
-  padding: 0 20px 16px;
+  padding: 16px 20px 16px;
   border-top: 1px solid #f0f0ea;
 }
 .cm-admin-card-closed {
