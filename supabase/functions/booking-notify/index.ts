@@ -15,7 +15,7 @@ const SUPABASE_SERVICE_KEY   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const CS_EMAIL               = Deno.env.get("CS_EMAIL") ?? "support@sharedxp.com";
 
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": APP_URL || "*",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -684,12 +684,14 @@ function buildCmAccepted(
       [
         `Congratulations! You've been accepted as a SharedXP Community Manager.`,
         `Your personal invite code is:`,
-        `<div style="text-align:center;margin:20px 0;"><span style="font-size:24px;font-weight:700;letter-spacing:2px;background:#f5f5f2;padding:12px 24px;border-radius:8px;border:2px solid #1a1a1a;">${inviteCode}</span></div>`,
-        `Share this code with athletes and sports enthusiasts. Anyone who signs up using your code becomes your permanent referral, and you earn 5% commission on every completed booking they make.`,
-        `Log in to your SharedXP account to access your CM Dashboard and track your referrals and commissions.`,
       ],
-      `${APP_URL}/cm-dashboard`,
+      `${APP_URL}/user-profile?tab=cm`,
       "Go to CM Dashboard",
+      `<div style="text-align:center;margin:20px 0 24px;">
+        <span style="font-size:24px;font-weight:700;letter-spacing:2px;background:#f5f5f2;padding:12px 24px;border-radius:8px;border:2px solid #1a1a1a;display:inline-block;">${inviteCode}</span>
+      </div>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">Share this code with athletes and sports enthusiasts. Anyone who signs up using your code becomes your permanent referral, and you earn 5% commission on every completed booking they make.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">Log in to your SharedXP account to access your CM Dashboard and track your referrals and commissions.</p>`,
     ),
   };
 }
@@ -733,7 +735,7 @@ function buildCmCommissionApproved(
         `<strong>Commission amount:</strong> ${currency} ${fmt(commissionAmount)}`,
         `Payment will be made via bank transfer within 10 business days. View your full commission history on your CM Dashboard.`,
       ],
-      `${APP_URL}/cm-dashboard`,
+      `${APP_URL}/user-profile?tab=cm`,
       "View CM Dashboard",
     ),
   };
@@ -793,6 +795,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   if (!res.ok) {
     const err = await res.text();
     console.error(`[booking-notify] Resend error ${res.status}:`, err);
+    throw new Error(`Resend ${res.status}: ${err}`);
   }
 }
 
@@ -909,6 +912,18 @@ serve(async (req: Request): Promise<Response> => {
         case "cm_revoked": {
           const e = buildCmStatusChange(userProfile, emailType);
           await sendEmail(e.to, e.subject, e.html);
+          break;
+        }
+        case "cm_admin_message": {
+          const subject = String(body.subject ?? "Message from SharedXP");
+          const message = String(body.message ?? "");
+          const html = emailHtml(
+            subject,
+            [message],
+            `${APP_URL}/user-profile`,
+            "Go to My Profile",
+          );
+          await sendEmail(String(userProfile.email), subject, html);
           break;
         }
         default:

@@ -6044,6 +6044,36 @@ body {
   color: #596164;
 }
 
+.profile-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.profile-tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.profile-tab-btn:hover {
+  color: #1a1a1a;
+}
+
+.profile-tab-btn.active {
+  color: #1a1a1a;
+  font-weight: 700;
+  border-bottom-color: #1a1a1a;
+}
+
 .unified-profile-own-actions {
   display: flex;
   gap: 8px;
@@ -7438,18 +7468,53 @@ body {
   margin: 0 0 28px;
 }
 .cm-invite-card {
-  background: #1a1a1a;
-  color: #fff;
+  background: #f5f5f2;
+  color: #1a1a1a;
+  border: 1.5px solid #d4e5a0;
   border-radius: 12px;
+  transition: border-color 0.2s, background 0.2s;
   padding: 24px 28px;
   margin-bottom: 32px;
+}
+.cm-invite-card--inactive {
+  background: #fafafa;
+  border-color: #e0e0e0;
+}
+.cm-invite-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 .cm-invite-label {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #aaa;
-  margin: 0 0 10px;
+  color: #666;
+  margin: 0;
+}
+.cm-account-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.cm-account-status-paused {
+  background: #fff3cd;
+  color: #856404;
+}
+.cm-account-status-revoked {
+  background: #fde8e8;
+  color: #b91c1c;
+}
+.cm-invite-hint--warning {
+  color: #856404;
+}
+.cm-invite-hint--warning a {
+  color: inherit;
+  font-weight: 600;
 }
 .cm-invite-code-row {
   display: flex;
@@ -7461,12 +7526,12 @@ body {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: #fff;
+  color: #1a1a1a;
 }
 .cm-copy-btn {
-  background: rgba(255,255,255,0.15);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.3);
+  background: #fff;
+  color: #1a1a1a;
+  border: 1.5px solid #1a1a1a;
   border-radius: 6px;
   padding: 8px 18px;
   font-size: 13px;
@@ -7474,11 +7539,12 @@ body {
   cursor: pointer;
 }
 .cm-copy-btn:hover {
-  background: rgba(255,255,255,0.25);
+  background: #1a1a1a;
+  color: #fff;
 }
 .cm-invite-hint {
   font-size: 12px;
-  color: #aaa;
+  color: #666;
   margin: 12px 0 0;
   line-height: 1.5;
 }
@@ -7637,6 +7703,16 @@ body {
   resize: vertical;
   box-sizing: border-box;
 }
+.cm-admin-email-subject {
+  width: 100%;
+  border: 1px solid #d8d8d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
 .cm-admin-count {
   display: inline-flex;
   align-items: center;
@@ -7649,6 +7725,40 @@ body {
   padding: 1px 7px;
   margin-left: 6px;
   line-height: 1.4;
+}
+.admin-note-history {
+  background: #f8f9f4;
+  border-left: 3px solid #d4e5a0;
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.admin-note-entry { font-size: 13px; }
+.admin-note-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.admin-note-action-label {
+  font-weight: 700;
+  color: #1a1a1a;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.admin-note-time {
+  color: #888;
+  font-size: 12px;
+}
+.admin-note-text {
+  margin: 0;
+  color: #444;
+  line-height: 1.5;
 }
 .cm-admin-stats-row {
   display: flex;

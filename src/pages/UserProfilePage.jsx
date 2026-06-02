@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
@@ -81,7 +81,10 @@ const getHistoryGalleryPhotos = (historyItems) => {
 };
 
 const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
-  const [activeTab, setActiveTab] = useState("guest");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") === "cm" ? "cm" : "guest"
+  );
   const [recommendationsPage, setRecommendationsPage] = useState(0);
   const [guestPhotosPage, setGuestPhotosPage] = useState(0);
   const [hostPhotosPage, setHostPhotosPage] = useState(0);
@@ -91,6 +94,59 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
   // Reviews/photos received as a host (guest rated the user)
   const [brHostReviews, setBrHostReviews] = useState([]);
   const [brHostPhotos, setBrHostPhotos] = useState([]);
+
+  // CM tab state
+  const [cmStats, setCmStats] = useState(null);
+  const [cmCommissions, setCmCommissions] = useState([]);
+  const [cmLoading, setCmLoading] = useState(false);
+  const [cmCopied, setCmCopied] = useState(false);
+
+  const fetchCmData = useCallback(async () => {
+    if (!currentUser?.cmProfile?.id) return;
+    setCmLoading(true);
+    const cmId = currentUser.cmProfile.id;
+    const [referralsRes, commissionsRes] = await Promise.all([
+      supabase.from("cm_referrals").select("id").eq("cm_id", cmId),
+      supabase
+        .from("cm_commissions")
+        .select(`id, gmv, commission_amount, currency, status, created_at,
+          booking_request:booking_requests(requested_date, sport,
+            requester:profiles!requester_id(full_name, first_name, last_name))`)
+        .eq("cm_id", cmId)
+        .order("created_at", { ascending: false }),
+    ]);
+    const commList = commissionsRes.data ?? [];
+    const currency = commList[0]?.currency ?? "EUR";
+    setCmStats({
+      referredCount: referralsRes.data?.length ?? 0,
+      completedBookings: commList.length,
+      totalEarnings: commList.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.commission_amount), 0),
+      pendingEarnings: commList.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.commission_amount), 0),
+      approvedEarnings: commList.filter((c) => c.status === "approved").reduce((s, c) => s + Number(c.commission_amount), 0),
+      currency,
+    });
+    setCmCommissions(commList);
+    setCmLoading(false);
+  }, [currentUser?.cmProfile?.id]);
+
+  useEffect(() => {
+    if (activeTab === "cm" && currentUser?.cmProfile && !cmStats) fetchCmData();
+  }, [activeTab, currentUser?.cmProfile, cmStats, fetchCmData]);
+
+  const copyCmCode = () => {
+    navigator.clipboard.writeText(currentUser?.cmProfile?.inviteCode ?? "").then(() => {
+      setCmCopied(true);
+      setTimeout(() => setCmCopied(false), 2000);
+    });
+  };
+
+  const fmtDate = (iso) =>
+    iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso)) : "—";
+  const fmtMoney = (amount, currency) => `${currency ?? ""} ${Number(amount ?? 0).toFixed(2)}`;
+  const CM_STATUS_LABEL = { pending: "Pending", approved: "Approved", paid: "Paid" };
+  const CM_STATUS_CLASS = { pending: "cm-status-pending", approved: "cm-status-approved", paid: "cm-status-paid" };
+  const getCmName = (profile) =>
+    profile ? profile.full_name || `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "—" : "—";
 
   // Fetch reviews and photos from booking_requests for both guest and host roles
   useEffect(() => {
@@ -365,8 +421,8 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
             </div>
           </div>
 
-          {/* ── Role tabs (only shown when user is a host) ── */}
-          {currentUser.isHost && (
+          {/* ── Role tabs (shown when user is a host or CM) ── */}
+          {(currentUser.isHost || currentUser.cmProfile) && (
             <div className="host-tab-bar unified-profile-tabs">
               <button
                 type="button"
@@ -378,16 +434,27 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
                   <span className="unified-profile-tab-rating">⭐ {guestAvgRating}</span>
                 )}
               </button>
-              <button
-                type="button"
-                className={`host-tab-btn${activeTab === "host" ? " active" : ""}`}
-                onClick={() => setActiveTab("host")}
-              >
-                As Host
-                {hostAvgRating !== null && (
-                  <span className="unified-profile-tab-rating">⭐ {hostAvgRating}</span>
-                )}
-              </button>
+              {currentUser.isHost && (
+                <button
+                  type="button"
+                  className={`host-tab-btn${activeTab === "host" ? " active" : ""}`}
+                  onClick={() => setActiveTab("host")}
+                >
+                  As Host
+                  {hostAvgRating !== null && (
+                    <span className="unified-profile-tab-rating">⭐ {hostAvgRating}</span>
+                  )}
+                </button>
+              )}
+              {currentUser.cmProfile && (
+                <button
+                  type="button"
+                  className={`host-tab-btn${activeTab === "cm" ? " active" : ""}`}
+                  onClick={() => setActiveTab("cm")}
+                >
+                  As CM
+                </button>
+              )}
             </div>
           )}
 
@@ -460,6 +527,100 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
                 )}
               </section>
             </>
+          )}
+
+          {/* ── As CM tab ── */}
+          {activeTab === "cm" && currentUser.cmProfile && (
+            <div className="cm-dashboard">
+              <div className={`cm-invite-card${currentUser.cmProfile.status !== "active" ? " cm-invite-card--inactive" : ""}`}>
+                <div className="cm-invite-card-header">
+                  <p className="cm-invite-label">Your invite code</p>
+                  {currentUser.cmProfile.status !== "active" && (
+                    <span className={`cm-account-status-badge cm-account-status-${currentUser.cmProfile.status}`}>
+                      {currentUser.cmProfile.status === "paused" ? "Paused" : "Revoked"}
+                    </span>
+                  )}
+                </div>
+                <div className="cm-invite-code-row">
+                  <span className="cm-invite-code">{currentUser.cmProfile.inviteCode}</span>
+                  {currentUser.cmProfile.status === "active" && (
+                    <button type="button" className="btn btn-secondary cm-copy-btn" onClick={copyCmCode}>
+                      {cmCopied ? "Copied!" : "Copy"}
+                    </button>
+                  )}
+                </div>
+                {currentUser.cmProfile.status === "active" ? (
+                  <p className="cm-invite-hint">
+                    Share this code with athletes and sports enthusiasts. Anyone who signs up with your code becomes your referral permanently.
+                  </p>
+                ) : (
+                  <p className="cm-invite-hint cm-invite-hint--warning">
+                    Your CM account has been {currentUser.cmProfile.status}. Your invite code is inactive — new sign-ups using it will not be credited. Contact <a href="mailto:support@sharedxp.com">support@sharedxp.com</a> for help.
+                  </p>
+                )}
+              </div>
+
+              {cmLoading ? (
+                <p>Loading stats…</p>
+              ) : cmStats ? (
+                <>
+                  <div className="cm-stats-grid">
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-value">{cmStats.referredCount}</p>
+                      <p className="cm-stat-label">Referred users</p>
+                    </div>
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-value">{cmStats.completedBookings}</p>
+                      <p className="cm-stat-label">Completed bookings</p>
+                    </div>
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-value">{fmtMoney(cmStats.totalEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-label">Total paid out</p>
+                    </div>
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-value">{fmtMoney(cmStats.pendingEarnings + cmStats.approvedEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-label">Pending commission</p>
+                    </div>
+                  </div>
+
+                  <h2 className="cm-section-title">Commission history</h2>
+                  {cmCommissions.length === 0 ? (
+                    <p className="cm-empty">No commissions yet. Share your invite code to get started!</p>
+                  ) : (
+                    <div className="cm-commission-table-wrap">
+                      <table className="cm-commission-table">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>User</th>
+                            <th>Sport</th>
+                            <th>GBV</th>
+                            <th>Commission</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {cmCommissions.map((c) => (
+                            <tr key={c.id}>
+                              <td>{fmtDate(c.created_at)}</td>
+                              <td>{getCmName(c.booking_request?.requester)}</td>
+                              <td>{c.booking_request?.sport ?? "—"}</td>
+                              <td>{fmtMoney(c.gmv, c.currency)}</td>
+                              <td>{fmtMoney(c.commission_amount, c.currency)}</td>
+                              <td>
+                                <span className={`cm-status-badge ${CM_STATUS_CLASS[c.status] ?? ""}`}>
+                                  {CM_STATUS_LABEL[c.status] ?? c.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
           )}
 
           {/* ── As Host tab ── */}
