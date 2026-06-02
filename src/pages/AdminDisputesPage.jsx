@@ -440,11 +440,7 @@ const CMManagementPanel = ({ currentUser }) => {
                       try {
                         const res = await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
                           method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${supabaseAnonKey}`,
-                            "apikey": supabaseAnonKey,
-                          },
+                          headers: { "Content-Type": "text/plain" },
                           body: JSON.stringify({ emailType: "cm_accepted", userId: cm.user_id, inviteCode: cm.invite_code }),
                         });
                         const json = await res.json();
