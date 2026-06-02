@@ -7650,6 +7650,40 @@ body {
   margin-left: 6px;
   line-height: 1.4;
 }
+.admin-note-history {
+  background: #f8f9f4;
+  border-left: 3px solid #d4e5a0;
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.admin-note-entry { font-size: 13px; }
+.admin-note-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.admin-note-action-label {
+  font-weight: 700;
+  color: #1a1a1a;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.admin-note-time {
+  color: #888;
+  font-size: 12px;
+}
+.admin-note-text {
+  margin: 0;
+  color: #444;
+  line-height: 1.5;
+}
 .cm-admin-stats-row {
   display: flex;
   gap: 20px;

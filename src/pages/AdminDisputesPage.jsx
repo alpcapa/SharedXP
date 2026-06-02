@@ -28,6 +28,58 @@ const sendCmEmail = async (emailType, userId, extra = {}) => {
   }
 };
 
+// ── Note history helpers ──────────────────────────────────────────────────────
+const parseNotes = (adminNotes) => {
+  if (!adminNotes) return [];
+  try {
+    const parsed = JSON.parse(adminNotes);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  return [{ action: "note", note: adminNotes, at: null }];
+};
+
+const appendNote = (existing, action, noteText) => {
+  const notes = parseNotes(existing);
+  notes.push({ action, note: noteText.trim(), at: new Date().toISOString() });
+  return JSON.stringify(notes);
+};
+
+const NOTE_LABELS = {
+  interview: "Moved to Interview",
+  accepted: "Accepted",
+  declined: "Declined",
+  paused: "Paused",
+  reactivated: "Re-activated",
+  revoked: "Revoked",
+  note: "Note",
+};
+
+const fmtDateTime = (iso) =>
+  iso
+    ? new Intl.DateTimeFormat("en-GB", {
+        day: "numeric", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      }).format(new Date(iso))
+    : "";
+
+const NoteHistory = ({ adminNotes }) => {
+  const notes = parseNotes(adminNotes);
+  if (notes.length === 0) return null;
+  return (
+    <div className="admin-note-history">
+      {notes.map((n, i) => (
+        <div key={i} className="admin-note-entry">
+          <div className="admin-note-meta">
+            <span className="admin-note-action-label">{NOTE_LABELS[n.action] ?? n.action}</span>
+            {n.at && <span className="admin-note-time">· {fmtDateTime(n.at)} · Admin</span>}
+          </div>
+          <p className="admin-note-text">{n.note}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // ── Admin CM Management panel ─────────────────────────────────────────────────
 const CMManagementPanel = () => {
   const [subTab, setSubTab] = useState("applications");
@@ -79,16 +131,18 @@ const CMManagementPanel = () => {
     if (busy(app.id)) return;
     if (!confirm("Move this application to interview stage?")) return;
     setActionBusy(app.id);
-    await supabase.from("cm_applications").update({ status: "interview", admin_notes: getNote(app.id) }).eq("id", app.id);
+    const newNotes = appendNote(app.admin_notes, "interview", getNote(app.id));
+    await supabase.from("cm_applications").update({ status: "interview", admin_notes: newNotes }).eq("id", app.id);
     await sendCmEmail("cm_interview", app.user_id);
+    setNote(app.id, "");
     await fetchAll();
     setActionBusy(null);
   };
 
   const acceptApplication = async (app) => {
-    if (!getNote(app.id).trim()) { alert("Please enter a reason before accepting."); return; }
+    if (!getNote(app.id).trim()) { alert("Please enter the interview outcome before accepting."); return; }
     if (busy(app.id)) return;
-    if (!confirm("Accept this application and generate an invite code?")) return;
+    if (!confirm("Accept this application and generate a welcome invite code?")) return;
     setActionBusy(app.id);
     const city = app.applicant?.city || app.city || "XP";
     let inviteCode = generateInviteCode(city);
@@ -98,20 +152,23 @@ const CMManagementPanel = () => {
       .eq("invite_code", inviteCode)
       .maybeSingle();
     if (clash) inviteCode = generateInviteCode(city);
+    const newNotes = appendNote(app.admin_notes, "accepted", getNote(app.id));
     const { error: profileErr } = await supabase.from("cm_profiles").insert({
       user_id: app.user_id,
       invite_code: inviteCode,
       status: "active",
       city: app.city || app.applicant?.city || "",
       country: app.country || app.applicant?.country || "",
+      admin_notes: newNotes,
     });
     if (profileErr) {
       console.error("[cm-admin] failed to create CM profile:", profileErr);
       setActionBusy(null);
       return;
     }
-    await supabase.from("cm_applications").update({ status: "accepted", admin_notes: getNote(app.id) }).eq("id", app.id);
+    await supabase.from("cm_applications").update({ status: "accepted", admin_notes: newNotes }).eq("id", app.id);
     await sendCmEmail("cm_accepted", app.user_id, { inviteCode });
+    setNote(app.id, "");
     await fetchAll();
     setActionBusy(null);
   };
@@ -121,8 +178,10 @@ const CMManagementPanel = () => {
     if (busy(app.id)) return;
     if (!confirm("Decline this application?")) return;
     setActionBusy(app.id);
-    await supabase.from("cm_applications").update({ status: "declined", admin_notes: getNote(app.id) }).eq("id", app.id);
+    const newNotes = appendNote(app.admin_notes, "declined", getNote(app.id));
+    await supabase.from("cm_applications").update({ status: "declined", admin_notes: newNotes }).eq("id", app.id);
     await sendCmEmail("cm_declined", app.user_id);
+    setNote(app.id, "");
     await fetchAll();
     setActionBusy(null);
   };
@@ -134,8 +193,10 @@ const CMManagementPanel = () => {
     if (busy(cm.id)) return;
     if (!confirm("Pause this CM's account?")) return;
     setActionBusy(cm.id);
-    await supabase.from("cm_profiles").update({ status: "paused", admin_notes: note }).eq("id", cm.id);
+    const newNotes = appendNote(cm.admin_notes, "paused", note);
+    await supabase.from("cm_profiles").update({ status: "paused", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_paused", cm.user_id);
+    setNote(cm.id, "");
     await fetchAll();
     setActionBusy(null);
   };
@@ -146,8 +207,10 @@ const CMManagementPanel = () => {
     if (busy(cm.id)) return;
     if (!confirm("Re-activate this CM's account?")) return;
     setActionBusy(cm.id);
-    await supabase.from("cm_profiles").update({ status: "active", admin_notes: note }).eq("id", cm.id);
+    const newNotes = appendNote(cm.admin_notes, "reactivated", note);
+    await supabase.from("cm_profiles").update({ status: "active", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_reactivated", cm.user_id);
+    setNote(cm.id, "");
     await fetchAll();
     setActionBusy(null);
   };
@@ -158,8 +221,10 @@ const CMManagementPanel = () => {
     if (busy(cm.id)) return;
     if (!confirm("Revoke this CM's access? This cannot be undone easily.")) return;
     setActionBusy(cm.id);
-    await supabase.from("cm_profiles").update({ status: "revoked", admin_notes: note }).eq("id", cm.id);
+    const newNotes = appendNote(cm.admin_notes, "revoked", note);
+    await supabase.from("cm_profiles").update({ status: "revoked", admin_notes: newNotes }).eq("id", cm.id);
     await sendCmEmail("cm_revoked", cm.user_id);
+    setNote(cm.id, "");
     await fetchAll();
     setActionBusy(null);
   };
@@ -227,60 +292,75 @@ const CMManagementPanel = () => {
         <div>
           <p className="admin-subtitle">Review pending and interview-stage applications.</p>
           {pendingApps.length === 0 && <p>No open applications.</p>}
-          {pendingApps.map((app) => (
-            <article key={app.id} className="cm-admin-card">
-              <div className="cm-admin-card-header">
-                <div>
-                  <strong>{getName(app.applicant)}</strong>
-                  <span className="cm-admin-email">{app.applicant?.email}</span>
-                  <span className="cm-admin-location">{app.city}, {app.country}</span>
+          {pendingApps.map((app) => {
+            const isInterview = app.status === "interview";
+            return (
+              <article key={app.id} className="cm-admin-card">
+                <div className="cm-admin-card-header">
+                  <div>
+                    <strong>{getName(app.applicant)}</strong>
+                    <span className="cm-admin-email">{app.applicant?.email}</span>
+                    <span className="cm-admin-location">{app.city}, {app.country}</span>
+                  </div>
+                  {statusBadge(app.status)}
                 </div>
-                {statusBadge(app.status)}
-              </div>
-              <div className="cm-admin-fields">
-                <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
-                <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
-                {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
-              </div>
-              <div className="cm-admin-notes-row">
-                <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">Reason (required — saved to record only, not sent in email)</label>
-                <textarea
-                  id={`notes-${app.id}`}
-                  className="cm-admin-notes"
-                  rows={2}
-                  placeholder="Internal notes for this application…"
-                  value={getNote(app.id)}
-                  onChange={(e) => setNote(app.id, e.target.value)}
-                />
-              </div>
-              <div className="admin-dispute-actions">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  disabled={busy(app.id) || app.status === "interview"}
-                  onClick={() => moveToInterview(app)}
-                >
-                  {busy(app.id) ? "…" : "Move to Interview"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={busy(app.id)}
-                  onClick={() => acceptApplication(app)}
-                >
-                  {busy(app.id) ? "…" : "Accept & Generate Code"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  disabled={busy(app.id)}
-                  onClick={() => declineApplication(app)}
-                >
-                  {busy(app.id) ? "…" : "Decline"}
-                </button>
-              </div>
-            </article>
-          ))}
+                <div className="cm-admin-fields">
+                  <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
+                  <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
+                  {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
+                </div>
+                {app.admin_notes && (
+                  <div className="cm-admin-notes-row">
+                    <p className="admin-dispute-label">Admin note history</p>
+                    <NoteHistory adminNotes={app.admin_notes} />
+                  </div>
+                )}
+                <div className="cm-admin-notes-row">
+                  <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">
+                    {isInterview
+                      ? "Interview outcome / review (required to accept or decline)"
+                      : "Reason (required — saved to record only, not sent in email)"}
+                  </label>
+                  <textarea
+                    id={`notes-${app.id}`}
+                    className="cm-admin-notes"
+                    rows={2}
+                    placeholder={isInterview
+                      ? "How did the interview go? Note key impressions before accepting or declining…"
+                      : "Internal notes for this application…"}
+                    value={getNote(app.id)}
+                    onChange={(e) => setNote(app.id, e.target.value)}
+                  />
+                </div>
+                <div className="admin-dispute-actions">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={busy(app.id) || isInterview}
+                    onClick={() => moveToInterview(app)}
+                  >
+                    {busy(app.id) ? "…" : "Move to Interview"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={busy(app.id)}
+                    onClick={() => acceptApplication(app)}
+                  >
+                    {busy(app.id) ? "…" : "Accept & Welcome"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    disabled={busy(app.id)}
+                    onClick={() => declineApplication(app)}
+                  >
+                    {busy(app.id) ? "…" : "Decline"}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
 
           {closedApps.length > 0 && (
             <details className="cm-admin-closed">
@@ -294,7 +374,7 @@ const CMManagementPanel = () => {
                     </div>
                     {statusBadge(app.status)}
                   </div>
-                  {app.admin_notes && <p className="cm-admin-note-preview">Notes: {app.admin_notes}</p>}
+                  {app.admin_notes && <NoteHistory adminNotes={app.admin_notes} />}
                 </article>
               ))}
             </details>
@@ -341,6 +421,12 @@ const CMManagementPanel = () => {
                         </button>
                       </div>
                     ))}
+                  </div>
+                )}
+                {cm.admin_notes && (
+                  <div className="cm-admin-notes-row">
+                    <p className="admin-dispute-label">Admin note history</p>
+                    <NoteHistory adminNotes={cm.admin_notes} />
                   </div>
                 )}
                 <div className="cm-admin-notes-row">
