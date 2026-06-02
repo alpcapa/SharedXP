@@ -110,8 +110,12 @@ const CMManagementPanel = () => {
         `)
         .order("created_at", { ascending: false }),
     ]);
-    setApplications(appRes.data ?? []);
-    setCmProfiles(cmRes.data ?? []);
+    const apps = appRes.data ?? [];
+    const cms = cmRes.data ?? [];
+    // Attach each CM's accepted application so old CMs can show their pre-existing notes
+    const appByUserId = Object.fromEntries(apps.map((a) => [a.user_id, a]));
+    setApplications(apps);
+    setCmProfiles(cms.map((cm) => ({ ...cm, _application: appByUserId[cm.user_id] ?? null })));
     setLoading(false);
   }, []);
 
@@ -423,10 +427,10 @@ const CMManagementPanel = () => {
                     ))}
                   </div>
                 )}
-                {cm.admin_notes && (
+                {(cm.admin_notes || cm._application?.admin_notes) && (
                   <div className="cm-admin-notes-row">
                     <p className="admin-dispute-label">Admin note history</p>
-                    <NoteHistory adminNotes={cm.admin_notes} />
+                    <NoteHistory adminNotes={cm.admin_notes || cm._application?.admin_notes} />
                   </div>
                 )}
                 <div className="cm-admin-notes-row">
