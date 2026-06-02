@@ -532,17 +532,32 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
           {/* ── As CM tab ── */}
           {activeTab === "cm" && currentUser.cmProfile && (
             <div className="cm-dashboard">
-              <div className="cm-invite-card">
-                <p className="cm-invite-label">Your invite code</p>
+              <div className={`cm-invite-card${currentUser.cmProfile.status !== "active" ? " cm-invite-card--inactive" : ""}`}>
+                <div className="cm-invite-card-header">
+                  <p className="cm-invite-label">Your invite code</p>
+                  {currentUser.cmProfile.status !== "active" && (
+                    <span className={`cm-account-status-badge cm-account-status-${currentUser.cmProfile.status}`}>
+                      {currentUser.cmProfile.status === "paused" ? "Paused" : "Revoked"}
+                    </span>
+                  )}
+                </div>
                 <div className="cm-invite-code-row">
                   <span className="cm-invite-code">{currentUser.cmProfile.inviteCode}</span>
-                  <button type="button" className="btn btn-secondary cm-copy-btn" onClick={copyCmCode}>
-                    {cmCopied ? "Copied!" : "Copy"}
-                  </button>
+                  {currentUser.cmProfile.status === "active" && (
+                    <button type="button" className="btn btn-secondary cm-copy-btn" onClick={copyCmCode}>
+                      {cmCopied ? "Copied!" : "Copy"}
+                    </button>
+                  )}
                 </div>
-                <p className="cm-invite-hint">
-                  Share this code with athletes and sports enthusiasts. Anyone who signs up with your code becomes your referral permanently.
-                </p>
+                {currentUser.cmProfile.status === "active" ? (
+                  <p className="cm-invite-hint">
+                    Share this code with athletes and sports enthusiasts. Anyone who signs up with your code becomes your referral permanently.
+                  </p>
+                ) : (
+                  <p className="cm-invite-hint cm-invite-hint--warning">
+                    Your CM account has been {currentUser.cmProfile.status}. Your invite code is inactive — new sign-ups using it will not be credited. Contact <a href="mailto:support@sharedxp.com">support@sharedxp.com</a> for help.
+                  </p>
+                )}
               </div>
 
               {cmLoading ? (

@@ -7472,15 +7472,49 @@ body {
   color: #1a1a1a;
   border: 1.5px solid #d4e5a0;
   border-radius: 12px;
+  transition: border-color 0.2s, background 0.2s;
   padding: 24px 28px;
   margin-bottom: 32px;
+}
+.cm-invite-card--inactive {
+  background: #fafafa;
+  border-color: #e0e0e0;
+}
+.cm-invite-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 .cm-invite-label {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #666;
-  margin: 0 0 10px;
+  margin: 0;
+}
+.cm-account-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.cm-account-status-paused {
+  background: #fff3cd;
+  color: #856404;
+}
+.cm-account-status-revoked {
+  background: #fde8e8;
+  color: #b91c1c;
+}
+.cm-invite-hint--warning {
+  color: #856404;
+}
+.cm-invite-hint--warning a {
+  color: inherit;
+  font-weight: 600;
 }
 .cm-invite-code-row {
   display: flex;
