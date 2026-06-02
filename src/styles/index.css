@@ -7468,8 +7468,9 @@ body {
   margin: 0 0 28px;
 }
 .cm-invite-card {
-  background: #1a1a1a;
-  color: #fff;
+  background: #f5f5f2;
+  color: #1a1a1a;
+  border: 1.5px solid #d4e5a0;
   border-radius: 12px;
   padding: 24px 28px;
   margin-bottom: 32px;
@@ -7478,7 +7479,7 @@ body {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #aaa;
+  color: #666;
   margin: 0 0 10px;
 }
 .cm-invite-code-row {
@@ -7491,12 +7492,12 @@ body {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: #fff;
+  color: #1a1a1a;
 }
 .cm-copy-btn {
-  background: rgba(255,255,255,0.15);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.3);
+  background: #fff;
+  color: #1a1a1a;
+  border: 1.5px solid #1a1a1a;
   border-radius: 6px;
   padding: 8px 18px;
   font-size: 13px;
@@ -7504,11 +7505,12 @@ body {
   cursor: pointer;
 }
 .cm-copy-btn:hover {
-  background: rgba(255,255,255,0.25);
+  background: #1a1a1a;
+  color: #fff;
 }
 .cm-invite-hint {
   font-size: 12px;
-  color: #aaa;
+  color: #666;
   margin: 12px 0 0;
   line-height: 1.5;
 }
