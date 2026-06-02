@@ -431,6 +431,19 @@ const CMManagementPanel = ({ currentUser }) => {
                   <span><strong>{s.pending}</strong> pending commission</span>
                   <span><strong>{s.approved}</strong> approved</span>
                   <span><strong>{s.paid}</strong> paid</span>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    disabled={busy(`welcome-${cm.id}`)}
+                    onClick={async () => {
+                      setActionBusy(`welcome-${cm.id}`);
+                      await sendCmEmail("cm_accepted", cm.user_id, { inviteCode: cm.invite_code });
+                      setActionBusy(null);
+                      alert("Welcome email resent.");
+                    }}
+                  >
+                    {busy(`welcome-${cm.id}`) ? "Sending…" : "Resend Welcome Email"}
+                  </button>
                 </div>
                 {pendingComms.length > 0 && (
                   <div className="cm-admin-pending-comms">
