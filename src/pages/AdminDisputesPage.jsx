@@ -81,7 +81,7 @@ const NoteHistory = ({ adminNotes, adminName = "Admin", fallbackDate = null }) =
                 <>
                   <span className="admin-note-action-label">{adminName}</span>
                   {fallbackDate && (
-                    <span className="admin-note-time">· wrote on {fmtDateLong(fallbackDate)}</span>
+                    <span className="admin-note-time">· wrote on {fmtDateTime(fallbackDate)}</span>
                   )}
                 </>
               ) : (
