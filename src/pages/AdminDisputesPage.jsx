@@ -437,9 +437,12 @@ const CMManagementPanel = ({ currentUser }) => {
                     disabled={busy(`welcome-${cm.id}`)}
                     onClick={async () => {
                       setActionBusy(`welcome-${cm.id}`);
-                      await sendCmEmail("cm_accepted", cm.user_id, { inviteCode: cm.invite_code });
+                      const { error } = await supabase.functions.invoke("booking-notify", {
+                        body: { emailType: "cm_accepted", userId: cm.user_id, inviteCode: cm.invite_code },
+                      });
                       setActionBusy(null);
-                      alert("Welcome email resent.");
+                      if (error) alert(`Failed to send: ${error.message}`);
+                      else alert("Welcome email sent.");
                     }}
                   >
                     {busy(`welcome-${cm.id}`) ? "Sending…" : "Resend Welcome Email"}
