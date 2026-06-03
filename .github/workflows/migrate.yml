@@ -2,12 +2,19 @@ name: Run Database Migrations
 
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to run migrations from
+        required: false
+        default: main
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
 
       - uses: supabase/setup-cli@v1
         with:
