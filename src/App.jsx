@@ -10,7 +10,7 @@ import HistoryPage from "./pages/HistoryPage";
 import FollowPage from "./pages/FollowPage";
 import HelpPage from "./pages/HelpPage";
 import LoginPage from "./pages/LoginPage";
-import MyProfilePage from "./pages/MyProfilePage";
+import EditProfilePage from "./pages/EditProfilePage";
 import SignUpPage from "./pages/SignUpPage";
 import PaymentPage from "./pages/PaymentPage";
 import ChatPage from "./pages/ChatPage";
@@ -27,7 +27,7 @@ import useAuth from "./context/AuthContext";
 import NotFoundPage from "./pages/NotFoundPage";
 import AboutPage from "./pages/AboutPage";
 import EventsPage from "./pages/EventsPage";
-import UnifiedProfilePage from "./pages/UnifiedProfilePage";
+import ProfilePage from "./pages/ProfilePage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import CancellationPolicyPage from "./pages/CancellationPolicyPage";
@@ -161,8 +161,8 @@ function App() {
       <Route path="/buddy/:buddyId" element={<BuddyRedirect />} />
       <Route path="/signup" element={<SignUpPage {...authActions} />} />
       <Route path="/login" element={<LoginPage {...authActions} />} />
-      <Route path="/edit-profile" element={<MyProfilePage {...authActions} />} />
-      <Route path="/user/:userId" element={<UnifiedProfilePage {...authActions} />} />
+      <Route path="/edit-profile" element={<EditProfilePage {...authActions} />} />
+      <Route path="/user/:userId" element={<ProfilePage {...authActions} />} />
       <Route path="/become-a-host" element={<HostPage {...authActions} />} />
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />

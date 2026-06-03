@@ -170,7 +170,7 @@ const StarRating = ({ rating }) => {
 const getName = (p) =>
   p?.full_name || [p?.first_name, p?.last_name].filter(Boolean).join(" ") || "User";
 
-const UnifiedProfilePage = ({ currentUser, onLogout }) => {
+const ProfilePage = ({ currentUser, onLogout }) => {
   const { userId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -1175,4 +1175,4 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
   );
 };
 
-export default UnifiedProfilePage;
+export default ProfilePage;

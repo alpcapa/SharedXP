@@ -137,7 +137,7 @@ const getInitialFormValues = (user) => {
 
 // ── Page component ─────────────────────────────────────────────────────────
 
-const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onUpdateProfile }) => {
+const EditProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onUpdateProfile }) => {
   const navigate = useNavigate();
   const photoInputRef = useRef(null);
   const countryDropdownRef = useRef(null);
@@ -534,4 +534,4 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
   );
 };
 
-export default MyProfilePage;
+export default EditProfilePage;
