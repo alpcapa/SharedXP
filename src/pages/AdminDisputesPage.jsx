@@ -124,8 +124,8 @@ const NoteHistory = ({ adminNotes, adminName = "Admin", fallbackDate = null }) =
 };
 
 // ── Admin CM Management panel ─────────────────────────────────────────────────
-const CMManagementPanel = ({ currentUser, initialSearch = "" }) => {
-  const [subTab, setSubTab] = useState("applications");
+const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "applications" }) => {
+  const [subTab, setSubTab] = useState(initialSubTab);
   const [applications, setApplications] = useState([]);
   const [cmProfiles, setCmProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1004,7 +1004,7 @@ const SupportPanel = () => {
                             CM · {cmProfile.status}
                           </span>
                           <a
-                            href={`/admin/disputes?tab=cm&search=${encodeURIComponent(matchedProfile.full_name || `${matchedProfile.first_name ?? ""} ${matchedProfile.last_name ?? ""}`.trim() || matchedProfile.email)}`}
+                            href={`/admin/disputes?tab=cm&subtab=active&search=${encodeURIComponent(matchedProfile.full_name || `${matchedProfile.first_name ?? ""} ${matchedProfile.last_name ?? ""}`.trim() || matchedProfile.email)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="support-cm-link"
@@ -1368,7 +1368,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
           </>
         )}
 
-        {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} />}
+        {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} />}
         {activeTab === "support" && <SupportPanel />}
         </main>
         <SiteFooter />
