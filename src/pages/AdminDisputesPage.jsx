@@ -839,7 +839,7 @@ const SupportPanel = () => {
                     ? <pre className="support-body-text">{msg.body_text}</pre>
                     : msg.body_html
                     ? <div className="support-body-html" dangerouslySetInnerHTML={{ __html: msg.body_html }} />
-                    : <p className="cm-admin-email">(no body — check edge function logs for payload structure)</p>
+                    : <p className="cm-admin-email">No body — Resend inbound does not forward email content. Reply using the sender's email address directly if needed.</p>
                   }
                 </div>
                 {isReplying ? (
