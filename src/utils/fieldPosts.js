@@ -3,9 +3,7 @@
 
 import { supabase } from "../lib/supabase";
 
-const LOCAL_FALLBACK_KEY = "sharedxp:field_posts_fallback";
 const MAX_RATING = 5;
-
 
 const isMissingRatingColumnError = (error) => {
   // 42703 = PostgreSQL "undefined_column"; PGRST204 = PostgREST schema-cache miss.
@@ -13,62 +11,9 @@ const isMissingRatingColumnError = (error) => {
   return error?.code === "42703" || error?.code === "PGRST204";
 };
 
-const isUpdateNotAllowedError = (error) => {
-  return error?.code === "42501";
-};
-
-const isUpdateNoRowError = (error) => {
-  return error?.code === "PGRST116";
-};
-
-const isFieldPostsUnavailableError = (error) => {
-  const raw = `${error?.message ?? ""} ${error?.details ?? ""} ${error?.hint ?? ""}`.toLowerCase();
-  return error?.code === "42P01" || (error?.code === "42501" && raw.includes("field_posts"));
-};
-
-const readLocalFallbackPosts = () => {
-  try {
-    const raw = window.localStorage.getItem(LOCAL_FALLBACK_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-const writeLocalFallbackPosts = (posts) => {
-  try {
-    window.localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(posts));
-  } catch {
-    // Ignore localStorage quota/availability issues.
-  }
-};
-
 const clampRating = (value) => {
   const numeric = Number(value);
   return Math.max(0, Math.min(MAX_RATING, Number.isFinite(numeric) ? numeric : 0));
-};
-
-const sortPostsByPostedAt = (posts) => {
-  return [...posts].sort(
-    (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
-  );
-};
-
-const generateFallbackId = () => {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `local-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-};
-
-const matchesExistingLocalPost = (storedPost, incomingPost) => {
-  if (storedPost.id === incomingPost.id) return true;
-  if (!incomingPost.sourceRequestId) return false;
-  return (
-    storedPost.sourceRequestId === incomingPost.sourceRequestId &&
-    storedPost.posterId === incomingPost.posterId
-  );
 };
 
 const mapStorageRow = (row) => ({
@@ -89,89 +34,6 @@ const mapStorageRow = (row) => ({
   sourceRequestId: row.source_request_id ?? null,
 });
 
-const mapFallbackRow = (row) => ({
-  id: row.id,
-  posterId: row.posterId ?? "",
-  role: row.role ?? "",
-  hostName: row.hostName ?? "",
-  hostPhoto: row.hostPhoto ?? "",
-  sport: row.sport ?? "",
-  city: row.city ?? "",
-  country: row.country ?? "",
-  caption: row.caption ?? "",
-  photos: Array.isArray(row.photos) ? row.photos : [],
-  photo: Array.isArray(row.photos) && row.photos.length > 0 ? row.photos[0] : "",
-  postedAt: row.postedAt ?? new Date().toISOString(),
-  likes: Number(row.likes ?? 0) || 0,
-  rating: clampRating(row.rating),
-  sourceRequestId: row.sourceRequestId ?? null,
-});
-
-const upsertLocalFallbackPost = (post) => {
-  const posts = readLocalFallbackPosts();
-  const existing = posts.find((storedPost) => matchesExistingLocalPost(storedPost, post));
-  const id = existing?.id ?? post.id ?? generateFallbackId();
-  const next = mapFallbackRow({
-    id,
-    posterId: post.posterId,
-    role: post.role,
-    hostName: post.hostName,
-    hostPhoto: post.hostPhoto,
-    sport: post.sport,
-    city: post.city,
-    country: post.country,
-    caption: post.caption,
-    photos: Array.isArray(post.photos) ? post.photos : [],
-    postedAt: existing?.postedAt ?? new Date().toISOString(),
-    likes: existing?.likes ?? 0,
-    rating: clampRating(post.rating),
-    sourceRequestId: post.sourceRequestId ?? null,
-  });
-  const filtered = posts.filter((p) => p.id !== id);
-  writeLocalFallbackPosts([...filtered, next]);
-  return id;
-};
-
-const mergeRemoteAndLocalPosts = (remoteRows) => {
-  const remotePosts = (remoteRows ?? []).map(mapStorageRow);
-  const localPosts = readLocalFallbackPosts().map(mapFallbackRow);
-
-  if (!localPosts.length) return remotePosts;
-
-  const merged = [...remotePosts];
-  localPosts.forEach((localPost) => {
-    const matchIndex = merged.findIndex(
-      (remotePost) =>
-        remotePost.id === localPost.id ||
-        (
-          localPost.sourceRequestId &&
-          remotePost.sourceRequestId === localPost.sourceRequestId &&
-          remotePost.posterId === localPost.posterId
-        )
-    );
-
-    if (matchIndex >= 0) {
-      const remotePost = merged[matchIndex];
-      const remoteRating = Number(remotePost.rating ?? 0);
-      const localRating = Number(localPost.rating ?? 0);
-      merged[matchIndex] = {
-        ...remotePost,
-        ...localPost,
-        postedAt: remotePost.postedAt ?? localPost.postedAt,
-        rating: remoteRating > 0
-          ? remotePost.rating
-          : localRating > 0
-            ? localPost.rating
-            : 0,
-      };
-    } else {
-      merged.push(localPost);
-    }
-  });
-
-  return sortPostsByPostedAt(merged);
-};
-
 const resolveBookingRequestRating = (post, request) => {
   if (!request) return 0;
   if (post.role === "hosted") {
@@ -180,43 +42,6 @@ const resolveBookingRequestRating = (post, request) => {
   }
   // Guest rated the host — stored as guest_rating / guest_host_ratings.overall.
   return Number(request.guest_rating ?? request.guest_host_ratings?.overall ?? 0);
-};
-
-const hasRatingSourceRequest = (post) => !!post.sourceRequestId;
-
-const hydrateMissingRatingsFromBookingRequests = async (posts) => {
-  const needsHydration = posts.filter(hasRatingSourceRequest);
-  if (!needsHydration.length) return posts;
-
-  const requestIds = [
-    ...new Set(needsHydration.map((post) => post.sourceRequestId).filter(Boolean)),
-  ];
-  if (!requestIds.length) return posts;
-  try {
-    const { data, error } = await supabase
-      .from("booking_requests")
-      .select("id, guest_rating, guest_host_ratings, host_rating")
-      .in("id", requestIds);
-    if (error) {
-      console.error("[fieldPosts] rating hydration error:", error);
-      return posts;
-    }
-
-    const requestById = new Map((data ?? []).map((row) => [row.id, row]));
-    return posts.map((post) => {
-      if (!hasRatingSourceRequest(post)) return post;
-      const request = requestById.get(post.sourceRequestId);
-      if (!request) return post;
-      const nextRating = clampRating(resolveBookingRequestRating(post, request));
-      if (nextRating <= 0) return post;
-      return Number(post.rating ?? 0) === nextRating
-        ? post
-        : { ...post, rating: nextRating };
-    });
-  } catch (error) {
-    console.error("[fieldPosts] rating hydration exception:", error);
-    return posts;
-  }
 };
 
 const avgByKey = (rows, keyField, valueField) => {
@@ -282,22 +107,19 @@ export const fetchFieldPosts = async () => {
     }
     if (error) {
       console.error("[fieldPosts] fetch error:", error);
-      if (isFieldPostsUnavailableError(error)) {
-        return sortPostsByPostedAt(readLocalFallbackPosts().map(mapFallbackRow));
-      }
       return [];
     }
-    const mergedPosts = mergeRemoteAndLocalPosts(data);
 
-    const posterRatings = await fetchPosterRatings(mergedPosts);
+    const posts = (data ?? []).map(mapStorageRow);
+    const posterRatings = await fetchPosterRatings(posts);
 
-    return mergedPosts.map((post) => {
+    return posts.map((post) => {
       const avg = posterRatings[`${post.role}:${post.posterId}`];
       return { ...post, posterRating: avg ? Math.round(avg * 10) / 10 : 0 };
     });
   } catch (e) {
     console.error("[fieldPosts] fetch exception:", e);
-    return sortPostsByPostedAt(readLocalFallbackPosts().map(mapFallbackRow));
+    return [];
   }
 };
 
@@ -326,38 +148,21 @@ export const saveFieldPost = async (post) => {
     const insertPost = async () => {
       let { data, error } = await supabase
         .from("field_posts")
-        .insert({
-          ...savePayloadWithRating,
-          likes: 0,
-        })
+        .insert({ ...savePayloadWithRating, likes: 0 })
         .select("id")
         .single();
       if (error && isMissingRatingColumnError(error)) {
         ({ data, error } = await supabase
           .from("field_posts")
-          .insert({
-            ...savePayloadBase,
-            likes: 0,
-          })
+          .insert({ ...savePayloadBase, likes: 0 })
           .select("id")
           .single());
       }
       if (error) {
-        // Table doesn't exist yet (migration not run) — use localStorage so the
-        // post at least survives the session.
-        if (isFieldPostsUnavailableError(error)) {
-          console.warn("[fieldPosts] field_posts table unavailable; using local storage:", error.code);
-          return upsertLocalFallbackPost(post);
-        }
-        // Any other error (RLS/permission, FK constraint, etc.) means the post
-        // will NOT be persisted. Log clearly so it's visible in the console, and
-        // return null so the caller can surface the failure to the user.
         console.error("[fieldPosts] INSERT failed (code %s):", error.code, error.message, error);
         return null;
       }
-      if (data?.id) return data.id;
-      console.warn("[fieldPosts] insert returned no id; falling back to local post storage");
-      return upsertLocalFallbackPost(post);
+      return data?.id ?? null;
     };
 
     const updatePost = async (postId) => {
@@ -375,16 +180,11 @@ export const saveFieldPost = async (post) => {
           .select("id")
           .maybeSingle());
       }
-      if (!error && data?.id) return data.id;
-      if (isUpdateNotAllowedError(error) || isUpdateNoRowError(error) || (!error && !data?.id)) {
-        console.warn(
-          "[fieldPosts] UPDATE unavailable, falling back to local post storage for post:",
-          postId
-        );
-        return upsertLocalFallbackPost(post);
+      if (error) {
+        console.error("[fieldPosts] update error:", error);
+        return null;
       }
-      console.error("[fieldPosts] update error; falling back to local post storage:", error);
-      return upsertLocalFallbackPost(post);
+      return data?.id ?? null;
     };
 
     if (post.id) {
@@ -400,8 +200,8 @@ export const saveFieldPost = async (post) => {
 
     return insertPost();
   } catch (e) {
-    console.error("[fieldPosts] save exception; falling back to local post storage:", e);
-    return upsertLocalFallbackPost(post);
+    console.error("[fieldPosts] save exception:", e);
+    return null;
   }
 };
 
@@ -416,11 +216,6 @@ export const deleteFieldPost = async (postId) => {
       .eq("id", postId);
     if (error) {
       console.error("[fieldPosts] delete error:", error);
-      if (isFieldPostsUnavailableError(error)) {
-        const filtered = readLocalFallbackPosts().filter((p) => p.id !== postId);
-        writeLocalFallbackPosts(filtered);
-        return true;
-      }
       return false;
     }
     return true;
@@ -445,12 +240,6 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
       .order("created_at", { ascending: false })
       .limit(1);
     if (!error && data?.[0]?.id) return data[0].id;
-    if (error && isFieldPostsUnavailableError(error)) {
-      const local = readLocalFallbackPosts().find(
-        (p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId
-      );
-      return local?.id ?? null;
-    }
     if (error) console.error("[fieldPosts] lookup id error:", error);
     return null;
   } catch (error) {
@@ -546,12 +335,6 @@ export const lookupFieldPost = async (sourceRequestId, posterId) => {
       .order("created_at", { ascending: false })
       .limit(1);
     if (!error && data?.[0]) return mapStorageRow(data[0]);
-    if (error && isFieldPostsUnavailableError(error)) {
-      const local = readLocalFallbackPosts()
-        .map(mapFallbackRow)
-        .find((p) => p.sourceRequestId === sourceRequestId && p.posterId === posterId);
-      return local ?? null;
-    }
     if (error) console.error("[fieldPosts] lookup error:", error);
     return null;
   } catch (error) {
