@@ -958,7 +958,7 @@ serve(async (req: Request): Promise<Response> => {
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });
     }
-    const SUPPORT_FROM = `SharedXP Support <support@sharedxp.com>`;
+    const SUPPORT_FROM = `SharedXP Support <noreply@sharedxp.com>`;
     const bodyLines = String(message).split("\n").map((l) =>
       `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">${l || "&nbsp;"}</p>`
     ).join("");
@@ -979,10 +979,11 @@ serve(async (req: Request): Promise<Response> => {
           <p style="margin:0;font-size:14px;font-weight:700;color:#444;">SharedXP Support</p>
         </td></tr>
         <tr><td style="background:#f9f9f9;padding:16px 32px;border-top:1px solid #eeeeee;">
-          <p style="margin:0;font-size:12px;color:#aaa;">
-            © ${new Date().getFullYear()} SharedXP &nbsp;·&nbsp;
-            <a href="${APP_URL}/help" style="color:#aaa;text-decoration:none;">Help Center</a>
+          <p style="margin:0 0 6px;font-size:12px;color:#aaa;">
+            This email was sent from a no-reply address. To follow up, please visit our
+            <a href="${APP_URL}/help" style="color:#888;text-decoration:underline;">Help Center</a>.
           </p>
+          <p style="margin:0;font-size:12px;color:#aaa;">© ${new Date().getFullYear()} SharedXP</p>
         </td></tr>
       </table>
     </td></tr>
