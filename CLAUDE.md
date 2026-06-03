@@ -18,7 +18,8 @@ supabase functions deploy booking-notify
 supabase functions deploy send-email
 supabase functions deploy events-sync
 supabase functions deploy forgot-password
-supabase secrets set RESEND_API_KEY=... RESEND_FROM_EMAIL=... APP_URL=... SEND_EMAIL_HOOK_SECRET=...
+supabase functions deploy inbound-support
+supabase secrets set RESEND_API_KEY=... RESEND_FROM_EMAIL=... APP_URL=... SEND_EMAIL_HOOK_SECRET=... RESEND_WEBHOOK_SECRET=...
 ```
 
 ## Architecture
@@ -37,21 +38,25 @@ supabase secrets set RESEND_API_KEY=... RESEND_FROM_EMAIL=... APP_URL=... SEND_E
 
 ### Data model (Supabase Postgres + RLS)
 
-Migrations live in `supabase/migrations/` (001–023, run in numeric order):
+Migrations live in `supabase/migrations/` (001–038, run in numeric order; 034 is intentionally absent):
 - `profiles` — one row per auth user; `is_host` and `is_admin` flags here
 - `pending_profiles` — intermediate profile state during OAuth/email confirmation
 - `user_languages` / `user_sports` — up to 4 ordered entries per user
 - `host_profiles` — one-to-one with `profiles` when `is_host=true`; holds payout/bank info, postcode, and geocoded coordinates
-- `host_sports` — one `host_profiles` → many sports, each with availability, pricing, equipment
+- `host_sports` — one `host_profiles` → many sports, each with availability, pricing, equipment; each sport has a `cancellation_policy` field
 - `host_sport_images` — ordered gallery images per `host_sport`
 - `bookings` — completed history with roles (`attended` / `hosted`); synced client-side via `syncBookings`
 - `booking_requests` — active booking lifecycle: `pending → accepted → payment_pending → in_progress → completed` (or `declined / cancelled / disputed / resolved_*`)
 - `messages` — per booking_request chat thread
-- `invoices` — payment record per booking_request; `released_at` signals payout
+- `invoices` — payment record per booking_request; `released_at` signals payout; `xp_earned` stores XP awarded to each participant
 - `disputes` — opened by requester when disputing a completed booking; resolved by admin
 - `external_events` — major international sports events (marathons, tennis, cycling, F1, etc.) sourced via the `events-sync` edge function
 - `field_posts` — community experience feed posts sourced from completed bookings
 - `field_post_likes` — like tracking per user per field post
+- `cm_applications` — Community Manager applications (`pending → interview → accepted / declined`)
+- `cm_profiles` — active CMs; each has a unique `invite_code` and tracks `city`, `country`, and status (`active / paused / revoked`)
+- `cm_commissions` — per-invoice CM commission records; created by a DB trigger on invoice release
+- `support_messages` — inbound support emails received via the `inbound-support` edge function; status `unread → read → replied → resolved`
 
 Storage buckets: `Avatars` (user photos) and `host-sport-images` (host sport galleries). Both store public URLs after upload.
 
@@ -82,6 +87,8 @@ New pages: `/payment-history` (`PaymentHistoryPage`) shows invoices with per-tra
 
 `supabase/functions/events-sync/index.ts` — pulls major sports events from public sources and upserts them into the `external_events` table. Intended to run on a daily cron (pg_cron, GitHub Action, or Supabase scheduled trigger). Can also be invoked manually via HTTP POST with the service role key.
 
+`supabase/functions/inbound-support/index.ts` — receives inbound emails forwarded by Resend (via Svix webhook) to support@sharedxp.com, persists them to `support_messages`, and sends an auto-reply directing the sender to the Help Center. Requires `RESEND_WEBHOOK_SECRET` (Svix signing secret) and `RESEND_API_KEY`.
+
 ### Styling
 
 All styles are in `src/styles/index.css` (~6500 lines). No CSS modules, no utility framework. Add styles directly to this file; there is no per-component stylesheet.
@@ -94,6 +101,12 @@ All styles are in `src/styles/index.css` (~6500 lines). No CSS modules, no utili
 - `majorEvents.js` — static list of major international sports events shown on the Events page.
 - `sports.js` — canonical sport list used across the app.
 - `countries.js` / `countryCities.js` — country and city reference data for location pickers.
+
+Utility helpers beyond date/pricing:
+- `src/utils/cancellationPolicy.js` — `CANCELLATION_POLICIES` config object (flexible / moderate / strict) and refund calculation helpers.
+- `src/utils/cmCommission.js` — CM commission rate constant and `computeCmCommission(gross)`. Mirrors the `create_cm_commission_on_release` DB trigger.
+- `src/utils/historyItem.js` — pure helpers for normalising and serialising booking history items; extracted from `HistoryPage` to keep the page focused on UI state.
+- `src/utils/recoveryLink.js` — `hasRecoveryType({ search, hash })` detects password-recovery URLs from both query params and hash fragments.
 
 ### Tests
 

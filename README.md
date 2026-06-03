@@ -56,7 +56,9 @@ SharedXP connects sports-loving travelers with local people who are eager to sha
 - Email confirmation and password reset via Resend
 - Hosting paused indicator in nav
 - Admin dispute dashboard for customer service
-- Full legal pages suite (Terms, Privacy, Payments, Safety, IP, Disclaimers)
+- Inbound support inbox — emails to support@sharedxp.com are stored and auto-replied
+- Community Manager program — applications, referral codes, and per-booking commissions
+- Full legal pages suite (Terms, Privacy, Payments, Safety, IP, Disclaimers, Cancellation Policy, CM Policy)
 
 -----
 
@@ -80,13 +82,14 @@ No external UI libraries. No TypeScript (frontend). The only runtime dependency 
 
 ## Project Status
 
-The core platform is live and backed by Supabase. Auth (including password reset), profiles, host onboarding, booking requests, in-app chat, invoicing, disputes, transactional email, The Field community feed, XP loyalty program, payment history, and the Events page are all functional.
+The core platform is live and backed by Supabase. Auth (including password reset), profiles, host onboarding, booking requests, in-app chat, invoicing, disputes, transactional email, The Field community feed, XP loyalty program, payment history, the Events page, Community Manager applications and commissions, and an inbound support email inbox are all functional.
 
 ### Still to come
 
 - Stripe Connect for host payouts (invoices are currently simulated)
 - Full OAuth via Google & Apple (wired up but prototype-only)
 - Moderation for The Field
+- CM Dashboard UI (page exists but is not yet routed)
 
 -----
 
@@ -147,8 +150,9 @@ supabase/
 │   ├── booking-notify/  # Transactional email dispatcher (Deno)
 │   ├── send-email/      # Supabase Auth email hook (Deno)
 │   ├── forgot-password/ # Password reset email sender (Deno)
-│   └── events-sync/     # Daily sports events sync (Deno)
-└── migrations/          # Numbered SQL migrations (001–023)
+│   ├── events-sync/     # Daily sports events sync (Deno)
+│   └── inbound-support/ # Inbound support email receiver (Deno)
+└── migrations/          # Numbered SQL migrations (001–038; 034 absent)
 ```
 
 -----
@@ -187,9 +191,12 @@ supabase/
 |`/safety-and-risk-policy`         |Safety and Risk Policy                                 |
 |`/content-and-intellectual-property-policy`|Content and IP Policy                         |
 |`/disclaimers`                    |Disclaimers                                            |
+|`/cancellation-policy`            |Cancellation Policy                                    |
+|`/community-manager-policy`       |Community Manager Policy                               |
 |`/how-it-works`                   |→ redirects to `/about`                                |
 |`/host-history`                   |→ redirects to `/history`                              |
 |`/buddy/:buddyId`                 |→ redirects to `/user/:buddyId`                        |
+|`*`                               |404 Not Found                                          |
 
 -----
 
