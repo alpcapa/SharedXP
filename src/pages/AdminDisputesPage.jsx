@@ -698,7 +698,7 @@ const SupportPanel = () => {
   const [busy, setBusy] = useState(null);
   const [supportTab, setSupportTab] = useState("open"); // "open" | "archive"
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterMonth, setFilterMonth] = useState(""); // "YYYY-MM"
+  const [filterMonth, setFilterMonth] = useState(() => new Date().toISOString().slice(0, 7)); // "YYYY-MM"
 
   const fetchMessages = useCallback(async () => {
     setLoading(true);
