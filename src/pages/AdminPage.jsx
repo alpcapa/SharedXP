@@ -545,6 +545,29 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                         <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />
                       </div>
                     )}
+                    <div className="cm-admin-notes-row">
+                      <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">
+                        Reason for accepting (required)
+                      </label>
+                      <textarea
+                        id={`notes-${app.id}`}
+                        className="cm-admin-notes"
+                        rows={2}
+                        placeholder="Why are you accepting this previously declined application?"
+                        value={getNote(app.id)}
+                        onChange={(e) => setNote(app.id, e.target.value)}
+                      />
+                    </div>
+                    <div className="admin-dispute-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={busy(app.id)}
+                        onClick={() => acceptApplication(app)}
+                      >
+                        {busy(app.id) ? "…" : "Accept & Welcome"}
+                      </button>
+                    </div>
                   </div>
                 )}
               </article>
