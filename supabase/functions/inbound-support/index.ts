@@ -10,6 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const WEBHOOK_SECRET       = Deno.env.get("RESEND_WEBHOOK_SECRET") ?? "";
+const RESEND_API_KEY       = Deno.env.get("RESEND_API_KEY") ?? "";
 
 function base64Decode(str: string): Uint8Array {
   const binary = atob(str);
@@ -80,27 +81,33 @@ serve(async (req) => {
   // Resend wraps inbound data under payload.data
   const data = (payload.data ?? payload) as Record<string, unknown>;
 
-  console.log("[inbound-support] payload keys:", Object.keys(payload));
-  console.log("[inbound-support] data keys:", Object.keys(data));
-  console.log("[inbound-support] data sample:", JSON.stringify(data).slice(0, 500));
-
   const rawFrom   = String(data.from ?? "");
   const fromEmail = extractEmail(rawFrom);
   const fromName  = extractName(rawFrom) || String(data.from_name ?? "");
   const subject   = String(data.subject ?? "(no subject)");
-  // Resend may use 'text', 'body', or 'plain_text' depending on version
-  const bodyText  = typeof data.text === "string" ? data.text
-                  : typeof data.body === "string" ? data.body
-                  : typeof data.plain_text === "string" ? data.plain_text
-                  : null;
-  const bodyHtml  = typeof data.html === "string" ? data.html
-                  : typeof data.body_html === "string" ? data.body_html
-                  : null;
-  const replyToRaw = Array.isArray(data.reply_to)
-    ? String(data.reply_to[0] ?? "")
-    : String(data.reply_to ?? "");
-  const replyTo   = replyToRaw ? extractEmail(replyToRaw) : fromEmail;
-  const resendId  = typeof data.email_id === "string" ? data.email_id : null;
+  const emailId   = typeof data.email_id === "string" ? data.email_id : null;
+
+  // Resend's inbound webhook omits the body — fetch it separately via the API
+  let bodyText: string | null = null;
+  let bodyHtml: string | null = null;
+  if (emailId && RESEND_API_KEY) {
+    try {
+      const emailRes = await fetch(`https://api.resend.com/emails/${emailId}`, {
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
+      });
+      if (emailRes.ok) {
+        const emailData = await emailRes.json();
+        bodyText = typeof emailData.text === "string" ? emailData.text : null;
+        bodyHtml = typeof emailData.html === "string" ? emailData.html : null;
+      } else {
+        console.error("[inbound-support] failed to fetch email body:", emailRes.status);
+      }
+    } catch (e) {
+      console.error("[inbound-support] error fetching email body:", e);
+    }
+  }
+
+  const resendId = emailId;
 
   const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
