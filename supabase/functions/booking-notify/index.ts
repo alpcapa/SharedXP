@@ -746,7 +746,7 @@ function buildCmStatusChange(
   emailType: string,
 ): { to: string; subject: string; html: string } {
   const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
-  const configs: Record<string, { heading: string; lines: string[]; label: string }> = {
+  const configs: Record<string, { heading: string; lines: string[]; label: string; url: string }> = {
     cm_paused: {
       heading: `Your CM account has been paused`,
       lines: [
@@ -755,6 +755,7 @@ function buildCmStatusChange(
         `If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
       ],
       label: "Contact Support",
+      url: `${APP_URL}/help`,
     },
     cm_reactivated: {
       heading: `Your CM account is active again, ${name}!`,
@@ -763,6 +764,7 @@ function buildCmStatusChange(
         `Your invite code is live again — start sharing and earning commissions!`,
       ],
       label: "Go to CM Dashboard",
+      url: `${APP_URL}/user-profile?tab=cm`,
     },
     cm_revoked: {
       heading: `Your CM status has been revoked`,
@@ -771,13 +773,14 @@ function buildCmStatusChange(
         `Any pending approved commissions will still be paid out. If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
       ],
       label: "Contact Support",
+      url: `${APP_URL}/help`,
     },
   };
   const cfg = configs[emailType] ?? configs.cm_paused;
   return {
     to: String(cm.email),
     subject: `${cfg.heading} — SharedXP`,
-    html: emailHtml(cfg.heading, cfg.lines, `${APP_URL}/help`, cfg.label),
+    html: emailHtml(cfg.heading, cfg.lines, cfg.url, cfg.label),
   };
 }
 
