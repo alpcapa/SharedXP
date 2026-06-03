@@ -392,7 +392,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           className={`admin-tab${subTab === "active" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("active")}
         >
-          Active CMs {pendingCommsTotal > 0 && <span className="cm-admin-count">{pendingCommsTotal}</span>}
+          Community Managers {pendingCommsTotal > 0 && <span className="cm-admin-count">{pendingCommsTotal}</span>}
         </button>
         </div>
         <div className="support-filters">
@@ -438,10 +438,47 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                 </button>
                 {isExpanded && (
                   <div className="cm-admin-card-body">
+                    <div className="cm-admin-app-header-row">
+                      <div>
+                        <strong>{getName(app.applicant)}</strong>
+                        {app.profile_url && (
+                          <a
+                            href={`https://${app.profile_url.replace(/^https?:\/\//, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="cm-admin-profile-link"
+                          >
+                            View profile ↗
+                          </a>
+                        )}
+                      </div>
+                      {statusBadge(app.status)}
+                    </div>
+                    <div className="cm-admin-app-meta-grid">
+                      <div>
+                        <p className="admin-dispute-label">EMAIL</p>
+                        <p className="cm-admin-meta-value">{app.applicant?.email || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="admin-dispute-label">PHONE</p>
+                        <p className="cm-admin-meta-value">{app.phone || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="admin-dispute-label">AVAILABLE</p>
+                        <p className="cm-admin-meta-value">{app.contact_times || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="admin-dispute-label">APPLIED</p>
+                        <p className="cm-admin-meta-value">
+                          {app.created_at
+                            ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(app.created_at))
+                            : "—"}
+                        </p>
+                      </div>
+                    </div>
                     <div className="cm-admin-fields">
                       <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
-                      <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
-                      {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
+                      <div><p className="admin-dispute-label">Why they want to be a CM</p><p>{app.motivation}</p></div>
                     </div>
                     {app.admin_notes && (
                       <div className="cm-admin-notes-row">
