@@ -7925,6 +7925,7 @@ body {
 .support-account-tags {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 .support-form {
   margin-top: 20px;
