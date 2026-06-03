@@ -819,7 +819,7 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, supportMessageId, subject, message, replyTo } = body as {
+  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, supportMessageId, subject, message, replyTo, repliedBy } = body as {
     emailType: string;
     bookingRequestId?: string;
     disputeId?: string;
@@ -832,6 +832,7 @@ serve(async (req: Request): Promise<Response> => {
     subject?: string;
     message?: string;
     replyTo?: string;
+    repliedBy?: string;
   };
 
   if (!emailType) {
@@ -1000,7 +1001,7 @@ serve(async (req: Request): Promise<Response> => {
     const prevReplies = Array.isArray(existing?.admin_replies) ? existing.admin_replies : [];
     await db.from("support_messages").update({
       status: "replied",
-      admin_replies: [...prevReplies, { body: message, subject, sent_at: new Date().toISOString() }],
+      admin_replies: [...prevReplies, { body: message, subject, sent_at: new Date().toISOString(), replied_by: repliedBy ?? "Admin" }],
     }).eq("id", supportMessageId);
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
