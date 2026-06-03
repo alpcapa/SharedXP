@@ -686,6 +686,7 @@ const CMManagementPanel = ({ currentUser }) => {
 // ── Support inbox panel ────────────────────────────────────────────────────────
 const SupportPanel = () => {
   const [messages, setMessages] = useState([]);
+  const [profileMap, setProfileMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [replyMode, setReplyMode] = useState(null); // message id
@@ -699,7 +700,20 @@ const SupportPanel = () => {
       .from("support_messages")
       .select("*")
       .order("received_at", { ascending: false });
-    setMessages(data ?? []);
+    const msgs = data ?? [];
+    setMessages(msgs);
+
+    // Batch-lookup sender emails against registered profiles
+    const emails = [...new Set(msgs.map((m) => m.from_email).filter(Boolean))];
+    if (emails.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, first_name, last_name, email, is_host, is_admin")
+        .in("email", emails);
+      const map = {};
+      (profiles ?? []).forEach((p) => { map[p.email] = p; });
+      setProfileMap(map);
+    }
     setLoading(false);
   }, []);
 
@@ -777,6 +791,7 @@ const SupportPanel = () => {
       {messages.map((msg) => {
         const isExpanded = expandedIds.has(msg.id);
         const isReplying = replyMode === msg.id;
+        const matchedProfile = profileMap[msg.from_email] ?? null;
         return (
           <article key={msg.id} className={`cm-admin-card${msg.status === "unread" ? " support-card-unread" : ""}`}>
             <button
@@ -801,12 +816,30 @@ const SupportPanel = () => {
             </button>
             {isExpanded && (
               <div className="cm-admin-card-body">
+                {matchedProfile ? (
+                  <div className="support-account-match">
+                    <span className="admin-dispute-label">Matched account</span>
+                    <span className="support-account-name">
+                      {matchedProfile.full_name || `${matchedProfile.first_name ?? ""} ${matchedProfile.last_name ?? ""}`.trim() || "—"}
+                    </span>
+                    <span className="cm-admin-email">{matchedProfile.email}</span>
+                    <div className="support-account-tags">
+                      {matchedProfile.is_host && <span className="cm-admin-badge cm-badge-accepted">Host</span>}
+                      {matchedProfile.is_admin && <span className="cm-admin-badge cm-badge-interview">Admin</span>}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="support-account-match support-account-nomatch">
+                    <span className="admin-dispute-label">Matched account</span>
+                    <span className="cm-admin-email">No registered account found for {msg.from_email}</span>
+                  </div>
+                )}
                 <div className="support-body">
                   {msg.body_text
                     ? <pre className="support-body-text">{msg.body_text}</pre>
                     : msg.body_html
                     ? <div className="support-body-html" dangerouslySetInnerHTML={{ __html: msg.body_html }} />
-                    : <p className="cm-admin-email">(no body)</p>
+                    : <p className="cm-admin-email">(no body — check edge function logs for payload structure)</p>
                   }
                 </div>
                 {isReplying ? (
