@@ -718,7 +718,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
 // ── Support inbox panel ────────────────────────────────────────────────────────
 const CLOSED_STATUSES = new Set(["replied", "resolved", "autoreplied"]);
 
-const SupportPanel = ({ currentUser }) => {
+const SupportPanel = ({ currentUser, onRead }) => {
   const [messages, setMessages] = useState([]);
   const [profileMap, setProfileMap] = useState({}); // email → profile
   const [cmProfileMap, setCmProfileMap] = useState({}); // profile.id → cm_profile
@@ -779,6 +779,7 @@ const SupportPanel = ({ currentUser }) => {
       setMessages((prev) =>
         prev.map((m) => ids.includes(m.id) ? { ...m, status: "read" } : m)
       );
+      onRead?.();
     }
   };
 
@@ -1388,7 +1389,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
         )}
 
         {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} />}
-        {activeTab === "support" && <SupportPanel currentUser={currentUser} />}
+        {activeTab === "support" && <SupportPanel currentUser={currentUser} onRead={fetchUnreadSupport} />}
         </main>
         <SiteFooter />
       </div>
