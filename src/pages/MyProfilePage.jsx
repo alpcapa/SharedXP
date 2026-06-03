@@ -539,7 +539,7 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
           <div className="host-settings-top-bar">
             <h1>My Profile</h1>
             <div className="profile-summary-actions">
-              <Link to="/user-profile" className="btn btn-primary">
+              <Link to={`/user/${currentUser.id}`} className="btn btn-primary">
                 Public Profile
               </Link>
               {!currentUser.isHost && (
