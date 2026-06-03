@@ -215,11 +215,9 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   // ── Supabase fetch ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!userId) return;
-    setLoading(true);
-    setProfile(null);
+
     setGuestReviews([]);
     setGuestPhotos([]);
-    setHostData(null);
     setHostReviews([]);
     setGuestReviewsPage(0);
     setHostReviewsPage(0);
@@ -228,6 +226,141 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     setSelectedTime("");
 
     let cancelled = false;
+
+    // ── Own profile: seed from auth cache, fetch only reviews ──────────────────
+    if (currentUser?.id === userId) {
+      setProfile({
+        id: currentUser.id,
+        full_name: currentUser.fullName,
+        first_name: currentUser.firstName || "",
+        last_name: currentUser.lastName || "",
+        photo_url: currentUser.photo || "",
+        signed_up_at: currentUser.signedUpAt || "",
+        is_host: currentUser.isHost || false,
+        birthday: currentUser.birthday || "",
+        city: currentUser.city || "",
+        country: currentUser.country || "",
+      });
+      if (currentUser.isHost && currentUser.hostProfile) {
+        const hp = currentUser.hostProfile;
+        setHostData({
+          id: currentUser.id,
+          name: currentUser.fullName,
+          fullName: currentUser.fullName,
+          image: currentUser.photo || "",
+          birthday: currentUser.birthday || "",
+          signedUpAt: currentUser.signedUpAt || "",
+          city: hp.city || "",
+          country: hp.country || "",
+          paused: hp.pauseHosting || false,
+          languages: (currentUser.languages || []).filter(Boolean),
+          sports: (hp.sports || [])
+            .filter((s) => !s.paused)
+            .map((s) => ({
+              ...s,
+              availableDates: generateAvailableDates(s.availability?.days),
+              availableTimes: generateTimeSlots(
+                s.availability?.startTime || "09:00",
+                s.availability?.endTime || "18:00"
+              ),
+            })),
+        });
+      } else {
+        setHostData(null);
+      }
+      setActiveTab("guest");
+      setLoading(false);
+
+      Promise.all([
+        supabase
+          .from("bookings")
+          .select("host_rating, sport, completed_at, counterparty_name, photo, photo_gallery")
+          .eq("user_id", userId).eq("role", "attended")
+          .order("completed_at", { ascending: false }),
+        supabase
+          .from("booking_requests")
+          .select("host_rating, host_review, host_rated_at, guest_photos, host_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)")
+          .eq("requester_id", userId).eq("status", "completed")
+          .order("host_rated_at", { ascending: false }),
+        ...(currentUser.isHost ? [
+          supabase
+            .from("bookings")
+            .select("counterparty_name, attendee_rating, sport, completed_at")
+            .eq("user_id", userId).eq("role", "hosted")
+            .gt("attendee_rating", 0)
+            .order("completed_at", { ascending: false }),
+          supabase
+            .from("booking_requests")
+            .select("requester_id, guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
+            .eq("host_id", userId).eq("status", "completed")
+            .gt("guest_rating", 0)
+            .order("guest_rated_at", { ascending: false }),
+        ] : []),
+      ]).then(async ([legacyResult, brGuestResult, legacyHostResult, brHostResult]) => {
+        if (cancelled) return;
+
+        const legacyBookings = legacyResult.data ?? [];
+        const brGuestRows = brGuestResult.data ?? [];
+        const legacyGuestReviews = legacyBookings
+          .filter((b) => Number(b.host_rating) > 0)
+          .map((b) => ({ author: b.counterparty_name || "Host", overall: b.host_rating, sport: b.sport, date: b.completed_at }));
+        const brGuestReviews = brGuestRows
+          .filter((r) => Number(r.host_rating) > 0)
+          .map((r) => {
+            const p = r.host_profile;
+            const hostName = p ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Host") : "Host";
+            return { author: hostName, overall: r.host_rating, comment: r.host_review || null, sport: r.sport, date: r.host_rated_at };
+          });
+        setGuestReviews([...brGuestReviews, ...legacyGuestReviews].sort((a, b) => {
+          if (!a.date && !b.date) return 0; if (!a.date) return 1; if (!b.date) return -1;
+          return new Date(b.date) - new Date(a.date);
+        }));
+
+        const legacyPhotos = legacyBookings.flatMap((b) => [b.photo, ...(Array.isArray(b.photo_gallery) ? b.photo_gallery : [])]);
+        const brPhotos = brGuestRows.flatMap((r) => [
+          ...(Array.isArray(r.guest_photos) ? r.guest_photos : []),
+          ...(Array.isArray(r.host_photos) ? r.host_photos : []),
+        ]);
+        setGuestPhotos([...new Set(
+          [...brPhotos, ...legacyPhotos].map((p) => String(p ?? "").trim()).filter((p) => p && p !== FALLBACK_PHOTO)
+        )]);
+
+        if (currentUser.isHost && legacyHostResult && brHostResult) {
+          const legacyHostRevs = (legacyHostResult.data ?? []).map((r) => ({
+            author: r.counterparty_name || "Guest", overall: r.attendee_rating, sport: r.sport, date: r.completed_at,
+          }));
+          const brRows = brHostResult.data ?? [];
+          const requesterIds = [...new Set(brRows.map((r) => r.requester_id).filter(Boolean))];
+          const nameMap = {};
+          if (requesterIds.length > 0) {
+            const { data: nameRows } = await supabase
+              .from("profile_names").select("id, full_name, first_name, last_name").in("id", requesterIds);
+            (nameRows ?? []).forEach((p) => { nameMap[p.id] = p; });
+          }
+          if (cancelled) return;
+          const brHostRevs = brRows.map((r) => {
+            const p = nameMap[r.requester_id] ?? null;
+            const author = p ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Guest") : "Guest";
+            const bd = r.guest_host_ratings ?? {};
+            return {
+              author, overall: r.guest_rating,
+              punctuality: bd.punctuality ?? null, equipmentQuality: bd.equipmentQuality ?? null,
+              localKnowledge: bd.localKnowledge ?? null, friendliness: bd.friendliness ?? null, value: bd.value ?? null,
+              comment: r.guest_review || null, sport: r.sport, date: r.guest_rated_at,
+              photos: [...(Array.isArray(r.guest_photos) ? r.guest_photos : []), ...(Array.isArray(r.host_photos) ? r.host_photos : [])].filter(Boolean),
+            };
+          });
+          setHostReviews([...brHostRevs, ...legacyHostRevs]);
+        }
+      });
+
+      return () => { cancelled = true; };
+    }
+
+    // ── Other users: full fetch ─────────────────────────────────────────────────
+    setLoading(true);
+    setProfile(null);
+    setHostData(null);
 
     Promise.all([
       supabase
