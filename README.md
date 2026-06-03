@@ -170,9 +170,8 @@ supabase/
 |`/login`                          |Log in                                                 |
 |`/auth/confirm`                   |Email confirmation handler                             |
 |`/reset-password`                 |Password reset form                                    |
-|`/my-profile`                     |Edit personal profile                                  |
-|`/user-profile`                   |Logged-in user's public profile view                   |
-|`/user/:userId`                   |Another user's public profile                          |
+|`/edit-profile`                   |Edit personal profile                                  |
+|`/user/:userId`                   |Profile page (own or another user's)                   |
 |`/become-a-host`                  |Host onboarding                                        |
 |`/host-settings`                  |Manage host profile                                    |
 |`/history`                        |XP History — booking history, photo upload, reviews, share to Field|
@@ -181,7 +180,7 @@ supabase/
 |`/payment/:bookingRequestId`      |Payment page for an accepted booking                               |
 |`/chat/:bookingRequestId`         |In-app messaging for a booking                         |
 |`/dispute-response/:disputeId`    |Host dispute response form                             |
-|`/admin/disputes`                 |Admin dispute dashboard (requires `is_admin = true`)   |
+|`/admin`                          |Admin panel — disputes, CM, support (requires `is_admin = true`)|
 |`/follow`                         |Follow / connections                                   |
 |`/help`                           |Help centre                                            |
 |`/legal`                          |Legal hub — links to all legal pages                   |
