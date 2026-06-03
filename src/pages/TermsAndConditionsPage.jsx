@@ -320,8 +320,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>18. Contact</h2>
               <p>
-                If you have questions about these Terms, please contact SharedXP through the official support or
-                communication channels made available on the Platform.
+                If you have questions about these Terms, please contact SharedXP through our <Link to="/help">Help Center</Link>.
               </p>
             </section>
           </article>

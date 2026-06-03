@@ -1,5 +1,6 @@
 // Receives inbound emails forwarded by Resend (via Svix webhook) to
-// support@sharedxp.com and persists them to the support_messages table.
+// support@sharedxp.com, persists them to support_messages, and sends an
+// auto-reply from noreply@sharedxp.com directing the sender to the Help Center.
 //
 // Deploy:  supabase functions deploy inbound-support
 // Secret:  supabase secrets set RESEND_WEBHOOK_SECRET=whsec_...
@@ -10,6 +11,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const WEBHOOK_SECRET       = Deno.env.get("RESEND_WEBHOOK_SECRET") ?? "";
+const RESEND_API_KEY       = Deno.env.get("RESEND_API_KEY") ?? "";
+const APP_URL              = Deno.env.get("APP_URL") ?? "https://project-gq4ge.vercel.app";
 
 function base64Decode(str: string): Uint8Array {
   const binary = atob(str);
@@ -60,6 +63,34 @@ function extractName(raw: string): string {
   return m ? m[1].trim() : "";
 }
 
+async function sendAutoReply(toEmail: string, toName: string, originalSubject: string): Promise<void> {
+  if (!RESEND_API_KEY || !toEmail) return;
+
+  const greeting = toName ? `Dear ${toName},` : "Dear sender,";
+  const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:40px auto;padding:0 20px">
+<p style="margin:0 0 16px">${greeting}</p>
+<p style="margin:0 0 16px">Unfortunately we are unable to respond to emails sent directly to support@sharedxp.com.</p>
+<p style="margin:0 0 16px">Please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;font-weight:600;">Help Center</a> to reach us — our contact form goes directly to our support team.</p>
+<p style="margin:0 0 16px">Thank you for your understanding.</p>
+<hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0"/>
+<p style="font-size:12px;color:#888">SharedXP · <a href="${APP_URL}" style="color:#888;">sharedxp.com</a></p>
+</body></html>`;
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "SharedXP <noreply@sharedxp.com>",
+      to: [toEmail],
+      subject: `Re: ${originalSubject}`,
+      html,
+    }),
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204 });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -86,13 +117,11 @@ serve(async (req) => {
   const subject   = String(data.subject ?? "(no subject)");
   const emailId   = typeof data.email_id === "string" ? data.email_id : null;
 
-  // Resend's inbound webhook omits the body and the API only serves sent emails —
-  // body will not be available; store metadata only.
+  // Resend's inbound webhook omits the body — store metadata only
   const replyToRaw = Array.isArray(data.reply_to)
     ? String(data.reply_to[0] ?? "")
     : String(data.reply_to ?? "");
   const replyTo  = replyToRaw ? extractEmail(replyToRaw) : fromEmail;
-  const resendId = emailId;
 
   const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -100,16 +129,20 @@ serve(async (req) => {
     from_email: fromEmail,
     from_name:  fromName,
     subject,
-    body_text:  bodyText,
-    body_html:  bodyHtml,
     reply_to:   replyTo,
-    resend_id:  resendId,
+    resend_id:  emailId,
+    status:     "autoreplied",
   });
 
   if (error) {
     console.error("[inbound-support] insert error:", error);
     return new Response("Internal error", { status: 500 });
   }
+
+  // Send auto-reply in background — do not block the 200 OK to Resend
+  sendAutoReply(replyTo, fromName, subject).catch((e) =>
+    console.error("[inbound-support] auto-reply error:", e)
+  );
 
   return new Response("OK", { status: 200 });
 });

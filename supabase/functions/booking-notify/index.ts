@@ -560,7 +560,7 @@ function buildDisputeResolvedRefund(
         `Dispute outcome, ${hostName}`,
         [
           `After reviewing the dispute for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team has decided to refund the guest.`,
-          `Payment will not be released for this session. If you have any questions, please contact us at support@sharedxp.com.`,
+          `Payment will not be released for this session. If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
         ],
         `${APP_URL}/history`,
         "View History",
@@ -585,7 +585,7 @@ function buildDisputeResolvedPaidHost(
         `Dispute resolved`,
         [
           `Dear ${reqName}, after reviewing both accounts for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team found that the experience was delivered as agreed.`,
-          `The payment has been released to the host. If you have further concerns, please contact us at support@sharedxp.com.`,
+          `The payment has been released to the host. If you have further concerns, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
         ],
         `${APP_URL}/history`,
         "View History",
@@ -752,7 +752,7 @@ function buildCmStatusChange(
       lines: [
         `Hi ${name}, your SharedXP Community Manager account has been temporarily paused.`,
         `While paused, your invite code will not be active and no new referrals will be attributed. Existing commissions are not affected.`,
-        `If you have any questions, please contact us at support@sharedxp.com.`,
+        `If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
       ],
       label: "Contact Support",
     },
@@ -768,7 +768,7 @@ function buildCmStatusChange(
       heading: `Your CM status has been revoked`,
       lines: [
         `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
-        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you have any questions.`,
+        `Any pending approved commissions will still be paid out. If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
       ],
       label: "Contact Support",
     },
@@ -950,6 +950,28 @@ serve(async (req: Request): Promise<Response> => {
   }
   // ── End CM emails ──────────────────────────────────────────────────────────
 
+  // ── Support reply (no booking data needed) ────────────────────────────────
+  if (emailType === "support_reply") {
+    if (!supportMessageId || !replyTo || !subject || !message) {
+      return new Response(JSON.stringify({ error: "support_reply requires supportMessageId, replyTo, subject, message" }), {
+        status: 400,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+    const SUPPORT_FROM = `SharedXP Support <support@sharedxp.com>`;
+    const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:40px auto;padding:0 20px">
+<p style="margin:0 0 16px">${message.replace(/\n/g, "<br/>")}</p>
+<hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0"/>
+<p style="font-size:12px;color:#888">SharedXP Support · <a href="https://sharedxp.com">sharedxp.com</a></p>
+</body></html>`;
+    await sendEmail(replyTo, subject, html, SUPPORT_FROM);
+    await db.from("support_messages").update({ status: "replied" }).eq("id", supportMessageId);
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
+
   // Fetch booking request + both profiles
   let booking: Record<string, unknown> | null = null;
   let requester: Record<string, unknown> | null = null;
@@ -1115,23 +1137,6 @@ serve(async (req: Request): Promise<Response> => {
           ...emails.map((e) => sendEmail(e.to, e.subject, e.html)),
           sendEmail(CS_EMAIL, `[Dispute resolved — paid host] ${emails[0].subject}`, emails[0].html),
         ]);
-        break;
-      }
-      case "support_reply": {
-        if (!supportMessageId || !replyTo || !subject || !message) {
-          return new Response(JSON.stringify({ error: "support_reply requires supportMessageId, replyTo, subject, message" }), {
-            status: 400,
-            headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-          });
-        }
-        const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:40px auto;padding:0 20px">
-<p style="margin:0 0 16px">${message.replace(/\n/g, "<br/>")}</p>
-<hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0"/>
-<p style="font-size:12px;color:#888">SharedXP Support · <a href="https://sharedxp.com">sharedxp.com</a></p>
-</body></html>`;
-        const SUPPORT_FROM = `SharedXP Support <support@sharedxp.com>`;
-        await sendEmail(replyTo, subject, html, SUPPORT_FROM);
-        await db.from("support_messages").update({ status: "replied" }).eq("id", supportMessageId);
         break;
       }
       default:

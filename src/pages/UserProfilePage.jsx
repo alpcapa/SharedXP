@@ -555,7 +555,7 @@ const UserProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onF
                   </p>
                 ) : (
                   <p className="cm-invite-hint cm-invite-hint--warning">
-                    Your CM account has been {currentUser.cmProfile.status}. Your invite code is inactive — new sign-ups using it will not be credited. Contact <a href="mailto:support@sharedxp.com">support@sharedxp.com</a> for help.
+                    Your CM account has been {currentUser.cmProfile.status}. Your invite code is inactive — new sign-ups using it will not be credited. Visit our <Link to="/help">Help Center</Link> to contact support.
                   </p>
                 )}
               </div>

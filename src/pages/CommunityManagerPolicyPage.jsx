@@ -239,8 +239,7 @@ const CommunityManagerPolicyPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>14. Contact</h2>
               <p>
-                Questions about the Community Manager Program or this Policy should be directed to SharedXP
-                through official support channels available on the Platform.
+                Questions about the Community Manager Program or this Policy should be directed to SharedXP through our <Link to="/help">Help Center</Link>.
               </p>
             </section>
           </article>

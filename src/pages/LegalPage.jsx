@@ -179,8 +179,7 @@ const LegalPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>10. Contact and Notices</h2>
               <p>
-                For legal notices, compliance concerns, or policy questions, contact SharedXP through official support or
-                legal communication channels made available on the Platform.
+                For legal notices, compliance concerns, or policy questions, contact SharedXP through our <Link to="/help">Help Center</Link>.
               </p>
             </section>
           </article>
