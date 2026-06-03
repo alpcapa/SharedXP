@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import InlineLoginForm from "../components/InlineLoginForm";
 import MyProfileForm from "../components/profile/MyProfileForm";
 import { COUNTRY_OPTIONS } from "../data/countries";
 import { COUNTRY_CITY_OPTIONS } from "../data/countryCities";
-import { supabase } from "../lib/supabase";
 
 const BIRTHDAY_PATTERN = new RegExp(
   "^(0[1-9]|[12]\\d|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
@@ -136,37 +135,15 @@ const getInitialFormValues = (user) => {
   };
 };
 
-// ── CM tab helpers ─────────────────────────────────────────────────────────
-
-const fmtDate = (iso) =>
-  iso
-    ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso))
-    : "—";
-
-const fmtMoney = (amount, currency) =>
-  `${currency ?? ""} ${Number(amount ?? 0).toFixed(2)}`;
-
-const CM_STATUS_LABEL = { pending: "Pending", approved: "Approved", paid: "Paid" };
-const CM_STATUS_CLASS = { pending: "cm-status-pending", approved: "cm-status-approved", paid: "cm-status-paid" };
-
-const getCmName = (profile) =>
-  profile
-    ? profile.full_name || `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "—"
-    : "—";
-
 // ── Page component ─────────────────────────────────────────────────────────
 
-const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onUpdateProfile }) => {
+const EditProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onUpdateProfile }) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const photoInputRef = useRef(null);
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
   const phoneCodeDropdownRef = useRef(null);
   const phoneCodeListRef = useRef(null);
-
-  const initialTab = searchParams.get("tab") === "cm" && currentUser?.isCm ? "cm" : "profile";
-  const [activeTab, setActiveTab] = useState(initialTab);
 
   const [formValues, setFormValues] = useState(
     getInitialFormValues(currentUser)
@@ -184,51 +161,6 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
   const [successMessage, setSuccessMessage] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle"); // "idle" | "saving" | "saved"
   const [showEmailConfirmDialog, setShowEmailConfirmDialog] = useState(false);
-
-  // CM tab state
-  const [cmStats, setCmStats] = useState(null);
-  const [cmCommissions, setCmCommissions] = useState([]);
-  const [cmLoading, setCmLoading] = useState(false);
-  const [cmCopied, setCmCopied] = useState(false);
-
-  const fetchCmData = useCallback(async () => {
-    if (!currentUser?.cmProfile?.id) return;
-    setCmLoading(true);
-    const cmId = currentUser.cmProfile.id;
-    const [referralsRes, commissionsRes] = await Promise.all([
-      supabase.from("cm_referrals").select("id").eq("cm_id", cmId),
-      supabase
-        .from("cm_commissions")
-        .select(`id, gmv, commission_amount, currency, status, approved_at, paid_at, created_at,
-          booking_request:booking_requests(requested_date, sport,
-            requester:profiles!requester_id(full_name, first_name, last_name))`)
-        .eq("cm_id", cmId)
-        .order("created_at", { ascending: false }),
-    ]);
-    const commList = commissionsRes.data ?? [];
-    const currency = commList[0]?.currency ?? "EUR";
-    setCmStats({
-      referredCount: referralsRes.data?.length ?? 0,
-      completedBookings: commList.length,
-      totalEarnings: commList.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.commission_amount), 0),
-      pendingEarnings: commList.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.commission_amount), 0),
-      approvedEarnings: commList.filter((c) => c.status === "approved").reduce((s, c) => s + Number(c.commission_amount), 0),
-      currency,
-    });
-    setCmCommissions(commList);
-    setCmLoading(false);
-  }, [currentUser?.cmProfile?.id]);
-
-  useEffect(() => {
-    if (activeTab === "cm" && currentUser?.isCm && !cmStats) fetchCmData();
-  }, [activeTab, currentUser?.isCm, cmStats, fetchCmData]);
-
-  const copyCmCode = () => {
-    navigator.clipboard.writeText(currentUser?.cmProfile?.inviteCode ?? "").then(() => {
-      setCmCopied(true);
-      setTimeout(() => setCmCopied(false), 2000);
-    });
-  };
 
   const selectedCountry = useMemo(() => {
     const search = formValues.country.trim().toLowerCase();
@@ -536,48 +468,20 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
         <main className="middle-section edit-profile-page">
-          <div className="host-settings-top-bar">
-            <h1>My Profile</h1>
-            <div className="profile-summary-actions">
-              <Link to="/user-profile" className="btn btn-primary">
-                Public Profile
-              </Link>
-              {!currentUser.isHost && (
-                <Link to="/become-a-host" className="btn btn-light">Become Host</Link>
+          <div className="guest-profile-header">
+            <div className="guest-profile-info">
+              <h2 className="guest-profile-name">{currentUser.fullName}</h2>
+            </div>
+            <div className="unified-profile-own-actions">
+              <Link to={`/user/${currentUser.id}`} className="btn btn-light">My Profile</Link>
+
+              {currentUser.isHost && (
+                <Link to="/host-settings" className="btn btn-primary">Host Settings</Link>
               )}
             </div>
           </div>
-          <div className="profile-name-row">
-            <h2>{currentUser.fullName}</h2>
-            {currentUser.isHost && (
-              <Link to="/host-settings" className="verified-host-badge">
-                ✅ Verified Host
-              </Link>
-            )}
-          </div>
 
-          {currentUser.isCm && (
-            <div className="profile-tabs">
-              <button
-                type="button"
-                className={`profile-tab-btn${activeTab === "profile" ? " active" : ""}`}
-                onClick={() => setActiveTab("profile")}
-              >
-                Edit Profile
-              </button>
-              <button
-                type="button"
-                className={`profile-tab-btn${activeTab === "cm" ? " active" : ""}`}
-                onClick={() => setActiveTab("cm")}
-              >
-                As CM
-              </button>
-            </div>
-          )}
-
-          {activeTab === "profile" && (
-            <>
-              <MyProfileForm
+          <MyProfileForm
                 formValues={formValues}
                 setFormValues={setFormValues}
                 selectedCountry={selectedCountry}
@@ -597,8 +501,8 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
                 onSportChange={onSportChange}
                 onPhotoSelect={onPhotoSelect}
                 onSubmit={onSubmit}
-              />
-              {showEmailConfirmDialog && (
+          />
+          {showEmailConfirmDialog && (
                 <div className="modal-backdrop" role="presentation">
                   <div
                     className="modal-box"
@@ -622,90 +526,6 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
                   </div>
                 </div>
               )}
-            </>
-          )}
-
-          {activeTab === "cm" && currentUser.isCm && (
-            <div className="cm-dashboard">
-              <p className="cm-dashboard-subtitle">
-                Welcome back, {currentUser.firstName || "CM"}. Here's your referral and commission overview.
-              </p>
-
-              <div className="cm-invite-card">
-                <p className="cm-invite-label">Your invite code</p>
-                <div className="cm-invite-code-row">
-                  <span className="cm-invite-code">{currentUser.cmProfile.inviteCode}</span>
-                  <button type="button" className="btn btn-secondary cm-copy-btn" onClick={copyCmCode}>
-                    {cmCopied ? "Copied!" : "Copy"}
-                  </button>
-                </div>
-                <p className="cm-invite-hint">
-                  Share this code with athletes and sports enthusiasts. Anyone who signs up with your code becomes your referral permanently.
-                </p>
-              </div>
-
-              {cmLoading ? (
-                <p>Loading stats…</p>
-              ) : cmStats ? (
-                <>
-                  <div className="cm-stats-grid">
-                    <div className="cm-stat-card">
-                      <p className="cm-stat-value">{cmStats.referredCount}</p>
-                      <p className="cm-stat-label">Referred users</p>
-                    </div>
-                    <div className="cm-stat-card">
-                      <p className="cm-stat-value">{cmStats.completedBookings}</p>
-                      <p className="cm-stat-label">Completed bookings</p>
-                    </div>
-                    <div className="cm-stat-card">
-                      <p className="cm-stat-value">{fmtMoney(cmStats.totalEarnings, cmStats.currency)}</p>
-                      <p className="cm-stat-label">Total paid out</p>
-                    </div>
-                    <div className="cm-stat-card">
-                      <p className="cm-stat-value">{fmtMoney(cmStats.pendingEarnings + cmStats.approvedEarnings, cmStats.currency)}</p>
-                      <p className="cm-stat-label">Pending commission</p>
-                    </div>
-                  </div>
-
-                  <h2 className="cm-section-title">Commission history</h2>
-                  {cmCommissions.length === 0 ? (
-                    <p className="cm-empty">No commissions yet. Share your invite code to get started!</p>
-                  ) : (
-                    <div className="cm-commission-table-wrap">
-                      <table className="cm-commission-table">
-                        <thead>
-                          <tr>
-                            <th>Date</th>
-                            <th>User</th>
-                            <th>Sport</th>
-                            <th>GBV</th>
-                            <th>Commission</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {cmCommissions.map((c) => (
-                            <tr key={c.id}>
-                              <td>{fmtDate(c.created_at)}</td>
-                              <td>{getCmName(c.booking_request?.requester)}</td>
-                              <td>{c.booking_request?.sport ?? "—"}</td>
-                              <td>{fmtMoney(c.gmv, c.currency)}</td>
-                              <td>{fmtMoney(c.commission_amount, c.currency)}</td>
-                              <td>
-                                <span className={`cm-status-badge ${CM_STATUS_CLASS[c.status] ?? ""}`}>
-                                  {CM_STATUS_LABEL[c.status] ?? c.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </>
-              ) : null}
-            </div>
-          )}
         </main>
 
         <SiteFooter />
@@ -714,4 +534,4 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
   );
 };
 
-export default MyProfilePage;
+export default EditProfilePage;

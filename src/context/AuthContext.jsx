@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { syncLocalFallbackPosts } from "../utils/fieldPosts";
 
 const padStringArray = (arr, n) =>
 Array.from({ length: n }, (_, i) =>
@@ -500,6 +501,7 @@ const loadUser = async (authUser) => {
   try {
     const u = await fetchUserProfile(authUser);
     if (mounted && u && !inRecoveryMode.current) setCurrentUser(u);
+    syncLocalFallbackPosts(authUser.id);
   } catch (e) {
     console.error("[auth] fetchUserProfile failed:", e);
     if (mounted && !inRecoveryMode.current) {

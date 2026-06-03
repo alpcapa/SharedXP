@@ -544,7 +544,9 @@ body {
 
 .auth-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
+  min-height: 40px;
 }
 
 .auth-link {
@@ -2403,18 +2405,6 @@ body {
   margin-top: 10px;
 }
 
-.profile-name-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 6px;
-}
-
-.profile-name-row h2 {
-  margin: 0;
-  font-size: 24px;
-}
 
 .verified-host-badge {
   display: inline-flex;
@@ -5692,9 +5682,6 @@ body {
 }
 
 .admin-title {
-  font-size: 26px;
-  font-weight: 800;
-  color: #1a1a1a;
   margin: 0 0 4px;
 }
 
@@ -5709,6 +5696,13 @@ body {
   gap: 4px;
   border-bottom: 2px solid #e8e9e4;
   margin-bottom: 28px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.admin-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .admin-tab {
@@ -5722,6 +5716,8 @@ body {
   margin-bottom: -2px;
   cursor: pointer;
   font-family: inherit;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .admin-tab-active {
@@ -6014,6 +6010,17 @@ body {
   padding: 20px 10px 64px;
 }
 
+.unified-profile-own-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+
 /* Card sections inside the profile page already have 10px side margin from the
    shared rule; remove it here since the parent now supplies that padding.
    Also tighten vertical gaps between sections. */
@@ -6072,14 +6079,6 @@ body {
   color: #1a1a1a;
   font-weight: 700;
   border-bottom-color: #1a1a1a;
-}
-
-.unified-profile-own-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-left: auto;
-  align-self: flex-start;
 }
 
 .unified-profile-own-actions .btn {
@@ -6882,8 +6881,9 @@ body {
     display: none;
   }
 
-  /* Shrink header brand on mobile */
+  /* Nav is gone — keep logo and auth on one line */
   .site-header {
+    flex-wrap: nowrap;
     padding: 12px 16px;
     border-radius: 14px;
   }
@@ -7916,6 +7916,7 @@ body {
 .support-account-tags {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 .support-form {
   margin-top: 20px;

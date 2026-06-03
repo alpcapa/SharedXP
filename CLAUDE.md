@@ -93,12 +93,10 @@ New pages: `/payment-history` (`PaymentHistoryPage`) shows invoices with per-tra
 
 All styles are in `src/styles/index.css` (~6500 lines). No CSS modules, no utility framework. Add styles directly to this file; there is no per-component stylesheet.
 
-### Mock / seed data
+### Static reference data
 
-`src/data/` contains static prototype fixtures and reference data:
-- `buddies.js` — 4 prototype hosts across Lisbon/Porto/Barcelona/Berlin. Availability dates generated dynamically relative to today.
-- `fieldPosts.js` — 8 prototype Field posts seeded from the same cities.
-- `majorEvents.js` — static list of major international sports events shown on the Events page.
+`src/data/` contains static reference data:
+- `majorEvents.js` — curated fallback list of major international sports events; used by the Events page when the `external_events` table is empty or unreachable.
 - `sports.js` — canonical sport list used across the app.
 - `countries.js` / `countryCities.js` — country and city reference data for location pickers.
 

@@ -285,7 +285,7 @@ function buildDisputeEmergencyToCS(
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "Guest");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
   const amount = invoice ? `${invoice.currency} ${Number(invoice.gross_amount).toFixed(2)}` : `${booking.currency} ${Number(booking.price).toFixed(2)}`;
-  const ctaUrl = `${APP_URL}/admin/disputes`;
+  const ctaUrl = `${APP_URL}/admin`;
   return {
     to: CS_EMAIL,
     subject: `⚠️ DISPUTE OPENED — Booking ${String(booking.id).slice(0, 8)} — Action Required`,
@@ -316,7 +316,7 @@ function buildDisputeHostRespondedToCS(
 ): { to: string; subject: string; html: string } {
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "Guest");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
-  const ctaUrl = `${APP_URL}/admin/disputes`;
+  const ctaUrl = `${APP_URL}/admin`;
   return {
     to: CS_EMAIL,
     subject: `Host responded to Dispute — Booking ${String(booking.id).slice(0, 8)}`,
@@ -685,7 +685,7 @@ function buildCmAccepted(
         `Congratulations! You've been accepted as a SharedXP Community Manager.`,
         `Your personal invite code is:`,
       ],
-      `${APP_URL}/user-profile?tab=cm`,
+      `${APP_URL}/user/${applicant.id}?tab=cm`,
       "Go to CM Dashboard",
       `<div style="text-align:center;margin:20px 0 24px;">
         <span style="font-size:24px;font-weight:700;letter-spacing:2px;background:#f5f5f2;padding:12px 24px;border-radius:8px;border:2px solid #1a1a1a;display:inline-block;">${inviteCode}</span>
@@ -735,7 +735,7 @@ function buildCmCommissionApproved(
         `<strong>Commission amount:</strong> ${currency} ${fmt(commissionAmount)}`,
         `Payment will be made via bank transfer within 10 business days. View your full commission history on your CM Dashboard.`,
       ],
-      `${APP_URL}/user-profile?tab=cm`,
+      `${APP_URL}/user/${cm.id}?tab=cm`,
       "View CM Dashboard",
     ),
   };
@@ -764,7 +764,7 @@ function buildCmStatusChange(
         `Your invite code is live again — start sharing and earning commissions!`,
       ],
       label: "Go to CM Dashboard",
-      url: `${APP_URL}/user-profile?tab=cm`,
+      url: `${APP_URL}/user/${cm.id}?tab=cm`,
     },
     cm_revoked: {
       heading: `Your CM status has been revoked`,
@@ -928,7 +928,7 @@ serve(async (req: Request): Promise<Response> => {
           const html = emailHtml(
             subject,
             [message],
-            `${APP_URL}/user-profile`,
+            `${APP_URL}/user/${userId}`,
             "Go to My Profile",
           );
           await sendEmail(String(userProfile.email), subject, html);

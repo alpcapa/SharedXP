@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import BuddyCard from "../components/BuddyCard";
 import SiteFooter from "../components/SiteFooter";
@@ -27,6 +27,17 @@ const fmtMonthYear = (iso) => {
   if (!iso) return "";
   return new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" }).format(new Date(iso));
 };
+
+const fmtDate = (iso) =>
+  iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso)) : "—";
+
+const fmtMoney = (amount, currency) => `${currency ?? ""} ${Number(amount ?? 0).toFixed(2)}`;
+
+const CM_STATUS_LABEL = { pending: "Pending", approved: "Approved", paid: "Paid" };
+const CM_STATUS_CLASS = { pending: "cm-status-pending", approved: "cm-status-approved", paid: "cm-status-paid" };
+
+const getCmName = (p) =>
+  p ? p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "—" : "—";
 
 const generateAvailableDates = (availabilityDays) => {
   const dayIndices =
@@ -159,15 +170,37 @@ const StarRating = ({ rating }) => {
 const getName = (p) =>
   p?.full_name || [p?.first_name, p?.last_name].filter(Boolean).join(" ") || "User";
 
-const UnifiedProfilePage = ({ currentUser, onLogout }) => {
+const ProfilePage = ({ currentUser, onLogout }) => {
   const { userId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
+  const _isOwnProfile = currentUser?.id === userId;
+
   // ── State ──────────────────────────────────────────────────────────────────
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(() => {
+    if (!_isOwnProfile || !currentUser) return null;
+    return {
+      id: currentUser.id,
+      full_name: currentUser.fullName,
+      first_name: currentUser.firstName || "",
+      last_name: currentUser.lastName || "",
+      photo_url: currentUser.photo || "",
+      signed_up_at: currentUser.signedUpAt || "",
+      is_host: currentUser.isHost || false,
+      birthday: currentUser.birthday || "",
+      city: currentUser.city || "",
+      country: currentUser.country || "",
+    };
+  });
+  const [loading, setLoading] = useState(!_isOwnProfile || !currentUser);
   const [activeTab, setActiveTab] = useState("guest");
+
+  // CM dashboard (own profile only)
+  const [cmStats, setCmStats] = useState(null);
+  const [cmCommissions, setCmCommissions] = useState([]);
+  const [cmLoading, setCmLoading] = useState(false);
+  const [cmCopied, setCmCopied] = useState(false);
 
   // Guest role
   const [guestReviews, setGuestReviews] = useState([]);
@@ -176,7 +209,32 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
   const [guestPhotosPage, setGuestPhotosPage] = useState(0);
 
   // Host role
-  const [hostData, setHostData] = useState(null);
+  const [hostData, setHostData] = useState(() => {
+    if (!_isOwnProfile || !currentUser?.isHost || !currentUser?.hostProfile) return null;
+    const hp = currentUser.hostProfile;
+    return {
+      id: currentUser.id,
+      name: currentUser.fullName,
+      fullName: currentUser.fullName,
+      image: currentUser.photo || "",
+      birthday: currentUser.birthday || "",
+      signedUpAt: currentUser.signedUpAt || "",
+      city: hp.city || "",
+      country: hp.country || "",
+      paused: hp.pauseHosting || false,
+      languages: (currentUser.languages || []).filter(Boolean),
+      sports: (hp.sports || [])
+        .filter((s) => !s.paused)
+        .map((s) => ({
+          ...s,
+          availableDates: generateAvailableDates(s.availability?.days),
+          availableTimes: generateTimeSlots(
+            s.availability?.startTime || "09:00",
+            s.availability?.endTime || "18:00"
+          ),
+        })),
+    };
+  });
   const [hostReviews, setHostReviews] = useState([]);
   const [hostReviewsPage, setHostReviewsPage] = useState(0);
   const [hostPhotosPage, setHostPhotosPage] = useState(0);
@@ -198,11 +256,9 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
   // ── Supabase fetch ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!userId) return;
-    setLoading(true);
-    setProfile(null);
+
     setGuestReviews([]);
     setGuestPhotos([]);
-    setHostData(null);
     setHostReviews([]);
     setGuestReviewsPage(0);
     setHostReviewsPage(0);
@@ -211,6 +267,141 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
     setSelectedTime("");
 
     let cancelled = false;
+
+    // ── Own profile: seed from auth cache, fetch only reviews ──────────────────
+    if (currentUser?.id === userId) {
+      setProfile({
+        id: currentUser.id,
+        full_name: currentUser.fullName,
+        first_name: currentUser.firstName || "",
+        last_name: currentUser.lastName || "",
+        photo_url: currentUser.photo || "",
+        signed_up_at: currentUser.signedUpAt || "",
+        is_host: currentUser.isHost || false,
+        birthday: currentUser.birthday || "",
+        city: currentUser.city || "",
+        country: currentUser.country || "",
+      });
+      if (currentUser.isHost && currentUser.hostProfile) {
+        const hp = currentUser.hostProfile;
+        setHostData({
+          id: currentUser.id,
+          name: currentUser.fullName,
+          fullName: currentUser.fullName,
+          image: currentUser.photo || "",
+          birthday: currentUser.birthday || "",
+          signedUpAt: currentUser.signedUpAt || "",
+          city: hp.city || "",
+          country: hp.country || "",
+          paused: hp.pauseHosting || false,
+          languages: (currentUser.languages || []).filter(Boolean),
+          sports: (hp.sports || [])
+            .filter((s) => !s.paused)
+            .map((s) => ({
+              ...s,
+              availableDates: generateAvailableDates(s.availability?.days),
+              availableTimes: generateTimeSlots(
+                s.availability?.startTime || "09:00",
+                s.availability?.endTime || "18:00"
+              ),
+            })),
+        });
+      } else {
+        setHostData(null);
+      }
+      setActiveTab("guest");
+      setLoading(false);
+
+      Promise.all([
+        supabase
+          .from("bookings")
+          .select("host_rating, sport, completed_at, counterparty_name, photo, photo_gallery")
+          .eq("user_id", userId).eq("role", "attended")
+          .order("completed_at", { ascending: false }),
+        supabase
+          .from("booking_requests")
+          .select("host_rating, host_review, host_rated_at, guest_photos, host_photos, sport, host_profile:profiles!host_id(full_name, first_name, last_name)")
+          .eq("requester_id", userId).eq("status", "completed")
+          .order("host_rated_at", { ascending: false }),
+        ...(currentUser.isHost ? [
+          supabase
+            .from("bookings")
+            .select("counterparty_name, attendee_rating, sport, completed_at")
+            .eq("user_id", userId).eq("role", "hosted")
+            .gt("attendee_rating", 0)
+            .order("completed_at", { ascending: false }),
+          supabase
+            .from("booking_requests")
+            .select("requester_id, guest_rating, guest_host_ratings, guest_review, guest_photos, host_photos, sport, guest_rated_at")
+            .eq("host_id", userId).eq("status", "completed")
+            .gt("guest_rating", 0)
+            .order("guest_rated_at", { ascending: false }),
+        ] : []),
+      ]).then(async ([legacyResult, brGuestResult, legacyHostResult, brHostResult]) => {
+        if (cancelled) return;
+
+        const legacyBookings = legacyResult.data ?? [];
+        const brGuestRows = brGuestResult.data ?? [];
+        const legacyGuestReviews = legacyBookings
+          .filter((b) => Number(b.host_rating) > 0)
+          .map((b) => ({ author: b.counterparty_name || "Host", overall: b.host_rating, sport: b.sport, date: b.completed_at }));
+        const brGuestReviews = brGuestRows
+          .filter((r) => Number(r.host_rating) > 0)
+          .map((r) => {
+            const p = r.host_profile;
+            const hostName = p ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Host") : "Host";
+            return { author: hostName, overall: r.host_rating, comment: r.host_review || null, sport: r.sport, date: r.host_rated_at };
+          });
+        setGuestReviews([...brGuestReviews, ...legacyGuestReviews].sort((a, b) => {
+          if (!a.date && !b.date) return 0; if (!a.date) return 1; if (!b.date) return -1;
+          return new Date(b.date) - new Date(a.date);
+        }));
+
+        const legacyPhotos = legacyBookings.flatMap((b) => [b.photo, ...(Array.isArray(b.photo_gallery) ? b.photo_gallery : [])]);
+        const brPhotos = brGuestRows.flatMap((r) => [
+          ...(Array.isArray(r.guest_photos) ? r.guest_photos : []),
+          ...(Array.isArray(r.host_photos) ? r.host_photos : []),
+        ]);
+        setGuestPhotos([...new Set(
+          [...brPhotos, ...legacyPhotos].map((p) => String(p ?? "").trim()).filter((p) => p && p !== FALLBACK_PHOTO)
+        )]);
+
+        if (currentUser.isHost && legacyHostResult && brHostResult) {
+          const legacyHostRevs = (legacyHostResult.data ?? []).map((r) => ({
+            author: r.counterparty_name || "Guest", overall: r.attendee_rating, sport: r.sport, date: r.completed_at,
+          }));
+          const brRows = brHostResult.data ?? [];
+          const requesterIds = [...new Set(brRows.map((r) => r.requester_id).filter(Boolean))];
+          const nameMap = {};
+          if (requesterIds.length > 0) {
+            const { data: nameRows } = await supabase
+              .from("profile_names").select("id, full_name, first_name, last_name").in("id", requesterIds);
+            (nameRows ?? []).forEach((p) => { nameMap[p.id] = p; });
+          }
+          if (cancelled) return;
+          const brHostRevs = brRows.map((r) => {
+            const p = nameMap[r.requester_id] ?? null;
+            const author = p ? (p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Guest") : "Guest";
+            const bd = r.guest_host_ratings ?? {};
+            return {
+              author, overall: r.guest_rating,
+              punctuality: bd.punctuality ?? null, equipmentQuality: bd.equipmentQuality ?? null,
+              localKnowledge: bd.localKnowledge ?? null, friendliness: bd.friendliness ?? null, value: bd.value ?? null,
+              comment: r.guest_review || null, sport: r.sport, date: r.guest_rated_at,
+              photos: [...(Array.isArray(r.guest_photos) ? r.guest_photos : []), ...(Array.isArray(r.host_photos) ? r.host_photos : [])].filter(Boolean),
+            };
+          });
+          setHostReviews([...brHostRevs, ...legacyHostRevs]);
+        }
+      });
+
+      return () => { cancelled = true; };
+    }
+
+    // ── Other users: full fetch ─────────────────────────────────────────────────
+    setLoading(true);
+    setProfile(null);
+    setHostData(null);
 
     Promise.all([
       supabase
@@ -403,6 +594,46 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
     setSelectedDate("");
     setSelectedTime("");
   }, [selectedSportIndex]);
+
+  // ── CM dashboard fetch (own profile only) ───────────────────────────────────
+  const fetchCmData = useCallback(async () => {
+    if (!currentUser?.cmProfile?.id) return;
+    setCmLoading(true);
+    const cmId = currentUser.cmProfile.id;
+    const [referralsRes, commissionsRes] = await Promise.all([
+      supabase.from("cm_referrals").select("id").eq("cm_id", cmId),
+      supabase
+        .from("cm_commissions")
+        .select(`id, gmv, commission_amount, currency, status, approved_at, paid_at, created_at,
+          booking_request:booking_requests(requested_date, sport,
+            requester:profiles!requester_id(full_name, first_name, last_name))`)
+        .eq("cm_id", cmId)
+        .order("created_at", { ascending: false }),
+    ]);
+    const commList = commissionsRes.data ?? [];
+    const currency = commList[0]?.currency ?? "EUR";
+    setCmStats({
+      referredCount: referralsRes.data?.length ?? 0,
+      completedBookings: commList.length,
+      totalEarnings: commList.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.commission_amount), 0),
+      pendingEarnings: commList.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.commission_amount), 0),
+      approvedEarnings: commList.filter((c) => c.status === "approved").reduce((s, c) => s + Number(c.commission_amount), 0),
+      currency,
+    });
+    setCmCommissions(commList);
+    setCmLoading(false);
+  }, [currentUser?.cmProfile?.id]);
+
+  useEffect(() => {
+    if (activeTab === "cm" && currentUser?.id === userId && currentUser?.isCm && !cmStats) fetchCmData();
+  }, [activeTab, userId, currentUser?.id, currentUser?.isCm, cmStats, fetchCmData]);
+
+  const copyCmCode = () => {
+    navigator.clipboard.writeText(currentUser?.cmProfile?.inviteCode ?? "").then(() => {
+      setCmCopied(true);
+      setTimeout(() => setCmCopied(false), 2000);
+    });
+  };
 
   // ── Derived: host booking engine ────────────────────────────────────────────
   const hostSports = useMemo(
@@ -650,20 +881,20 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
               {isHost && hostLanguages && (
                 <p className="unified-profile-languages"><strong>Languages:</strong> {hostLanguages}</p>
               )}
-              {isOwnProfile && (
-                <div className="unified-profile-own-actions">
-                  <Link to="/my-profile" className="btn btn-primary">Edit Profile</Link>
-                  {isHost
-                    ? <Link to="/host-settings" className="btn btn-light">Host Settings</Link>
-                    : <Link to="/become-a-host" className="btn btn-light">Become Host</Link>
-                  }
-                </div>
-              )}
             </div>
+            {isOwnProfile && (
+              <div className="unified-profile-own-actions">
+                <Link to="/edit-profile" className="btn btn-light">Edit Profile</Link>
+                {isHost
+                  ? <Link to="/host-settings" className="btn btn-primary">Host Settings</Link>
+                  : <Link to="/become-a-host" className="btn btn-light">Become Host</Link>
+                }
+              </div>
+            )}
           </div>
 
           {/* ── Role tabs ── */}
-          {isHost && (
+          {(isHost || (isOwnProfile && currentUser?.isCm)) && (
             <div className="host-tab-bar unified-profile-tabs">
               <button
                 type="button"
@@ -675,16 +906,27 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
                   <span className="unified-profile-tab-rating">⭐ {guestAvg}</span>
                 )}
               </button>
-              <button
-                type="button"
-                className={`host-tab-btn${activeTab === "host" ? " active" : ""}`}
-                onClick={() => setActiveTab("host")}
-              >
-                As Host
-                {hostAvg !== null && (
-                  <span className="unified-profile-tab-rating">⭐ {hostAvg}</span>
-                )}
-              </button>
+              {isHost && (
+                <button
+                  type="button"
+                  className={`host-tab-btn${activeTab === "host" ? " active" : ""}`}
+                  onClick={() => setActiveTab("host")}
+                >
+                  As Host
+                  {hostAvg !== null && (
+                    <span className="unified-profile-tab-rating">⭐ {hostAvg}</span>
+                  )}
+                </button>
+              )}
+              {isOwnProfile && currentUser?.isCm && (
+                <button
+                  type="button"
+                  className={`host-tab-btn${activeTab === "cm" ? " active" : ""}`}
+                  onClick={() => setActiveTab("cm")}
+                >
+                  As CM
+                </button>
+              )}
             </div>
           )}
 
@@ -973,6 +1215,91 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
             </>
           )}
 
+          {/* ── CM tab ── */}
+          {activeTab === "cm" && isOwnProfile && currentUser?.isCm && (
+            <div className="cm-dashboard">
+              <p className="cm-dashboard-subtitle">
+                Welcome back, {currentUser.firstName || "CM"}. Here's your referral and commission overview.
+              </p>
+              {currentUser.cmProfile.status !== "active" && (
+                <p className="cm-status-warning">
+                  Your CM account has been {currentUser.cmProfile.status}. Your invite code is inactive — new sign-ups using it will not be credited.
+                </p>
+              )}
+              <div className="cm-invite-card">
+                <p className="cm-invite-label">Your invite code</p>
+                <div className="cm-invite-code-row">
+                  <span className="cm-invite-code">{currentUser.cmProfile.inviteCode}</span>
+                  <button type="button" className="btn btn-secondary cm-copy-btn" onClick={copyCmCode}>
+                    {cmCopied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+                <p className="cm-invite-hint">
+                  Share this code with athletes and sports enthusiasts. Anyone who signs up with your code becomes your referral permanently.
+                </p>
+              </div>
+              {cmLoading ? (
+                <p>Loading stats…</p>
+              ) : cmStats ? (
+                <>
+                  <div className="cm-stats-grid">
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-value">{cmStats.referredCount}</p>
+                      <p className="cm-stat-label">Referred users</p>
+                    </div>
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-value">{cmStats.completedBookings}</p>
+                      <p className="cm-stat-label">Completed bookings</p>
+                    </div>
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-value">{fmtMoney(cmStats.totalEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-label">Total paid out</p>
+                    </div>
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-value">{fmtMoney(cmStats.pendingEarnings + cmStats.approvedEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-label">Pending commission</p>
+                    </div>
+                  </div>
+                  <h2 className="cm-section-title">Commission history</h2>
+                  {cmCommissions.length === 0 ? (
+                    <p className="cm-empty">No commissions yet. Share your invite code to get started!</p>
+                  ) : (
+                    <div className="cm-commission-table-wrap">
+                      <table className="cm-commission-table">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>User</th>
+                            <th>Sport</th>
+                            <th>GBV</th>
+                            <th>Commission</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {cmCommissions.map((c) => (
+                            <tr key={c.id}>
+                              <td>{fmtDate(c.created_at)}</td>
+                              <td>{getCmName(c.booking_request?.requester)}</td>
+                              <td>{c.booking_request?.sport ?? "—"}</td>
+                              <td>{fmtMoney(c.gmv, c.currency)}</td>
+                              <td>{fmtMoney(c.commission_amount, c.currency)}</td>
+                              <td>
+                                <span className={`cm-status-badge ${CM_STATUS_CLASS[c.status] ?? ""}`}>
+                                  {CM_STATUS_LABEL[c.status] ?? c.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
+          )}
+
         </main>
 
         <SiteFooter />
@@ -1022,4 +1349,4 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
   );
 };
 
-export default UnifiedProfilePage;
+export default ProfilePage;

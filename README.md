@@ -137,7 +137,7 @@ src/
 ├── assets/              # Static images and SVGs
 ├── components/          # Shared UI (SiteHeader, SiteFooter, BuddyCard)
 ├── context/             # AuthContext — all auth state and user mutations
-├── data/                # Seed and reference data (buddies, field posts, sports, countries, events)
+├── data/                # Static reference data (sports, countries, events)
 ├── hooks/               # useBookingRequests, useHosts
 ├── lib/                 # supabase.js — singleton Supabase client
 ├── pages/               # One file per route
@@ -170,9 +170,8 @@ supabase/
 |`/login`                          |Log in                                                 |
 |`/auth/confirm`                   |Email confirmation handler                             |
 |`/reset-password`                 |Password reset form                                    |
-|`/my-profile`                     |Edit personal profile                                  |
-|`/user-profile`                   |Logged-in user's public profile view                   |
-|`/user/:userId`                   |Another user's public profile                          |
+|`/edit-profile`                   |Edit personal profile                                  |
+|`/user/:userId`                   |Profile page (own or another user's)                   |
 |`/become-a-host`                  |Host onboarding                                        |
 |`/host-settings`                  |Manage host profile                                    |
 |`/history`                        |XP History — booking history, photo upload, reviews, share to Field|
@@ -181,7 +180,7 @@ supabase/
 |`/payment/:bookingRequestId`      |Payment page for an accepted booking                               |
 |`/chat/:bookingRequestId`         |In-app messaging for a booking                         |
 |`/dispute-response/:disputeId`    |Host dispute response form                             |
-|`/admin/disputes`                 |Admin dispute dashboard (requires `is_admin = true`)   |
+|`/admin`                          |Admin panel — disputes, CM, support (requires `is_admin = true`)|
 |`/follow`                         |Follow / connections                                   |
 |`/help`                           |Help centre                                            |
 |`/legal`                          |Legal hub — links to all legal pages                   |
@@ -197,17 +196,6 @@ supabase/
 |`/host-history`                   |→ redirects to `/history`                              |
 |`/buddy/:buddyId`                 |→ redirects to `/user/:buddyId`                        |
 |`*`                               |404 Not Found                                          |
-
------
-
-## Mock Data
-
-The prototype ships with 4 host buddies and 8 Field posts covering:
-
-**Hosts:** Cycling · Tennis · Running · Basketball  
-**Cities:** Lisbon · Porto · Barcelona · Berlin
-
-Host availability dates are generated dynamically relative to today so the booking calendar always shows upcoming slots.
 
 -----
 

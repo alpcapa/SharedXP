@@ -10,12 +10,12 @@ import HistoryPage from "./pages/HistoryPage";
 import FollowPage from "./pages/FollowPage";
 import HelpPage from "./pages/HelpPage";
 import LoginPage from "./pages/LoginPage";
-import MyProfilePage from "./pages/MyProfilePage";
+import EditProfilePage from "./pages/EditProfilePage";
 import SignUpPage from "./pages/SignUpPage";
 import PaymentPage from "./pages/PaymentPage";
 import ChatPage from "./pages/ChatPage";
 import DisputeResponsePage from "./pages/DisputeResponsePage";
-import AdminDisputesPage from "./pages/AdminDisputesPage";
+import AdminPage from "./pages/AdminPage";
 import ContentAndIntellectualPropertyPolicyPage from "./pages/ContentAndIntellectualPropertyPolicyPage";
 import DisclaimersPage from "./pages/DisclaimersPage";
 import LegalPage from "./pages/LegalPage";
@@ -27,8 +27,7 @@ import useAuth from "./context/AuthContext";
 import NotFoundPage from "./pages/NotFoundPage";
 import AboutPage from "./pages/AboutPage";
 import EventsPage from "./pages/EventsPage";
-import UserProfilePage from "./pages/UserProfilePage";
-import UnifiedProfilePage from "./pages/UnifiedProfilePage";
+import ProfilePage from "./pages/ProfilePage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import CancellationPolicyPage from "./pages/CancellationPolicyPage";
@@ -162,9 +161,8 @@ function App() {
       <Route path="/buddy/:buddyId" element={<BuddyRedirect />} />
       <Route path="/signup" element={<SignUpPage {...authActions} />} />
       <Route path="/login" element={<LoginPage {...authActions} />} />
-      <Route path="/my-profile" element={<MyProfilePage {...authActions} />} />
-      <Route path="/user-profile" element={<UserProfilePage {...authActions} />} />
-      <Route path="/user/:userId" element={<UnifiedProfilePage {...authActions} />} />
+      <Route path="/edit-profile" element={<EditProfilePage {...authActions} />} />
+      <Route path="/user/:userId" element={<ProfilePage {...authActions} />} />
       <Route path="/become-a-host" element={<HostPage {...authActions} />} />
       <Route path="/host-settings" element={<HostPage {...authActions} />} />
       <Route path="/history" element={<HistoryPage {...authActions} />} />
@@ -173,7 +171,7 @@ function App() {
       <Route path="/payment/:bookingRequestId" element={<PaymentPage {...authActions} />} />
       <Route path="/chat/:bookingRequestId" element={<ChatPage {...authActions} />} />
       <Route path="/dispute-response/:disputeId" element={<DisputeResponsePage {...authActions} />} />
-      <Route path="/admin/disputes" element={<AdminDisputesPage {...authActions} />} />
+      <Route path="/admin" element={<AdminPage {...authActions} />} />
       <Route path="/follow" element={<FollowPage {...authActions} />} />
       <Route path="/help" element={<HelpPage {...authActions} />} />
       <Route path="/the-field" element={<FieldPage {...authActions} />} />

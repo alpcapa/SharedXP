@@ -1009,7 +1009,7 @@ const SupportPanel = ({ currentUser, onRead }) => {
                             CM · {cmProfile.status}
                           </span>
                           <a
-                            href={`/admin/disputes?tab=cm&subtab=active&search=${encodeURIComponent(matchedProfile.full_name || `${matchedProfile.first_name ?? ""} ${matchedProfile.last_name ?? ""}`.trim() || matchedProfile.email)}`}
+                            href={`/admin?tab=cm&subtab=active&search=${encodeURIComponent(matchedProfile.full_name || `${matchedProfile.first_name ?? ""} ${matchedProfile.last_name ?? ""}`.trim() || matchedProfile.email)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="support-cm-link"
@@ -1141,7 +1141,7 @@ const fmtDate = (iso) =>
   iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" })
           .format(new Date(iso)) : "—";
 
-const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
+const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const [searchParams] = useSearchParams();
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1398,4 +1398,4 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
   );
 };
 
-export default AdminDisputesPage;
+export default AdminPage;

@@ -123,7 +123,7 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
           {isMenuOpen && (
             <div className="user-dropdown" role="menu">
               <p className="user-dropdown-name">{currentUser.fullName}</p>
-              <Link to="/user-profile" className="user-dropdown-link" role="menuitem">
+              <Link to={`/user/${currentUser.id}`} className="user-dropdown-link" role="menuitem">
                 My Profile
               </Link>
               <Link to="/history" className="user-dropdown-link user-dropdown-xp-history" role="menuitem">
@@ -149,7 +149,7 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
                 {navHostLabel}
               </Link>
               {currentUser.isAdmin && (
-                <Link to="/admin/disputes" className="user-dropdown-link user-dropdown-admin" role="menuitem">
+                <Link to="/admin" className="user-dropdown-link user-dropdown-admin" role="menuitem">
                   Admin Panel
                 </Link>
               )}
