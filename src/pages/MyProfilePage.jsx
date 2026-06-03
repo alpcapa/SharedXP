@@ -469,14 +469,8 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
         </section>
         <main className="middle-section edit-profile-page">
           <div className="guest-profile-header">
-            <img src={profilePhoto} alt={currentUser.fullName} className="guest-profile-photo" />
             <div className="guest-profile-info">
-              <h2 className="guest-profile-name">
-                {currentUser.fullName}
-                {currentUser.isHost && (
-                  <Link to="/host-settings" className="verified-host-badge">✅ Verified Host</Link>
-                )}
-              </h2>
+              <h2 className="guest-profile-name">{currentUser.fullName}</h2>
             </div>
             <div className="unified-profile-own-actions">
               <Link to={`/user/${currentUser.id}`} className="btn btn-light">My Profile</Link>
