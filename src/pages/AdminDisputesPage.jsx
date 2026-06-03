@@ -684,7 +684,7 @@ const CMManagementPanel = ({ currentUser }) => {
 };
 
 // ── Support inbox panel ────────────────────────────────────────────────────────
-const CLOSED_STATUSES = new Set(["replied", "resolved"]);
+const CLOSED_STATUSES = new Set(["replied", "resolved", "autoreplied"]);
 
 const SupportPanel = () => {
   const [messages, setMessages] = useState([]);
@@ -792,8 +792,10 @@ const SupportPanel = () => {
       read: "support-badge-read",
       replied: "support-badge-replied",
       resolved: "support-badge-resolved",
+      autoreplied: "support-badge-autoreplied",
     };
-    return <span className={`support-status-badge ${map[status] ?? ""}`}>{status}</span>;
+    const labels = { autoreplied: "auto-replied" };
+    return <span className={`support-status-badge ${map[status] ?? ""}`}>{labels[status] ?? status}</span>;
   };
 
   const fmtMsgDate = (iso) =>
