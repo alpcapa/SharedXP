@@ -63,8 +63,7 @@ const HelpPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>1. Contact Support</h2>
               <p>
-                Use the form below or email us directly at{" "}
-                <a href="mailto:support@sharedxp.com">support@sharedxp.com</a>.
+                Use the form below to reach our support team. We respond to all submissions as quickly as possible.
               </p>
               <ul>
                 <li>Share clear details and screenshots when possible.</li>

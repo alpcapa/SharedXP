@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 
@@ -198,8 +199,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>12. Changes and Contact</h2>
               <p>
-                SharedXP may update these terms to reflect legal or operational changes. Questions can be submitted
-                through official support/legal channels on the platform.
+                SharedXP may update these terms to reflect legal or operational changes. Questions can be submitted through our <Link to="/help">Help Center</Link>.
               </p>
             </section>
           </article>
