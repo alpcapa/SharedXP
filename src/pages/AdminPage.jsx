@@ -344,8 +344,8 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
     ["pending", "interview"].includes(a.status) &&
     matchesCmSearch(getName(a.applicant), a.applicant?.email)
   );
-  const closedApps = applications.filter((a) =>
-    ["accepted", "declined"].includes(a.status) &&
+  const declinedApps = applications.filter((a) =>
+    a.status === "declined" &&
     matchesCmSearch(getName(a.applicant), a.applicant?.email)
   );
   const filteredCmProfiles = cmProfiles.filter((cm) =>
@@ -393,6 +393,13 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           onClick={() => setSubTab("active")}
         >
           Active CMs {pendingCommsTotal > 0 && <span className="cm-admin-count">{pendingCommsTotal}</span>}
+        </button>
+        <button
+          type="button"
+          className={`admin-tab${subTab === "declined" ? " admin-tab-active" : ""}`}
+          onClick={() => setSubTab("declined")}
+        >
+          Declined {declinedApps.length > 0 && <span className="cm-admin-count">{declinedApps.length}</span>}
         </button>
         </div>
         <div className="support-filters">
@@ -498,23 +505,51 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
             );
           })}
 
-          {closedApps.length > 0 && (
-            <details className="cm-admin-closed">
-              <summary>Accepted / Declined ({closedApps.length})</summary>
-              {closedApps.map((app) => (
-                <article key={app.id} className="cm-admin-card cm-admin-card-closed">
-                  <div className="cm-admin-card-header">
-                    <div>
-                      <strong>{getName(app.applicant)}</strong>
-                      <span className="cm-admin-email">{app.applicant?.email}</span>
-                    </div>
-                    {statusBadge(app.status)}
+        </div>
+      )}
+
+      {subTab === "declined" && (
+        <div>
+          <p className="admin-subtitle">Applications that were declined.</p>
+          {declinedApps.length === 0 && <p>No declined applications.</p>}
+          {declinedApps.map((app) => {
+            const isExpanded = expandedIds.has(app.id);
+            return (
+              <article key={app.id} className="cm-admin-card">
+                <button
+                  type="button"
+                  className="cm-admin-card-summary"
+                  onClick={() => toggleExpand(app.id)}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="cm-admin-card-summary-left">
+                    <strong>{getName(app.applicant)}</strong>
+                    <span className="cm-admin-email">{app.applicant?.email}</span>
+                    <span className="cm-admin-location">{app.city}, {app.country}</span>
                   </div>
-                  {app.admin_notes && <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />}
-                </article>
-              ))}
-            </details>
-          )}
+                  <div className="cm-admin-card-summary-right">
+                    {statusBadge(app.status)}
+                    <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+                  </div>
+                </button>
+                {isExpanded && (
+                  <div className="cm-admin-card-body">
+                    <div className="cm-admin-fields">
+                      <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
+                      <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
+                      {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
+                    </div>
+                    {app.admin_notes && (
+                      <div className="cm-admin-notes-row">
+                        <p className="admin-dispute-label">Admin note history</p>
+                        <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
       )}
 
