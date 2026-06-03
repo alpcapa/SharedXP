@@ -4,6 +4,7 @@
 import { supabase } from "../lib/supabase";
 
 const MAX_RATING = 5;
+const LOCAL_FALLBACK_KEY = "sharedxp:field_posts_fallback";
 
 const isMissingRatingColumnError = (error) => {
   // 42703 = PostgreSQL "undefined_column"; PGRST204 = PostgREST schema-cache miss.
@@ -340,5 +341,31 @@ export const lookupFieldPost = async (sourceRequestId, posterId) => {
   } catch (error) {
     console.error("[fieldPosts] lookup exception:", error);
     return null;
+  }
+};
+
+/**
+ * One-time migration: push any posts saved to localStorage by the old fallback
+ * path into the DB, then clear the localStorage key.
+ * Call this fire-and-forget after the user session is established.
+ */
+export const syncLocalFallbackPosts = async (userId) => {
+  if (!userId) return;
+  try {
+    const raw = window.localStorage.getItem(LOCAL_FALLBACK_KEY);
+    if (!raw) return;
+    const posts = JSON.parse(raw);
+    if (!Array.isArray(posts) || posts.length === 0) {
+      window.localStorage.removeItem(LOCAL_FALLBACK_KEY);
+      return;
+    }
+    // Only sync posts that belong to this user — RLS would reject others anyway.
+    const ownPosts = posts.filter((p) => p.posterId === userId);
+    if (ownPosts.length > 0) {
+      await Promise.allSettled(ownPosts.map((p) => saveFieldPost(p)));
+    }
+    window.localStorage.removeItem(LOCAL_FALLBACK_KEY);
+  } catch (e) {
+    console.error("[fieldPosts] local fallback sync error:", e);
   }
 };
