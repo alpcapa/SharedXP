@@ -783,14 +783,14 @@ function buildCmStatusChange(
 
 // ── Resend sender ──────────────────────────────────────────────────────────
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(to: string, subject: string, html: string, from = FROM_EMAIL): Promise<void> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${RESEND_API_KEY}`,
     },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+    body: JSON.stringify({ from, to, subject, html }),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -819,7 +819,7 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId } = body as {
+  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, supportMessageId, subject, message, replyTo } = body as {
     emailType: string;
     bookingRequestId?: string;
     disputeId?: string;
@@ -828,6 +828,10 @@ serve(async (req: Request): Promise<Response> => {
     adminNotes?: string;
     inviteCode?: string;
     commissionId?: string;
+    supportMessageId?: string;
+    subject?: string;
+    message?: string;
+    replyTo?: string;
   };
 
   if (!emailType) {
@@ -1111,6 +1115,23 @@ serve(async (req: Request): Promise<Response> => {
           ...emails.map((e) => sendEmail(e.to, e.subject, e.html)),
           sendEmail(CS_EMAIL, `[Dispute resolved — paid host] ${emails[0].subject}`, emails[0].html),
         ]);
+        break;
+      }
+      case "support_reply": {
+        if (!supportMessageId || !replyTo || !subject || !message) {
+          return new Response(JSON.stringify({ error: "support_reply requires supportMessageId, replyTo, subject, message" }), {
+            status: 400,
+            headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+          });
+        }
+        const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:40px auto;padding:0 20px">
+<p style="margin:0 0 16px">${message.replace(/\n/g, "<br/>")}</p>
+<hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0"/>
+<p style="font-size:12px;color:#888">SharedXP Support · <a href="https://sharedxp.com">sharedxp.com</a></p>
+</body></html>`;
+        const SUPPORT_FROM = `SharedXP Support <support@sharedxp.com>`;
+        await sendEmail(replyTo, subject, html, SUPPORT_FROM);
+        await db.from("support_messages").update({ status: "replied" }).eq("id", supportMessageId);
         break;
       }
       default:

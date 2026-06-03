@@ -133,6 +133,14 @@ const CMManagementPanel = ({ currentUser }) => {
   const [emailSubjects, setEmailSubjects] = useState({});
   const [actionBusy, setActionBusy] = useState(null);
   const [cmActionMode, setCmActionMode] = useState(null); // { id, action }
+  const [expandedIds, setExpandedIds] = useState(new Set());
+
+  const toggleExpand = (id) =>
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   const adminName = currentUser?.fullName ||
     `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() ||
     "Admin";
@@ -376,70 +384,83 @@ const CMManagementPanel = ({ currentUser }) => {
           {pendingApps.length === 0 && <p>No open applications.</p>}
           {pendingApps.map((app) => {
             const isInterview = app.status === "interview";
+            const isExpanded = expandedIds.has(app.id);
             return (
               <article key={app.id} className="cm-admin-card">
-                <div className="cm-admin-card-header">
-                  <div>
+                <button
+                  type="button"
+                  className="cm-admin-card-summary"
+                  onClick={() => toggleExpand(app.id)}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="cm-admin-card-summary-left">
                     <strong>{getName(app.applicant)}</strong>
                     <span className="cm-admin-email">{app.applicant?.email}</span>
                     <span className="cm-admin-location">{app.city}, {app.country}</span>
                   </div>
-                  {statusBadge(app.status)}
-                </div>
-                <div className="cm-admin-fields">
-                  <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
-                  <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
-                  {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
-                </div>
-                {app.admin_notes && (
-                  <div className="cm-admin-notes-row">
-                    <p className="admin-dispute-label">Admin note history</p>
-                    <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />
+                  <div className="cm-admin-card-summary-right">
+                    {statusBadge(app.status)}
+                    <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+                  </div>
+                </button>
+                {isExpanded && (
+                  <div className="cm-admin-card-body">
+                    <div className="cm-admin-fields">
+                      <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
+                      <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
+                      {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
+                    </div>
+                    {app.admin_notes && (
+                      <div className="cm-admin-notes-row">
+                        <p className="admin-dispute-label">Admin note history</p>
+                        <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />
+                      </div>
+                    )}
+                    <div className="cm-admin-notes-row">
+                      <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">
+                        {isInterview
+                          ? "Interview outcome / review (required to accept or decline)"
+                          : "Reason (required — saved to record only, not sent in email)"}
+                      </label>
+                      <textarea
+                        id={`notes-${app.id}`}
+                        className="cm-admin-notes"
+                        rows={2}
+                        placeholder={isInterview
+                          ? "How did the interview go? Note key impressions before accepting or declining…"
+                          : "Internal notes for this application…"}
+                        value={getNote(app.id)}
+                        onChange={(e) => setNote(app.id, e.target.value)}
+                      />
+                    </div>
+                    <div className="admin-dispute-actions">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        disabled={busy(app.id) || isInterview}
+                        onClick={() => moveToInterview(app)}
+                      >
+                        {busy(app.id) ? "…" : "Move to Interview"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={busy(app.id)}
+                        onClick={() => acceptApplication(app)}
+                      >
+                        {busy(app.id) ? "…" : "Accept & Welcome"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        disabled={busy(app.id)}
+                        onClick={() => declineApplication(app)}
+                      >
+                        {busy(app.id) ? "…" : "Decline"}
+                      </button>
+                    </div>
                   </div>
                 )}
-                <div className="cm-admin-notes-row">
-                  <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">
-                    {isInterview
-                      ? "Interview outcome / review (required to accept or decline)"
-                      : "Reason (required — saved to record only, not sent in email)"}
-                  </label>
-                  <textarea
-                    id={`notes-${app.id}`}
-                    className="cm-admin-notes"
-                    rows={2}
-                    placeholder={isInterview
-                      ? "How did the interview go? Note key impressions before accepting or declining…"
-                      : "Internal notes for this application…"}
-                    value={getNote(app.id)}
-                    onChange={(e) => setNote(app.id, e.target.value)}
-                  />
-                </div>
-                <div className="admin-dispute-actions">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    disabled={busy(app.id) || isInterview}
-                    onClick={() => moveToInterview(app)}
-                  >
-                    {busy(app.id) ? "…" : "Move to Interview"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    disabled={busy(app.id)}
-                    onClick={() => acceptApplication(app)}
-                  >
-                    {busy(app.id) ? "…" : "Accept & Welcome"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    disabled={busy(app.id)}
-                    onClick={() => declineApplication(app)}
-                  >
-                    {busy(app.id) ? "…" : "Decline"}
-                  </button>
-                </div>
               </article>
             );
           })}
@@ -471,16 +492,30 @@ const CMManagementPanel = ({ currentUser }) => {
           {cmProfiles.map((cm) => {
             const s = cmStats(cm);
             const pendingComms = (cm.cm_commissions ?? []).filter((c) => c.status === "pending");
+            const isExpanded = expandedIds.has(cm.id);
             return (
               <article key={cm.id} className="cm-admin-card">
-                <div className="cm-admin-card-header">
-                  <div>
+                <button
+                  type="button"
+                  className="cm-admin-card-summary"
+                  onClick={() => toggleExpand(cm.id)}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="cm-admin-card-summary-left">
                     <strong>{getName(cm.owner)}</strong>
                     <span className="cm-admin-email">{cm.owner?.email}</span>
                     <code className="cm-invite-code-pill">{cm.invite_code}</code>
                   </div>
-                  {statusBadge(cm.status)}
-                </div>
+                  <div className="cm-admin-card-summary-right">
+                    {statusBadge(cm.status)}
+                    {pendingComms.length > 0 && (
+                      <span className="cm-admin-count">{pendingComms.length} pending</span>
+                    )}
+                    <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+                  </div>
+                </button>
+                {isExpanded && (
+                  <div className="cm-admin-card-body">
                 <div className="cm-admin-stats-row">
                   <span><strong>{s.referrals}</strong> referrals</span>
                   <span><strong>{s.pending}</strong> pending commission</span>
@@ -637,11 +672,208 @@ const CMManagementPanel = ({ currentUser }) => {
                     )}
                   </div>
                 )}
+                  </div>
+                )}
               </article>
             );
           })}
         </div>
       )}
+    </div>
+  );
+};
+
+// ── Support inbox panel ────────────────────────────────────────────────────────
+const SupportPanel = () => {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedIds, setExpandedIds] = useState(new Set());
+  const [replyMode, setReplyMode] = useState(null); // message id
+  const [replySubject, setReplySubject] = useState("");
+  const [replyBody, setReplyBody] = useState("");
+  const [busy, setBusy] = useState(null);
+
+  const fetchMessages = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("support_messages")
+      .select("*")
+      .order("received_at", { ascending: false });
+    setMessages(data ?? []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchMessages(); }, [fetchMessages]);
+
+  const toggleExpand = async (msg) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      next.has(msg.id) ? next.delete(msg.id) : next.add(msg.id);
+      return next;
+    });
+    if (msg.status === "unread") {
+      await supabase.from("support_messages").update({ status: "read" }).eq("id", msg.id);
+      setMessages((prev) => prev.map((m) => m.id === msg.id ? { ...m, status: "read" } : m));
+    }
+  };
+
+  const markResolved = async (id) => {
+    await supabase.from("support_messages").update({ status: "resolved" }).eq("id", id);
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, status: "resolved" } : m));
+  };
+
+  const sendReply = async (msg) => {
+    if (!replySubject.trim()) { alert("Please enter a subject."); return; }
+    if (!replyBody.trim()) { alert("Please enter a message."); return; }
+    setBusy(msg.id);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          emailType: "support_reply",
+          supportMessageId: msg.id,
+          replyTo: msg.reply_to || msg.from_email,
+          subject: replySubject,
+          message: replyBody,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        alert(`Failed: ${j.error ?? res.status}`);
+      } else {
+        setMessages((prev) => prev.map((m) => m.id === msg.id ? { ...m, status: "replied" } : m));
+        setReplyMode(null);
+        setReplySubject("");
+        setReplyBody("");
+      }
+    } catch (e) {
+      alert(`Error: ${e.message}`);
+    }
+    setBusy(null);
+  };
+
+  const statusBadge = (status) => {
+    const map = {
+      unread: "support-badge-unread",
+      read: "support-badge-read",
+      replied: "support-badge-replied",
+      resolved: "support-badge-resolved",
+    };
+    return <span className={`support-status-badge ${map[status] ?? ""}`}>{status}</span>;
+  };
+
+  const unreadCount = messages.filter((m) => m.status === "unread").length;
+
+  if (loading) return <p style={{ marginTop: 24 }}>Loading messages…</p>;
+
+  return (
+    <div className="support-panel">
+      <p className="admin-subtitle">
+        Emails sent to support@sharedxp.com via Resend inbound routing.
+        {unreadCount > 0 && <strong> {unreadCount} unread.</strong>}
+      </p>
+      {messages.length === 0 && <p>No support messages yet.</p>}
+      {messages.map((msg) => {
+        const isExpanded = expandedIds.has(msg.id);
+        const isReplying = replyMode === msg.id;
+        return (
+          <article key={msg.id} className={`cm-admin-card${msg.status === "unread" ? " support-card-unread" : ""}`}>
+            <button
+              type="button"
+              className="cm-admin-card-summary"
+              onClick={() => toggleExpand(msg)}
+              aria-expanded={isExpanded}
+            >
+              <div className="cm-admin-card-summary-left">
+                <strong>{msg.from_name || msg.from_email}</strong>
+                {msg.from_name && <span className="cm-admin-email">{msg.from_email}</span>}
+                <span className="support-subject">{msg.subject}</span>
+              </div>
+              <div className="cm-admin-card-summary-right">
+                {statusBadge(msg.status)}
+                <span className="cm-admin-email" style={{ whiteSpace: "nowrap" }}>
+                  {new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+                    .format(new Date(msg.received_at))}
+                </span>
+                <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+              </div>
+            </button>
+            {isExpanded && (
+              <div className="cm-admin-card-body">
+                <div className="support-body">
+                  {msg.body_text
+                    ? <pre className="support-body-text">{msg.body_text}</pre>
+                    : msg.body_html
+                    ? <div className="support-body-html" dangerouslySetInnerHTML={{ __html: msg.body_html }} />
+                    : <p className="cm-admin-email">(no body)</p>
+                  }
+                </div>
+                {isReplying ? (
+                  <div className="cm-admin-notes-row" style={{ marginTop: 16 }}>
+                    <p className="admin-dispute-label">Reply to {msg.reply_to || msg.from_email}</p>
+                    <input
+                      type="text"
+                      className="cm-admin-email-subject"
+                      placeholder="Subject…"
+                      value={replySubject}
+                      onChange={(e) => setReplySubject(e.target.value)}
+                      autoFocus
+                    />
+                    <textarea
+                      className="cm-admin-notes"
+                      rows={5}
+                      placeholder="Your reply…"
+                      value={replyBody}
+                      onChange={(e) => setReplyBody(e.target.value)}
+                    />
+                    <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                      <button
+                        type="button"
+                        className="btn btn-light"
+                        onClick={() => { setReplyMode(null); setReplySubject(""); setReplyBody(""); }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={busy === msg.id}
+                        onClick={() => sendReply(msg)}
+                      >
+                        {busy === msg.id ? "Sending…" : "Send Reply"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="admin-dispute-actions" style={{ marginTop: 12 }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => {
+                        setReplyMode(msg.id);
+                        setReplySubject(`Re: ${msg.subject}`);
+                        setReplyBody("");
+                      }}
+                    >
+                      Reply
+                    </button>
+                    {msg.status !== "resolved" && (
+                      <button
+                        type="button"
+                        className="btn btn-light"
+                        onClick={() => markResolved(msg.id)}
+                      >
+                        Mark resolved
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </article>
+        );
+      })}
     </div>
   );
 };
@@ -656,6 +888,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
   const [resolving, setResolving] = useState(null);
   const [activeTab, setActiveTab] = useState("disputes");
   const [cmCounts, setCmCounts] = useState({ pendingApps: 0, pendingComms: 0 });
+  const [unreadSupport, setUnreadSupport] = useState(0);
   const { resolveDispute } = useBookingRequests(currentUser);
 
   const fetchDisputes = useCallback(async () => {
@@ -689,14 +922,23 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
     setCmCounts({ pendingApps: appRes.count ?? 0, pendingComms: commRes.count ?? 0 });
   }, []);
 
+  const fetchUnreadSupport = useCallback(async () => {
+    const { count } = await supabase
+      .from("support_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "unread");
+    setUnreadSupport(count ?? 0);
+  }, []);
+
   useEffect(() => {
     if (currentUser?.isAdmin) {
       fetchDisputes();
       fetchCmCounts();
+      fetchUnreadSupport();
     } else {
       setLoading(false);
     }
-  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts]);
+  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts, fetchUnreadSupport]);
 
   const handleResolve = async (disputeId, resolution) => {
     if (!confirm(`Resolve as "${resolution}"?`)) return;
@@ -783,6 +1025,14 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
             {(cmCounts.pendingApps + cmCounts.pendingComms) > 0 && (
               <span className="cm-admin-count">{cmCounts.pendingApps + cmCounts.pendingComms}</span>
             )}
+          </button>
+          <button
+            type="button"
+            className={`admin-tab${activeTab === "support" ? " admin-tab-active" : ""}`}
+            onClick={() => setActiveTab("support")}
+          >
+            Support
+            {unreadSupport > 0 && <span className="cm-admin-count">{unreadSupport}</span>}
           </button>
         </div>
 
@@ -880,6 +1130,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
         )}
 
         {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} />}
+        {activeTab === "support" && <SupportPanel />}
         </main>
         <SiteFooter />
       </div>
