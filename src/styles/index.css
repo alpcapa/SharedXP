@@ -6025,11 +6025,21 @@ body {
 
 .unified-profile-own-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
+  flex-wrap: wrap;
   margin-left: auto;
   align-self: flex-start;
   flex-shrink: 0;
+}
+
+.edit-profile-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-bottom: 16px;
 }
 
 /* Card sections inside the profile page already have 10px side margin from the

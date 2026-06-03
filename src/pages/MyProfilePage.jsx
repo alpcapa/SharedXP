@@ -468,7 +468,7 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
         <main className="middle-section edit-profile-page">
-          <div className="unified-profile-own-actions">
+          <div className="edit-profile-actions">
             <Link to={`/user/${currentUser.id}`} className="btn btn-light">My Profile</Link>
             {currentUser.isHost && (
               <Link to="/host-settings" className="btn btn-light">Host Settings</Link>
