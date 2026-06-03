@@ -972,7 +972,7 @@ const SupportPanel = () => {
                             CM · {cmProfile.status}
                           </span>
                           <a
-                            href="/admin?tab=cm"
+                            href="/admin/disputes?tab=cm"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="support-cm-link"
