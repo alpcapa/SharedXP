@@ -783,14 +783,14 @@ function buildCmStatusChange(
 
 // ── Resend sender ──────────────────────────────────────────────────────────
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(to: string, subject: string, html: string, from = FROM_EMAIL): Promise<void> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${RESEND_API_KEY}`,
     },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+    body: JSON.stringify({ from, to, subject, html }),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -1129,7 +1129,8 @@ serve(async (req: Request): Promise<Response> => {
 <hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0"/>
 <p style="font-size:12px;color:#888">SharedXP Support · <a href="https://sharedxp.com">sharedxp.com</a></p>
 </body></html>`;
-        await sendEmail(replyTo, subject, html);
+        const SUPPORT_FROM = `SharedXP Support <support@sharedxp.com>`;
+        await sendEmail(replyTo, subject, html, SUPPORT_FROM);
         await db.from("support_messages").update({ status: "replied" }).eq("id", supportMessageId);
         break;
       }
