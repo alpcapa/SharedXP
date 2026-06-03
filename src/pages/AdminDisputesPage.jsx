@@ -1043,6 +1043,18 @@ const SupportPanel = () => {
                             <p className="cm-admin-email">No body content captured for this message.</p>
                           )}
                         </div>
+                        {(msg.admin_replies ?? []).map((r, i) => (
+                          <div key={i} className="support-admin-reply">
+                            <div className="support-admin-reply-header">
+                              <span className="support-admin-reply-label">SharedXP Support</span>
+                              <span className="cm-admin-email" style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
+                                {fmtMsgDate(r.sent_at)}
+                              </span>
+                            </div>
+                            <p className="support-admin-reply-subject">{r.subject}</p>
+                            <pre className="support-body-text">{r.body}</pre>
+                          </div>
+                        ))}
                         {isReplying ? (
                           <div className="cm-admin-notes-row" style={{ marginTop: 12 }}>
                             <p className="admin-dispute-label">Reply to {msg.reply_to || msg.from_email}</p>

@@ -8057,6 +8057,32 @@ body {
   flex-wrap: wrap;
   margin-bottom: 10px;
 }
+.support-admin-reply {
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #f0f7ee;
+  margin-top: 8px;
+}
+.support-admin-reply-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.support-admin-reply-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2e7d32;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.support-admin-reply-subject {
+  font-size: 12px;
+  color: #555;
+  margin: 0 0 8px;
+  font-style: italic;
+}
 .support-reply-signature {
   font-size: 13px;
   color: #aaa;

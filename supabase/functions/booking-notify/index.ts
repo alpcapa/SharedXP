@@ -990,7 +990,17 @@ serve(async (req: Request): Promise<Response> => {
 </body>
 </html>`;
     await sendEmail(replyTo, subject, html, SUPPORT_FROM);
-    await db.from("support_messages").update({ status: "replied" }).eq("id", supportMessageId);
+    // Append reply to admin_replies so the thread is visible in the admin UI
+    const { data: existing } = await db
+      .from("support_messages")
+      .select("admin_replies")
+      .eq("id", supportMessageId)
+      .maybeSingle();
+    const prevReplies = Array.isArray(existing?.admin_replies) ? existing.admin_replies : [];
+    await db.from("support_messages").update({
+      status: "replied",
+      admin_replies: [...prevReplies, { body: message, subject, sent_at: new Date().toISOString() }],
+    }).eq("id", supportMessageId);
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
