@@ -6881,8 +6881,9 @@ body {
     display: none;
   }
 
-  /* Shrink header brand on mobile */
+  /* Nav is gone — keep logo and auth on one line */
   .site-header {
+    flex-wrap: nowrap;
     padding: 12px 16px;
     border-radius: 14px;
   }
