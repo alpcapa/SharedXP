@@ -544,7 +544,9 @@ body {
 
 .auth-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
+  min-height: 40px;
 }
 
 .auth-link {
