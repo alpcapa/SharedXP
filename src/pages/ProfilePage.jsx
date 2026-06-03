@@ -175,9 +175,25 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const _isOwnProfile = currentUser?.id === userId;
+
   // ── State ──────────────────────────────────────────────────────────────────
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(() => {
+    if (!_isOwnProfile || !currentUser) return null;
+    return {
+      id: currentUser.id,
+      full_name: currentUser.fullName,
+      first_name: currentUser.firstName || "",
+      last_name: currentUser.lastName || "",
+      photo_url: currentUser.photo || "",
+      signed_up_at: currentUser.signedUpAt || "",
+      is_host: currentUser.isHost || false,
+      birthday: currentUser.birthday || "",
+      city: currentUser.city || "",
+      country: currentUser.country || "",
+    };
+  });
+  const [loading, setLoading] = useState(!_isOwnProfile || !currentUser);
   const [activeTab, setActiveTab] = useState("guest");
 
   // CM dashboard (own profile only)
@@ -193,7 +209,32 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const [guestPhotosPage, setGuestPhotosPage] = useState(0);
 
   // Host role
-  const [hostData, setHostData] = useState(null);
+  const [hostData, setHostData] = useState(() => {
+    if (!_isOwnProfile || !currentUser?.isHost || !currentUser?.hostProfile) return null;
+    const hp = currentUser.hostProfile;
+    return {
+      id: currentUser.id,
+      name: currentUser.fullName,
+      fullName: currentUser.fullName,
+      image: currentUser.photo || "",
+      birthday: currentUser.birthday || "",
+      signedUpAt: currentUser.signedUpAt || "",
+      city: hp.city || "",
+      country: hp.country || "",
+      paused: hp.pauseHosting || false,
+      languages: (currentUser.languages || []).filter(Boolean),
+      sports: (hp.sports || [])
+        .filter((s) => !s.paused)
+        .map((s) => ({
+          ...s,
+          availableDates: generateAvailableDates(s.availability?.days),
+          availableTimes: generateTimeSlots(
+            s.availability?.startTime || "09:00",
+            s.availability?.endTime || "18:00"
+          ),
+        })),
+    };
+  });
   const [hostReviews, setHostReviews] = useState([]);
   const [hostReviewsPage, setHostReviewsPage] = useState(0);
   const [hostPhotosPage, setHostPhotosPage] = useState(0);
