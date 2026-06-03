@@ -8060,7 +8060,6 @@ body {
 .support-reply-signature {
   font-size: 13px;
   color: #aaa;
-  line-height: 1.7;
   padding: 10px 12px;
   border: 1px dashed #e0e0d8;
   border-top: none;
@@ -8068,7 +8067,12 @@ body {
   background: #fafaf8;
   pointer-events: none;
   user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
+.support-reply-sig-line { display: block; }
+.support-reply-sig-name { display: block; font-weight: 600; color: #999; }
 .support-cm-link {
   font-size: 12px;
   color: #555;

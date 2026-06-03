@@ -84,11 +84,9 @@ async function sendAutoReply(toEmail: string, toName: string, originalSubject: s
           ${p("Unfortunately we are unable to respond to emails sent directly to support@sharedxp.com.")}
           ${p(`Please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;font-weight:600;">Help Center</a> to reach us — our contact form goes directly to our support team.`)}
           ${p("Thank you for your understanding.")}
-          <hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0 20px"/>
-          <p style="margin:0;font-size:14px;line-height:1.8;color:#444;">
-            Sincerely,<br/>
-            <strong>SharedXP Support</strong>
-          </p>
+          <hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0 16px"/>
+          <p style="margin:0 0 4px;font-size:14px;color:#444;">Sincerely,</p>
+          <p style="margin:0;font-size:14px;font-weight:700;color:#444;">SharedXP Support</p>
         </td></tr>
         <tr><td style="background:#f9f9f9;padding:16px 32px;border-top:1px solid #eeeeee;">
           <p style="margin:0;font-size:12px;color:#aaa;">
