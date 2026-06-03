@@ -959,11 +959,38 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
     const SUPPORT_FROM = `SharedXP Support <support@sharedxp.com>`;
-    const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:40px auto;padding:0 20px">
-<p style="margin:0 0 16px">${message.replace(/\n/g, "<br/>")}</p>
-<hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0"/>
-<p style="font-size:12px;color:#888">SharedXP Support · <a href="https://sharedxp.com">sharedxp.com</a></p>
-</body></html>`;
+    const bodyLines = String(message).split("\n").map((l) =>
+      `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">${l || "&nbsp;"}</p>`
+    ).join("");
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+        <tr><td style="background:#1a1a1a;padding:20px 32px;">
+          <span style="font-size:18px;font-weight:700;color:#ffffff;">SharedXP Support</span>
+        </td></tr>
+        <tr><td style="padding:32px;">
+          ${bodyLines}
+          <hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0 20px"/>
+          <p style="margin:0;font-size:14px;line-height:1.8;color:#444;">
+            Sincerely,<br/>
+            <strong>SharedXP Support</strong>
+          </p>
+        </td></tr>
+        <tr><td style="background:#f9f9f9;padding:16px 32px;border-top:1px solid #eeeeee;">
+          <p style="margin:0;font-size:12px;color:#aaa;">
+            © ${new Date().getFullYear()} SharedXP &nbsp;·&nbsp;
+            <a href="${APP_URL}/help" style="color:#aaa;text-decoration:none;">Help Center</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
     await sendEmail(replyTo, subject, html, SUPPORT_FROM);
     await db.from("support_messages").update({ status: "replied" }).eq("id", supportMessageId);
     return new Response(JSON.stringify({ ok: true }), {

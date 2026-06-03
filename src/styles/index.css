@@ -7750,6 +7750,10 @@ body {
   resize: vertical;
   box-sizing: border-box;
 }
+.cm-admin-notes-row:has(.support-reply-signature) .cm-admin-notes {
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+}
 .cm-admin-email-subject {
   width: 100%;
   border: 1px solid #d8d8d0;
@@ -8052,6 +8056,18 @@ body {
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 10px;
+}
+.support-reply-signature {
+  font-size: 13px;
+  color: #aaa;
+  line-height: 1.7;
+  padding: 10px 12px;
+  border: 1px dashed #e0e0d8;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: #fafaf8;
+  pointer-events: none;
+  user-select: none;
 }
 .support-cm-link {
   font-size: 12px;

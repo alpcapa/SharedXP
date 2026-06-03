@@ -1061,6 +1061,9 @@ const SupportPanel = () => {
                               value={replyBody}
                               onChange={(e) => setReplyBody(e.target.value)}
                             />
+                            <div className="support-reply-signature">
+                              Sincerely,<br />SharedXP Support
+                            </div>
                             <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
                               <button
                                 type="button"
