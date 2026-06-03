@@ -5709,6 +5709,13 @@ body {
   gap: 4px;
   border-bottom: 2px solid #e8e9e4;
   margin-bottom: 28px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.admin-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .admin-tab {
@@ -5722,6 +5729,8 @@ body {
   margin-bottom: -2px;
   cursor: pointer;
   font-family: inherit;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .admin-tab-active {
