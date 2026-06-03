@@ -66,7 +66,7 @@ function extractName(raw: string): string {
 async function sendAutoReply(toEmail: string, toName: string, originalSubject: string): Promise<void> {
   if (!RESEND_API_KEY || !toEmail) return;
 
-  const greeting = toName ? `Dear ${toName},` : "Dear sender,";
+  const greeting = toName ? `Dear ${toName},` : "Dear Sender,";
   const p = (text: string) =>
     `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">${text}</p>`;
   const html = `<!DOCTYPE html>
