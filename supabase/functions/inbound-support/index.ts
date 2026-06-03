@@ -67,14 +67,38 @@ async function sendAutoReply(toEmail: string, toName: string, originalSubject: s
   if (!RESEND_API_KEY || !toEmail) return;
 
   const greeting = toName ? `Dear ${toName},` : "Dear sender,";
-  const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:40px auto;padding:0 20px">
-<p style="margin:0 0 16px">${greeting}</p>
-<p style="margin:0 0 16px">Unfortunately we are unable to respond to emails sent directly to support@sharedxp.com.</p>
-<p style="margin:0 0 16px">Please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;font-weight:600;">Help Center</a> to reach us — our contact form goes directly to our support team.</p>
-<p style="margin:0 0 16px">Thank you for your understanding.</p>
-<hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0"/>
-<p style="font-size:12px;color:#888">SharedXP · <a href="${APP_URL}" style="color:#888;">sharedxp.com</a></p>
-</body></html>`;
+  const p = (text: string) =>
+    `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">${text}</p>`;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+        <tr><td style="background:#1a1a1a;padding:20px 32px;">
+          <span style="font-size:18px;font-weight:700;color:#ffffff;">SharedXP Support</span>
+        </td></tr>
+        <tr><td style="padding:32px;">
+          ${p(greeting)}
+          ${p("Unfortunately we are unable to respond to emails sent directly to support@sharedxp.com.")}
+          ${p(`Please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;font-weight:600;">Help Center</a> to reach us — our contact form goes directly to our support team.`)}
+          ${p("Thank you for your understanding.")}
+          <hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0 16px"/>
+          <p style="margin:0 0 4px;font-size:14px;color:#444;">Sincerely,</p>
+          <p style="margin:0;font-size:14px;font-weight:700;color:#444;">SharedXP Support</p>
+        </td></tr>
+        <tr><td style="background:#f9f9f9;padding:16px 32px;border-top:1px solid #eeeeee;">
+          <p style="margin:0;font-size:12px;color:#aaa;">
+            © ${new Date().getFullYear()} SharedXP &nbsp;·&nbsp;
+            <a href="${APP_URL}/help" style="color:#aaa;text-decoration:none;">Help Center</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 
   await fetch("https://api.resend.com/emails", {
     method: "POST",
