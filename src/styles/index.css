@@ -1307,6 +1307,7 @@ body {
 .auth-form input,
 .auth-form textarea,
 .auth-form select {
+  width: 100%;
   border: 1px solid #dbe1d8;
   border-radius: 12px;
   padding: 10px 12px;
