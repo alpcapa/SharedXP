@@ -2403,18 +2403,6 @@ body {
   margin-top: 10px;
 }
 
-.profile-name-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 6px;
-}
-
-.profile-name-row h2 {
-  margin: 0;
-  font-size: 24px;
-}
 
 .verified-host-badge {
   display: inline-flex;
@@ -6030,14 +6018,6 @@ body {
   flex-shrink: 0;
 }
 
-.edit-profile-actions {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  margin-bottom: 16px;
-}
 
 /* Card sections inside the profile page already have 10px side margin from the
    shared rule; remove it here since the parent now supplies that padding.
@@ -6097,14 +6077,6 @@ body {
   color: #1a1a1a;
   font-weight: 700;
   border-bottom-color: #1a1a1a;
-}
-
-.unified-profile-own-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-left: auto;
-  align-self: flex-start;
 }
 
 .unified-profile-own-actions .btn {
