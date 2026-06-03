@@ -710,9 +710,9 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
             </div>
             {isOwnProfile && (
               <div className="unified-profile-own-actions">
-                <Link to="/my-profile" className="btn btn-primary">Edit Profile</Link>
+                <Link to="/my-profile" className="btn btn-light">Edit Profile</Link>
                 {isHost
-                  ? <Link to="/host-settings" className="btn btn-light">Host Settings</Link>
+                  ? <Link to="/host-settings" className="btn btn-primary">Host Settings</Link>
                   : <Link to="/become-a-host" className="btn btn-light">Become Host</Link>
                 }
               </div>

@@ -468,19 +468,22 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
         <main className="middle-section edit-profile-page">
-          <div className="edit-profile-actions">
-            <Link to={`/user/${currentUser.id}`} className="btn btn-light">My Profile</Link>
-            {currentUser.isHost && (
-              <Link to="/host-settings" className="btn btn-light">Host Settings</Link>
-            )}
-          </div>
-          <div className="profile-name-row">
-            <h2>{currentUser.fullName}</h2>
-            {currentUser.isHost && (
-              <Link to="/host-settings" className="verified-host-badge">
-                ✅ Verified Host
-              </Link>
-            )}
+          <div className="guest-profile-header">
+            <img src={profilePhoto} alt={currentUser.fullName} className="guest-profile-photo" />
+            <div className="guest-profile-info">
+              <h2 className="guest-profile-name">
+                {currentUser.fullName}
+                {currentUser.isHost && (
+                  <Link to="/host-settings" className="verified-host-badge">✅ Verified Host</Link>
+                )}
+              </h2>
+            </div>
+            <div className="unified-profile-own-actions">
+              <Link to={`/user/${currentUser.id}`} className="btn btn-light">My Profile</Link>
+              {currentUser.isHost && (
+                <Link to="/host-settings" className="btn btn-primary">Host Settings</Link>
+              )}
+            </div>
           </div>
 
           <MyProfileForm
