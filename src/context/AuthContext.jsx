@@ -1075,8 +1075,6 @@ const { error } = await supabase.from("cm_applications").insert({
   user_id: currentUser.id,
   city: formData.city || currentUser.city || "",
   country: formData.country || currentUser.country || "",
-  phone: formData.phone || "",
-  profile_url: formData.profileUrl || "",
   sports_background: formData.sportsBackground || "",
   motivation: formData.motivation || "",
   contact_times: formData.contactTimes || "",

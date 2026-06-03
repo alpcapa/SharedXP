@@ -31,54 +31,13 @@ const fmtMonthYear = (iso) => {
 const fmtDate = (iso) =>
   iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso)) : "—";
 
+const fmtMoney = (amount, currency) => `${currency ?? ""} ${Number(amount ?? 0).toFixed(2)}`;
+
+const CM_STATUS_LABEL = { pending: "Pending", approved: "Approved", paid: "Paid" };
+const CM_STATUS_CLASS = { pending: "cm-status-pending", approved: "cm-status-approved", paid: "cm-status-paid" };
+
 const getCmName = (p) =>
   p ? p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "—" : "—";
-
-const fmtCurrency = (amount, currency) => {
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency || "EUR",
-      maximumFractionDigits: 0,
-    }).format(amount ?? 0);
-  } catch {
-    return `${currency ?? ""}${Math.round(amount ?? 0)}`;
-  }
-};
-
-const PIE_COLORS = ["#6abf40", "#3b82f6", "#f97316", "#ef4444", "#8b5cf6", "#14b8a6", "#f59e0b", "#ec4899"];
-
-const CmPieChart = ({ data }) => {
-  const total = data.reduce((s, d) => s + d.gmv, 0);
-  if (!data.length || total === 0) return null;
-  let angle = -Math.PI / 2;
-  const cx = 60, cy = 60, r = 50;
-  const slices = data.map((d, i) => {
-    const sweep = (d.gmv / total) * 2 * Math.PI;
-    const x1 = cx + r * Math.cos(angle);
-    const y1 = cy + r * Math.sin(angle);
-    angle += sweep;
-    const x2 = cx + r * Math.cos(angle);
-    const y2 = cy + r * Math.sin(angle);
-    const large = sweep > Math.PI ? 1 : 0;
-    return { path: `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z`, color: PIE_COLORS[i % PIE_COLORS.length], pct: Math.round((d.gmv / total) * 100), city: d.city };
-  });
-  return (
-    <div className="cm-pie-wrap">
-      <svg viewBox="0 0 120 120" width="120" height="120">
-        {slices.map((s, i) => <path key={i} d={s.path} fill={s.color} />)}
-      </svg>
-      <ul className="cm-pie-legend">
-        {slices.map((s, i) => (
-          <li key={i} className="cm-pie-legend-item">
-            <span className="cm-pie-dot" style={{ background: s.color }} />
-            {s.city} {s.pct}%
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-};
 
 const generateAvailableDates = (availabilityDays) => {
   const dayIndices =
@@ -240,8 +199,6 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   // CM dashboard (own profile only)
   const [cmStats, setCmStats] = useState(null);
   const [cmCommissions, setCmCommissions] = useState([]);
-  const [cmAcquiredMembers, setCmAcquiredMembers] = useState([]);
-  const [cmGlobalReach, setCmGlobalReach] = useState([]);
   const [cmLoading, setCmLoading] = useState(false);
   const [cmCopied, setCmCopied] = useState(false);
 
@@ -643,79 +600,27 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     if (!currentUser?.cmProfile?.id) return;
     setCmLoading(true);
     const cmId = currentUser.cmProfile.id;
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
     const [referralsRes, commissionsRes] = await Promise.all([
-      supabase
-        .from("cm_referrals")
-        .select(`id, signed_up_at, referred_user:profiles!referred_user_id(id, first_name, last_name, full_name, country, city, is_host)`)
-        .eq("cm_id", cmId)
-        .order("signed_up_at", { ascending: false }),
+      supabase.from("cm_referrals").select("id").eq("cm_id", cmId),
       supabase
         .from("cm_commissions")
-        .select(`id, gmv, commission_amount, currency, status, created_at,
-          booking_request:booking_requests!booking_request_id(id, requester_id, sport)`)
+        .select(`id, gmv, commission_amount, currency, status, approved_at, paid_at, created_at,
+          booking_request:booking_requests(requested_date, sport,
+            requester:profiles!requester_id(full_name, first_name, last_name))`)
         .eq("cm_id", cmId)
         .order("created_at", { ascending: false }),
     ]);
-
-    const referrals = referralsRes.data ?? [];
     const commList = commissionsRes.data ?? [];
     const currency = commList[0]?.currency ?? "EUR";
-
-    const userById = Object.fromEntries(referrals.map((r) => [r.referred_user?.id, r.referred_user]));
-
-    const membersThisMonth = referrals.filter((r) => r.signed_up_at >= monthStart).length;
-    const becameHost = referrals.filter((r) => r.referred_user?.is_host).length;
-    const expThisMonth = commList.filter((c) => c.created_at >= monthStart).length;
-    const totalGmv = commList.reduce((s, c) => s + Number(c.gmv), 0);
-    const gmvThisMonth = commList.filter((c) => c.created_at >= monthStart).reduce((s, c) => s + Number(c.gmv), 0);
-    const pendingCommission = commList.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.commission_amount), 0);
-    const approvedCommission = commList.filter((c) => c.status === "approved").reduce((s, c) => s + Number(c.commission_amount), 0);
-    const paidCommission = commList.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.commission_amount), 0);
-
-    const reachMap = {};
-    for (const comm of commList) {
-      const requesterId = comm.booking_request?.requester_id;
-      const profile = userById[requesterId];
-      if (!profile) continue;
-      const city = profile.city || "Other";
-      const country = profile.country || "";
-      const key = `${city}|||${country}`;
-      if (!reachMap[key]) reachMap[key] = { city, country, exp: 0, gmv: 0 };
-      reachMap[key].exp += 1;
-      reachMap[key].gmv += Number(comm.gmv);
-    }
-    const globalReach = Object.values(reachMap).sort((a, b) => b.gmv - a.gmv).slice(0, 8);
-
-    const expByUser = {};
-    for (const comm of commList) {
-      const id = comm.booking_request?.requester_id;
-      if (id) expByUser[id] = (expByUser[id] ?? 0) + 1;
-    }
-    const acquiredMembers = referrals.map((r) => ({
-      ...r,
-      experienceCount: expByUser[r.referred_user?.id] ?? 0,
-    }));
-
     setCmStats({
-      membersAcquired: referrals.length,
-      membersThisMonth,
-      becameHost,
-      becameHostPct: referrals.length > 0 ? Math.round((becameHost / referrals.length) * 100) : 0,
-      experiences: commList.length,
-      expThisMonth,
-      gmv: totalGmv,
-      gmvThisMonth,
-      pendingCommission,
-      approvedCommission,
-      paidCommission,
+      referredCount: referralsRes.data?.length ?? 0,
+      completedBookings: commList.length,
+      totalEarnings: commList.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.commission_amount), 0),
+      pendingEarnings: commList.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.commission_amount), 0),
+      approvedEarnings: commList.filter((c) => c.status === "approved").reduce((s, c) => s + Number(c.commission_amount), 0),
       currency,
     });
     setCmCommissions(commList);
-    setCmAcquiredMembers(acquiredMembers);
-    setCmGlobalReach(globalReach);
     setCmLoading(false);
   }, [currentUser?.cmProfile?.id]);
 
@@ -1313,128 +1218,81 @@ const ProfilePage = ({ currentUser, onLogout }) => {
           {/* ── CM tab ── */}
           {activeTab === "cm" && isOwnProfile && currentUser?.isCm && (
             <div className="cm-dashboard">
+              <p className="cm-dashboard-subtitle">
+                Welcome back, {currentUser.firstName || "CM"}. Here's your referral and commission overview.
+              </p>
               {currentUser.cmProfile.status !== "active" && (
                 <p className="cm-status-warning">
                   Your CM account has been {currentUser.cmProfile.status}. Your invite code is inactive — new sign-ups using it will not be credited.
                 </p>
               )}
-
-              {/* Invite code card */}
-              <div className={`cm-invite-card${currentUser.cmProfile.status !== "active" ? " cm-invite-card--inactive" : ""}`}>
-                <p className="cm-invite-card-title">Your Invite Code</p>
+              <div className="cm-invite-card">
+                <p className="cm-invite-label">Your invite code</p>
                 <div className="cm-invite-code-row">
-                  <span className="cm-invite-code-dashed">{currentUser.cmProfile.inviteCode}</span>
-                  <button type="button" className="btn btn-primary cm-copy-btn" onClick={copyCmCode}>
-                    {cmCopied ? "Copied!" : "Copy Code"}
+                  <span className="cm-invite-code">{currentUser.cmProfile.inviteCode}</span>
+                  <button type="button" className="btn btn-secondary cm-copy-btn" onClick={copyCmCode}>
+                    {cmCopied ? "Copied!" : "Copy"}
                   </button>
                 </div>
-                <p className="cm-invite-shareable-link">
-                  Shareable link: <strong>sharedxp.com/signup?ref={currentUser.cmProfile.inviteCode}</strong>
-                </p>
-                <div className="cm-invite-warning">
-                  ⚠️ Share this code with your network to use on signup. No code = no commission.
-                </div>
                 <p className="cm-invite-hint">
-                  Commission is earned on all experiences by referred users worldwide. Your own hosted experiences are excluded.
+                  Share this code with athletes and sports enthusiasts. Anyone who signs up with your code becomes your referral permanently.
                 </p>
               </div>
-
               {cmLoading ? (
                 <p>Loading stats…</p>
               ) : cmStats ? (
                 <>
-                  {/* 6 stat cards */}
-                  <div className="cm-stats-grid cm-stats-grid-6">
+                  <div className="cm-stats-grid">
                     <div className="cm-stat-card">
-                      <p className="cm-stat-upper">MEMBERS ACQUIRED</p>
-                      <p className="cm-stat-value">{cmStats.membersAcquired}</p>
-                      {cmStats.membersThisMonth > 0 && (
-                        <p className="cm-stat-sub">+{cmStats.membersThisMonth} this month</p>
-                      )}
+                      <p className="cm-stat-value">{cmStats.referredCount}</p>
+                      <p className="cm-stat-label">Referred users</p>
                     </div>
                     <div className="cm-stat-card">
-                      <p className="cm-stat-upper">BECAME HOST</p>
-                      <p className="cm-stat-value">{cmStats.becameHost}</p>
-                      <p className="cm-stat-sub">{cmStats.becameHostPct}% conversion</p>
+                      <p className="cm-stat-value">{cmStats.completedBookings}</p>
+                      <p className="cm-stat-label">Completed bookings</p>
                     </div>
                     <div className="cm-stat-card">
-                      <p className="cm-stat-upper">EXPERIENCES</p>
-                      <p className="cm-stat-value">{cmStats.experiences}</p>
-                      {cmStats.expThisMonth > 0 && (
-                        <p className="cm-stat-sub">+{cmStats.expThisMonth} this month</p>
-                      )}
+                      <p className="cm-stat-value">{fmtMoney(cmStats.totalEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-label">Total paid out</p>
                     </div>
                     <div className="cm-stat-card">
-                      <p className="cm-stat-upper">GMV GENERATED</p>
-                      <p className="cm-stat-value">{fmtCurrency(cmStats.gmv, cmStats.currency)}</p>
-                      {cmStats.gmvThisMonth > 0 && (
-                        <p className="cm-stat-sub">{fmtCurrency(cmStats.gmvThisMonth, cmStats.currency)} this month</p>
-                      )}
-                    </div>
-                    <div className="cm-stat-card">
-                      <p className="cm-stat-upper">COMMISSION PENDING</p>
-                      <p className="cm-stat-value">{fmtCurrency(cmStats.pendingCommission, cmStats.currency)}</p>
-                      <p className="cm-stat-sub">Awaiting approval</p>
-                    </div>
-                    <div className="cm-stat-card">
-                      <p className="cm-stat-upper">COMMISSION PAID</p>
-                      <p className="cm-stat-value">{fmtCurrency(cmStats.paidCommission, cmStats.currency)}</p>
-                      {cmStats.approvedCommission > 0 && (
-                        <p className="cm-stat-sub">{fmtCurrency(cmStats.approvedCommission, cmStats.currency)} approved</p>
-                      )}
+                      <p className="cm-stat-value">{fmtMoney(cmStats.pendingEarnings + cmStats.approvedEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-label">Pending commission</p>
                     </div>
                   </div>
-
-                  {/* Global Reach */}
-                  {cmGlobalReach.length > 0 && (
-                    <div className="cm-global-reach">
-                      <h2 className="cm-section-title">Global Reach</h2>
-                      <p className="cm-section-subtitle">Referred members book worldwide — you earn commission on all of them.</p>
-                      <div className="cm-global-reach-inner">
-                        <table className="cm-reach-table">
-                          <thead>
-                            <tr>
-                              <th>CITY</th>
-                              <th>COUNTRY</th>
-                              <th>EXP.</th>
-                              <th>GMV</th>
+                  <h2 className="cm-section-title">Commission history</h2>
+                  {cmCommissions.length === 0 ? (
+                    <p className="cm-empty">No commissions yet. Share your invite code to get started!</p>
+                  ) : (
+                    <div className="cm-commission-table-wrap">
+                      <table className="cm-commission-table">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>User</th>
+                            <th>Sport</th>
+                            <th>GBV</th>
+                            <th>Commission</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {cmCommissions.map((c) => (
+                            <tr key={c.id}>
+                              <td>{fmtDate(c.created_at)}</td>
+                              <td>{getCmName(c.booking_request?.requester)}</td>
+                              <td>{c.booking_request?.sport ?? "—"}</td>
+                              <td>{fmtMoney(c.gmv, c.currency)}</td>
+                              <td>{fmtMoney(c.commission_amount, c.currency)}</td>
+                              <td>
+                                <span className={`cm-status-badge ${CM_STATUS_CLASS[c.status] ?? ""}`}>
+                                  {CM_STATUS_LABEL[c.status] ?? c.status}
+                                </span>
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {cmGlobalReach.map((row, i) => (
-                              <tr key={i}>
-                                <td><strong>{row.city}</strong></td>
-                                <td>{row.country}</td>
-                                <td>{row.exp}</td>
-                                <td>{fmtCurrency(row.gmv, cmStats.currency)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <CmPieChart data={cmGlobalReach} />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Acquired Members */}
-                  {cmAcquiredMembers.length > 0 && (
-                    <div className="cm-acquired-members">
-                      <h2 className="cm-section-title">Acquired Members</h2>
-                      <div className="cm-member-list">
-                        {cmAcquiredMembers.map((m) => (
-                          <div key={m.id} className="cm-member-row">
-                            <div className="cm-member-info">
-                              <span className="cm-member-name">{getCmName(m.referred_user)}</span>
-                              <span className="cm-member-meta">
-                                {m.referred_user?.country || "—"} · Joined {fmtDate(m.signed_up_at)}
-                              </span>
-                            </div>
-                            <span className="cm-member-exp">
-                              {m.experienceCount} {m.experienceCount === 1 ? "experience" : "experiences"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </>
