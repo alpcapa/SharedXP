@@ -161,7 +161,7 @@ function App() {
       <Route path="/buddy/:buddyId" element={<BuddyRedirect />} />
       <Route path="/signup" element={<SignUpPage {...authActions} />} />
       <Route path="/login" element={<LoginPage {...authActions} />} />
-      <Route path="/my-profile" element={<MyProfilePage {...authActions} />} />
+      <Route path="/edit-profile" element={<MyProfilePage {...authActions} />} />
       <Route path="/user/:userId" element={<UnifiedProfilePage {...authActions} />} />
       <Route path="/become-a-host" element={<HostPage {...authActions} />} />
       <Route path="/host-settings" element={<HostPage {...authActions} />} />

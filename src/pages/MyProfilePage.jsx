@@ -474,6 +474,7 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
             </div>
             <div className="unified-profile-own-actions">
               <Link to={`/user/${currentUser.id}`} className="btn btn-light">My Profile</Link>
+
               {currentUser.isHost && (
                 <Link to="/host-settings" className="btn btn-primary">Host Settings</Link>
               )}
