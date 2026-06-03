@@ -137,7 +137,7 @@ src/
 ├── assets/              # Static images and SVGs
 ├── components/          # Shared UI (SiteHeader, SiteFooter, BuddyCard)
 ├── context/             # AuthContext — all auth state and user mutations
-├── data/                # Seed and reference data (buddies, field posts, sports, countries, events)
+├── data/                # Static reference data (sports, countries, events)
 ├── hooks/               # useBookingRequests, useHosts
 ├── lib/                 # supabase.js — singleton Supabase client
 ├── pages/               # One file per route
@@ -197,17 +197,6 @@ supabase/
 |`/host-history`                   |→ redirects to `/history`                              |
 |`/buddy/:buddyId`                 |→ redirects to `/user/:buddyId`                        |
 |`*`                               |404 Not Found                                          |
-
------
-
-## Mock Data
-
-The prototype ships with 4 host buddies and 8 Field posts covering:
-
-**Hosts:** Cycling · Tennis · Running · Basketball  
-**Cities:** Lisbon · Porto · Barcelona · Berlin
-
-Host availability dates are generated dynamically relative to today so the booking calendar always shows upcoming slots.
 
 -----
 
