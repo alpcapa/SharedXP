@@ -6023,6 +6023,13 @@ body {
   padding: 20px 10px 64px;
 }
 
+.unified-profile-own-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 /* Card sections inside the profile page already have 10px side margin from the
    shared rule; remove it here since the parent now supplies that padding.
    Also tighten vertical gaps between sections. */

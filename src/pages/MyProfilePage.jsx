@@ -468,13 +468,11 @@ const MyProfilePage = ({ currentUser, authLoading, onLogout, onEmailLogin, onFor
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
         <main className="middle-section edit-profile-page">
-          <div className="host-settings-top-bar">
-            <div className="profile-summary-actions">
-              <Link to={`/user/${currentUser.id}`} className="btn btn-light">My Profile</Link>
-              {currentUser.isHost && (
-                <Link to="/host-settings" className="btn btn-light">Host Settings</Link>
-              )}
-            </div>
+          <div className="unified-profile-own-actions">
+            <Link to={`/user/${currentUser.id}`} className="btn btn-light">My Profile</Link>
+            {currentUser.isHost && (
+              <Link to="/host-settings" className="btn btn-light">Host Settings</Link>
+            )}
           </div>
           <div className="profile-name-row">
             <h2>{currentUser.fullName}</h2>
