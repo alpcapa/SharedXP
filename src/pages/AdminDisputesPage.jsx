@@ -124,7 +124,7 @@ const NoteHistory = ({ adminNotes, adminName = "Admin", fallbackDate = null }) =
 };
 
 // ── Admin CM Management panel ─────────────────────────────────────────────────
-const CMManagementPanel = ({ currentUser }) => {
+const CMManagementPanel = ({ currentUser, initialSearch = "" }) => {
   const [subTab, setSubTab] = useState("applications");
   const [applications, setApplications] = useState([]);
   const [cmProfiles, setCmProfiles] = useState([]);
@@ -134,6 +134,7 @@ const CMManagementPanel = ({ currentUser }) => {
   const [actionBusy, setActionBusy] = useState(null);
   const [cmActionMode, setCmActionMode] = useState(null); // { id, action }
   const [expandedIds, setExpandedIds] = useState(new Set());
+  const [cmSearch, setCmSearch] = useState(initialSearch);
 
   const toggleExpand = (id) =>
     setExpandedIds((prev) => {
@@ -332,8 +333,23 @@ const CMManagementPanel = ({ currentUser }) => {
     setActionBusy(null);
   };
 
-  const pendingApps = applications.filter((a) => ["pending", "interview"].includes(a.status));
-  const closedApps = applications.filter((a) => ["accepted", "declined"].includes(a.status));
+  const matchesCmSearch = (name, email) => {
+    if (!cmSearch.trim()) return true;
+    const q = cmSearch.toLowerCase();
+    return (name ?? "").toLowerCase().includes(q) || (email ?? "").toLowerCase().includes(q);
+  };
+
+  const pendingApps = applications.filter((a) =>
+    ["pending", "interview"].includes(a.status) &&
+    matchesCmSearch(getName(a.applicant), a.applicant?.email)
+  );
+  const closedApps = applications.filter((a) =>
+    ["accepted", "declined"].includes(a.status) &&
+    matchesCmSearch(getName(a.applicant), a.applicant?.email)
+  );
+  const filteredCmProfiles = cmProfiles.filter((cm) =>
+    matchesCmSearch(getName(cm.owner), cm.owner?.email)
+  );
 
   const statusBadge = (status) => {
     const map = {
@@ -361,7 +377,8 @@ const CMManagementPanel = ({ currentUser }) => {
 
   return (
     <div className="cm-admin-panel">
-      <div className="cm-admin-subtabs">
+      <div className="support-inbox-controls">
+        <div className="cm-admin-subtabs" style={{ marginBottom: 0 }}>
         <button
           type="button"
           className={`admin-tab${subTab === "applications" ? " admin-tab-active" : ""}`}
@@ -376,6 +393,21 @@ const CMManagementPanel = ({ currentUser }) => {
         >
           Active CMs {pendingCommsTotal > 0 && <span className="cm-admin-count">{pendingCommsTotal}</span>}
         </button>
+        </div>
+        <div className="support-filters">
+          <input
+            type="text"
+            className="support-search-input"
+            placeholder="Search name or email…"
+            value={cmSearch}
+            onChange={(e) => setCmSearch(e.target.value)}
+          />
+          {cmSearch && (
+            <button type="button" className="btn btn-light btn-sm" onClick={() => setCmSearch("")}>
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {subTab === "applications" && (
@@ -488,8 +520,8 @@ const CMManagementPanel = ({ currentUser }) => {
       {subTab === "active" && (
         <div>
           <p className="admin-subtitle">Manage active, paused, and revoked Community Managers.</p>
-          {cmProfiles.length === 0 && <p>No Community Managers yet.</p>}
-          {cmProfiles.map((cm) => {
+          {filteredCmProfiles.length === 0 && <p>{cmProfiles.length === 0 ? "No Community Managers yet." : "No CMs match your search."}</p>}
+          {filteredCmProfiles.map((cm) => {
             const s = cmStats(cm);
             const pendingComms = (cm.cm_commissions ?? []).filter((c) => c.status === "pending");
             const isExpanded = expandedIds.has(cm.id);
@@ -972,7 +1004,7 @@ const SupportPanel = () => {
                             CM · {cmProfile.status}
                           </span>
                           <a
-                            href="/admin/disputes?tab=cm"
+                            href={`/admin/disputes?tab=cm&search=${encodeURIComponent(matchedProfile.full_name || `${matchedProfile.first_name ?? ""} ${matchedProfile.last_name ?? ""}`.trim() || matchedProfile.email)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="support-cm-link"
@@ -1336,7 +1368,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
           </>
         )}
 
-        {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} />}
+        {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} />}
         {activeTab === "support" && <SupportPanel />}
         </main>
         <SiteFooter />
