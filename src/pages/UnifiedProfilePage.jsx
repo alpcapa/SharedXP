@@ -685,7 +685,6 @@ const UnifiedProfilePage = ({ currentUser, onLogout }) => {
           {/* ── Own-profile action bar ── */}
           {isOwnProfile && (
             <div className="host-settings-top-bar">
-              <h1>My Profile</h1>
               <div className="profile-summary-actions">
                 <Link to="/my-profile" className="btn btn-primary">Edit Profile</Link>
                 {isHost
