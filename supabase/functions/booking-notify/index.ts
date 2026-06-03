@@ -746,7 +746,7 @@ function buildCmStatusChange(
   emailType: string,
 ): { to: string; subject: string; html: string } {
   const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
-  const configs: Record<string, { heading: string; lines: string[]; label: string }> = {
+  const configs: Record<string, { heading: string; lines: string[]; label: string; url: string }> = {
     cm_paused: {
       heading: `Your CM account has been paused`,
       lines: [
@@ -755,6 +755,7 @@ function buildCmStatusChange(
         `If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
       ],
       label: "Contact Support",
+      url: `${APP_URL}/help`,
     },
     cm_reactivated: {
       heading: `Your CM account is active again, ${name}!`,
@@ -763,6 +764,7 @@ function buildCmStatusChange(
         `Your invite code is live again — start sharing and earning commissions!`,
       ],
       label: "Go to CM Dashboard",
+      url: `${APP_URL}/user-profile?tab=cm`,
     },
     cm_revoked: {
       heading: `Your CM status has been revoked`,
@@ -771,13 +773,14 @@ function buildCmStatusChange(
         `Any pending approved commissions will still be paid out. If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
       ],
       label: "Contact Support",
+      url: `${APP_URL}/help`,
     },
   };
   const cfg = configs[emailType] ?? configs.cm_paused;
   return {
     to: String(cm.email),
     subject: `${cfg.heading} — SharedXP`,
-    html: emailHtml(cfg.heading, cfg.lines, `${APP_URL}/help`, cfg.label),
+    html: emailHtml(cfg.heading, cfg.lines, cfg.url, cfg.label),
   };
 }
 
@@ -819,7 +822,7 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, supportMessageId, subject, message, replyTo } = body as {
+  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, supportMessageId, subject, message, replyTo, repliedBy } = body as {
     emailType: string;
     bookingRequestId?: string;
     disputeId?: string;
@@ -832,6 +835,7 @@ serve(async (req: Request): Promise<Response> => {
     subject?: string;
     message?: string;
     replyTo?: string;
+    repliedBy?: string;
   };
 
   if (!emailType) {
@@ -958,7 +962,7 @@ serve(async (req: Request): Promise<Response> => {
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });
     }
-    const SUPPORT_FROM = `SharedXP Support <support@sharedxp.com>`;
+    const SUPPORT_FROM = `SharedXP Support <noreply@sharedxp.com>`;
     const bodyLines = String(message).split("\n").map((l) =>
       `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">${l || "&nbsp;"}</p>`
     ).join("");
@@ -979,10 +983,11 @@ serve(async (req: Request): Promise<Response> => {
           <p style="margin:0;font-size:14px;font-weight:700;color:#444;">SharedXP Support</p>
         </td></tr>
         <tr><td style="background:#f9f9f9;padding:16px 32px;border-top:1px solid #eeeeee;">
-          <p style="margin:0;font-size:12px;color:#aaa;">
-            © ${new Date().getFullYear()} SharedXP &nbsp;·&nbsp;
-            <a href="${APP_URL}/help" style="color:#aaa;text-decoration:none;">Help Center</a>
+          <p style="margin:0 0 6px;font-size:12px;color:#aaa;">
+            This email was sent from a no-reply address. To follow up, please visit our
+            <a href="${APP_URL}/help" style="color:#888;text-decoration:underline;">Help Center</a>.
           </p>
+          <p style="margin:0;font-size:12px;color:#aaa;">© ${new Date().getFullYear()} SharedXP</p>
         </td></tr>
       </table>
     </td></tr>
@@ -999,7 +1004,7 @@ serve(async (req: Request): Promise<Response> => {
     const prevReplies = Array.isArray(existing?.admin_replies) ? existing.admin_replies : [];
     await db.from("support_messages").update({
       status: "replied",
-      admin_replies: [...prevReplies, { body: message, subject, sent_at: new Date().toISOString() }],
+      admin_replies: [...prevReplies, { body: message, subject, sent_at: new Date().toISOString(), replied_by: repliedBy ?? "Admin" }],
     }).eq("id", supportMessageId);
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

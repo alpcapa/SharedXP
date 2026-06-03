@@ -124,7 +124,7 @@ const NoteHistory = ({ adminNotes, adminName = "Admin", fallbackDate = null }) =
 };
 
 // ── Admin CM Management panel ─────────────────────────────────────────────────
-const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "applications" }) => {
+const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "applications", onCountChange }) => {
   const [subTab, setSubTab] = useState(initialSubTab);
   const [applications, setApplications] = useState([]);
   const [cmProfiles, setCmProfiles] = useState([]);
@@ -174,7 +174,8 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
     setApplications(apps);
     setCmProfiles(cms.map((cm) => ({ ...cm, _application: appByUserId[cm.user_id] ?? null })));
     setLoading(false);
-  }, []);
+    onCountChange?.();
+  }, [onCountChange]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -718,7 +719,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
 // ── Support inbox panel ────────────────────────────────────────────────────────
 const CLOSED_STATUSES = new Set(["replied", "resolved", "autoreplied"]);
 
-const SupportPanel = () => {
+const SupportPanel = ({ currentUser, onRead }) => {
   const [messages, setMessages] = useState([]);
   const [profileMap, setProfileMap] = useState({}); // email → profile
   const [cmProfileMap, setCmProfileMap] = useState({}); // profile.id → cm_profile
@@ -779,6 +780,7 @@ const SupportPanel = () => {
       setMessages((prev) =>
         prev.map((m) => ids.includes(m.id) ? { ...m, status: "read" } : m)
       );
+      onRead?.();
     }
   };
 
@@ -801,6 +803,9 @@ const SupportPanel = () => {
           replyTo: msg.reply_to || msg.from_email,
           subject: replySubject,
           message: replyBody,
+          repliedBy: currentUser?.fullName ||
+            `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() ||
+            "Admin",
         }),
       });
       if (!res.ok) {
@@ -1046,7 +1051,7 @@ const SupportPanel = () => {
                         {(msg.admin_replies ?? []).map((r, i) => (
                           <div key={i} className="support-admin-reply">
                             <div className="support-admin-reply-header">
-                              <span className="support-admin-reply-label">SharedXP Support</span>
+                              <span className="support-admin-reply-label">{r.replied_by || "Admin"}</span>
                               <span className="cm-admin-email" style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
                                 {fmtMsgDate(r.sent_at)}
                               </span>
@@ -1384,8 +1389,8 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
           </>
         )}
 
-        {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} />}
-        {activeTab === "support" && <SupportPanel />}
+        {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} onCountChange={fetchCmCounts} />}
+        {activeTab === "support" && <SupportPanel currentUser={currentUser} onRead={fetchUnreadSupport} />}
         </main>
         <SiteFooter />
       </div>
