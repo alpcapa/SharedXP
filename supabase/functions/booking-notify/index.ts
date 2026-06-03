@@ -560,7 +560,7 @@ function buildDisputeResolvedRefund(
         `Dispute outcome, ${hostName}`,
         [
           `After reviewing the dispute for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team has decided to refund the guest.`,
-          `Payment will not be released for this session. If you have any questions, please contact us at support@sharedxp.com.`,
+          `Payment will not be released for this session. If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
         ],
         `${APP_URL}/history`,
         "View History",
@@ -585,7 +585,7 @@ function buildDisputeResolvedPaidHost(
         `Dispute resolved`,
         [
           `Dear ${reqName}, after reviewing both accounts for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team found that the experience was delivered as agreed.`,
-          `The payment has been released to the host. If you have further concerns, please contact us at support@sharedxp.com.`,
+          `The payment has been released to the host. If you have further concerns, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
         ],
         `${APP_URL}/history`,
         "View History",
@@ -752,7 +752,7 @@ function buildCmStatusChange(
       lines: [
         `Hi ${name}, your SharedXP Community Manager account has been temporarily paused.`,
         `While paused, your invite code will not be active and no new referrals will be attributed. Existing commissions are not affected.`,
-        `If you have any questions, please contact us at support@sharedxp.com.`,
+        `If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
       ],
       label: "Contact Support",
     },
@@ -768,7 +768,7 @@ function buildCmStatusChange(
       heading: `Your CM status has been revoked`,
       lines: [
         `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
-        `Any pending approved commissions will still be paid out. Please contact support@sharedxp.com if you have any questions.`,
+        `Any pending approved commissions will still be paid out. If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
       ],
       label: "Contact Support",
     },

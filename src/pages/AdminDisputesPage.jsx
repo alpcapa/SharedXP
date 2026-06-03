@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import InlineLoginForm from "../components/InlineLoginForm";
@@ -684,15 +684,21 @@ const CMManagementPanel = ({ currentUser }) => {
 };
 
 // ── Support inbox panel ────────────────────────────────────────────────────────
+const CLOSED_STATUSES = new Set(["replied", "resolved"]);
+
 const SupportPanel = () => {
   const [messages, setMessages] = useState([]);
-  const [profileMap, setProfileMap] = useState({});
+  const [profileMap, setProfileMap] = useState({}); // email → profile
+  const [cmProfileMap, setCmProfileMap] = useState({}); // profile.id → cm_profile
   const [loading, setLoading] = useState(true);
-  const [expandedIds, setExpandedIds] = useState(new Set());
+  const [expandedEmails, setExpandedEmails] = useState(new Set()); // keyed by from_email
   const [replyMode, setReplyMode] = useState(null); // message id
   const [replySubject, setReplySubject] = useState("");
   const [replyBody, setReplyBody] = useState("");
   const [busy, setBusy] = useState(null);
+  const [supportTab, setSupportTab] = useState("open"); // "open" | "archive"
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterMonth, setFilterMonth] = useState(""); // "YYYY-MM"
 
   const fetchMessages = useCallback(async () => {
     setLoading(true);
@@ -703,31 +709,44 @@ const SupportPanel = () => {
     const msgs = data ?? [];
     setMessages(msgs);
 
-    // Batch-lookup sender emails against registered profiles
     const emails = [...new Set(msgs.map((m) => m.from_email).filter(Boolean))];
     if (emails.length > 0) {
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, full_name, first_name, last_name, email, is_host, is_admin")
         .in("email", emails);
-      const map = {};
-      (profiles ?? []).forEach((p) => { map[p.email] = p; });
-      setProfileMap(map);
+      const pMap = {};
+      const userIds = [];
+      (profiles ?? []).forEach((p) => { pMap[p.email] = p; userIds.push(p.id); });
+      setProfileMap(pMap);
+
+      if (userIds.length > 0) {
+        const { data: cmProfiles } = await supabase
+          .from("cm_profiles")
+          .select("user_id, status, invite_code")
+          .in("user_id", userIds);
+        const cmMap = {};
+        (cmProfiles ?? []).forEach((cp) => { cmMap[cp.user_id] = cp; });
+        setCmProfileMap(cmMap);
+      }
     }
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
-  const toggleExpand = async (msg) => {
-    setExpandedIds((prev) => {
+  const toggleThread = async (fromEmail, unreadMsgs) => {
+    setExpandedEmails((prev) => {
       const next = new Set(prev);
-      next.has(msg.id) ? next.delete(msg.id) : next.add(msg.id);
+      next.has(fromEmail) ? next.delete(fromEmail) : next.add(fromEmail);
       return next;
     });
-    if (msg.status === "unread") {
-      await supabase.from("support_messages").update({ status: "read" }).eq("id", msg.id);
-      setMessages((prev) => prev.map((m) => m.id === msg.id ? { ...m, status: "read" } : m));
+    if (unreadMsgs.length > 0) {
+      const ids = unreadMsgs.map((m) => m.id);
+      await supabase.from("support_messages").update({ status: "read" }).in("id", ids);
+      setMessages((prev) =>
+        prev.map((m) => ids.includes(m.id) ? { ...m, status: "read" } : m)
+      );
     }
   };
 
@@ -777,6 +796,55 @@ const SupportPanel = () => {
     return <span className={`support-status-badge ${map[status] ?? ""}`}>{status}</span>;
   };
 
+  const fmtMsgDate = (iso) =>
+    new Intl.DateTimeFormat("en-GB", {
+      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+    }).format(new Date(iso));
+
+  // Group messages into threads keyed by from_email, latest first within each thread
+  const threads = (() => {
+    const map = {};
+    messages.forEach((msg) => {
+      const key = msg.from_email || "unknown";
+      if (!map[key]) map[key] = [];
+      map[key].push(msg);
+    });
+    return Object.entries(map).map(([email, msgs]) => {
+      const sorted = [...msgs].sort((a, b) => new Date(b.received_at) - new Date(a.received_at));
+      const allClosed = sorted.every((m) => CLOSED_STATUSES.has(m.status));
+      const hasUnread = sorted.some((m) => m.status === "unread");
+      return {
+        fromEmail: email,
+        fromName: sorted[0].from_name || "",
+        msgs: sorted,
+        latestAt: sorted[0].received_at,
+        allClosed,
+        hasUnread,
+        unreadCount: sorted.filter((m) => m.status === "unread").length,
+      };
+    }).sort((a, b) => new Date(b.latestAt) - new Date(a.latestAt));
+  })();
+
+  // Apply tab filter
+  const tabThreads = threads.filter((t) =>
+    supportTab === "open" ? !t.allClosed : t.allClosed
+  );
+
+  // Apply search + month filter
+  const filteredThreads = tabThreads.filter((t) => {
+    const q = searchQuery.toLowerCase();
+    if (q) {
+      const matchName = t.fromName.toLowerCase().includes(q);
+      const matchEmail = t.fromEmail.toLowerCase().includes(q);
+      if (!matchName && !matchEmail) return false;
+    }
+    if (filterMonth) {
+      const monthMatch = t.msgs.some((m) => m.received_at?.startsWith(filterMonth));
+      if (!monthMatch) return false;
+    }
+    return true;
+  });
+
   const unreadCount = messages.filter((m) => m.status === "unread").length;
 
   if (loading) return <p style={{ marginTop: 24 }}>Loading messages…</p>;
@@ -784,124 +852,227 @@ const SupportPanel = () => {
   return (
     <div className="support-panel">
       <p className="admin-subtitle">
-        Emails sent to support@sharedxp.com via Resend inbound routing.
+        Messages from the in-app contact form and email.
         {unreadCount > 0 && <strong> {unreadCount} unread.</strong>}
       </p>
-      {messages.length === 0 && <p>No support messages yet.</p>}
-      {messages.map((msg) => {
-        const isExpanded = expandedIds.has(msg.id);
-        const isReplying = replyMode === msg.id;
-        const matchedProfile = profileMap[msg.from_email] ?? null;
+
+      <div className="support-inbox-controls">
+        <div className="cm-admin-subtabs" style={{ marginBottom: 0 }}>
+          <button
+            type="button"
+            className={`admin-tab${supportTab === "open" ? " admin-tab-active" : ""}`}
+            onClick={() => setSupportTab("open")}
+          >
+            Open
+            {threads.filter((t) => !t.allClosed && t.hasUnread).length > 0 && (
+              <span className="cm-admin-count">
+                {threads.filter((t) => !t.allClosed && t.hasUnread).length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={`admin-tab${supportTab === "archive" ? " admin-tab-active" : ""}`}
+            onClick={() => setSupportTab("archive")}
+          >
+            Archive
+          </button>
+        </div>
+        <div className="support-filters">
+          <input
+            type="text"
+            className="support-search-input"
+            placeholder="Search name or email…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <input
+            type="month"
+            className="support-month-input"
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value)}
+          />
+          {(searchQuery || filterMonth) && (
+            <button
+              type="button"
+              className="btn btn-light btn-sm"
+              onClick={() => { setSearchQuery(""); setFilterMonth(""); }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+
+      {filteredThreads.length === 0 && (
+        <p style={{ marginTop: 16 }}>
+          {threads.length === 0 ? "No support messages yet." : "No threads match your filters."}
+        </p>
+      )}
+
+      {filteredThreads.map((thread) => {
+        const { fromEmail, fromName, msgs, hasUnread, unreadCount: threadUnread } = thread;
+        const isExpanded = expandedEmails.has(fromEmail);
+        const matchedProfile = profileMap[fromEmail] ?? null;
+        const cmProfile = matchedProfile ? cmProfileMap[matchedProfile.id] ?? null : null;
+        const latestMsg = msgs[0];
+
         return (
-          <article key={msg.id} className={`cm-admin-card${msg.status === "unread" ? " support-card-unread" : ""}`}>
+          <article key={fromEmail} className={`cm-admin-card${hasUnread ? " support-card-unread" : ""}`}>
             <button
               type="button"
               className="cm-admin-card-summary"
-              onClick={() => toggleExpand(msg)}
+              onClick={() => toggleThread(fromEmail, msgs.filter((m) => m.status === "unread"))}
               aria-expanded={isExpanded}
             >
               <div className="cm-admin-card-summary-left">
-                <strong>{msg.from_name || msg.from_email}</strong>
-                {msg.from_name && <span className="cm-admin-email">{msg.from_email}</span>}
-                <span className="support-subject">{msg.subject}</span>
+                <strong>{fromName || fromEmail}</strong>
+                {fromName && <span className="cm-admin-email">{fromEmail}</span>}
+                <span className="support-subject">{latestMsg.subject}</span>
+                {msgs.length > 1 && (
+                  <span className="cm-admin-email">{msgs.length} messages</span>
+                )}
               </div>
               <div className="cm-admin-card-summary-right">
-                {statusBadge(msg.status)}
+                {threadUnread > 0 && (
+                  <span className="cm-admin-count">{threadUnread} unread</span>
+                )}
                 <span className="cm-admin-email" style={{ whiteSpace: "nowrap" }}>
-                  {new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
-                    .format(new Date(msg.received_at))}
+                  {fmtMsgDate(latestMsg.received_at)}
                 </span>
                 <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
               </div>
             </button>
+
             {isExpanded && (
               <div className="cm-admin-card-body">
                 {matchedProfile ? (
                   <div className="support-account-match">
                     <span className="admin-dispute-label">Matched account</span>
                     <span className="support-account-name">
-                      {matchedProfile.full_name || `${matchedProfile.first_name ?? ""} ${matchedProfile.last_name ?? ""}`.trim() || "—"}
+                      {matchedProfile.full_name ||
+                        `${matchedProfile.first_name ?? ""} ${matchedProfile.last_name ?? ""}`.trim() || "—"}
                     </span>
                     <span className="cm-admin-email">{matchedProfile.email}</span>
                     <div className="support-account-tags">
-                      {matchedProfile.is_host && <span className="cm-admin-badge cm-badge-accepted">Host</span>}
-                      {matchedProfile.is_admin && <span className="cm-admin-badge cm-badge-interview">Admin</span>}
+                      {matchedProfile.is_host && (
+                        <span className="cm-admin-badge cm-badge-accepted">Host</span>
+                      )}
+                      {matchedProfile.is_admin && (
+                        <span className="cm-admin-badge cm-badge-interview">Admin</span>
+                      )}
+                      {cmProfile && (
+                        <>
+                          <span className={`cm-admin-badge ${
+                            cmProfile.status === "active" ? "cm-badge-accepted" :
+                            cmProfile.status === "paused" ? "cm-badge-pending" : "cm-badge-declined"
+                          }`}>
+                            CM · {cmProfile.status}
+                          </span>
+                          <a
+                            href="/admin?tab=cm"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="support-cm-link"
+                          >
+                            View CM card ↗
+                          </a>
+                        </>
+                      )}
                     </div>
                   </div>
                 ) : (
                   <div className="support-account-match support-account-nomatch">
                     <span className="admin-dispute-label">Matched account</span>
-                    <span className="cm-admin-email">No registered account found for {msg.from_email}</span>
+                    <span className="cm-admin-email">No registered account found for {fromEmail}</span>
                   </div>
                 )}
-                <div className="support-body">
-                  {msg.body_text
-                    ? <pre className="support-body-text">{msg.body_text}</pre>
-                    : msg.body_html
-                    ? <div className="support-body-html" dangerouslySetInnerHTML={{ __html: msg.body_html }} />
-                    : <p className="cm-admin-email">No body — Resend inbound does not forward email content. Reply using the sender's email address directly if needed.</p>
-                  }
+
+                <div className="support-thread">
+                  {msgs.map((msg) => {
+                    const isReplying = replyMode === msg.id;
+                    return (
+                      <div key={msg.id} className="support-thread-message">
+                        <div className="support-thread-message-header">
+                          {statusBadge(msg.status)}
+                          <span className="cm-admin-email">{msg.subject}</span>
+                          <span className="cm-admin-email" style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
+                            {fmtMsgDate(msg.received_at)}
+                          </span>
+                        </div>
+                        <div className="support-body">
+                          {msg.body_text ? (
+                            <pre className="support-body-text">{msg.body_text}</pre>
+                          ) : msg.body_html ? (
+                            <div className="support-body-html" dangerouslySetInnerHTML={{ __html: msg.body_html }} />
+                          ) : (
+                            <p className="cm-admin-email">No body content captured for this message.</p>
+                          )}
+                        </div>
+                        {isReplying ? (
+                          <div className="cm-admin-notes-row" style={{ marginTop: 12 }}>
+                            <p className="admin-dispute-label">Reply to {msg.reply_to || msg.from_email}</p>
+                            <input
+                              type="text"
+                              className="cm-admin-email-subject"
+                              placeholder="Subject…"
+                              value={replySubject}
+                              onChange={(e) => setReplySubject(e.target.value)}
+                              autoFocus
+                            />
+                            <textarea
+                              className="cm-admin-notes"
+                              rows={5}
+                              placeholder="Your reply…"
+                              value={replyBody}
+                              onChange={(e) => setReplyBody(e.target.value)}
+                            />
+                            <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                              <button
+                                type="button"
+                                className="btn btn-light"
+                                onClick={() => { setReplyMode(null); setReplySubject(""); setReplyBody(""); }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                disabled={busy === msg.id}
+                                onClick={() => sendReply(msg)}
+                              >
+                                {busy === msg.id ? "Sending…" : "Send Reply"}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm"
+                              onClick={() => {
+                                setReplyMode(msg.id);
+                                setReplySubject(`Re: ${msg.subject}`);
+                                setReplyBody("");
+                              }}
+                            >
+                              Reply
+                            </button>
+                            {!CLOSED_STATUSES.has(msg.status) && (
+                              <button
+                                type="button"
+                                className="btn btn-light btn-sm"
+                                onClick={() => markResolved(msg.id)}
+                              >
+                                Mark resolved
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                {isReplying ? (
-                  <div className="cm-admin-notes-row" style={{ marginTop: 16 }}>
-                    <p className="admin-dispute-label">Reply to {msg.reply_to || msg.from_email}</p>
-                    <input
-                      type="text"
-                      className="cm-admin-email-subject"
-                      placeholder="Subject…"
-                      value={replySubject}
-                      onChange={(e) => setReplySubject(e.target.value)}
-                      autoFocus
-                    />
-                    <textarea
-                      className="cm-admin-notes"
-                      rows={5}
-                      placeholder="Your reply…"
-                      value={replyBody}
-                      onChange={(e) => setReplyBody(e.target.value)}
-                    />
-                    <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
-                      <button
-                        type="button"
-                        className="btn btn-light"
-                        onClick={() => { setReplyMode(null); setReplySubject(""); setReplyBody(""); }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        disabled={busy === msg.id}
-                        onClick={() => sendReply(msg)}
-                      >
-                        {busy === msg.id ? "Sending…" : "Send Reply"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="admin-dispute-actions" style={{ marginTop: 12 }}>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => {
-                        setReplyMode(msg.id);
-                        setReplySubject(`Re: ${msg.subject}`);
-                        setReplyBody("");
-                      }}
-                    >
-                      Reply
-                    </button>
-                    {msg.status !== "resolved" && (
-                      <button
-                        type="button"
-                        className="btn btn-light"
-                        onClick={() => markResolved(msg.id)}
-                      >
-                        Mark resolved
-                      </button>
-                    )}
-                  </div>
-                )}
               </div>
             )}
           </article>
@@ -916,10 +1087,11 @@ const fmtDate = (iso) =>
           .format(new Date(iso)) : "—";
 
 const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
+  const [searchParams] = useSearchParams();
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
-  const [activeTab, setActiveTab] = useState("disputes");
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "disputes");
   const [cmCounts, setCmCounts] = useState({ pendingApps: 0, pendingComms: 0 });
   const [unreadSupport, setUnreadSupport] = useState(0);
   const { resolveDispute } = useBookingRequests(currentUser);
