@@ -15,7 +15,7 @@ import SignUpPage from "./pages/SignUpPage";
 import PaymentPage from "./pages/PaymentPage";
 import ChatPage from "./pages/ChatPage";
 import DisputeResponsePage from "./pages/DisputeResponsePage";
-import AdminDisputesPage from "./pages/AdminDisputesPage";
+import AdminPage from "./pages/AdminPage";
 import ContentAndIntellectualPropertyPolicyPage from "./pages/ContentAndIntellectualPropertyPolicyPage";
 import DisclaimersPage from "./pages/DisclaimersPage";
 import LegalPage from "./pages/LegalPage";
@@ -171,7 +171,7 @@ function App() {
       <Route path="/payment/:bookingRequestId" element={<PaymentPage {...authActions} />} />
       <Route path="/chat/:bookingRequestId" element={<ChatPage {...authActions} />} />
       <Route path="/dispute-response/:disputeId" element={<DisputeResponsePage {...authActions} />} />
-      <Route path="/admin/disputes" element={<AdminDisputesPage {...authActions} />} />
+      <Route path="/admin" element={<AdminPage {...authActions} />} />
       <Route path="/follow" element={<FollowPage {...authActions} />} />
       <Route path="/help" element={<HelpPage {...authActions} />} />
       <Route path="/the-field" element={<FieldPage {...authActions} />} />
