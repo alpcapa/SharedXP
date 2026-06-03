@@ -950,6 +950,28 @@ serve(async (req: Request): Promise<Response> => {
   }
   // ── End CM emails ──────────────────────────────────────────────────────────
 
+  // ── Support reply (no booking data needed) ────────────────────────────────
+  if (emailType === "support_reply") {
+    if (!supportMessageId || !replyTo || !subject || !message) {
+      return new Response(JSON.stringify({ error: "support_reply requires supportMessageId, replyTo, subject, message" }), {
+        status: 400,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+    const SUPPORT_FROM = `SharedXP Support <support@sharedxp.com>`;
+    const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:40px auto;padding:0 20px">
+<p style="margin:0 0 16px">${message.replace(/\n/g, "<br/>")}</p>
+<hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0"/>
+<p style="font-size:12px;color:#888">SharedXP Support · <a href="https://sharedxp.com">sharedxp.com</a></p>
+</body></html>`;
+    await sendEmail(replyTo, subject, html, SUPPORT_FROM);
+    await db.from("support_messages").update({ status: "replied" }).eq("id", supportMessageId);
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
+
   // Fetch booking request + both profiles
   let booking: Record<string, unknown> | null = null;
   let requester: Record<string, unknown> | null = null;
@@ -1115,23 +1137,6 @@ serve(async (req: Request): Promise<Response> => {
           ...emails.map((e) => sendEmail(e.to, e.subject, e.html)),
           sendEmail(CS_EMAIL, `[Dispute resolved — paid host] ${emails[0].subject}`, emails[0].html),
         ]);
-        break;
-      }
-      case "support_reply": {
-        if (!supportMessageId || !replyTo || !subject || !message) {
-          return new Response(JSON.stringify({ error: "support_reply requires supportMessageId, replyTo, subject, message" }), {
-            status: 400,
-            headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-          });
-        }
-        const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:40px auto;padding:0 20px">
-<p style="margin:0 0 16px">${message.replace(/\n/g, "<br/>")}</p>
-<hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0"/>
-<p style="font-size:12px;color:#888">SharedXP Support · <a href="https://sharedxp.com">sharedxp.com</a></p>
-</body></html>`;
-        const SUPPORT_FROM = `SharedXP Support <support@sharedxp.com>`;
-        await sendEmail(replyTo, subject, html, SUPPORT_FROM);
-        await db.from("support_messages").update({ status: "replied" }).eq("id", supportMessageId);
         break;
       }
       default:
