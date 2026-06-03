@@ -80,12 +80,22 @@ serve(async (req) => {
   // Resend wraps inbound data under payload.data
   const data = (payload.data ?? payload) as Record<string, unknown>;
 
+  console.log("[inbound-support] payload keys:", Object.keys(payload));
+  console.log("[inbound-support] data keys:", Object.keys(data));
+  console.log("[inbound-support] data sample:", JSON.stringify(data).slice(0, 500));
+
   const rawFrom   = String(data.from ?? "");
   const fromEmail = extractEmail(rawFrom);
   const fromName  = extractName(rawFrom) || String(data.from_name ?? "");
   const subject   = String(data.subject ?? "(no subject)");
-  const bodyText  = typeof data.text === "string" ? data.text : null;
-  const bodyHtml  = typeof data.html === "string" ? data.html : null;
+  // Resend may use 'text', 'body', or 'plain_text' depending on version
+  const bodyText  = typeof data.text === "string" ? data.text
+                  : typeof data.body === "string" ? data.body
+                  : typeof data.plain_text === "string" ? data.plain_text
+                  : null;
+  const bodyHtml  = typeof data.html === "string" ? data.html
+                  : typeof data.body_html === "string" ? data.body_html
+                  : null;
   const replyToRaw = Array.isArray(data.reply_to)
     ? String(data.reply_to[0] ?? "")
     : String(data.reply_to ?? "");
