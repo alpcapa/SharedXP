@@ -124,7 +124,7 @@ const NoteHistory = ({ adminNotes, adminName = "Admin", fallbackDate = null }) =
 };
 
 // ── Admin CM Management panel ─────────────────────────────────────────────────
-const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "applications" }) => {
+const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "applications", onCountChange }) => {
   const [subTab, setSubTab] = useState(initialSubTab);
   const [applications, setApplications] = useState([]);
   const [cmProfiles, setCmProfiles] = useState([]);
@@ -174,7 +174,8 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
     setApplications(apps);
     setCmProfiles(cms.map((cm) => ({ ...cm, _application: appByUserId[cm.user_id] ?? null })));
     setLoading(false);
-  }, []);
+    onCountChange?.();
+  }, [onCountChange]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -1388,7 +1389,7 @@ const AdminDisputesPage = ({ currentUser, authLoading, onLogout, onEmailLogin, o
           </>
         )}
 
-        {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} />}
+        {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} onCountChange={fetchCmCounts} />}
         {activeTab === "support" && <SupportPanel currentUser={currentUser} onRead={fetchUnreadSupport} />}
         </main>
         <SiteFooter />
