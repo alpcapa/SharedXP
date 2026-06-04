@@ -114,7 +114,7 @@ function buildBookingRequestToHost(
 ): { to: string; subject: string; html: string } {
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "A guest");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
-  const ctaUrl = `${APP_URL}/history?tab=pending`;
+  const ctaUrl = `${APP_URL}/history?tab=pending&bookingId=${booking.id}`;
   return {
     to: String(host.email),
     subject: `New booking request for ${booking.sport} — SharedXP`,
@@ -124,7 +124,7 @@ function buildBookingRequestToHost(
         `<strong>${reqName}</strong> wants to book a <strong>${booking.sport}</strong> session with you.`,
         `📅 <strong>Date:</strong> ${booking.requested_date} &nbsp; ⏰ <strong>Time:</strong> ${booking.requested_time}`,
         `💰 <strong>Price:</strong> ${booking.currency} ${Number(booking.price).toFixed(2)}`,
-        `Log in to your SharedXP account and visit your Pending Bookings to accept or decline.`,
+        `Log in to your SharedXP account to accept or decline this request.`,
       ],
       ctaUrl,
       "View Booking Request",
@@ -165,7 +165,6 @@ function buildBookingDeclinedToRequester(
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "The host");
   const reason = String(booking.decline_reason ?? "No reason provided.");
-  const ctaUrl = `${APP_URL}/history?tab=pending`;
   return {
     to: String(requester.email),
     subject: `Your booking request was declined — SharedXP`,
@@ -215,7 +214,7 @@ function buildExperienceConfirmedToHost(
 ): { to: string; subject: string; html: string } {
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "Your guest");
-  const ctaUrl = `${APP_URL}/history?tab=pending`;
+  const ctaUrl = `${APP_URL}/history`;
   return {
     to: String(host.email),
     subject: `${reqName} confirmed your experience — payment released`,
@@ -226,7 +225,7 @@ function buildExperienceConfirmedToHost(
         `Your payment has been released. Please allow 3–5 business days for the funds to appear in your registered bank account.`,
       ],
       ctaUrl,
-      "Leave a Review",
+      "View History",
       invoice ? invoiceTable(invoice) : "",
     ),
   };
@@ -239,7 +238,7 @@ function buildExperienceCompletedToRequester(
 ): { to: string; subject: string; html: string } {
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "your host");
-  const ctaUrl = `${APP_URL}/history?tab=pending`;
+  const ctaUrl = `${APP_URL}/history?tab=pending&bookingId=${booking.id}`;
   return {
     to: String(requester.email),
     subject: `How was your ${booking.sport} experience with ${hostName}? Please confirm`,
@@ -385,8 +384,8 @@ function buildCancelledPrePaymentToHost(
         `<strong>${reqName}</strong> has cancelled their <strong>${booking.sport}</strong> booking for <strong>${booking.requested_date}</strong> at <strong>${booking.requested_time}</strong>.`,
         `No payment was made, so there is nothing further to action. Your slot is now open again.`,
       ],
-      `${APP_URL}/history?tab=pending`,
-      "View Bookings",
+      `${APP_URL}/history`,
+      "View History",
     ),
   };
 }
@@ -433,8 +432,8 @@ function buildCancelledPostPaymentToHost(
         refundLine,
         hostLine,
       ],
-      `${APP_URL}/history?tab=pending`,
-      "View Bookings",
+      `${APP_URL}/history`,
+      "View History",
     ),
   };
 }
@@ -532,7 +531,7 @@ function buildDisputeOpenedToRequester(
         `Our team will review both accounts and get back to you within 24–48 hours. The host has been notified and given the opportunity to respond.`,
         `In the meantime, you can view the status of your booking in your history.`,
       ],
-      `${APP_URL}/history?tab=pending`,
+      `${APP_URL}/history?tab=pending&bookingId=${booking.id}`,
       "View Your Booking",
     ),
   };

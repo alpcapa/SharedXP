@@ -799,7 +799,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const handleOpenConfirmation = () => {
     if (!canBook) return;
     if (!currentUser) {
-      sessionStorage.setItem("postAuthRedirect", location.pathname);
+      sessionStorage.setItem("postAuthRedirect", location.pathname + location.search);
       setShowLoginPrompt(true);
       return;
     }

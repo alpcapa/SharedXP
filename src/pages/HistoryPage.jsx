@@ -68,6 +68,7 @@ const HistoryPage = ({
   const location = useLocation();
   const queryTab = new URLSearchParams(location.search).get("tab");
   const queryEditRating = new URLSearchParams(location.search).get("editRating");
+  const queryBookingId = new URLSearchParams(location.search).get("bookingId");
 
   const [allItems, setAllItems] = useState(() =>
     mergeAndSort(
@@ -518,6 +519,7 @@ const HistoryPage = ({
                     onSubmitRating={submitRating}
                     currentUser={currentUser}
                     editRatingRequestId={queryEditRating}
+                    scrollToId={queryBookingId}
                   />
                 ))}
               </div>
@@ -543,6 +545,7 @@ const HistoryPage = ({
                     onSubmitRating={submitRating}
                     currentUser={currentUser}
                     editRatingRequestId={queryEditRating}
+                    scrollToId={queryBookingId}
                   />
                 ))}
               </div>
@@ -570,6 +573,7 @@ const HistoryPage = ({
                     onSubmitRating={submitRating}
                     currentUser={currentUser}
                     editRatingRequestId={queryEditRating}
+                    scrollToId={queryBookingId}
                   />
                 ))}
               </div>
@@ -613,6 +617,7 @@ const HistoryPage = ({
                           onSubmitRating={submitRating}
                           currentUser={currentUser}
                           editRatingRequestId={queryEditRating}
+                    scrollToId={queryBookingId}
                         />
                       ) : (
                         <HistoryCard

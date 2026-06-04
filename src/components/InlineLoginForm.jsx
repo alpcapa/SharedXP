@@ -1,7 +1,15 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 const InlineLoginForm = ({ onEmailLogin, onForgotPassword, title, description }) => {
+  const location = useLocation();
+
+  // Persist the current URL so any login method (inline, /login page, OAuth)
+  // redirects back here after authentication.
+  useEffect(() => {
+    sessionStorage.setItem("postAuthRedirect", location.pathname + location.search);
+  }, [location.pathname, location.search]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
