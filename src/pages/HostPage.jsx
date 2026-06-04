@@ -51,6 +51,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
     () => getInitialHostProfile(currentUser),
     [currentUser]
   );
+  const navigate = useNavigate();
   const [hostProfileDraft, setHostProfileDraft] = useState(initialProfile);
   const [activeSportIndex, setActiveSportIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
@@ -65,6 +66,24 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
   const [isSaving, setIsSaving] = useState(false);
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
+  const [showCmModal, setShowCmModal] = useState(false);
+  const [cmStep, setCmStep] = useState("info");
+  const [cmForm, setCmForm] = useState({ sportsBackground: "", motivation: "", contactTimes: "", agreedToCmTerms: false, agreedToContact: false, country: "", city: "", phoneCountryCode: "", phone: "" });
+  const [cmError, setCmError] = useState("");
+  const [cmSubmitting, setCmSubmitting] = useState(false);
+  const [cmSuccess, setCmSuccess] = useState(false);
+  const [isCmCountryOpen, setIsCmCountryOpen] = useState(false);
+  const [cmCountrySearch, setCmCountrySearch] = useState("");
+  const [isCmCityOpen, setIsCmCityOpen] = useState(false);
+  const [cmCitySearch, setCmCitySearch] = useState("");
+  const [isCmPhoneOpen, setIsCmPhoneOpen] = useState(false);
+  const [cmPhoneSearch, setCmPhoneSearch] = useState("");
+  const cmCountryRef = useRef(null);
+  const cmCityRef = useRef(null);
+  const cmPhoneRef = useRef(null);
+  const [hostedCount, setHostedCount] = useState(currentUser?.hostHistory?.length ?? 0);
+  const [cmAppStatus, setCmAppStatus] = useState(null);
+  const [cmAppUpdatedAt, setCmAppUpdatedAt] = useState(null);
 
   const selectedCountry = useMemo(
     () =>
@@ -133,26 +152,6 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [isCountryDropdownOpen, isCityDropdownOpen, isCmCountryOpen, isCmCityOpen, isCmPhoneOpen]);
-
-  const navigate = useNavigate();
-  const [showCmModal, setShowCmModal] = useState(false);
-  const [cmStep, setCmStep] = useState("info");
-  const [cmForm, setCmForm] = useState({ sportsBackground: "", motivation: "", contactTimes: "", agreedToCmTerms: false, agreedToContact: false, country: "", city: "", phoneCountryCode: "", phone: "" });
-  const [cmError, setCmError] = useState("");
-  const [cmSubmitting, setCmSubmitting] = useState(false);
-  const [cmSuccess, setCmSuccess] = useState(false);
-  const [isCmCountryOpen, setIsCmCountryOpen] = useState(false);
-  const [cmCountrySearch, setCmCountrySearch] = useState("");
-  const [isCmCityOpen, setIsCmCityOpen] = useState(false);
-  const [cmCitySearch, setCmCitySearch] = useState("");
-  const [isCmPhoneOpen, setIsCmPhoneOpen] = useState(false);
-  const [cmPhoneSearch, setCmPhoneSearch] = useState("");
-  const cmCountryRef = useRef(null);
-  const cmCityRef = useRef(null);
-  const cmPhoneRef = useRef(null);
-  const [hostedCount, setHostedCount] = useState(currentUser?.hostHistory?.length ?? 0);
-  const [cmAppStatus, setCmAppStatus] = useState(null);
-  const [cmAppUpdatedAt, setCmAppUpdatedAt] = useState(null);
 
   const cmSelectedCountry = useMemo(
     () => COUNTRY_OPTIONS.find((c) => c.name.toLowerCase() === cmForm.country.trim().toLowerCase()) ?? null,
