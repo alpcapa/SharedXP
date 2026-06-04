@@ -135,6 +135,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
   const [cmActionMode, setCmActionMode] = useState(null); // { id, action }
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [cmSearch, setCmSearch] = useState(initialSearch);
+  const [emailFeedback, setEmailFeedback] = useState({});
 
   const toggleExpand = (id) =>
     setExpandedIds((prev) => {
@@ -189,12 +190,16 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
 
   const busy = (id) => actionBusy === id;
 
+  const setEmailErr = (id, msg) => setEmailFeedback((prev) => ({ ...prev, [id]: { type: "error", msg } }));
+  const clearEmailFeedback = (id) => setEmailFeedback((prev) => { const next = { ...prev }; delete next[id]; return next; });
+
   const sendAdminEmail = async (cm) => {
     const subject = getSubject(cm.id).trim();
     const message = getNote(cm.id).trim();
-    if (!subject) { alert("Please enter a subject."); return; }
-    if (!message) { alert("Please enter a message."); return; }
+    if (!subject) { setEmailErr(cm.id, "Please enter a subject."); return; }
+    if (!message) { setEmailErr(cm.id, "Please enter a message."); return; }
     if (busy(`email-${cm.id}`)) return;
+    clearEmailFeedback(cm.id);
     setActionBusy(`email-${cm.id}`);
     try {
       const res = await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
@@ -204,15 +209,15 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        alert(`Failed to send: ${json.error ?? res.status}`);
+        setEmailErr(cm.id, `Failed to send: ${json.error ?? res.status}`);
       } else {
-        alert("Email sent.");
+        setEmailFeedback((prev) => ({ ...prev, [cm.id]: { type: "success", msg: "Sent" } }));
         setSubject(cm.id, "");
         setNote(cm.id, "");
-        setCmActionMode(null);
+        setTimeout(() => { setCmActionMode(null); clearEmailFeedback(cm.id); }, 1500);
       }
     } catch (e) {
-      alert(`Error: ${e.message}`);
+      setEmailErr(cm.id, `Error: ${e.message}`);
     }
     setActionBusy(null);
   };
@@ -708,7 +713,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                                 className="cm-admin-email-subject"
                                 placeholder="Subject…"
                                 value={getSubject(cm.id)}
-                                onChange={(e) => setSubject(cm.id, e.target.value)}
+                                onChange={(e) => { setSubject(cm.id, e.target.value); clearEmailFeedback(cm.id); }}
                                 autoFocus
                               />
                               <textarea
@@ -716,23 +721,28 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                                 rows={4}
                                 placeholder="Message…"
                                 value={getNote(cm.id)}
-                                onChange={(e) => setNote(cm.id, e.target.value)}
+                                onChange={(e) => { setNote(cm.id, e.target.value); clearEmailFeedback(cm.id); }}
                               />
+                              {emailFeedback[cm.id] && (
+                                <p style={{ margin: "6px 0 0", fontSize: 13, color: emailFeedback[cm.id].type === "error" ? "#ef4444" : "#2e7d32" }}>
+                                  {emailFeedback[cm.id].msg}
+                                </p>
+                              )}
                               <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
                                 <button
                                   type="button"
                                   className="btn btn-light"
-                                  onClick={() => { setCmActionMode(null); setSubject(cm.id, ""); setNote(cm.id, ""); }}
+                                  onClick={() => { setCmActionMode(null); setSubject(cm.id, ""); setNote(cm.id, ""); clearEmailFeedback(cm.id); }}
                                 >
                                   Cancel
                                 </button>
                                 <button
                                   type="button"
                                   className="btn btn-primary"
-                                  disabled={busy(`email-${cm.id}`)}
+                                  disabled={busy(`email-${cm.id}`) || emailFeedback[cm.id]?.type === "success"}
                                   onClick={() => sendAdminEmail(cm)}
                                 >
-                                  {busy(`email-${cm.id}`) ? "Sending…" : "Send Email"}
+                                  {emailFeedback[cm.id]?.type === "success" ? "Sent" : busy(`email-${cm.id}`) ? "Sending…" : "Send Email"}
                                 </button>
                               </div>
                             </>
