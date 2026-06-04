@@ -50,7 +50,7 @@ function emailHtml(
             <h1 style="margin:0 0 20px;font-size:22px;font-weight:700;color:#1a1a1a;">${heading}</h1>
             ${body}
             ${extraHtml}
-            <a href="${ctaUrl}" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 28px;border-radius:6px;margin-top:20px;">
+            <a href="${ctaUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 28px;border-radius:6px;margin-top:20px;">
               ${ctaLabel}
             </a>
           </td>
@@ -59,7 +59,7 @@ function emailHtml(
           <td style="padding:24px 40px 40px;">
             <p style="margin:0;font-size:13px;color:#888;line-height:1.5;">
               If the button above doesn't work, copy and paste this link into your browser:<br/>
-              <a href="${ctaUrl}" style="color:#1a1a1a;word-break:break-all;">${ctaUrl}</a>
+              <a href="${ctaUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a1a1a;word-break:break-all;">${ctaUrl}</a>
             </p>
           </td>
         </tr>
