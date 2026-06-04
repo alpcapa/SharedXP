@@ -32,12 +32,12 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
     typeof hostingPausedOverride === "boolean"
       ? hostingPausedOverride
       : Boolean(currentUser?.isHost && currentUser?.hostProfile?.pauseHosting);
-  let hostLabel = "Become A Host";
+  let hostLabel = "Become Host";
   if (currentUser?.isHost) {
     hostLabel = isHostingPaused ? "Hosting Paused" : "Host Settings";
   }
   const navHostRoute = isLoggedIn ? hostRoute : "/become-a-host";
-  const navHostLabel = isLoggedIn ? hostLabel : "Become a Host";
+  const navHostLabel = isLoggedIn ? hostLabel : "Become Host";
   const isHostLabelPaused = Boolean(isLoggedIn && currentUser?.isHost && isHostingPaused);
 
   const fallbackPhoto = useMemo(() => {
@@ -138,9 +138,11 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
                   </span>
                 )}
               </Link>
-              <Link to="/payment-history" className="user-dropdown-link" role="menuitem">
-                Payment History
-              </Link>
+              {currentUser.isHost && (
+                <Link to="/payment-history" className="user-dropdown-link" role="menuitem">
+                  Payment History
+                </Link>
+              )}
               <Link
                 to={navHostRoute}
                 className={`user-dropdown-link${isHostLabelPaused ? " site-nav-link-paused" : ""}`}

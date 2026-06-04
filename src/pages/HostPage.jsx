@@ -14,6 +14,35 @@ import {
   validateSportsTab,
 } from "../components/host/hostUtils";
 
+const REGIONAL_INDICATOR_OFFSET = 127397;
+const getCountryFlag = (code) =>
+  String(code || "")
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + char.charCodeAt(0)));
+
+const getCmPhoneDetails = (user) => {
+  const rawPhone = String(user?.phone ?? "").trim();
+  const explicitCode = user?.phoneCountryCode || "";
+  const explicitCountry = COUNTRY_OPTIONS.find((c) => c.code === explicitCode);
+  const dialCode = explicitCountry?.dialCode ?? user?.countryDialCode ?? "";
+  const matched = explicitCountry ?? COUNTRY_OPTIONS.find((c) => c.dialCode === dialCode);
+  if (matched) {
+    const phoneDigits = rawPhone.replace(/\D/g, "");
+    const dialDigits = matched.dialCode.replace(/\D/g, "");
+    return {
+      phoneCountryCode: matched.code,
+      phone: phoneDigits.startsWith(dialDigits) ? phoneDigits.slice(dialDigits.length) : phoneDigits,
+    };
+  }
+  const phoneDigits = rawPhone.replace(/\D/g, "");
+  const longestMatch = [...COUNTRY_OPTIONS]
+    .sort((a, b) => b.dialCode.length - a.dialCode.length)
+    .find((c) => phoneDigits.startsWith(c.dialCode.replace(/\D/g, "")));
+  if (!longestMatch) return { phoneCountryCode: "", phone: phoneDigits };
+  const dialDigits = longestMatch.dialCode.replace(/\D/g, "");
+  return { phoneCountryCode: longestMatch.code, phone: phoneDigits.slice(dialDigits.length) };
+};
+
 const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword, onSaveHostProfile, onTogglePauseHosting, onSubmitCmApplication }) => {
   const location = useLocation();
   const isHostSettingsRoute = location.pathname === "/host-settings";
@@ -22,6 +51,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
     () => getInitialHostProfile(currentUser),
     [currentUser]
   );
+  const navigate = useNavigate();
   const [hostProfileDraft, setHostProfileDraft] = useState(initialProfile);
   const [activeSportIndex, setActiveSportIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
@@ -36,6 +66,24 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
   const [isSaving, setIsSaving] = useState(false);
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
+  const [showCmModal, setShowCmModal] = useState(false);
+  const [cmStep, setCmStep] = useState("info");
+  const [cmForm, setCmForm] = useState({ sportsBackground: "", motivation: "", contactTimes: "", agreedToCmTerms: false, agreedToContact: false, country: "", city: "", phoneCountryCode: "", phone: "" });
+  const [cmError, setCmError] = useState("");
+  const [cmSubmitting, setCmSubmitting] = useState(false);
+  const [cmSuccess, setCmSuccess] = useState(false);
+  const [isCmCountryOpen, setIsCmCountryOpen] = useState(false);
+  const [cmCountrySearch, setCmCountrySearch] = useState("");
+  const [isCmCityOpen, setIsCmCityOpen] = useState(false);
+  const [cmCitySearch, setCmCitySearch] = useState("");
+  const [isCmPhoneOpen, setIsCmPhoneOpen] = useState(false);
+  const [cmPhoneSearch, setCmPhoneSearch] = useState("");
+  const cmCountryRef = useRef(null);
+  const cmCityRef = useRef(null);
+  const cmPhoneRef = useRef(null);
+  const [hostedCount, setHostedCount] = useState(currentUser?.hostHistory?.length ?? 0);
+  const [cmAppStatus, setCmAppStatus] = useState(null);
+  const [cmAppUpdatedAt, setCmAppUpdatedAt] = useState(null);
 
   const selectedCountry = useMemo(
     () =>
@@ -85,35 +133,55 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (
-        isCountryDropdownOpen &&
-        countryDropdownRef.current &&
-        !countryDropdownRef.current.contains(event.target)
-      ) {
+      if (isCountryDropdownOpen && countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) {
         setIsCountryDropdownOpen(false);
       }
-      if (
-        isCityDropdownOpen &&
-        cityDropdownRef.current &&
-        !cityDropdownRef.current.contains(event.target)
-      ) {
+      if (isCityDropdownOpen && cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
         setIsCityDropdownOpen(false);
+      }
+      if (isCmCountryOpen && cmCountryRef.current && !cmCountryRef.current.contains(event.target)) {
+        setIsCmCountryOpen(false);
+      }
+      if (isCmCityOpen && cmCityRef.current && !cmCityRef.current.contains(event.target)) {
+        setIsCmCityOpen(false);
+      }
+      if (isCmPhoneOpen && cmPhoneRef.current && !cmPhoneRef.current.contains(event.target)) {
+        setIsCmPhoneOpen(false);
       }
     };
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [isCountryDropdownOpen, isCityDropdownOpen]);
+  }, [isCountryDropdownOpen, isCityDropdownOpen, isCmCountryOpen, isCmCityOpen, isCmPhoneOpen]);
 
-  const navigate = useNavigate();
-  const [showCmModal, setShowCmModal] = useState(false);
-  const [cmStep, setCmStep] = useState("info");
-  const [cmForm, setCmForm] = useState({ sportsBackground: "", motivation: "", contactTimes: "", agreedToCmTerms: false, agreedToContact: false });
-  const [cmError, setCmError] = useState("");
-  const [cmSubmitting, setCmSubmitting] = useState(false);
-  const [cmSuccess, setCmSuccess] = useState(false);
-  const [hostedCount, setHostedCount] = useState(currentUser?.hostHistory?.length ?? 0);
-  const [cmAppStatus, setCmAppStatus] = useState(null);
-  const [cmAppUpdatedAt, setCmAppUpdatedAt] = useState(null);
+  const cmSelectedCountry = useMemo(
+    () => COUNTRY_OPTIONS.find((c) => c.name.toLowerCase() === cmForm.country.trim().toLowerCase()) ?? null,
+    [cmForm.country]
+  );
+  const cmAvailableCities = useMemo(() => {
+    if (!cmSelectedCountry) return [];
+    const cities = COUNTRY_CITY_OPTIONS[cmSelectedCountry.code] ?? [];
+    if (cmForm.city && !cities.includes(cmForm.city)) return [cmForm.city, ...cities];
+    return cities;
+  }, [cmSelectedCountry, cmForm.city]);
+  const cmFilteredCountries = useMemo(() => {
+    const search = cmCountrySearch.trim().toLowerCase();
+    if (!search) return COUNTRY_OPTIONS;
+    return COUNTRY_OPTIONS.filter((c) => c.name.toLowerCase().includes(search));
+  }, [cmCountrySearch]);
+  const cmFilteredCities = useMemo(() => {
+    const search = cmCitySearch.trim().toLowerCase();
+    if (!search) return cmAvailableCities;
+    return cmAvailableCities.filter((c) => c.toLowerCase().includes(search));
+  }, [cmAvailableCities, cmCitySearch]);
+  const cmSelectedPhoneCountry = useMemo(
+    () => COUNTRY_OPTIONS.find((c) => c.code === cmForm.phoneCountryCode) ?? cmSelectedCountry ?? null,
+    [cmForm.phoneCountryCode, cmSelectedCountry]
+  );
+  const cmFilteredPhoneCodes = useMemo(() => {
+    const search = cmPhoneSearch.trim().toLowerCase();
+    if (!search) return COUNTRY_OPTIONS;
+    return COUNTRY_OPTIONS.filter((c) => c.name.toLowerCase().includes(search) || c.dialCode.includes(search));
+  }, [cmPhoneSearch]);
 
   useEffect(() => {
     if (!currentUser?.id) return;
@@ -153,6 +221,26 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
       body: { emailType: "cm_eligible", userId: currentUser.id },
     }).catch((e) => console.error("[cm] eligibility email:", e));
   }, [hostedCount, currentUser?.id, currentUser?.isHost, currentUser?.isCm, currentUser?.cmEligibleNotified]);
+
+  useEffect(() => {
+    if (!showCmModal || !currentUser) return;
+    const phoneDetails = getCmPhoneDetails(currentUser);
+    setCmForm({
+      sportsBackground: "",
+      motivation: "",
+      contactTimes: "",
+      agreedToCmTerms: false,
+      agreedToContact: false,
+      country: currentUser.country || "",
+      city: currentUser.city || "",
+      phoneCountryCode: phoneDetails.phoneCountryCode,
+      phone: phoneDetails.phone,
+    });
+    setCmError("");
+    setIsCmCountryOpen(false);
+    setIsCmCityOpen(false);
+    setIsCmPhoneOpen(false);
+  }, [showCmModal]);
 
   if (!currentUser) {
     if (authLoading) {
@@ -292,15 +380,24 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
 
   const onCmSubmit = async (e) => {
     e.preventDefault();
+    if (!cmForm.country.trim()) { setCmError("Please select your country."); return; }
+    if (!cmForm.city.trim()) { setCmError("Please enter your city."); return; }
+    if (!cmSelectedPhoneCountry) { setCmError("Please select your phone country code."); return; }
+    if (!cmForm.phone.trim()) { setCmError("Please enter your phone number."); return; }
     if (!cmForm.sportsBackground.trim()) { setCmError("Please describe your sports background."); return; }
     if (!cmForm.motivation.trim()) { setCmError("Please share your motivation."); return; }
     if (!cmForm.agreedToCmTerms) { setCmError("Please agree to the Community Manager terms."); return; }
     if (!cmForm.agreedToContact) { setCmError("Please agree to be contacted about Community Manager matters."); return; }
+    const phoneDigits = cmForm.phone.trim().replace(/\D/g, "");
+    const dialDigits = (cmSelectedPhoneCountry?.dialCode || "").replace(/\D/g, "");
+    const localDigits = phoneDigits.startsWith(dialDigits) ? phoneDigits.slice(dialDigits.length) : phoneDigits;
+    const fullPhone = `${cmSelectedPhoneCountry.dialCode} ${localDigits}`.trim();
     setCmError("");
     setCmSubmitting(true);
     const result = await onSubmitCmApplication?.({
-      city: currentUser?.city || "",
-      country: currentUser?.country || "",
+      country: cmForm.country.trim(),
+      city: cmForm.city.trim(),
+      phone: fullPhone,
       sportsBackground: cmForm.sportsBackground.trim(),
       motivation: cmForm.motivation.trim(),
       contactTimes: cmForm.contactTimes.trim(),
@@ -533,6 +630,149 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                       Tell us about yourself and why you'd be a great SharedXP ambassador. We'll review your application and get back to you within 5 business days.
                     </p>
                     <form onSubmit={onCmSubmit} className="cm-application-form">
+                      <p className="cm-form-section-label">Contact details</p>
+                      <label htmlFor="cm-country">Country</label>
+                      <div className="auth-search-dropdown" ref={cmCountryRef}>
+                        <button
+                          type="button"
+                          className="auth-dropdown-trigger cm-dropdown-trigger"
+                          aria-haspopup="listbox"
+                          aria-expanded={isCmCountryOpen}
+                          onClick={() => { setIsCmCountryOpen((p) => !p); setCmCountrySearch(""); }}
+                        >
+                          {cmForm.country || <span className="cm-dropdown-placeholder">Select country</span>}
+                        </button>
+                        {isCmCountryOpen && (
+                          <div className="auth-dropdown-panel">
+                            <input
+                              type="search"
+                              className="auth-dropdown-search"
+                              placeholder="Search country"
+                              value={cmCountrySearch}
+                              onChange={(e) => setCmCountrySearch(e.target.value)}
+                            />
+                            <ul className="auth-dropdown-options" role="listbox">
+                              {cmFilteredCountries.map((option) => (
+                                <li key={option.code}>
+                                  <button
+                                    type="button"
+                                    className="auth-dropdown-option"
+                                    role="option"
+                                    aria-selected={cmForm.country === option.name}
+                                    onClick={() => {
+                                      setCmForm((prev) => ({ ...prev, country: option.name, city: "", phoneCountryCode: prev.phoneCountryCode || option.code }));
+                                      setIsCmCountryOpen(false);
+                                    }}
+                                  >
+                                    <span>{getCountryFlag(option.code)}</span>
+                                    <span>{option.name}</span>
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                      <label htmlFor="cm-city">City</label>
+                      <div className="auth-search-dropdown" ref={cmCityRef}>
+                        <button
+                          type="button"
+                          className="auth-dropdown-trigger cm-dropdown-trigger"
+                          aria-haspopup="listbox"
+                          aria-expanded={isCmCityOpen}
+                          disabled={!cmSelectedCountry}
+                          onClick={() => { setIsCmCityOpen((p) => !p); setCmCitySearch(""); }}
+                        >
+                          {cmForm.city || <span className="cm-dropdown-placeholder">{cmSelectedCountry ? "Select city" : "Select country first"}</span>}
+                        </button>
+                        {isCmCityOpen && cmSelectedCountry && (
+                          <div className="auth-dropdown-panel">
+                            <input
+                              type="search"
+                              className="auth-dropdown-search"
+                              placeholder="Search city"
+                              value={cmCitySearch}
+                              onChange={(e) => setCmCitySearch(e.target.value)}
+                            />
+                            <ul className="auth-dropdown-options" role="listbox">
+                              {cmFilteredCities.map((city) => (
+                                <li key={city}>
+                                  <button
+                                    type="button"
+                                    className="auth-dropdown-option"
+                                    role="option"
+                                    aria-selected={cmForm.city === city}
+                                    onClick={() => { setCmForm((prev) => ({ ...prev, city })); setIsCmCityOpen(false); }}
+                                  >
+                                    {city}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                      <label id="cm-phone-label">Phone number</label>
+                      <div className="auth-phone-field">
+                        <div className="auth-search-dropdown auth-phone-code-picker" ref={cmPhoneRef}>
+                          <button
+                            type="button"
+                            className="auth-dropdown-trigger auth-phone-code-trigger"
+                            aria-haspopup="listbox"
+                            aria-expanded={isCmPhoneOpen}
+                            aria-labelledby="cm-phone-label"
+                            onClick={() => { setIsCmPhoneOpen((p) => !p); setCmPhoneSearch(""); }}
+                          >
+                            {cmSelectedPhoneCountry ? (
+                              <>
+                                <span>{getCountryFlag(cmSelectedPhoneCountry.code)}</span>
+                                <span>{cmSelectedPhoneCountry.dialCode}</span>
+                              </>
+                            ) : (
+                              <span>Code</span>
+                            )}
+                          </button>
+                          {isCmPhoneOpen && (
+                            <div className="auth-dropdown-panel">
+                              <input
+                                type="search"
+                                className="auth-dropdown-search"
+                                placeholder="Search country or code"
+                                value={cmPhoneSearch}
+                                onChange={(e) => setCmPhoneSearch(e.target.value)}
+                              />
+                              <ul className="auth-dropdown-options" role="listbox" aria-labelledby="cm-phone-label">
+                                {cmFilteredPhoneCodes.map((option) => (
+                                  <li key={`cm-phone-${option.code}`}>
+                                    <button
+                                      type="button"
+                                      className="auth-dropdown-option"
+                                      role="option"
+                                      aria-selected={cmForm.phoneCountryCode === option.code}
+                                      onClick={() => {
+                                        setCmForm((prev) => ({ ...prev, phoneCountryCode: option.code }));
+                                        setIsCmPhoneOpen(false);
+                                      }}
+                                    >
+                                      <span>{getCountryFlag(option.code)}</span>
+                                      <span>{option.name} ({option.dialCode})</span>
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          id="cm-phone"
+                          name="phone"
+                          type="tel"
+                          placeholder="Phone number"
+                          value={cmForm.phone}
+                          onChange={onCmFormChange}
+                        />
+                      </div>
+                      <p className="cm-form-section-label cm-form-section-label--top">About you</p>
                       <label htmlFor="cm-sports-bg">Your bio and sports background</label>
                       <textarea
                         id="cm-sports-bg"

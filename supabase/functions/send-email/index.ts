@@ -98,9 +98,14 @@ function emailHtml(heading: string, body: string, ctaUrl: string, ctaLabel: stri
           </tr>
           <tr>
             <td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #eeeeee;">
-              <p style="margin:0;font-size:12px;color:#aaa;">
-                © ${new Date().getFullYear()} SharedXP · All rights reserved
-              </p>
+              <table width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="font-size:12px;color:#aaa;line-height:1.5;">
+                  This is a noreply email, please visit <a href="${APP_URL}/help" style="color:#aaa;text-decoration:underline;">Help Center</a> to contact us.
+                </td>
+                <td style="font-size:12px;color:#aaa;text-align:right;white-space:nowrap;padding-left:16px;">
+                  © ${new Date().getFullYear()} SharedXP
+                </td>
+              </tr></table>
             </td>
           </tr>
         </table>

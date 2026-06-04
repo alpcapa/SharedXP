@@ -7419,7 +7419,8 @@ body {
   margin-top: 16px;
 }
 .cm-application-form textarea,
-.cm-application-form input[type="text"] {
+.cm-application-form input[type="text"],
+.cm-application-form input[type="tel"] {
   width: 100%;
   border: 1px solid #d8d8d0;
   border-radius: 8px;
@@ -7431,7 +7432,61 @@ body {
   color: #1a1a1a;
 }
 .cm-application-form textarea:focus,
-.cm-application-form input[type="text"]:focus {
+.cm-application-form input[type="text"]:focus,
+.cm-application-form input[type="tel"]:focus {
+  outline: none;
+  border-color: #1a1a1a;
+}
+.cm-form-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #999;
+  margin: 20px 0 0;
+}
+.cm-form-section-label--top {
+  margin-top: 28px;
+}
+.cm-dropdown-trigger {
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #d8d8d0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+.cm-dropdown-trigger:focus {
+  outline: none;
+  border-color: #1a1a1a;
+}
+.cm-dropdown-trigger:disabled {
+  background: #f7f7f5;
+  color: #aaa;
+  cursor: not-allowed;
+}
+.cm-dropdown-placeholder {
+  color: #aaa;
+}
+.cm-application-form .auth-phone-field {
+  margin-top: 0;
+}
+.cm-application-form .auth-phone-code-trigger {
+  background: #fff;
+  border: 1px solid #d8d8d0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1a1a1a;
+  cursor: pointer;
+  height: 40px;
+}
+.cm-application-form .auth-phone-code-trigger:focus {
   outline: none;
   border-color: #1a1a1a;
 }
