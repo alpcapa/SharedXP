@@ -385,7 +385,7 @@ function buildCancelledPrePaymentToHost(
         `No payment was made, so there is nothing further to action. Your slot is now open again.`,
       ],
       `${APP_URL}/history`,
-      "View Bookings",
+      "View History",
     ),
   };
 }
@@ -433,7 +433,7 @@ function buildCancelledPostPaymentToHost(
         hostLine,
       ],
       `${APP_URL}/history`,
-      "View Bookings",
+      "View History",
     ),
   };
 }
