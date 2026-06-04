@@ -1307,6 +1307,7 @@ body {
 .auth-form input,
 .auth-form textarea,
 .auth-form select {
+  width: 100%;
   border: 1px solid #dbe1d8;
   border-radius: 12px;
   padding: 10px 12px;
@@ -2335,6 +2336,7 @@ body {
 
 .history-field select,
 .history-field textarea {
+  width: 100%;
   border: 1px solid #dbe1d8;
   border-radius: 12px;
   padding: 10px 12px;
@@ -4166,6 +4168,7 @@ body {
 }
 
 .field-share-caption-input {
+  width: 100%;
   padding: 10px 12px;
   border: 1px solid #d1d8cd;
   border-radius: 10px;
@@ -5256,6 +5259,7 @@ body {
 }
 
 .payment-input {
+  width: 100%;
   padding: 11px 14px;
   border: 1px solid #d1d8cd;
   border-radius: 10px;
@@ -7810,6 +7814,7 @@ body {
   margin: 0;
   color: #444;
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 .cm-admin-stats-row {
   display: flex;
@@ -8075,7 +8080,6 @@ body {
   font-size: 12px;
   font-weight: 700;
   color: #2e7d32;
-  text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 .support-admin-reply-subject {

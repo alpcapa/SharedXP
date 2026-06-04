@@ -65,7 +65,14 @@ function emailHtml(
         </tr>
         <tr>
           <td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #eeeeee;">
-            <p style="margin:0;font-size:12px;color:#aaa;">© ${new Date().getFullYear()} SharedXP · All rights reserved</p>
+            <table width="100%" cellpadding="0" cellspacing="0"><tr>
+              <td style="font-size:12px;color:#aaa;line-height:1.5;">
+                This is a noreply email, please visit <a href="${APP_URL}/help" style="color:#aaa;text-decoration:underline;">Help Center</a> to contact us.
+              </td>
+              <td style="font-size:12px;color:#aaa;text-align:right;white-space:nowrap;padding-left:16px;">
+                © ${new Date().getFullYear()} SharedXP
+              </td>
+            </tr></table>
           </td>
         </tr>
       </table>
@@ -925,11 +932,13 @@ serve(async (req: Request): Promise<Response> => {
         case "cm_admin_message": {
           const subject = String(body.subject ?? "Message from SharedXP");
           const message = String(body.message ?? "");
+          const signatureHtml = `<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e8e9e4;"><p style="margin:0 0 2px;font-size:13px;color:#888;">Sincerely,</p><p style="margin:0;font-size:13px;font-weight:700;color:#444;">SharedXP Support</p></div>`;
           const html = emailHtml(
             subject,
             [message],
             `${APP_URL}/user/${userId}`,
             "Go to My Profile",
+            signatureHtml,
           );
           await sendEmail(String(userProfile.email), subject, html);
           break;
@@ -962,7 +971,7 @@ serve(async (req: Request): Promise<Response> => {
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });
     }
-    const SUPPORT_FROM = `SharedXP Support <noreply@sharedxp.com>`;
+    const SUPPORT_FROM = `SharedXP <noreply@sharedxp.com>`;
     const bodyLines = String(message).split("\n").map((l) =>
       `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">${l || "&nbsp;"}</p>`
     ).join("");
@@ -982,12 +991,15 @@ serve(async (req: Request): Promise<Response> => {
           <p style="margin:0 0 4px;font-size:14px;color:#444;">Sincerely,</p>
           <p style="margin:0;font-size:14px;font-weight:700;color:#444;">SharedXP Support</p>
         </td></tr>
-        <tr><td style="background:#f9f9f9;padding:16px 32px;border-top:1px solid #eeeeee;">
-          <p style="margin:0 0 6px;font-size:12px;color:#aaa;">
-            This email was sent from a no-reply address. To follow up, please visit our
-            <a href="${APP_URL}/help" style="color:#888;text-decoration:underline;">Help Center</a>.
-          </p>
-          <p style="margin:0;font-size:12px;color:#aaa;">© ${new Date().getFullYear()} SharedXP</p>
+        <tr><td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #eeeeee;">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="font-size:12px;color:#aaa;line-height:1.5;">
+              This is a noreply email, please visit <a href="${APP_URL}/help" style="color:#aaa;text-decoration:underline;">Help Center</a> to contact us.
+            </td>
+            <td style="font-size:12px;color:#aaa;text-align:right;white-space:nowrap;padding-left:16px;">
+              © ${new Date().getFullYear()} SharedXP
+            </td>
+          </tr></table>
         </td></tr>
       </table>
     </td></tr>
@@ -1004,7 +1016,7 @@ serve(async (req: Request): Promise<Response> => {
     const prevReplies = Array.isArray(existing?.admin_replies) ? existing.admin_replies : [];
     await db.from("support_messages").update({
       status: "replied",
-      admin_replies: [...prevReplies, { body: message, subject, sent_at: new Date().toISOString(), replied_by: repliedBy ?? "Admin" }],
+      admin_replies: [...prevReplies, { body: message, subject, sent_at: new Date().toISOString(), replied_by: repliedBy || "Admin" }],
     }).eq("id", supportMessageId);
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
