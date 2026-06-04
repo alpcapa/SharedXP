@@ -962,7 +962,7 @@ serve(async (req: Request): Promise<Response> => {
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });
     }
-    const SUPPORT_FROM = `SharedXP Support <noreply@sharedxp.com>`;
+    const SUPPORT_FROM = `SharedXP <noreply@sharedxp.com>`;
     const bodyLines = String(message).split("\n").map((l) =>
       `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">${l || "&nbsp;"}</p>`
     ).join("");
