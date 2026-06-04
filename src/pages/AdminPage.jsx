@@ -477,6 +477,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                     <div className="cm-admin-fields">
                       <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
                       <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
+                      {app.phone && <div><p className="admin-dispute-label">Phone</p><p>{app.phone}</p></div>}
                       {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
                     </div>
                     {app.admin_notes && (
@@ -566,6 +567,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                     <div className="cm-admin-fields">
                       <div><p className="admin-dispute-label">Sports background</p><p>{app.sports_background}</p></div>
                       <div><p className="admin-dispute-label">Motivation</p><p>{app.motivation}</p></div>
+                      {app.phone && <div><p className="admin-dispute-label">Phone</p><p>{app.phone}</p></div>}
                       {app.contact_times && <div><p className="admin-dispute-label">Contact times</p><p>{app.contact_times}</p></div>}
                     </div>
                     {app.admin_notes && (
