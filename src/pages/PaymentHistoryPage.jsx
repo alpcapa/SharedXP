@@ -199,10 +199,6 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
       navigate("/login");
       return;
     }
-    if (!currentUser.isHost) {
-      navigate("/");
-      return;
-    }
 
     const fetchInvoices = async () => {
       setLoading(true);
