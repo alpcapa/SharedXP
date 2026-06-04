@@ -99,36 +99,6 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
     return availableCities.filter((c) => c.toLowerCase().includes(search));
   }, [availableCities, citySearchValue]);
 
-  const cmSelectedCountry = useMemo(
-    () => COUNTRY_OPTIONS.find((c) => c.name.toLowerCase() === cmForm.country.trim().toLowerCase()) ?? null,
-    [cmForm.country]
-  );
-  const cmAvailableCities = useMemo(() => {
-    if (!cmSelectedCountry) return [];
-    const cities = COUNTRY_CITY_OPTIONS[cmSelectedCountry.code] ?? [];
-    if (cmForm.city && !cities.includes(cmForm.city)) return [cmForm.city, ...cities];
-    return cities;
-  }, [cmSelectedCountry, cmForm.city]);
-  const cmFilteredCountries = useMemo(() => {
-    const search = cmCountrySearch.trim().toLowerCase();
-    if (!search) return COUNTRY_OPTIONS;
-    return COUNTRY_OPTIONS.filter((c) => c.name.toLowerCase().includes(search));
-  }, [cmCountrySearch]);
-  const cmFilteredCities = useMemo(() => {
-    const search = cmCitySearch.trim().toLowerCase();
-    if (!search) return cmAvailableCities;
-    return cmAvailableCities.filter((c) => c.toLowerCase().includes(search));
-  }, [cmAvailableCities, cmCitySearch]);
-  const cmSelectedPhoneCountry = useMemo(
-    () => COUNTRY_OPTIONS.find((c) => c.code === cmForm.phoneCountryCode) ?? cmSelectedCountry ?? null,
-    [cmForm.phoneCountryCode, cmSelectedCountry]
-  );
-  const cmFilteredPhoneCodes = useMemo(() => {
-    const search = cmPhoneSearch.trim().toLowerCase();
-    if (!search) return COUNTRY_OPTIONS;
-    return COUNTRY_OPTIONS.filter((c) => c.name.toLowerCase().includes(search) || c.dialCode.includes(search));
-  }, [cmPhoneSearch]);
-
   useEffect(() => {
     setHostProfileDraft(initialProfile);
     setActiveSportIndex(0);
@@ -183,6 +153,36 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
   const [hostedCount, setHostedCount] = useState(currentUser?.hostHistory?.length ?? 0);
   const [cmAppStatus, setCmAppStatus] = useState(null);
   const [cmAppUpdatedAt, setCmAppUpdatedAt] = useState(null);
+
+  const cmSelectedCountry = useMemo(
+    () => COUNTRY_OPTIONS.find((c) => c.name.toLowerCase() === cmForm.country.trim().toLowerCase()) ?? null,
+    [cmForm.country]
+  );
+  const cmAvailableCities = useMemo(() => {
+    if (!cmSelectedCountry) return [];
+    const cities = COUNTRY_CITY_OPTIONS[cmSelectedCountry.code] ?? [];
+    if (cmForm.city && !cities.includes(cmForm.city)) return [cmForm.city, ...cities];
+    return cities;
+  }, [cmSelectedCountry, cmForm.city]);
+  const cmFilteredCountries = useMemo(() => {
+    const search = cmCountrySearch.trim().toLowerCase();
+    if (!search) return COUNTRY_OPTIONS;
+    return COUNTRY_OPTIONS.filter((c) => c.name.toLowerCase().includes(search));
+  }, [cmCountrySearch]);
+  const cmFilteredCities = useMemo(() => {
+    const search = cmCitySearch.trim().toLowerCase();
+    if (!search) return cmAvailableCities;
+    return cmAvailableCities.filter((c) => c.toLowerCase().includes(search));
+  }, [cmAvailableCities, cmCitySearch]);
+  const cmSelectedPhoneCountry = useMemo(
+    () => COUNTRY_OPTIONS.find((c) => c.code === cmForm.phoneCountryCode) ?? cmSelectedCountry ?? null,
+    [cmForm.phoneCountryCode, cmSelectedCountry]
+  );
+  const cmFilteredPhoneCodes = useMemo(() => {
+    const search = cmPhoneSearch.trim().toLowerCase();
+    if (!search) return COUNTRY_OPTIONS;
+    return COUNTRY_OPTIONS.filter((c) => c.name.toLowerCase().includes(search) || c.dialCode.includes(search));
+  }, [cmPhoneSearch]);
 
   useEffect(() => {
     if (!currentUser?.id) return;
