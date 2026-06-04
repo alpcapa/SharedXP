@@ -7631,6 +7631,13 @@ body {
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.cm-admin-subtabs::-webkit-scrollbar {
+  display: none;
 }
 .cm-admin-card {
   background: #fff;
