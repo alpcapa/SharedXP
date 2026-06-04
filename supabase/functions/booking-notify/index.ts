@@ -114,7 +114,7 @@ function buildBookingRequestToHost(
 ): { to: string; subject: string; html: string } {
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "A guest");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
-  const ctaUrl = `${APP_URL}/history?tab=pending`;
+  const ctaUrl = `${APP_URL}/chat/${booking.id}`;
   return {
     to: String(host.email),
     subject: `New booking request for ${booking.sport} — SharedXP`,
@@ -124,7 +124,7 @@ function buildBookingRequestToHost(
         `<strong>${reqName}</strong> wants to book a <strong>${booking.sport}</strong> session with you.`,
         `📅 <strong>Date:</strong> ${booking.requested_date} &nbsp; ⏰ <strong>Time:</strong> ${booking.requested_time}`,
         `💰 <strong>Price:</strong> ${booking.currency} ${Number(booking.price).toFixed(2)}`,
-        `Log in to your SharedXP account and visit your In Progress bookings to accept or decline.`,
+        `Log in to your SharedXP account to view this request and accept or decline.`,
       ],
       ctaUrl,
       "View Booking Request",
