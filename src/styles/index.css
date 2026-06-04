@@ -4706,6 +4706,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.pending-card-highlight {
+  box-shadow: 0 0 0 3px #96c93d66;
+  border-color: #96c93d;
 }
 
 .pending-card-header {

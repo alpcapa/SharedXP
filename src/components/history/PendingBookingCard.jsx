@@ -113,6 +113,7 @@ const PendingBookingCard = ({
   onSubmitRating,
   currentUser,
   editRatingRequestId,
+  scrollToId,
 }) => {
   const cardRef = useRef(null);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
@@ -211,6 +212,16 @@ const PendingBookingCard = ({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editRatingRequestId]);
+
+  // Scroll to and briefly highlight this card when linked from an email notification.
+  useEffect(() => {
+    if (scrollToId !== request.id) return;
+    requestAnimationFrame(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      cardRef.current?.classList.add("pending-card-highlight");
+      setTimeout(() => cardRef.current?.classList.remove("pending-card-highlight"), 2000);
+    });
+  }, [scrollToId, request.id]);
 
   const initialHostRatings = initialRatingSnapshot?.hostRatings ?? {
     overall: 0,
