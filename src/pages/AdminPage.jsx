@@ -897,6 +897,7 @@ const SupportPanel = ({ currentUser, onRead }) => {
           message: replyBody,
           repliedBy: currentUser?.fullName ||
             `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() ||
+            currentUser?.email ||
             "Admin",
         }),
       });

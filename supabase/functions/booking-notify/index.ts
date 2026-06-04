@@ -1004,7 +1004,7 @@ serve(async (req: Request): Promise<Response> => {
     const prevReplies = Array.isArray(existing?.admin_replies) ? existing.admin_replies : [];
     await db.from("support_messages").update({
       status: "replied",
-      admin_replies: [...prevReplies, { body: message, subject, sent_at: new Date().toISOString(), replied_by: repliedBy ?? "Admin" }],
+      admin_replies: [...prevReplies, { body: message, subject, sent_at: new Date().toISOString(), replied_by: repliedBy || "Admin" }],
     }).eq("id", supportMessageId);
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
