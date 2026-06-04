@@ -124,7 +124,7 @@ function buildBookingRequestToHost(
         `<strong>${reqName}</strong> wants to book a <strong>${booking.sport}</strong> session with you.`,
         `📅 <strong>Date:</strong> ${booking.requested_date} &nbsp; ⏰ <strong>Time:</strong> ${booking.requested_time}`,
         `💰 <strong>Price:</strong> ${booking.currency} ${Number(booking.price).toFixed(2)}`,
-        `Log in to your SharedXP account and visit your Pending Bookings to accept or decline.`,
+        `Log in to your SharedXP account and visit your In Progress bookings to accept or decline.`,
       ],
       ctaUrl,
       "View Booking Request",
@@ -215,7 +215,7 @@ function buildExperienceConfirmedToHost(
 ): { to: string; subject: string; html: string } {
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "Your guest");
-  const ctaUrl = `${APP_URL}/history?tab=pending`;
+  const ctaUrl = `${APP_URL}/history`;
   return {
     to: String(host.email),
     subject: `${reqName} confirmed your experience — payment released`,
@@ -226,7 +226,7 @@ function buildExperienceConfirmedToHost(
         `Your payment has been released. Please allow 3–5 business days for the funds to appear in your registered bank account.`,
       ],
       ctaUrl,
-      "Leave a Review",
+      "View History",
       invoice ? invoiceTable(invoice) : "",
     ),
   };
@@ -385,7 +385,7 @@ function buildCancelledPrePaymentToHost(
         `<strong>${reqName}</strong> has cancelled their <strong>${booking.sport}</strong> booking for <strong>${booking.requested_date}</strong> at <strong>${booking.requested_time}</strong>.`,
         `No payment was made, so there is nothing further to action. Your slot is now open again.`,
       ],
-      `${APP_URL}/history?tab=pending`,
+      `${APP_URL}/history`,
       "View Bookings",
     ),
   };
@@ -433,7 +433,7 @@ function buildCancelledPostPaymentToHost(
         refundLine,
         hostLine,
       ],
-      `${APP_URL}/history?tab=pending`,
+      `${APP_URL}/history`,
       "View Bookings",
     ),
   };
