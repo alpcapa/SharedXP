@@ -75,6 +75,7 @@ const NOTE_LABELS = {
   paused: "Paused",
   reactivated: "Re-activated",
   revoked: "Revoked",
+  email: "Email Sent",
   note: "Note",
 };
 
@@ -211,9 +212,12 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
         const json = await res.json().catch(() => ({}));
         setEmailErr(cm.id, `Failed to send: ${json.error ?? res.status}`);
       } else {
+        const newNotes = appendNote(cm.admin_notes, "email", `Subject: ${subject}\n\n${message}`);
+        await supabase.from("cm_profiles").update({ admin_notes: newNotes }).eq("id", cm.id);
         setEmailFeedback((prev) => ({ ...prev, [cm.id]: { type: "success", msg: "Sent" } }));
         setSubject(cm.id, "");
         setNote(cm.id, "");
+        await fetchAll();
         setTimeout(() => { setCmActionMode(null); clearEmailFeedback(cm.id); }, 1500);
       }
     } catch (e) {
