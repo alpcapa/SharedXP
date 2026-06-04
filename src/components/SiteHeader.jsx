@@ -138,11 +138,9 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
                   </span>
                 )}
               </Link>
-              {currentUser.isHost && (
-                <Link to="/payment-history" className="user-dropdown-link" role="menuitem">
-                  Payment History
-                </Link>
-              )}
+              <Link to="/payment-history" className="user-dropdown-link" role="menuitem">
+                Payment History
+              </Link>
               <Link
                 to={navHostRoute}
                 className={`user-dropdown-link${isHostLabelPaused ? " site-nav-link-paused" : ""}`}
