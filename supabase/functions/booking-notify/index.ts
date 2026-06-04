@@ -165,7 +165,6 @@ function buildBookingDeclinedToRequester(
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "The host");
   const reason = String(booking.decline_reason ?? "No reason provided.");
-  const ctaUrl = `${APP_URL}/history?tab=pending`;
   return {
     to: String(requester.email),
     subject: `Your booking request was declined — SharedXP`,
@@ -239,7 +238,7 @@ function buildExperienceCompletedToRequester(
 ): { to: string; subject: string; html: string } {
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "your host");
-  const ctaUrl = `${APP_URL}/history?tab=pending`;
+  const ctaUrl = `${APP_URL}/history?tab=pending&bookingId=${booking.id}`;
   return {
     to: String(requester.email),
     subject: `How was your ${booking.sport} experience with ${hostName}? Please confirm`,
@@ -532,7 +531,7 @@ function buildDisputeOpenedToRequester(
         `Our team will review both accounts and get back to you within 24–48 hours. The host has been notified and given the opportunity to respond.`,
         `In the meantime, you can view the status of your booking in your history.`,
       ],
-      `${APP_URL}/history?tab=pending`,
+      `${APP_URL}/history?tab=pending&bookingId=${booking.id}`,
       "View Your Booking",
     ),
   };
