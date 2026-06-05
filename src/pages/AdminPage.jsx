@@ -1430,9 +1430,10 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                             <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
                           </div>
                           <div>
-                            <p className="admin-dispute-label">Host</p>
+                            <p className="admin-dispute-label">Session host</p>
                             <p>{post?.host_name || "—"}</p>
-                            <p className="admin-dispute-email">{post?.role ?? ""}</p>
+                            <p className="admin-dispute-label" style={{ marginTop: 8 }}>Poster</p>
+                            <p>{post?.role === "hosted" ? "Host" : "Guest"}</p>
                           </div>
                           <div>
                             <p className="admin-dispute-label">Reported by</p>
