@@ -413,7 +413,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                         <article className="field-card">
                           <div className="field-host-row">
                             {host.photo ? (
-                              <img src={host.photo} alt={host.name} className="field-host-avatar" />
+                              <img src={host.photo} alt={host.name} className="field-host-avatar" loading="lazy" />
                             ) : (
                               <div className="field-host-avatar field-host-avatar-fallback">
                                 {String(host.name ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
@@ -432,7 +432,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                             </div>
                           </div>
                           {host.photo ? (
-                            <img src={host.photo} alt={host.name} className="field-post-photo" />
+                            <img src={host.photo} alt={host.name} className="field-post-photo" loading="lazy" />
                           ) : (
                             <div className="field-post-photo-placeholder" />
                           )}
@@ -481,7 +481,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                         ? `/user/${post.posterId}`
                         : null;
                     const avatar = post.hostPhoto ? (
-                      <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" />
+                      <img src={post.hostPhoto} alt={post.hostName} className="field-host-avatar" loading="lazy" />
                     ) : (
                       <div className="field-host-avatar field-host-avatar-fallback" aria-hidden="true">
                         {String(post.hostName ?? "?").trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"}
@@ -543,6 +543,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                                 src={photos[idx]}
                                 alt={post.sport}
                                 className="field-post-photo"
+                                loading="lazy"
                               />
                               {photos.length > 1 && (
                                 <button
