@@ -164,6 +164,26 @@ body {
   margin-top: 16px;
 }
 
+/* ── Home page horizontal scroll rows ─────────────────────────────── */
+.home-scroll-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 14px;
+  margin-top: 12px;
+  padding-bottom: 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.home-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+.home-scroll-row > * {
+  flex: 0 0 260px;
+  min-width: 260px;
+  scroll-snap-align: start;
+}
+
 .locals-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

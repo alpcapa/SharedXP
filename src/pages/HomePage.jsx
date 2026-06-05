@@ -9,9 +9,6 @@ import { supabase } from "../lib/supabase";
 import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, toggleFieldPostLike } from "../utils/fieldPosts";
 import { getAgeFromBirthday } from "../utils/profileAge";
 
-const LOCALS_PER_PAGE = 6;
-const FIELD_PER_PAGE = 3;
-const HOME_EVENTS_PAGE_SIZE = 3;
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -74,8 +71,6 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [selectedSport, setSelectedSport] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState(DEFAULT_MONTH);
   const [selectedYear, setSelectedYear] = useState(DEFAULT_YEAR);
-  const [localsPage, setLocalsPage] = useState(0);
-  const [fieldPage, setFieldPage] = useState(0);
   const [fieldPostsList, setFieldPostsList] = useState([]);
   const [fieldPostsLoading, setFieldPostsLoading] = useState(true);
   const [fieldDeletedIds, setFieldDeletedIds] = useState(() => new Set());
@@ -137,7 +132,6 @@ const HomePage = ({ currentUser, onLogout }) => {
   }, []);
   const [majorEventsList, setMajorEventsList] = useState([]);
   const [majorEventsLoading, setMajorEventsLoading] = useState(true);
-  const [majorEventsPage, setMajorEventsPage] = useState(0);
   const searchBarRef = useRef(null);
 
   useEffect(() => {
@@ -257,35 +251,10 @@ const HomePage = ({ currentUser, onLogout }) => {
     });
   }, [hosts, selectedCountry, selectedCity, selectedSport]);
 
-  useEffect(() => {
-    setLocalsPage(0);
-  }, [selectedCountry, selectedCity, selectedSport]);
-
-  const totalLocalsPages = Math.max(1, Math.ceil(filteredHosts.length / LOCALS_PER_PAGE));
-  const featuredLocals = useMemo(() => {
-    const startIndex = localsPage * LOCALS_PER_PAGE;
-    return filteredHosts.slice(startIndex, startIndex + LOCALS_PER_PAGE);
-  }, [localsPage, filteredHosts]);
-
   const activeFieldPosts = useMemo(
     () => fieldPostsList.filter((p) => !fieldDeletedIds.has(p.id)),
     [fieldPostsList, fieldDeletedIds]
   );
-
-  const totalFieldPages = Math.max(1, Math.ceil(activeFieldPosts.length / FIELD_PER_PAGE));
-  const visibleFieldPosts = useMemo(() => {
-    const start = fieldPage * FIELD_PER_PAGE;
-    return activeFieldPosts.slice(start, start + FIELD_PER_PAGE);
-  }, [fieldPage, activeFieldPosts]);
-
-  const totalMajorEventsPages = Math.max(
-    1,
-    Math.ceil(majorEventsList.length / HOME_EVENTS_PAGE_SIZE)
-  );
-  const visibleMajorEvents = useMemo(() => {
-    const startIndex = majorEventsPage * HOME_EVENTS_PAGE_SIZE;
-    return majorEventsList.slice(startIndex, startIndex + HOME_EVENTS_PAGE_SIZE);
-  }, [majorEventsList, majorEventsPage]);
 
   const localsHeadingLocation = useMemo(() => {
     if (selectedCity !== "All") return selectedCity;
@@ -431,8 +400,8 @@ const HomePage = ({ currentUser, onLogout }) => {
               ) : filteredHosts.length === 0 ? (
                 <p className="explore-empty">No locals found matching your filters.</p>
               ) : (
-                <div className="locals-grid">
-                          {featuredLocals.map((host) => {
+                <div className="home-scroll-row">
+                          {filteredHosts.map((host) => {
                     const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                     const hasEquipment = host.sports.some((s) => s.equipment_available);
                     const levels = [
@@ -479,30 +448,6 @@ const HomePage = ({ currentUser, onLogout }) => {
                   })}
                 </div>
               )}
-              {!hostsLoading && filteredHosts.length > 0 && (
-                <div className="locals-nav-row">
-                  <button
-                    type="button"
-                    className="locals-nav"
-                    aria-label="Show previous 6 locals"
-                    onClick={() => setLocalsPage((page) => Math.max(page - 1, 0))}
-                    disabled={localsPage === 0}
-                  >
-                    ‹
-                  </button>
-                  <button
-                    type="button"
-                    className="locals-nav"
-                    aria-label="Show next 6 locals"
-                    onClick={() =>
-                      setLocalsPage((page) => Math.min(page + 1, totalLocalsPages - 1))
-                    }
-                    disabled={localsPage >= totalLocalsPages - 1}
-                  >
-                    ›
-                  </button>
-                </div>
-              )}
             </div>
           </section>
 
@@ -525,9 +470,8 @@ const HomePage = ({ currentUser, onLogout }) => {
                 </Link>
               </p>
             ) : (
-              <>
-                <div className="field-feed">
-                  {visibleFieldPosts.map((post) => {
+              <div className="home-scroll-row">
+                  {activeFieldPosts.map((post) => {
                     const isOwner = post.posterId != null && post.posterId === currentUser?.id;
                     const postLocation = [post.city, post.country].filter(Boolean).join(", ");
                     const postRating = Number(post.rating ?? 0);
@@ -664,30 +608,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                       </article>
                     );
                   })}
-                </div>
-                {activeFieldPosts.length > FIELD_PER_PAGE && (
-                  <div className="locals-nav-row">
-                    <button
-                      type="button"
-                      className="locals-nav"
-                      aria-label="Show previous field posts"
-                      onClick={() => setFieldPage((p) => Math.max(p - 1, 0))}
-                      disabled={fieldPage === 0}
-                    >
-                      ‹
-                    </button>
-                    <button
-                      type="button"
-                      className="locals-nav"
-                      aria-label="Show next field posts"
-                      onClick={() => setFieldPage((p) => Math.min(p + 1, totalFieldPages - 1))}
-                      disabled={fieldPage >= totalFieldPages - 1}
-                    >
-                      ›
-                    </button>
-                  </div>
-                )}
-              </>
+              </div>
             )}
           </section>
 
@@ -710,41 +631,11 @@ const HomePage = ({ currentUser, onLogout }) => {
             ) : majorEventsList.length === 0 ? (
               <p className="explore-empty">No major events to show right now.</p>
             ) : (
-              <>
-                <div className="major-events-grid">
-                  {visibleMajorEvents.map((event) => (
-                    <EventCard key={event.id} event={event} compact />
-                  ))}
-                </div>
-                {majorEventsList.length > HOME_EVENTS_PAGE_SIZE && (
-                  <div className="locals-nav-row">
-                    <button
-                      type="button"
-                      className="locals-nav"
-                      aria-label="Show previous events"
-                      onClick={() =>
-                        setMajorEventsPage((page) => Math.max(page - 1, 0))
-                      }
-                      disabled={majorEventsPage === 0}
-                    >
-                      ‹
-                    </button>
-                    <button
-                      type="button"
-                      className="locals-nav"
-                      aria-label="Show next events"
-                      onClick={() =>
-                        setMajorEventsPage((page) =>
-                          Math.min(page + 1, totalMajorEventsPages - 1)
-                        )
-                      }
-                      disabled={majorEventsPage >= totalMajorEventsPages - 1}
-                    >
-                      ›
-                    </button>
-                  </div>
-                )}
-              </>
+              <div className="home-scroll-row">
+                {majorEventsList.map((event) => (
+                  <EventCard key={event.id} event={event} compact />
+                ))}
+              </div>
             )}
           </section>
 
