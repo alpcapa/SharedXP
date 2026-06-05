@@ -1216,6 +1216,13 @@ body {
 .home-page .hero.auth-hero {
   padding-bottom: 0;
   margin-bottom: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.home-page .hero:not(.auth-hero) .site-header {
+  margin-left: -10px;
+  margin-right: -10px;
 }
 
 .auth-page {
