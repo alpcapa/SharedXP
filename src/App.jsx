@@ -48,6 +48,10 @@ function App() {
   const location = useLocation();
   const didRedirect = useRef(false);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   // After OAuth login the browser lands on "/" with postAuthRedirect in
   // sessionStorage. Consume it once to send the user to their intended page.
   useEffect(() => {

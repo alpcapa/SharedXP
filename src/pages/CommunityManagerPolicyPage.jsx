@@ -10,9 +10,9 @@ const CommunityManagerPolicyPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section legal-content">
-          <article className="simple-page legal-page">
-            <h1>Community Manager Policy</h1>
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">Community Manager Policy</h1>
+          <article className="legal-page">
             <p className="legal-last-updated">Last updated: May 21, 2026</p>
             <p>
               This Community Manager Policy ("CM Policy") governs participation in the SharedXP Community Manager

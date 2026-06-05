@@ -95,6 +95,19 @@ body {
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
+.auth-hero + .middle-section.explore-page-content,
+.auth-hero + .middle-section.about-main,
+.auth-hero + .middle-section.follow-main,
+.auth-hero + .field-main,
+.auth-hero + .events-main {
+  width: auto;
+  margin: 10px 10px 0;
+  padding: 28px 28px 48px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
 .auth-hero + .middle-section.auth-page {
   width: auto;
   margin: 10px 10px 0;
@@ -112,22 +125,8 @@ body {
   margin-top: 10px;
 }
 
-.auth-hero + .middle-section > *:first-child,
-.auth-hero + .explore-hero,
-.auth-hero + .events-hero,
-.auth-hero + .field-hero,
-.events-hero + .events-main,
-.field-hero + .field-main,
-.explore-hero + .middle-section {
+.auth-hero + .middle-section > *:first-child {
   margin-top: 0;
-}
-
-.explore-hero + .middle-section {
-  padding-top: 0;
-}
-
-.explore-hero + .middle-section.explore-page-content {
-  padding-top: 20px;
 }
 
 /* ── Shared section typography ─────────────────── */
@@ -689,7 +688,7 @@ body {
 .xp-tag-disputed   { background: #fff7ed; color: #92400e; }
 
 .home-page .hero {
-  margin: 10px 0;
+  margin: 10px 10px;
   border-radius: 16px;
   min-height: var(--hero-min-height);
   padding: 10px;
@@ -698,6 +697,14 @@ body {
     url("../assets/BEEE9932-9032-4B9C-8E1B-577FFB6173E8.png");
   background-size: cover;
   background-position: center;
+}
+
+.home-page .hero + .middle-section.home-main {
+  margin: 10px 10px 0;
+  padding: 28px 28px 48px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .hero-content {
@@ -906,9 +913,6 @@ body {
   font-size: 18px;
 }
 
-.explore-page-content,
-.field-main,
-.events-main,
 .host-settings-page,
 .edit-profile-page {
   margin: 10px 0;
@@ -1590,32 +1594,6 @@ body {
 }
 
 /* ── Follow page ────────────────────────────────── */
-.follow-page {
-  display: grid;
-  gap: 20px;
-}
-
-.follow-page-header {
-  background: #fff;
-  border: 1px solid #e6e7e2;
-  border-radius: 14px;
-  padding: 24px;
-}
-
-.follow-page-header h1 {
-  margin: 0;
-  font-size: clamp(30px, 3.6vw, 48px);
-  letter-spacing: -0.7px;
-}
-
-.follow-page-header p {
-  margin: 10px 0 0;
-  color: #4b5563;
-  font-size: 16px;
-  line-height: 1.6;
-  max-width: 820px;
-}
-
 .follow-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2477,10 +2455,7 @@ body {
 .booking-engine-section,
 .recommendations,
 .host-settings-page,
-.edit-profile-page,
-.explore-page-content,
-.field-main,
-.events-main {
+.edit-profile-page {
   background: white;
   margin: 20px 10px;
   padding: 20px;
@@ -3229,31 +3204,6 @@ body {
 }
 
 .about-main {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-/* Hero */
-.about-hero {
-  margin: 0;
-  padding: 40px 0 0;
-}
-
-.about-hero h1 {
-  margin: 0;
-  font-size: clamp(28px, 4vw, 48px);
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  line-height: 1.1;
-  color: #141a1f;
-}
-
-.about-hero-sub {
-  margin: 16px 0 28px;
-  font-size: clamp(15px, 1.5vw, 18px);
-  color: #596164;
-  line-height: 1.6;
 }
 
 .about-hero-img {
@@ -7939,6 +7889,79 @@ body {
   color: #888;
   margin: 6px 0 0;
   font-style: italic;
+}
+
+/* ── CM application popup ──────────────────────────────────────────────────── */
+.cm-app-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.cm-app-popup {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+.cm-app-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+.cm-app-popup-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.cm-app-popup-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: 6px;
+}
+.cm-app-popup-close:hover {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+.cm-app-popup-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cm-app-popup-field p {
+  margin: 0;
+}
+.cm-app-popup-field p:last-child {
+  font-size: 15px;
+  color: #1a1a1a;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.cm-app-popup-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 /* ── Support inbox ─────────────────────────────────────────────────────────── */

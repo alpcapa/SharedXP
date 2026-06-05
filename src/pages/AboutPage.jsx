@@ -47,15 +47,14 @@ const testimonials = [
 
 const AboutPage = ({ currentUser, onLogout }) => {
   return (
-    <div className="about-page">
+    <div className="home-page">
       <div className="middle-page-frame">
-        <SiteHeader currentUser={currentUser} onLogout={onLogout} />
-      </div>
-
-      <main className="about-main">
-        <section className="about-hero">
-          <h1>Sport doesn't stop when you travel. Neither should you.</h1>
-          <p className="about-hero-sub">
+        <section className="hero auth-hero">
+          <SiteHeader currentUser={currentUser} onLogout={onLogout} />
+        </section>
+        <main className="middle-section about-main">
+          <h1 className="admin-title">Sport doesn't stop when you travel. Neither should you.</h1>
+          <p className="admin-subtitle">
             Behind every great sports experience is someone local who made it possible — a cyclist who knows the best hidden trails, a yoga teacher with a studio tucked down a side street, a bike shop owner who's seen it all. SharedXP brings sports-loving travelers and passionate locals together, so that knowledge, gear, and experience get shared — not just sold.
           </p>
           <img
@@ -63,7 +62,6 @@ const AboutPage = ({ currentUser, onLogout }) => {
             src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=1400&q=80"
             alt="Travelers enjoying outdoor sport activity"
           />
-        </section>
 
         <section className="about-story">
           <p className="about-label">Our story</p>
@@ -219,9 +217,7 @@ const AboutPage = ({ currentUser, onLogout }) => {
             </div>
           </div>
         </section>
-      </main>
-
-      <div className="middle-page-frame">
+        </main>
         <SiteFooter />
       </div>
     </div>

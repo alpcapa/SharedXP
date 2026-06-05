@@ -9,9 +9,9 @@ const ContentAndIntellectualPropertyPolicyPage = ({ currentUser, onLogout }) => 
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section legal-content">
-          <article className="simple-page legal-page">
-            <h1>Content and Intellectual Property Policy</h1>
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">Content and Intellectual Property Policy</h1>
+          <article className="legal-page">
             <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               This policy explains how SharedXP handles user-generated content, platform intellectual property, and

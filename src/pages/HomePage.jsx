@@ -408,7 +408,7 @@ const HomePage = ({ currentUser, onLogout }) => {
           </div>
         </section>
 
-        <main className="middle-section">
+        <main className="middle-section home-main">
           {/* ── Locals ───────────────────────────────────────── */}
           <section className="locals-section" id="locals">
             <div className="section-head">
