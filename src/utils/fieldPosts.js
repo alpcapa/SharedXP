@@ -97,6 +97,7 @@ export const fetchFieldPosts = async ({ limit = 12, offset = 0 } = {}) => {
       .select(
         "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, rating, source_request_id, created_at"
       )
+      .is("suspended_at", null)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
     if (error && isMissingRatingColumnError(error)) {
@@ -105,6 +106,7 @@ export const fetchFieldPosts = async ({ limit = 12, offset = 0 } = {}) => {
         .select(
           "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, source_request_id, created_at"
         )
+        .is("suspended_at", null)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1));
     }

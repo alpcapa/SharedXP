@@ -1320,6 +1320,10 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(null);
   const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const [emailMode, setEmailMode] = useState(() => new Set());
+  const [emailSubjects, setEmailSubjects] = useState({});
+  const [emailMessages, setEmailMessages] = useState({});
+  const [emailFeedback, setEmailFeedback] = useState({});
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -1328,7 +1332,7 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
       .select(`
         id, created_at, status, post_id, reporter_id,
         post:field_posts!post_id(
-          id, caption, sport, city, country, photos, host_name, role,
+          id, poster_id, caption, sport, city, country, photos, host_name, role, suspended_at,
           poster:profiles!poster_id(full_name, first_name, last_name)
         ),
         reporter:profiles!reporter_id(full_name, first_name, last_name, email)
@@ -1351,6 +1355,61 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
       else next.add(id);
       return next;
     });
+  };
+
+  const openEmail = (id) => setEmailMode((prev) => new Set([...prev, id]));
+  const closeEmail = (id) => {
+    setEmailMode((prev) => { const s = new Set(prev); s.delete(id); return s; });
+    setEmailSubjects((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    setEmailMessages((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    setEmailFeedback((prev) => { const n = { ...prev }; delete n[id]; return n; });
+  };
+
+  const sendReportEmail = async (reportId, posterId, recipientName) => {
+    const subject = (emailSubjects[reportId] ?? "").trim();
+    const message = (emailMessages[reportId] ?? "").trim();
+    if (!subject) { setEmailFeedback((p) => ({ ...p, [reportId]: { type: "error", msg: "Please enter a subject." } })); return; }
+    if (!message) { setEmailFeedback((p) => ({ ...p, [reportId]: { type: "error", msg: "Please enter a message." } })); return; }
+    setActing(reportId);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ emailType: "cm_admin_message", userId: posterId, subject, message }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setEmailFeedback((p) => ({ ...p, [reportId]: { type: "error", msg: `Failed: ${json.error ?? res.status}` } }));
+      } else {
+        setEmailFeedback((p) => ({ ...p, [reportId]: { type: "success", msg: "Sent" } }));
+        setTimeout(() => closeEmail(reportId), 1500);
+      }
+    } catch (e) {
+      setEmailFeedback((p) => ({ ...p, [reportId]: { type: "error", msg: `Error: ${e.message}` } }));
+    }
+    setActing(null);
+  };
+
+  const suspend = async (postId) => {
+    setActing(postId);
+    const { error } = await supabase
+      .from("field_posts")
+      .update({ suspended_at: new Date().toISOString() })
+      .eq("id", postId);
+    if (error) console.error("[reports] suspend error:", error);
+    await fetchReports();
+    setActing(null);
+  };
+
+  const unsuspend = async (postId) => {
+    setActing(postId);
+    const { error } = await supabase
+      .from("field_posts")
+      .update({ suspended_at: null })
+      .eq("id", postId);
+    if (error) console.error("[reports] unsuspend error:", error);
+    await fetchReports();
+    setActing(null);
   };
 
   const dismiss = async (reportId) => {
@@ -1392,11 +1451,13 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
           {reports.map((r) => {
             const post = r.post;
             const isExpanded = expandedIds.has(r.id);
+            const isEmailOpen = emailMode.has(r.id);
             const photo = Array.isArray(post?.photos) && post.photos.length > 0 ? post.photos[0] : null;
             const isHost = post?.role === "hosted";
-            const sharerName = isHost
-              ? (post?.host_name || "—")
-              : getProfileName(post?.poster);
+            const isSuspended = !!post?.suspended_at;
+            const sharerName = isHost ? (post?.host_name || "—") : getProfileName(post?.poster);
+            const posterId = post?.poster_id;
+            const isBusy = acting === r.id || acting === post?.id;
             return (
               <article key={r.id} className="admin-dispute-card">
                 <button
@@ -1414,7 +1475,9 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                     </span>
                   </div>
                   <div className="cm-admin-card-summary-right">
-                    <span className="pending-status-badge status-disputed">Pending</span>
+                    <span className={`pending-status-badge ${isSuspended ? "status-pending" : "status-disputed"}`}>
+                      {isSuspended ? "Suspended" : "Pending"}
+                    </span>
                     <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
                   </div>
                 </button>
@@ -1446,24 +1509,62 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                           </div>
                         </div>
 
-                        <div className="admin-dispute-actions">
-                          <button
-                            type="button"
-                            className="btn btn-danger"
-                            onClick={() => removePost(r.id, r.post_id)}
-                            disabled={acting === r.id}
-                          >
-                            {acting === r.id ? "…" : "Remove Post"}
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-light"
-                            onClick={() => dismiss(r.id)}
-                            disabled={acting === r.id}
-                          >
-                            {acting === r.id ? "…" : "Dismiss"}
-                          </button>
-                        </div>
+                        {!isEmailOpen ? (
+                          <div className="admin-dispute-actions">
+                            <button type="button" className="btn btn-light" onClick={() => openEmail(r.id)} disabled={isBusy}>
+                              Email
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-light"
+                              onClick={() => isSuspended ? unsuspend(post.id) : suspend(post.id)}
+                              disabled={isBusy}
+                            >
+                              {isBusy ? "…" : isSuspended ? "Unsuspend" : "Suspend"}
+                            </button>
+                            <button type="button" className="btn btn-danger" onClick={() => removePost(r.id, r.post_id)} disabled={isBusy}>
+                              {isBusy ? "…" : "Remove Post"}
+                            </button>
+                            <button type="button" className="btn btn-light" onClick={() => dismiss(r.id)} disabled={isBusy}>
+                              {isBusy ? "…" : "Dismiss"}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="cm-admin-notes-row" style={{ marginTop: 12 }}>
+                            <p className="admin-dispute-label">Email {sharerName}</p>
+                            <input
+                              type="text"
+                              className="cm-admin-email-subject"
+                              placeholder="Subject…"
+                              value={emailSubjects[r.id] ?? ""}
+                              onChange={(e) => setEmailSubjects((p) => ({ ...p, [r.id]: e.target.value }))}
+                              autoFocus
+                            />
+                            <textarea
+                              className="cm-admin-notes"
+                              rows={4}
+                              placeholder="Message…"
+                              value={emailMessages[r.id] ?? ""}
+                              onChange={(e) => setEmailMessages((p) => ({ ...p, [r.id]: e.target.value }))}
+                            />
+                            {emailFeedback[r.id] && (
+                              <p style={{ margin: "6px 0 0", fontSize: 13, color: emailFeedback[r.id].type === "error" ? "#ef4444" : "#2e7d32" }}>
+                                {emailFeedback[r.id].msg}
+                              </p>
+                            )}
+                            <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                              <button type="button" className="btn btn-light" onClick={() => closeEmail(r.id)}>Cancel</button>
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                disabled={isBusy || emailFeedback[r.id]?.type === "success"}
+                                onClick={() => sendReportEmail(r.id, posterId, sharerName)}
+                              >
+                                {emailFeedback[r.id]?.type === "success" ? "Sent" : isBusy ? "Sending…" : "Send Email"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
