@@ -51,9 +51,9 @@ const HelpPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section legal-content">
-          <article className="simple-page legal-page">
-            <h1>Help Center</h1>
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">Help Center</h1>
+          <article className="legal-page">
             <p className="legal-last-updated">Last updated: April 19, 2026</p>
             <p>
               Welcome to SharedXP Help. This page gives quick guidance for both participants and hosts, including how to
