@@ -165,11 +165,48 @@ body {
 }
 
 /* ── Home page horizontal scroll rows ─────────────────────────────── */
+.scroll-row-wrap {
+  position: relative;
+  margin-top: 12px;
+}
+
+.scroll-row-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e3e5df;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+  font-size: 22px;
+  line-height: 1;
+  color: #4b5563;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.scroll-row-btn:hover {
+  background: #f5f7f0;
+}
+
+.scroll-row-btn-prev {
+  left: 6px;
+}
+
+.scroll-row-btn-next {
+  right: 6px;
+}
+
 .home-scroll-row {
   display: flex;
   overflow-x: auto;
   gap: 14px;
-  margin-top: 12px;
   padding-bottom: 12px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;

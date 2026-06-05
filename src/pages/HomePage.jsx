@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import EventCard from "../components/EventCard";
 import RolePill from "../components/RolePill";
+import ScrollRow from "../components/ScrollRow";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { loadMajorEvents } from "../lib/events";
@@ -400,7 +401,7 @@ const HomePage = ({ currentUser, onLogout }) => {
               ) : filteredHosts.length === 0 ? (
                 <p className="explore-empty">No locals found matching your filters.</p>
               ) : (
-                <div className="home-scroll-row">
+                <ScrollRow>
                           {filteredHosts.map((host) => {
                     const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                     const hasEquipment = host.sports.some((s) => s.equipment_available);
@@ -446,7 +447,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                       </Link>
                     );
                   })}
-                </div>
+                </ScrollRow>
               )}
             </div>
           </section>
@@ -470,7 +471,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                 </Link>
               </p>
             ) : (
-              <div className="home-scroll-row">
+              <ScrollRow>
                   {activeFieldPosts.map((post) => {
                     const isOwner = post.posterId != null && post.posterId === currentUser?.id;
                     const postLocation = [post.city, post.country].filter(Boolean).join(", ");
@@ -608,7 +609,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                       </article>
                     );
                   })}
-              </div>
+              </ScrollRow>
             )}
           </section>
 
@@ -631,11 +632,11 @@ const HomePage = ({ currentUser, onLogout }) => {
             ) : majorEventsList.length === 0 ? (
               <p className="explore-empty">No major events to show right now.</p>
             ) : (
-              <div className="home-scroll-row">
+              <ScrollRow>
                 {majorEventsList.map((event) => (
                   <EventCard key={event.id} event={event} compact />
                 ))}
-              </div>
+              </ScrollRow>
             )}
           </section>
 
