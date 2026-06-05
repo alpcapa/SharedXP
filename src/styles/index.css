@@ -164,6 +164,85 @@ body {
   margin-top: 16px;
 }
 
+/* ── Home page horizontal scroll rows ─────────────────────────────── */
+.scroll-row-wrap {
+  position: relative;
+  margin-top: 12px;
+}
+
+.scroll-row-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e3e5df;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 22px;
+  line-height: 1;
+  color: #4b5563;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.scroll-row-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.scroll-row-btn-prev {
+  left: 6px;
+}
+
+.scroll-row-btn-next {
+  right: 6px;
+}
+
+.scroll-row-loader {
+  flex: 0 0 80px;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-row-loader::after {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #e3e5df;
+  border-top-color: #96c93d;
+  animation: scroll-spinner 0.7s linear infinite;
+}
+
+@keyframes scroll-spinner {
+  to { transform: rotate(360deg); }
+}
+
+.home-scroll-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 14px;
+  padding-bottom: 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.home-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+.home-scroll-row > * {
+  flex: 0 0 260px;
+  min-width: 260px;
+  scroll-snap-align: start;
+}
+
 .locals-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
