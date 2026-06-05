@@ -1,6 +1,6 @@
 // Receives inbound emails forwarded by Resend (via Svix webhook) to
 // support@sharedxp.com, persists them to support_messages, and sends an
-// auto-reply from noreply@sharedxp.com directing the sender to the Help Center.
+// auto-reply from noreply@sharedxp.com directing the sender to the Contact page.
 //
 // Deploy:  supabase functions deploy inbound-support
 // Secret:  supabase secrets set RESEND_WEBHOOK_SECRET=whsec_...
