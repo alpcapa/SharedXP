@@ -351,8 +351,9 @@ const HistoryPage = ({
       });
       setSharePosting(false);
       setSharePosted(true);
+      navigate("/field");
     },
-    [shareCaption, currentUser, onSaveHistory, onSaveHostHistory]
+    [shareCaption, currentUser, onSaveHistory, onSaveHostHistory, navigate]
   );
 
   const openGallery = useCallback((item, startIndex = 0) => {

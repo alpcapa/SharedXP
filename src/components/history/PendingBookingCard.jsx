@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import DeclineModal from "./DeclineModal";
 import DeclineConfirmationModal from "./DeclineConfirmationModal";
 import ShareToFieldModal from "./ShareToFieldModal";
@@ -116,6 +116,7 @@ const PendingBookingCard = ({
   scrollToId,
 }) => {
   const cardRef = useRef(null);
+  const navigate = useNavigate();
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -341,6 +342,7 @@ const PendingBookingCard = ({
         setExistingFieldPostId(savedId);
         setExistingFieldCaption(shareCaption.trim());
         setSharePosted(true);
+        navigate("/field");
       } else {
         window.alert("Could not post to The Field right now. Please try again.");
       }
