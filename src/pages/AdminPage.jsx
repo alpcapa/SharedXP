@@ -1314,6 +1314,136 @@ const fmtDate = (iso) =>
   iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" })
           .format(new Date(iso)) : "—";
 
+// ── Field Post Reports Panel ──────────────────────────────────────────────────
+const FieldPostReportsPanel = ({ onCountChange }) => {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState(null);
+
+  const fetchReports = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("field_post_reports")
+      .select(`
+        id, created_at, status, post_id, reporter_id,
+        post:field_posts!post_id(id, caption, sport, city, country, photos, host_name, role),
+        reporter:profiles!reporter_id(full_name, first_name, last_name, email)
+      `)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    if (error) console.error("[reports] fetch error:", error);
+    const rows = data ?? [];
+    setReports(rows);
+    setLoading(false);
+    onCountChange?.(rows.length);
+  }, [onCountChange]);
+
+  useEffect(() => { fetchReports(); }, [fetchReports]);
+
+  const dismiss = async (reportId) => {
+    setActing(reportId);
+    const { error } = await supabase
+      .from("field_post_reports")
+      .update({ status: "dismissed" })
+      .eq("id", reportId);
+    if (error) console.error("[reports] dismiss error:", error);
+    await fetchReports();
+    setActing(null);
+  };
+
+  const removePost = async (reportId, postId) => {
+    if (!confirm("Remove this post? This cannot be undone.")) return;
+    setActing(reportId);
+    const { error } = await supabase.from("field_posts").delete().eq("id", postId);
+    if (error) console.error("[reports] remove post error:", error);
+    await fetchReports();
+    setActing(null);
+  };
+
+  const getProfileName = (profile) => {
+    if (!profile) return "Anonymous";
+    return profile.full_name ||
+      `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() ||
+      profile.email || "Unknown";
+  };
+
+  if (loading) return <p style={{ marginTop: 24 }}>Loading reports…</p>;
+
+  return (
+    <div>
+      <p className="admin-subtitle">Field posts flagged by users as inappropriate.</p>
+      {reports.length === 0 ? (
+        <p>No pending reports.</p>
+      ) : (
+        <div className="admin-dispute-list">
+          {reports.map((r) => {
+            const post = r.post;
+            const photo = Array.isArray(post?.photos) && post.photos.length > 0 ? post.photos[0] : null;
+            return (
+              <article key={r.id} className="admin-dispute-card">
+                <div className="admin-dispute-header">
+                  <div>
+                    <h2 className="admin-dispute-sport">
+                      {post?.sport ?? "Unknown sport"}
+                      {post?.city ? ` — ${post.city}` : ""}
+                      {post?.country ? `, ${post.country}` : ""}
+                    </h2>
+                    <p className="admin-dispute-date">Reported {fmtDate(r.created_at)}</p>
+                  </div>
+                  <span className="pending-status-badge status-disputed">Pending</span>
+                </div>
+
+                {photo && (
+                  <img
+                    src={photo}
+                    alt="Reported post"
+                    style={{ maxWidth: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 8, marginBottom: 8 }}
+                  />
+                )}
+
+                <div className="admin-dispute-accounts">
+                  <div>
+                    <p className="admin-dispute-label">Caption</p>
+                    <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
+                  </div>
+                  <div>
+                    <p className="admin-dispute-label">Host</p>
+                    <p>{post?.host_name || "—"}</p>
+                    <p className="admin-dispute-email">{post?.role ?? ""}</p>
+                  </div>
+                  <div>
+                    <p className="admin-dispute-label">Reported by</p>
+                    <p>{getProfileName(r.reporter)}</p>
+                  </div>
+                </div>
+
+                <div className="admin-dispute-actions">
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => removePost(r.id, r.post_id)}
+                    disabled={acting === r.id}
+                  >
+                    {acting === r.id ? "…" : "Remove Post"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-light"
+                    onClick={() => dismiss(r.id)}
+                    disabled={acting === r.id}
+                  >
+                    {acting === r.id ? "…" : "Dismiss"}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const [searchParams] = useSearchParams();
   const [disputes, setDisputes] = useState([]);
@@ -1322,6 +1452,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "disputes");
   const [cmCounts, setCmCounts] = useState({ pendingApps: 0, pendingComms: 0 });
   const [unreadSupport, setUnreadSupport] = useState(0);
+  const [pendingReports, setPendingReports] = useState(0);
   const { resolveDispute } = useBookingRequests(currentUser);
 
   const fetchDisputes = useCallback(async () => {
@@ -1363,15 +1494,24 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
     setUnreadSupport(count ?? 0);
   }, []);
 
+  const fetchPendingReports = useCallback(async () => {
+    const { count } = await supabase
+      .from("field_post_reports")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending");
+    setPendingReports(count ?? 0);
+  }, []);
+
   useEffect(() => {
     if (currentUser?.isAdmin) {
       fetchDisputes();
       fetchCmCounts();
       fetchUnreadSupport();
+      fetchPendingReports();
     } else {
       setLoading(false);
     }
-  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts, fetchUnreadSupport]);
+  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts, fetchUnreadSupport, fetchPendingReports]);
 
   const handleResolve = async (disputeId, resolution) => {
     if (!confirm(`Resolve as "${resolution}"?`)) return;
@@ -1466,6 +1606,14 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
           >
             Support
             {unreadSupport > 0 && <span className="cm-admin-count">{unreadSupport}</span>}
+          </button>
+          <button
+            type="button"
+            className={`admin-tab${activeTab === "reports" ? " admin-tab-active" : ""}`}
+            onClick={() => setActiveTab("reports")}
+          >
+            Reports
+            {pendingReports > 0 && <span className="cm-admin-count">{pendingReports}</span>}
           </button>
         </div>
 
@@ -1564,6 +1712,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
 
         {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} onCountChange={fetchCmCounts} />}
         {activeTab === "support" && <SupportPanel currentUser={currentUser} onRead={fetchUnreadSupport} />}
+        {activeTab === "reports" && <FieldPostReportsPanel onCountChange={setPendingReports} />}
         </main>
         <SiteFooter />
       </div>

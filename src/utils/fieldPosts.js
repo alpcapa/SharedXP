@@ -211,6 +211,26 @@ export const saveFieldPost = async (post) => {
 };
 
 /**
+ * Report a field post as inappropriate. Returns true on success.
+ */
+export const reportFieldPost = async (postId, reporterId) => {
+  if (!postId) return false;
+  try {
+    const { error } = await supabase
+      .from("field_post_reports")
+      .insert({ post_id: postId, reporter_id: reporterId ?? null });
+    if (error) {
+      console.error("[fieldPosts] report error:", error);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[fieldPosts] report exception:", e);
+    return false;
+  }
+};
+
+/**
  * Delete a field post from Supabase by its UUID. Returns a promise.
  */
 export const deleteFieldPost = async (postId) => {
