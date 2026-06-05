@@ -253,70 +253,52 @@ export const lookupFieldPostId = async (sourceRequestId, posterId) => {
   }
 };
 
-/**
- * Fetch the set of post IDs that the given user has liked.
- * Returns a Set<string> of post UUIDs.
- */
-export const fetchLikedPostIds = async (userId) => {
-  if (!userId) return new Set();
+const LIKED_LOCAL_KEY = "sharedxp:field_post_liked_ids";
+
+const loadLikedSet = () => {
   try {
-    const { data, error } = await supabase
-      .from("field_post_likes")
-      .select("post_id")
-      .eq("user_id", userId);
-    if (error) {
-      console.error("[fieldPosts] fetchLikedPostIds error:", error);
-      return new Set();
-    }
-    return new Set((data ?? []).map((r) => r.post_id));
-  } catch (e) {
-    console.error("[fieldPosts] fetchLikedPostIds exception:", e);
+    const raw = localStorage.getItem(LIKED_LOCAL_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch {
     return new Set();
   }
 };
 
-/**
- * Toggle a like for a field post.
- * Returns { liked: boolean, likes: number } on success, or null on error.
- * The DB trigger on field_post_likes keeps field_posts.likes in sync atomically.
- */
-export const toggleFieldPostLike = async (postId, userId, currentLikeCount) => {
-  if (!postId || !userId) return null;
+const saveLikedSet = (set) => {
   try {
-    const { data: existing, error: checkError } = await supabase
-      .from("field_post_likes")
-      .select("post_id")
-      .eq("post_id", postId)
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (checkError) {
-      console.error("[fieldPosts] like check error:", checkError);
+    localStorage.setItem(LIKED_LOCAL_KEY, JSON.stringify([...set]));
+  } catch { /* storage unavailable */ }
+};
+
+/**
+ * Returns the set of post IDs this device has liked, from localStorage.
+ */
+export const fetchLikedPostIds = () => loadLikedSet();
+
+/**
+ * Toggle a like for a field post. No auth required — anyone can like.
+ * Liked state is stored in localStorage; the counter is updated via a
+ * SECURITY DEFINER RPC so anon users can bypass RLS on field_posts.
+ * Returns { liked: boolean, likes: number } on success, or null on error.
+ */
+export const toggleFieldPostLike = async (postId) => {
+  if (!postId) return null;
+  const likedSet = loadLikedSet();
+  const isLiked = likedSet.has(postId);
+  const delta = isLiked ? -1 : 1;
+  try {
+    const { data, error } = await supabase.rpc("adjust_field_post_likes", {
+      p_post_id: postId,
+      p_delta: delta,
+    });
+    if (error) {
+      console.error("[fieldPosts] toggleLike rpc error:", error);
       return null;
     }
-
-    const isLiked = !!existing;
-
-    if (isLiked) {
-      const { error: deleteError } = await supabase
-        .from("field_post_likes")
-        .delete()
-        .eq("post_id", postId)
-        .eq("user_id", userId);
-      if (deleteError) {
-        console.error("[fieldPosts] unlike error:", deleteError);
-        return null;
-      }
-      return { liked: false, likes: Math.max(0, currentLikeCount - 1) };
-    } else {
-      const { error: insertError } = await supabase
-        .from("field_post_likes")
-        .insert({ post_id: postId, user_id: userId });
-      if (insertError) {
-        console.error("[fieldPosts] like error:", insertError);
-        return null;
-      }
-      return { liked: true, likes: currentLikeCount + 1 };
-    }
+    if (isLiked) likedSet.delete(postId);
+    else likedSet.add(postId);
+    saveLikedSet(likedSet);
+    return { liked: !isLiked, likes: data ?? 0 };
   } catch (e) {
     console.error("[fieldPosts] toggleLike exception:", e);
     return null;

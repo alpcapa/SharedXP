@@ -107,7 +107,7 @@ const HomePage = ({ currentUser, onLogout }) => {
   const [fieldPostsLoading, setFieldPostsLoading] = useState(true);
   const [fieldDeletedIds, setFieldDeletedIds] = useState(() => new Set());
   const [fieldCarouselIndex, setFieldCarouselIndex] = useState({});
-  const [likedPostIds, setLikedPostIds] = useState(() => new Set());
+  const [likedPostIds, setLikedPostIds] = useState(() => fetchLikedPostIds());
   const [pendingLikeIds, setPendingLikeIds] = useState(() => new Set());
 
   const handleDeleteFieldPost = useCallback((postId) => {
@@ -117,7 +117,7 @@ const HomePage = ({ currentUser, onLogout }) => {
   }, []);
 
   const handleLikeFieldPost = useCallback(async (post) => {
-    if (!currentUser?.id || pendingLikeIds.has(post.id)) return;
+    if (pendingLikeIds.has(post.id)) return;
     const isCurrentlyLiked = likedPostIds.has(post.id);
     setPendingLikeIds((prev) => new Set([...prev, post.id]));
     setLikedPostIds((prev) => {
@@ -133,7 +133,7 @@ const HomePage = ({ currentUser, onLogout }) => {
           : p
       )
     );
-    const result = await toggleFieldPostLike(post.id, currentUser.id, post.likes);
+    const result = await toggleFieldPostLike(post.id);
     if (!result) {
       setLikedPostIds((prev) => {
         const next = new Set(prev);
@@ -160,7 +160,7 @@ const HomePage = ({ currentUser, onLogout }) => {
       next.delete(post.id);
       return next;
     });
-  }, [currentUser, likedPostIds, pendingLikeIds]);
+  }, [likedPostIds, pendingLikeIds]);
   const getFieldCarouselIndex = useCallback(
     (postId) => fieldCarouselIndex[postId] ?? 0,
     [fieldCarouselIndex]
@@ -298,13 +298,6 @@ const HomePage = ({ currentUser, onLogout }) => {
     });
   }, []);
 
-  useEffect(() => {
-    if (!currentUser?.id) {
-      setLikedPostIds(new Set());
-      return;
-    }
-    fetchLikedPostIds(currentUser.id).then(setLikedPostIds);
-  }, [currentUser?.id]);
 
   const countryOptions = useMemo(
     () => ["All", ...[...new Set(hostLocations.map((l) => l.country).filter(Boolean))].sort()],
@@ -641,7 +634,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                             type="button"
                             className="field-like-btn"
                             onClick={() => handleLikeFieldPost(post)}
-                            disabled={!currentUser || pendingLikeIds.has(post.id)}
+                            disabled={pendingLikeIds.has(post.id)}
                             aria-label={likedPostIds.has(post.id) ? "Unlike" : "Like"}
                           >
                             {likedPostIds.has(post.id) ? "❤️" : "🤍"}
