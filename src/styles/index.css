@@ -96,6 +96,7 @@ body {
 }
 
 .auth-hero + .middle-section.explore-page-content,
+.auth-hero + .middle-section.about-main,
 .auth-hero + .field-main,
 .auth-hero + .events-main {
   width: auto;
@@ -3220,31 +3221,6 @@ body {
 }
 
 .about-main {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-/* Hero */
-.about-hero {
-  margin: 0;
-  padding: 40px 0 0;
-}
-
-.about-hero h1 {
-  margin: 0;
-  font-size: clamp(28px, 4vw, 48px);
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  line-height: 1.1;
-  color: #141a1f;
-}
-
-.about-hero-sub {
-  margin: 16px 0 28px;
-  font-size: clamp(15px, 1.5vw, 18px);
-  color: #596164;
-  line-height: 1.6;
 }
 
 .about-hero-img {
