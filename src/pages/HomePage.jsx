@@ -117,7 +117,11 @@ const HomePage = ({ currentUser, onLogout }) => {
   }, []);
 
   const handleLikeFieldPost = useCallback(async (post) => {
-    if (!currentUser?.id || pendingLikeIds.has(post.id)) return;
+    if (!currentUser?.id) {
+      window.alert("Sign in to like posts.");
+      return;
+    }
+    if (pendingLikeIds.has(post.id)) return;
     const isCurrentlyLiked = likedPostIds.has(post.id);
     setPendingLikeIds((prev) => new Set([...prev, post.id]));
     setLikedPostIds((prev) => {
@@ -641,7 +645,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                             type="button"
                             className="field-like-btn"
                             onClick={() => handleLikeFieldPost(post)}
-                            disabled={!currentUser || pendingLikeIds.has(post.id)}
+                            disabled={pendingLikeIds.has(post.id)}
                             aria-label={likedPostIds.has(post.id) ? "Unlike" : "Like"}
                           >
                             {likedPostIds.has(post.id) ? "❤️" : "🤍"}
