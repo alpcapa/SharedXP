@@ -1,6 +1,11 @@
 name: Run Database Migrations
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'supabase/migrations/**'
   workflow_dispatch:
     inputs:
       branch:

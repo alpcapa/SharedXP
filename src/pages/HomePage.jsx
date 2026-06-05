@@ -208,7 +208,7 @@ const HomePage = ({ currentUser, onLogout }) => {
   }, []);
 
   useEffect(() => {
-    fetchFieldPosts().then((posts) => {
+    fetchFieldPosts().then(({ posts }) => {
       setFieldPostsList(posts);
       setFieldPostsLoading(false);
     });

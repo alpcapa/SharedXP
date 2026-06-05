@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import RolePill from "../components/RolePill";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, toggleFieldPostLike } from "../utils/fieldPosts";
+
+const PAGE_SIZE = 12;
 
 const FieldPage = ({ currentUser, onLogout }) => {
   const [selectedCountry, setSelectedCountry] = useState("All");
@@ -13,13 +15,20 @@ const FieldPage = ({ currentUser, onLogout }) => {
   const [deletedIds, setDeletedIds] = useState(() => new Set());
   const [fieldPosts, setFieldPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [likedPostIds, setLikedPostIds] = useState(() => new Set());
   const [pendingLikeIds, setPendingLikeIds] = useState(() => new Set());
+  const offsetRef = useRef(0);
+  const sentinelRef = useRef(null);
 
   useEffect(() => {
     setPostsLoading(true);
-    fetchFieldPosts().then((posts) => {
+    offsetRef.current = 0;
+    fetchFieldPosts({ limit: PAGE_SIZE, offset: 0 }).then(({ posts, hasMore }) => {
       setFieldPosts(posts);
+      offsetRef.current = posts.length;
+      setHasMore(hasMore);
       setPostsLoading(false);
     });
   }, []);
@@ -31,6 +40,27 @@ const FieldPage = ({ currentUser, onLogout }) => {
     }
     fetchLikedPostIds(currentUser.id).then(setLikedPostIds);
   }, [currentUser?.id]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const { posts, hasMore: more } = await fetchFieldPosts({ limit: PAGE_SIZE, offset: offsetRef.current });
+    offsetRef.current += posts.length;
+    setFieldPosts((prev) => [...prev, ...posts]);
+    setHasMore(more);
+    setLoadingMore(false);
+  }, [loadingMore, hasMore]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) loadMore(); },
+      { rootMargin: "300px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore, hasMore]);
 
   const handleLikePost = useCallback(async (post) => {
     if (!currentUser?.id || pendingLikeIds.has(post.id)) return;
@@ -340,6 +370,12 @@ const FieldPage = ({ currentUser, onLogout }) => {
                );
              })}
           </div>
+        )}
+        {!postsLoading && (
+          <>
+            <div ref={sentinelRef} />
+            {loadingMore && <p className="field-empty-state">Loading more…</p>}
+          </>
         )}
         </main>
         <SiteFooter />

@@ -95,23 +95,23 @@ const CommunityManagerPolicyPage = ({ currentUser, onLogout }) => {
               <p>
                 Each Community Manager is issued one unique invite code. A referral is attributed to a Community
                 Manager when a new user signs up on SharedXP using that code and subsequently completes a paid
-                booking as either a guest or a host.
+                booking as a guest (attendee).
               </p>
               <p>
                 <strong>Attribution rules:</strong>
               </p>
               <ul>
-                <li>Only bookings completed by users who signed up using the CM's invite code generate
-                commission.</li>
+                <li>Only bookings where the referred user pays as a guest (attendee) generate commission.
+                Bookings where the referred user earns as a host do not.</li>
                 <li>If a user does not use the invite code at sign-up, no referral attribution is possible
                 retroactively.</li>
-                <li>Community Managers do not earn commission on their own bookings, whether as guest or host.</li>
+                <li>Community Managers do not earn commission on their own bookings.</li>
                 <li>
                   <strong>No code, no commission.</strong> The invite code must be entered at sign-up. SharedXP
                   cannot attribute referrals based on verbal claims or off-platform records.
                 </li>
-                <li>Referral attribution is lifetime — once a user is linked to a CM's code, all future bookings
-                by that user generate commission for the CM, unless the CM's status is paused or revoked.</li>
+                <li>Referral attribution is lifetime — once a user is linked to a CM's code, all future guest
+                bookings by that user generate commission for the CM, unless the CM's status is paused or revoked.</li>
               </ul>
               <p>
                 Sharing an invite code in exchange for payment, gifts, or other incentives outside the Program is
@@ -123,7 +123,7 @@ const CommunityManagerPolicyPage = ({ currentUser, onLogout }) => {
               <h2>6. Commission Structure</h2>
               <p>
                 Community Managers earn a commission of <strong>5% of the gross booking value (GBV)</strong> for
-                every completed booking made by a user attributed to their invite code. GBV is the total amount
+                every completed booking where a referred user pays as a guest (attendee). GBV is the total amount
                 paid by the guest before any platform fees or deductions.
               </p>
               <p>

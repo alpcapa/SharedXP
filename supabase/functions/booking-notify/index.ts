@@ -628,7 +628,7 @@ function buildCmEligible(
       [
         `You've been selected to become our new Community Manager.`,
         `As a host with an outstanding track record on SharedXP, you're now eligible to apply for the Community Manager programme.`,
-        `Community Managers earn 5% commission on every booking made by users they refer, and get their own unique invite code to share with sports enthusiasts in their city.`,
+        `Community Managers earn 5% commission every time a user they referred books a session as a guest, and get their own unique invite code to share with sports enthusiasts in their city.`,
         `Click below to learn more and apply.`,
       ],
       `${APP_URL}/host-settings`,
@@ -696,7 +696,7 @@ function buildCmAccepted(
       `<div style="text-align:center;margin:20px 0 24px;">
         <span style="font-size:24px;font-weight:700;letter-spacing:2px;background:#f5f5f2;padding:12px 24px;border-radius:8px;border:2px solid #1a1a1a;display:inline-block;">${inviteCode}</span>
       </div>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">Share this code with athletes and sports enthusiasts. Anyone who signs up using your code becomes your permanent referral, and you earn 5% commission on every completed booking they make.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">Share this code with athletes and sports enthusiasts. Anyone who signs up using your code becomes your permanent referral, and you earn 5% commission every time they book a session as a guest.</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">Log in to your SharedXP account to access your CM Dashboard and track your referrals and commissions.</p>`,
     ),
   };
