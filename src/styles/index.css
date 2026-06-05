@@ -688,7 +688,7 @@ body {
 .xp-tag-disputed   { background: #fff7ed; color: #92400e; }
 
 .home-page .hero {
-  margin: 10px 0;
+  margin: 10px 10px;
   border-radius: 16px;
   min-height: var(--hero-min-height);
   padding: 10px;
