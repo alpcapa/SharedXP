@@ -9,9 +9,9 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section legal-content">
-          <article className="simple-page legal-page">
-            <h1>Privacy Notice</h1>
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">Privacy Notice</h1>
+          <article className="legal-page">
             <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               This Privacy Notice explains how SharedXP collects and uses personal data for account access, host

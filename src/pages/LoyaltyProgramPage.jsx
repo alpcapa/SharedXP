@@ -10,9 +10,9 @@ const LoyaltyProgramPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section legal-content">
-          <article className="simple-page legal-page">
-            <h1>SharedXP Loyalty Program</h1>
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">SharedXP Loyalty Program</h1>
+          <article className="legal-page">
             <p className="legal-last-updated">Effective: May 10, 2026</p>
             <p>
               The SharedXP Loyalty Program rewards every participant in a shared experience — whether

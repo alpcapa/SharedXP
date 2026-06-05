@@ -10,9 +10,9 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section legal-content">
-          <article className="simple-page legal-page">
-            <h1>Payments and Payout Terms</h1>
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">Payments and Payout Terms</h1>
+          <article className="legal-page">
             <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               These terms explain how SharedXP handles participant payments, host payouts, fee disclosures, and payment

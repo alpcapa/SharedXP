@@ -10,9 +10,9 @@ const DisclaimersPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section legal-content">
-          <article className="simple-page legal-page">
-            <h1>Disclaimers Notice</h1>
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">Disclaimers Notice</h1>
+          <article className="legal-page">
             <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               This notice consolidates key legal disclaimers relevant to using SharedXP. It is designed to clarify the
