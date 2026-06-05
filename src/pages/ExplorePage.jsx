@@ -398,17 +398,9 @@ const ExplorePage = ({ currentUser, onLogout }) => {
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
-        <section className="explore-hero">
-          <div className="explore-hero-content">
-            <h1>
-              Find your Host<span className="accent">.</span> Anywhere
-              <span className="accent">.</span>
-            </h1>
-            <p>Search and filter hosts by location, sport, gender, level, and equipment.</p>
-          </div>
-        </section>
-
         <main className="middle-section explore-page-content">
+          <h1 className="admin-title">Find your Host<span className="accent">.</span> Anywhere<span className="accent">.</span></h1>
+          <p className="admin-subtitle">Search and filter hosts by location, sport, gender, level, and equipment.</p>
           <section className="explore-filters">
               <div className="explore-filter-search">
                 <label htmlFor="explore-search">Search</label>

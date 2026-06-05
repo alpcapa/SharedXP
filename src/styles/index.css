@@ -95,6 +95,17 @@ body {
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
+.auth-hero + .middle-section.explore-page-content,
+.auth-hero + .field-main,
+.auth-hero + .events-main {
+  width: auto;
+  margin: 10px 10px 0;
+  padding: 28px 28px 48px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
 .auth-hero + .middle-section.auth-page {
   width: auto;
   margin: 10px 10px 0;
@@ -112,22 +123,8 @@ body {
   margin-top: 10px;
 }
 
-.auth-hero + .middle-section > *:first-child,
-.auth-hero + .explore-hero,
-.auth-hero + .events-hero,
-.auth-hero + .field-hero,
-.events-hero + .events-main,
-.field-hero + .field-main,
-.explore-hero + .middle-section {
+.auth-hero + .middle-section > *:first-child {
   margin-top: 0;
-}
-
-.explore-hero + .middle-section {
-  padding-top: 0;
-}
-
-.explore-hero + .middle-section.explore-page-content {
-  padding-top: 20px;
 }
 
 /* ── Shared section typography ─────────────────── */
@@ -906,9 +903,6 @@ body {
   font-size: 18px;
 }
 
-.explore-page-content,
-.field-main,
-.events-main,
 .host-settings-page,
 .edit-profile-page {
   margin: 10px 0;
@@ -2477,10 +2471,7 @@ body {
 .booking-engine-section,
 .recommendations,
 .host-settings-page,
-.edit-profile-page,
-.explore-page-content,
-.field-main,
-.events-main {
+.edit-profile-page {
   background: white;
   margin: 20px 10px;
   padding: 20px;
