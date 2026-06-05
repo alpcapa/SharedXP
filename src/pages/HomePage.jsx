@@ -144,6 +144,16 @@ const HomePage = ({ currentUser, onLogout }) => {
       setFieldPostsList((prev) =>
         prev.map((p) => (p.id === post.id ? { ...p, likes: post.likes } : p))
       );
+    } else {
+      setLikedPostIds((prev) => {
+        const next = new Set(prev);
+        if (result.liked) next.add(post.id);
+        else next.delete(post.id);
+        return next;
+      });
+      setFieldPostsList((prev) =>
+        prev.map((p) => (p.id === post.id ? { ...p, likes: result.likes } : p))
+      );
     }
     setPendingLikeIds((prev) => {
       const next = new Set(prev);
