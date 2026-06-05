@@ -699,6 +699,14 @@ body {
   background-position: center;
 }
 
+.home-page .hero + .middle-section.home-main {
+  margin: 10px 0 0;
+  padding: 28px 28px 48px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
 .hero-content {
   width: min(988px, 96%);
   padding: 44px 18px 28px;
