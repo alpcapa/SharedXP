@@ -179,8 +179,8 @@ body {
   height: 36px;
   border-radius: 50%;
   border: 1px solid #e3e5df;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   font-size: 22px;
   line-height: 1;
   color: #4b5563;
@@ -192,7 +192,7 @@ body {
 }
 
 .scroll-row-btn:hover {
-  background: #f5f7f0;
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .scroll-row-btn-prev {
