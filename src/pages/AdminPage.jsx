@@ -1327,7 +1327,10 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
       .from("field_post_reports")
       .select(`
         id, created_at, status, post_id, reporter_id,
-        post:field_posts!post_id(id, caption, sport, city, country, photos, host_name, role),
+        post:field_posts!post_id(
+          id, caption, sport, city, country, photos, host_name, role,
+          poster:profiles!poster_id(full_name, first_name, last_name)
+        ),
         reporter:profiles!reporter_id(full_name, first_name, last_name, email)
       `)
       .eq("status", "pending")
@@ -1390,6 +1393,10 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
             const post = r.post;
             const isExpanded = expandedIds.has(r.id);
             const photo = Array.isArray(post?.photos) && post.photos.length > 0 ? post.photos[0] : null;
+            const isHost = post?.role === "hosted";
+            const sharerName = isHost
+              ? (post?.host_name || "—")
+              : getProfileName(post?.poster);
             return (
               <article key={r.id} className="admin-dispute-card">
                 <button
@@ -1399,13 +1406,17 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                   aria-expanded={isExpanded}
                 >
                   <div className="cm-admin-card-summary-left">
-                    <strong>{post?.sport ?? "Unknown sport"}</strong>
+                    <strong>
+                      {post?.sport ?? "Unknown sport"}
+                      <span className="cm-admin-email" style={{ fontWeight: "normal", marginLeft: 6 }}>
+                        {isHost ? "hosted by" : "attended by"} {sharerName}
+                      </span>
+                    </strong>
                     {(post?.city || post?.country) && (
                       <span className="cm-admin-email">
                         {[post.city, post.country].filter(Boolean).join(", ")}
                       </span>
                     )}
-                    <span className="cm-admin-email">Reported {fmtDate(r.created_at)}</span>
                   </div>
                   <div className="cm-admin-card-summary-right">
                     <span className="pending-status-badge status-disputed">Pending</span>
@@ -1430,14 +1441,14 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                             <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
                           </div>
                           <div>
-                            <p className="admin-dispute-label">Session host</p>
-                            <p>{post?.host_name || "—"}</p>
-                            <p className="admin-dispute-label" style={{ marginTop: 8 }}>Poster</p>
-                            <p>{post?.role === "hosted" ? "Host" : "Guest"}</p>
+                            <p className="admin-dispute-label">Shared by</p>
+                            <p>{sharerName}</p>
+                            <p className="admin-dispute-email">{isHost ? "Host" : "Guest"}</p>
                           </div>
                           <div>
                             <p className="admin-dispute-label">Reported by</p>
                             <p>{getProfileName(r.reporter)}</p>
+                            <p className="admin-dispute-email">{fmtDate(r.created_at)}</p>
                           </div>
                         </div>
 
