@@ -1319,6 +1319,7 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(null);
+  const [expandedIds, setExpandedIds] = useState(() => new Set());
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -1339,6 +1340,15 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
   }, [onCountChange]);
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
+
+  const toggleExpanded = (id) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const dismiss = async (reportId) => {
     setActing(reportId);
@@ -1378,63 +1388,77 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
         <div className="admin-dispute-list">
           {reports.map((r) => {
             const post = r.post;
+            const isExpanded = expandedIds.has(r.id);
             const photo = Array.isArray(post?.photos) && post.photos.length > 0 ? post.photos[0] : null;
             return (
               <article key={r.id} className="admin-dispute-card">
-                <div className="admin-dispute-header">
-                  <div>
-                    <h2 className="admin-dispute-sport">
-                      {post?.sport ?? "Unknown sport"}
-                      {post?.city ? ` — ${post.city}` : ""}
-                      {post?.country ? `, ${post.country}` : ""}
-                    </h2>
-                    <p className="admin-dispute-date">Reported {fmtDate(r.created_at)}</p>
+                <button
+                  type="button"
+                  className="cm-admin-card-summary"
+                  onClick={() => toggleExpanded(r.id)}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="cm-admin-card-summary-left">
+                    <strong>{post?.sport ?? "Unknown sport"}</strong>
+                    {(post?.city || post?.country) && (
+                      <span className="cm-admin-email">
+                        {[post.city, post.country].filter(Boolean).join(", ")}
+                      </span>
+                    )}
+                    <span className="cm-admin-email">Reported {fmtDate(r.created_at)}</span>
                   </div>
-                  <span className="pending-status-badge status-disputed">Pending</span>
-                </div>
+                  <div className="cm-admin-card-summary-right">
+                    <span className="pending-status-badge status-disputed">Pending</span>
+                    <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+                  </div>
+                </button>
 
-                {photo && (
-                  <img
-                    src={photo}
-                    alt="Reported post"
-                    style={{ maxWidth: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 8, marginBottom: 8 }}
-                  />
+                {isExpanded && (
+                  <div className="cm-admin-card-body">
+                    {photo && (
+                      <img
+                        src={photo}
+                        alt="Reported post"
+                        style={{ maxWidth: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 8, marginBottom: 12 }}
+                      />
+                    )}
+
+                    <div className="admin-dispute-accounts">
+                      <div>
+                        <p className="admin-dispute-label">Caption</p>
+                        <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
+                      </div>
+                      <div>
+                        <p className="admin-dispute-label">Host</p>
+                        <p>{post?.host_name || "—"}</p>
+                        <p className="admin-dispute-email">{post?.role ?? ""}</p>
+                      </div>
+                      <div>
+                        <p className="admin-dispute-label">Reported by</p>
+                        <p>{getProfileName(r.reporter)}</p>
+                      </div>
+                    </div>
+
+                    <div className="admin-dispute-actions">
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        onClick={() => removePost(r.id, r.post_id)}
+                        disabled={acting === r.id}
+                      >
+                        {acting === r.id ? "…" : "Remove Post"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-light"
+                        onClick={() => dismiss(r.id)}
+                        disabled={acting === r.id}
+                      >
+                        {acting === r.id ? "…" : "Dismiss"}
+                      </button>
+                    </div>
+                  </div>
                 )}
-
-                <div className="admin-dispute-accounts">
-                  <div>
-                    <p className="admin-dispute-label">Caption</p>
-                    <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
-                  </div>
-                  <div>
-                    <p className="admin-dispute-label">Host</p>
-                    <p>{post?.host_name || "—"}</p>
-                    <p className="admin-dispute-email">{post?.role ?? ""}</p>
-                  </div>
-                  <div>
-                    <p className="admin-dispute-label">Reported by</p>
-                    <p>{getProfileName(r.reporter)}</p>
-                  </div>
-                </div>
-
-                <div className="admin-dispute-actions">
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={() => removePost(r.id, r.post_id)}
-                    disabled={acting === r.id}
-                  >
-                    {acting === r.id ? "…" : "Remove Post"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-light"
-                    onClick={() => dismiss(r.id)}
-                    disabled={acting === r.id}
-                  >
-                    {acting === r.id ? "…" : "Dismiss"}
-                  </button>
-                </div>
               </article>
             );
           })}
