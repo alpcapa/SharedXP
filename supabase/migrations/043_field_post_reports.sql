@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS public.field_post_reports (
 
 ALTER TABLE public.field_post_reports ENABLE ROW LEVEL SECURITY;
 
--- Any authenticated user can file a report
+-- Any user (including anonymous) can file a report
 CREATE POLICY "field_post_reports_insert" ON public.field_post_reports
-  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+  FOR INSERT WITH CHECK (true);
 
 -- Only admins can read reports
 CREATE POLICY "field_post_reports_select" ON public.field_post_reports
