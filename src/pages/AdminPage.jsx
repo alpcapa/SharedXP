@@ -1406,9 +1406,8 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                   aria-expanded={isExpanded}
                 >
                   <div className="cm-admin-card-summary-left">
-                    <strong>{post?.sport ?? "Unknown sport"}</strong>
                     <span className="cm-admin-email">
-                      {isHost ? "hosted by" : "attended by"} {sharerName}
+                      Experience hosted by {post?.host_name || "—"}
                       {(post?.city || post?.country) ? ` / ${[post.city, post.country].filter(Boolean).join(", ")}` : ""}
                       {` on ${fmtDate(r.created_at)}`}
                     </span>
