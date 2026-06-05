@@ -13,7 +13,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
   const [deletedIds, setDeletedIds] = useState(() => new Set());
   const [fieldPosts, setFieldPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const [likedPostIds, setLikedPostIds] = useState(() => new Set());
+  const [likedPostIds, setLikedPostIds] = useState(() => fetchLikedPostIds());
   const [pendingLikeIds, setPendingLikeIds] = useState(() => new Set());
 
   useEffect(() => {
@@ -24,16 +24,8 @@ const FieldPage = ({ currentUser, onLogout }) => {
     });
   }, []);
 
-  useEffect(() => {
-    if (!currentUser?.id) {
-      setLikedPostIds(new Set());
-      return;
-    }
-    fetchLikedPostIds(currentUser.id).then(setLikedPostIds);
-  }, [currentUser?.id]);
-
   const handleLikePost = useCallback(async (post) => {
-    if (!currentUser?.id || pendingLikeIds.has(post.id)) return;
+    if (pendingLikeIds.has(post.id)) return;
     const isCurrentlyLiked = likedPostIds.has(post.id);
     setPendingLikeIds((prev) => new Set([...prev, post.id]));
     setLikedPostIds((prev) => {
@@ -49,7 +41,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
           : p
       )
     );
-    const result = await toggleFieldPostLike(post.id, currentUser.id, post.likes);
+    const result = await toggleFieldPostLike(post.id);
     if (!result) {
       setLikedPostIds((prev) => {
         const next = new Set(prev);
@@ -60,13 +52,23 @@ const FieldPage = ({ currentUser, onLogout }) => {
       setFieldPosts((prev) =>
         prev.map((p) => (p.id === post.id ? { ...p, likes: post.likes } : p))
       );
+    } else {
+      setLikedPostIds((prev) => {
+        const next = new Set(prev);
+        if (result.liked) next.add(post.id);
+        else next.delete(post.id);
+        return next;
+      });
+      setFieldPosts((prev) =>
+        prev.map((p) => (p.id === post.id ? { ...p, likes: result.likes } : p))
+      );
     }
     setPendingLikeIds((prev) => {
       const next = new Set(prev);
       next.delete(post.id);
       return next;
     });
-  }, [currentUser, likedPostIds, pendingLikeIds]);
+  }, [likedPostIds, pendingLikeIds]);
 
   const getCarouselIndex = (postId) => carouselIndex[postId] ?? 0;
 
@@ -286,7 +288,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
                        type="button"
                        className="field-like-btn"
                        onClick={() => handleLikePost(post)}
-                       disabled={!currentUser || pendingLikeIds.has(post.id)}
+                       disabled={pendingLikeIds.has(post.id)}
                        aria-label={likedPostIds.has(post.id) ? "Unlike" : "Like"}
                      >
                        {likedPostIds.has(post.id) ? "❤️" : "🤍"}
