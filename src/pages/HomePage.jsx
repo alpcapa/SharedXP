@@ -16,7 +16,7 @@ const PAGE_MORE = 10;
 
 const HOST_SELECT = `id, country, city, pause_hosting,
   profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at),
-  host_sports(id, sport, level, equipment_available, paused)`;
+  host_sports!inner(id, sport, level, equipment_available, paused)`;
 
 const toHostObject = (hp) => ({
   id: hp.id,
@@ -163,6 +163,8 @@ const HomePage = ({ currentUser, onLogout }) => {
     });
   }, []);
 
+  const [hostLocations, setHostLocations] = useState([]);
+  const [allSports, setAllSports] = useState([]);
   const [hostsHasMore, setHostsHasMore] = useState(false);
   const [hostsLoadingMore, setHostsLoadingMore] = useState(false);
   const [hostsOffset, setHostsOffset] = useState(0);
@@ -177,22 +179,30 @@ const HomePage = ({ currentUser, onLogout }) => {
   const loadMoreHosts = useCallback(async () => {
     if (!hostsHasMore || hostsLoadingMore) return;
     setHostsLoadingMore(true);
-    const { data, error } = await supabase
+
+    let q = supabase
       .from("host_profiles")
       .select(HOST_SELECT)
       .eq("pause_hosting", false)
+      .eq("host_sports.paused", false)
       .order("id", { ascending: false })
       .range(hostsOffset, hostsOffset + PAGE_MORE - 1);
+
+    if (selectedCountry !== "All") q = q.eq("country", selectedCountry);
+    if (selectedCity !== "All") q = q.eq("city", selectedCity);
+    if (selectedSport !== "All") q = q.eq("host_sports.sport", selectedSport);
+
+    const { data, error } = await q;
     if (!error && data) {
       setHosts((prev) => [
         ...prev,
-        ...sortHosts(data.filter((hp) => hp.profile && (hp.host_sports || []).some((hs) => !hs.paused)).map(toHostObject)),
+        ...sortHosts(data.filter((hp) => hp.profile && (hp.host_sports || []).length > 0).map(toHostObject)),
       ]);
       setHostsHasMore(data.length === PAGE_MORE);
       setHostsOffset((prev) => prev + data.length);
     }
     setHostsLoadingMore(false);
-  }, [hostsHasMore, hostsLoadingMore, hostsOffset]);
+  }, [hostsHasMore, hostsLoadingMore, hostsOffset, selectedCountry, selectedCity, selectedSport]);
 
   const loadMoreFieldPosts = useCallback(async () => {
     if (!fieldHasMore || fieldLoadingMore) return;
@@ -212,35 +222,51 @@ const HomePage = ({ currentUser, onLogout }) => {
     setEventsLoadingMore(false);
   }, [eventsHasMore, eventsLoadingMore, majorEventsList.length]);
 
+  // Fetch dropdown option data once on mount (independent of filters)
+  useEffect(() => {
+    supabase.from("host_profiles").select("country, city").eq("pause_hosting", false)
+      .then(({ data }) => { if (data) setHostLocations(data.filter((r) => r.country)); });
+    supabase.from("host_sports").select("sport").eq("paused", false).not("sport", "is", null)
+      .then(({ data }) => { if (data) setAllSports([...new Set(data.map((r) => r.sport).filter(Boolean))].sort()); });
+  }, []);
+
+  // Re-fetch hosts from DB whenever filters change
   useEffect(() => {
     let cancelled = false;
     setHostsLoading(true);
+    setHosts([]);
+    setHostsOffset(0);
+    setHostsHasMore(false);
 
-    supabase
+    let q = supabase
       .from("host_profiles")
       .select(HOST_SELECT)
       .eq("pause_hosting", false)
+      .eq("host_sports.paused", false)
       .order("id", { ascending: false })
-      .range(0, PAGE_INITIAL - 1)
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) {
-          console.error("[home] Failed to fetch hosts:", error);
-          setHosts([]);
-          setHostsHasMore(false);
-        } else {
-          const raw = data || [];
-          setHosts(sortHosts(raw.filter((hp) => hp.profile && (hp.host_sports || []).some((hs) => !hs.paused)).map(toHostObject)));
-          setHostsHasMore(raw.length === PAGE_INITIAL);
-          setHostsOffset(raw.length);
-        }
-        setHostsLoading(false);
-      });
+      .range(0, PAGE_INITIAL - 1);
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (selectedCountry !== "All") q = q.eq("country", selectedCountry);
+    if (selectedCity !== "All") q = q.eq("city", selectedCity);
+    if (selectedSport !== "All") q = q.eq("host_sports.sport", selectedSport);
+
+    q.then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) {
+        console.error("[home] Failed to fetch hosts:", error);
+        setHosts([]);
+        setHostsHasMore(false);
+      } else {
+        const raw = data || [];
+        setHosts(sortHosts(raw.filter((hp) => hp.profile && (hp.host_sports || []).length > 0).map(toHostObject)));
+        setHostsHasMore(raw.length === PAGE_INITIAL);
+        setHostsOffset(raw.length);
+      }
+      setHostsLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [selectedCountry, selectedCity, selectedSport]);
 
   useEffect(() => {
     let cancelled = false;
@@ -271,39 +297,24 @@ const HomePage = ({ currentUser, onLogout }) => {
   }, [currentUser?.id]);
 
   const countryOptions = useMemo(
-    () => ["All", ...[...new Set(hosts.map((h) => h.country).filter(Boolean))].sort()],
-    [hosts]
+    () => ["All", ...[...new Set(hostLocations.map((l) => l.country).filter(Boolean))].sort()],
+    [hostLocations]
   );
 
   const cityOptions = useMemo(() => {
-    const hostsForCountry =
-      selectedCountry === "All" ? hosts : hosts.filter((h) => h.country === selectedCountry);
-    return ["All", ...[...new Set(hostsForCountry.map((h) => h.city).filter(Boolean))].sort()];
-  }, [hosts, selectedCountry]);
+    const forCountry = selectedCountry === "All"
+      ? hostLocations
+      : hostLocations.filter((l) => l.country === selectedCountry);
+    return ["All", ...[...new Set(forCountry.map((l) => l.city).filter(Boolean))].sort()];
+  }, [hostLocations, selectedCountry]);
 
-  const sportOptions = useMemo(
-    () => [
-      "All",
-      ...[...new Set(hosts.flatMap((h) => h.sports.map((s) => s.sport)).filter(Boolean))].sort()
-    ],
-    [hosts]
-  );
+  const sportOptions = useMemo(() => ["All", ...allSports], [allSports]);
 
   useEffect(() => {
     if (selectedCity !== "All" && !cityOptions.includes(selectedCity)) {
       setSelectedCity("All");
     }
   }, [cityOptions, selectedCity]);
-
-  const filteredHosts = useMemo(() => {
-    return hosts.filter((host) => {
-      const matchesCountry = selectedCountry === "All" || host.country === selectedCountry;
-      const matchesCity = selectedCity === "All" || host.city === selectedCity;
-      const matchesSport =
-        selectedSport === "All" || host.sports.some((s) => s.sport === selectedSport);
-      return matchesCountry && matchesCity && matchesSport;
-    });
-  }, [hosts, selectedCountry, selectedCity, selectedSport]);
 
   const activeFieldPosts = useMemo(
     () => fieldPostsList.filter((p) => !fieldDeletedIds.has(p.id)),
@@ -451,11 +462,11 @@ const HomePage = ({ currentUser, onLogout }) => {
             <div className="locals-grid-wrap">
               {hostsLoading ? (
                 <p className="explore-loading">Loading locals…</p>
-              ) : filteredHosts.length === 0 ? (
+              ) : hosts.length === 0 ? (
                 <p className="explore-empty">No locals found matching your filters.</p>
               ) : (
                 <ScrollRow onLoadMore={hostsHasMore ? loadMoreHosts : undefined} isLoadingMore={hostsLoadingMore}>
-                          {filteredHosts.map((host) => {
+                          {hosts.map((host) => {
                     const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                     const hasEquipment = host.sports.some((s) => s.equipment_available);
                     const levels = [
