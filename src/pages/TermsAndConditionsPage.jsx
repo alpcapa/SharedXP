@@ -320,7 +320,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>18. Contact</h2>
               <p>
-                If you have questions about these Terms, please contact SharedXP through our <Link to="/help">Help Center</Link>.
+                If you have questions about these Terms, please <Link to="/contact">contact SharedXP</Link>.
               </p>
             </section>
           </article>
