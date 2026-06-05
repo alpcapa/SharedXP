@@ -5,11 +5,42 @@ import RolePill from "../components/RolePill";
 import ScrollRow from "../components/ScrollRow";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { loadMajorEvents } from "../lib/events";
+import { loadMajorEventsPage } from "../lib/events";
 import { supabase } from "../lib/supabase";
 import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, toggleFieldPostLike } from "../utils/fieldPosts";
 import { getAgeFromBirthday } from "../utils/profileAge";
 
+
+const PAGE_INITIAL = 20;
+const PAGE_MORE = 10;
+
+const HOST_SELECT = `id, country, city, pause_hosting,
+  profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at),
+  host_sports(id, sport, level, equipment_available, paused)`;
+
+const toHostObject = (hp) => ({
+  id: hp.id,
+  userId: hp.profile.id,
+  name:
+    hp.profile.full_name ||
+    [hp.profile.first_name, hp.profile.last_name].filter(Boolean).join(" ") ||
+    "Host",
+  photo: hp.profile.photo_url || "",
+  gender: hp.profile.gender || "",
+  birthday: hp.profile.birthday || "",
+  country: hp.country || "",
+  city: hp.city || "",
+  signedUpAt: hp.profile.signed_up_at || "",
+  sports: (hp.host_sports || []).filter((hs) => !hs.paused),
+});
+
+const sortHosts = (list) =>
+  [...list].sort((a, b) => {
+    if (a.signedUpAt && b.signedUpAt) return b.signedUpAt.localeCompare(a.signedUpAt);
+    if (a.signedUpAt) return -1;
+    if (b.signedUpAt) return 1;
+    return 0;
+  });
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -131,9 +162,55 @@ const HomePage = ({ currentUser, onLogout }) => {
       return { ...prev, [postId]: next };
     });
   }, []);
+
+  const [hostsHasMore, setHostsHasMore] = useState(false);
+  const [hostsLoadingMore, setHostsLoadingMore] = useState(false);
+  const [hostsOffset, setHostsOffset] = useState(0);
+  const [fieldHasMore, setFieldHasMore] = useState(false);
+  const [fieldLoadingMore, setFieldLoadingMore] = useState(false);
   const [majorEventsList, setMajorEventsList] = useState([]);
   const [majorEventsLoading, setMajorEventsLoading] = useState(true);
+  const [eventsHasMore, setEventsHasMore] = useState(false);
+  const [eventsLoadingMore, setEventsLoadingMore] = useState(false);
   const searchBarRef = useRef(null);
+
+  const loadMoreHosts = useCallback(async () => {
+    if (!hostsHasMore || hostsLoadingMore) return;
+    setHostsLoadingMore(true);
+    const { data, error } = await supabase
+      .from("host_profiles")
+      .select(HOST_SELECT)
+      .eq("pause_hosting", false)
+      .order("id", { ascending: false })
+      .range(hostsOffset, hostsOffset + PAGE_MORE - 1);
+    if (!error && data) {
+      setHosts((prev) => [
+        ...prev,
+        ...sortHosts(data.filter((hp) => hp.profile && (hp.host_sports || []).some((hs) => !hs.paused)).map(toHostObject)),
+      ]);
+      setHostsHasMore(data.length === PAGE_MORE);
+      setHostsOffset((prev) => prev + data.length);
+    }
+    setHostsLoadingMore(false);
+  }, [hostsHasMore, hostsLoadingMore, hostsOffset]);
+
+  const loadMoreFieldPosts = useCallback(async () => {
+    if (!fieldHasMore || fieldLoadingMore) return;
+    setFieldLoadingMore(true);
+    const { posts, hasMore } = await fetchFieldPosts({ limit: PAGE_MORE, offset: fieldPostsList.length });
+    setFieldPostsList((prev) => [...prev, ...posts]);
+    setFieldHasMore(hasMore);
+    setFieldLoadingMore(false);
+  }, [fieldHasMore, fieldLoadingMore, fieldPostsList.length]);
+
+  const loadMoreEvents = useCallback(async () => {
+    if (!eventsHasMore || eventsLoadingMore) return;
+    setEventsLoadingMore(true);
+    const { events, hasMore } = await loadMajorEventsPage({ limit: PAGE_MORE, offset: majorEventsList.length });
+    setMajorEventsList((prev) => [...prev, ...events]);
+    setEventsHasMore(hasMore);
+    setEventsLoadingMore(false);
+  }, [eventsHasMore, eventsLoadingMore, majorEventsList.length]);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,42 +218,21 @@ const HomePage = ({ currentUser, onLogout }) => {
 
     supabase
       .from("host_profiles")
-      .select(
-        `id, country, city, pause_hosting,
-         profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday, signed_up_at),
-         host_sports(id, sport, level, equipment_available, paused)`
-      )
+      .select(HOST_SELECT)
       .eq("pause_hosting", false)
+      .order("id", { ascending: false })
+      .range(0, PAGE_INITIAL - 1)
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) {
           console.error("[home] Failed to fetch hosts:", error);
           setHosts([]);
+          setHostsHasMore(false);
         } else {
-          const transformed = (data || [])
-            .filter((hp) => hp.profile && (hp.host_sports || []).some((hs) => !hs.paused))
-            .map((hp) => ({
-              id: hp.id,
-              userId: hp.profile.id,
-              name:
-                hp.profile.full_name ||
-                [hp.profile.first_name, hp.profile.last_name].filter(Boolean).join(" ") ||
-                "Host",
-              photo: hp.profile.photo_url || "",
-              gender: hp.profile.gender || "",
-              birthday: hp.profile.birthday || "",
-              country: hp.country || "",
-              city: hp.city || "",
-              signedUpAt: hp.profile.signed_up_at || "",
-              sports: (hp.host_sports || []).filter((hs) => !hs.paused)
-            }));
-          transformed.sort((a, b) => {
-            if (a.signedUpAt && b.signedUpAt) return b.signedUpAt.localeCompare(a.signedUpAt);
-            if (a.signedUpAt) return -1;
-            if (b.signedUpAt) return 1;
-            return 0;
-          });
-          setHosts(transformed);
+          const raw = data || [];
+          setHosts(sortHosts(raw.filter((hp) => hp.profile && (hp.host_sports || []).some((hs) => !hs.paused)).map(toHostObject)));
+          setHostsHasMore(raw.length === PAGE_INITIAL);
+          setHostsOffset(raw.length);
         }
         setHostsLoading(false);
       });
@@ -189,22 +245,19 @@ const HomePage = ({ currentUser, onLogout }) => {
   useEffect(() => {
     let cancelled = false;
     setMajorEventsLoading(true);
-    loadMajorEvents()
-      .then((rows) => {
-        if (cancelled) return;
-        setMajorEventsList(rows);
-      })
-      .finally(() => {
-        if (!cancelled) setMajorEventsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+    loadMajorEventsPage({ limit: PAGE_INITIAL }).then(({ events, hasMore }) => {
+      if (cancelled) return;
+      setMajorEventsList(events);
+      setEventsHasMore(hasMore);
+      setMajorEventsLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    fetchFieldPosts().then(({ posts }) => {
+    fetchFieldPosts({ limit: PAGE_INITIAL }).then(({ posts, hasMore }) => {
       setFieldPostsList(posts);
+      setFieldHasMore(hasMore);
       setFieldPostsLoading(false);
     });
   }, []);
@@ -401,7 +454,7 @@ const HomePage = ({ currentUser, onLogout }) => {
               ) : filteredHosts.length === 0 ? (
                 <p className="explore-empty">No locals found matching your filters.</p>
               ) : (
-                <ScrollRow>
+                <ScrollRow onLoadMore={hostsHasMore ? loadMoreHosts : undefined} isLoadingMore={hostsLoadingMore}>
                           {filteredHosts.map((host) => {
                     const locationLine = [host.city, host.country].filter(Boolean).join(", ");
                     const hasEquipment = host.sports.some((s) => s.equipment_available);
@@ -471,7 +524,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                 </Link>
               </p>
             ) : (
-              <ScrollRow>
+              <ScrollRow onLoadMore={fieldHasMore ? loadMoreFieldPosts : undefined} isLoadingMore={fieldLoadingMore}>
                   {activeFieldPosts.map((post) => {
                     const isOwner = post.posterId != null && post.posterId === currentUser?.id;
                     const postLocation = [post.city, post.country].filter(Boolean).join(", ");
@@ -633,7 +686,7 @@ const HomePage = ({ currentUser, onLogout }) => {
             ) : majorEventsList.length === 0 ? (
               <p className="explore-empty">No major events to show right now.</p>
             ) : (
-              <ScrollRow>
+              <ScrollRow onLoadMore={eventsHasMore ? loadMoreEvents : undefined} isLoadingMore={eventsLoadingMore}>
                 {majorEventsList.map((event) => (
                   <EventCard key={event.id} event={event} compact />
                 ))}

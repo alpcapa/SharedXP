@@ -203,6 +203,28 @@ body {
   right: 6px;
 }
 
+.scroll-row-loader {
+  flex: 0 0 80px;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-row-loader::after {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #e3e5df;
+  border-top-color: #96c93d;
+  animation: scroll-spinner 0.7s linear infinite;
+}
+
+@keyframes scroll-spinner {
+  to { transform: rotate(360deg); }
+}
+
 .home-scroll-row {
   display: flex;
   overflow-x: auto;

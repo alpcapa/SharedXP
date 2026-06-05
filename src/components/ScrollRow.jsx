@@ -1,18 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const SCROLL_STEP = 274;
+const LOAD_MORE_TRIGGER = 10 * 274; // fire when 10 cards from the end
 
-const ScrollRow = ({ children }) => {
+const ScrollRow = ({ children, onLoadMore, isLoadingMore }) => {
   const ref = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const nearEnd = useRef(false);
 
   const update = useCallback(() => {
     const el = ref.current;
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 2);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
-  }, []);
+
+    if (onLoadMore) {
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - LOAD_MORE_TRIGGER;
+      if (atEnd && !nearEnd.current) {
+        nearEnd.current = true;
+        onLoadMore();
+      }
+      if (!atEnd) nearEnd.current = false;
+    }
+  }, [onLoadMore]);
 
   useEffect(() => {
     const el = ref.current;
@@ -48,6 +59,7 @@ const ScrollRow = ({ children }) => {
       )}
       <div ref={ref} className="home-scroll-row">
         {children}
+        {isLoadingMore && <div className="scroll-row-loader" aria-hidden="true" />}
       </div>
       {canScrollRight && (
         <button
