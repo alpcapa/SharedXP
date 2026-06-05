@@ -204,7 +204,7 @@ const HelpPage = ({ currentUser, onLogout }) => {
           <div className="help-contact-cta">
             <h2>Still need help?</h2>
             <p>Can't find the answer you're looking for? Our support team is here.</p>
-            <Link to="/contact" className="btn btn-primary">Contact support</Link>
+            <Link to="/contact" className="btn btn-primary">Contact Center</Link>
           </div>
         </main>
 

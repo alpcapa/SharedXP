@@ -199,7 +199,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>12. Changes and Contact</h2>
               <p>
-                SharedXP may update these terms to reflect legal or operational changes. Questions can be submitted through our <Link to="/contact">contact page</Link>.
+                SharedXP may update these terms to reflect legal or operational changes. Questions can be submitted through our <Link to="/contact">Contact Center</Link>.
               </p>
             </section>
           </article>

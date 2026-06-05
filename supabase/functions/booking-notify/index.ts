@@ -760,7 +760,7 @@ function buildCmStatusChange(
         `While paused, your invite code will not be active and no new referrals will be attributed. Existing commissions are not affected.`,
         `If you have any questions, please <a href="${APP_URL}/contact" style="color:#1a1a1a;">contact our support team</a>.`,
       ],
-      label: "Contact Support",
+      label: "Contact Center",
       url: `${APP_URL}/contact`,
     },
     cm_reactivated: {
@@ -778,7 +778,7 @@ function buildCmStatusChange(
         `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
         `Any pending approved commissions will still be paid out. If you have any questions, please <a href="${APP_URL}/contact" style="color:#1a1a1a;">contact our support team</a>.`,
       ],
-      label: "Contact Support",
+      label: "Contact Center",
       url: `${APP_URL}/contact`,
     },
   };
