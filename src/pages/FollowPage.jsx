@@ -49,7 +49,7 @@ const FollowPage = ({ currentUser, onLogout }) => {
         </section>
 
         <main className="middle-section follow-main">
-          <h1 className="admin-title">Follow SharedXP on social media</h1>
+          <h1 className="admin-title">Follow us on social media</h1>
           <p className="admin-subtitle">
             Connect with us across social media to discover new locals, sports moments, and
             travel-ready experiences.
