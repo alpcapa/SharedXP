@@ -108,14 +108,9 @@ const EventsPage = ({ currentUser, onLogout }) => {
         <section className="hero auth-hero">
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
-        <section className="events-hero">
-          <h1>Major Events</h1>
-          <p>
-            Marathons, Grand Slams, cycling Monuments, Grand Prix and more — the world's
-            biggest sports events, all in one place.
-          </p>
-        </section>
         <main className="events-main">
+          <h1 className="admin-title">Major Events</h1>
+          <p className="admin-subtitle">Marathons, Grand Slams, cycling Monuments, Grand Prix and more — the world's biggest sports events, all in one place.</p>
         <div className="events-filter-row">
           <label className="events-filter-field">
             <span>Sport</span>

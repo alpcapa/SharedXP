@@ -9,6 +9,7 @@ import HostPage from "./pages/HostPage";
 import HistoryPage from "./pages/HistoryPage";
 import FollowPage from "./pages/FollowPage";
 import HelpPage from "./pages/HelpPage";
+import ContactPage from "./pages/ContactPage";
 import LoginPage from "./pages/LoginPage";
 import EditProfilePage from "./pages/EditProfilePage";
 import SignUpPage from "./pages/SignUpPage";
@@ -47,6 +48,10 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const didRedirect = useRef(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   // After OAuth login the browser lands on "/" with postAuthRedirect in
   // sessionStorage. Consume it once to send the user to their intended page.
@@ -174,6 +179,7 @@ function App() {
       <Route path="/admin" element={<AdminPage {...authActions} />} />
       <Route path="/follow" element={<FollowPage {...authActions} />} />
       <Route path="/help" element={<HelpPage {...authActions} />} />
+      <Route path="/contact" element={<ContactPage {...authActions} />} />
       <Route path="/the-field" element={<FieldPage {...authActions} />} />
       <Route path="/host-history" element={<Navigate to="/history" replace />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditionsPage {...authActions} />} />

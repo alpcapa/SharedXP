@@ -95,6 +95,19 @@ body {
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
+.auth-hero + .middle-section.explore-page-content,
+.auth-hero + .middle-section.about-main,
+.auth-hero + .middle-section.follow-main,
+.auth-hero + .field-main,
+.auth-hero + .events-main {
+  width: auto;
+  margin: 10px 10px 0;
+  padding: 28px 28px 48px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
 .auth-hero + .middle-section.auth-page {
   width: auto;
   margin: 10px 10px 0;
@@ -112,22 +125,8 @@ body {
   margin-top: 10px;
 }
 
-.auth-hero + .middle-section > *:first-child,
-.auth-hero + .explore-hero,
-.auth-hero + .events-hero,
-.auth-hero + .field-hero,
-.events-hero + .events-main,
-.field-hero + .field-main,
-.explore-hero + .middle-section {
+.auth-hero + .middle-section > *:first-child {
   margin-top: 0;
-}
-
-.explore-hero + .middle-section {
-  padding-top: 0;
-}
-
-.explore-hero + .middle-section.explore-page-content {
-  padding-top: 20px;
 }
 
 /* ── Shared section typography ─────────────────── */
@@ -163,6 +162,85 @@ body {
 /* ── Local cards grid ──────────────────────────── */
 .locals-grid-wrap {
   margin-top: 16px;
+}
+
+/* ── Home page horizontal scroll rows ─────────────────────────────── */
+.scroll-row-wrap {
+  position: relative;
+  margin-top: 12px;
+}
+
+.scroll-row-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e3e5df;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 22px;
+  line-height: 1;
+  color: #4b5563;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.scroll-row-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.scroll-row-btn-prev {
+  left: 6px;
+}
+
+.scroll-row-btn-next {
+  right: 6px;
+}
+
+.scroll-row-loader {
+  flex: 0 0 80px;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-row-loader::after {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #e3e5df;
+  border-top-color: #96c93d;
+  animation: scroll-spinner 0.7s linear infinite;
+}
+
+@keyframes scroll-spinner {
+  to { transform: rotate(360deg); }
+}
+
+.home-scroll-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 14px;
+  padding-bottom: 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.home-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+.home-scroll-row > * {
+  flex: 0 0 260px;
+  min-width: 260px;
+  scroll-snap-align: start;
 }
 
 .locals-grid {
@@ -689,15 +767,23 @@ body {
 .xp-tag-disputed   { background: #fff7ed; color: #92400e; }
 
 .home-page .hero {
-  margin: 10px 0;
+  margin: 10px 10px;
   border-radius: 16px;
   min-height: var(--hero-min-height);
-  padding: 10px;
+  padding: 0 0 10px;
   background-image:
     linear-gradient(90deg, rgba(244, 243, 235, 0.97) 0%, rgba(244, 243, 235, 0.85) 45%, rgba(244, 243, 235, 0.4) 70%, rgba(244, 243, 235, 0.1) 100%),
     url("../assets/BEEE9932-9032-4B9C-8E1B-577FFB6173E8.png");
   background-size: cover;
   background-position: center;
+}
+
+.home-page .hero + .middle-section.home-main {
+  margin: 10px 10px 0;
+  padding: 28px 28px 48px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .hero-content {
@@ -906,9 +992,6 @@ body {
   font-size: 18px;
 }
 
-.explore-page-content,
-.field-main,
-.events-main,
 .host-settings-page,
 .edit-profile-page {
   margin: 10px 0;
@@ -1212,6 +1295,11 @@ body {
 .home-page .hero.auth-hero {
   padding-bottom: 0;
   margin-bottom: 0;
+}
+
+.home-page .hero:not(.auth-hero) .site-header {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
 }
 
 .auth-page {
@@ -1590,32 +1678,6 @@ body {
 }
 
 /* ── Follow page ────────────────────────────────── */
-.follow-page {
-  display: grid;
-  gap: 20px;
-}
-
-.follow-page-header {
-  background: #fff;
-  border: 1px solid #e6e7e2;
-  border-radius: 14px;
-  padding: 24px;
-}
-
-.follow-page-header h1 {
-  margin: 0;
-  font-size: clamp(30px, 3.6vw, 48px);
-  letter-spacing: -0.7px;
-}
-
-.follow-page-header p {
-  margin: 10px 0 0;
-  color: #4b5563;
-  font-size: 16px;
-  line-height: 1.6;
-  max-width: 820px;
-}
-
 .follow-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2477,10 +2539,7 @@ body {
 .booking-engine-section,
 .recommendations,
 .host-settings-page,
-.edit-profile-page,
-.explore-page-content,
-.field-main,
-.events-main {
+.edit-profile-page {
   background: white;
   margin: 20px 10px;
   padding: 20px;
@@ -3229,31 +3288,6 @@ body {
 }
 
 .about-main {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-/* Hero */
-.about-hero {
-  margin: 0;
-  padding: 40px 0 0;
-}
-
-.about-hero h1 {
-  margin: 0;
-  font-size: clamp(28px, 4vw, 48px);
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  line-height: 1.1;
-  color: #141a1f;
-}
-
-.about-hero-sub {
-  margin: 16px 0 28px;
-  font-size: clamp(15px, 1.5vw, 18px);
-  color: #596164;
-  line-height: 1.6;
 }
 
 .about-hero-img {
@@ -7941,6 +7975,79 @@ body {
   font-style: italic;
 }
 
+/* ── CM application popup ──────────────────────────────────────────────────── */
+.cm-app-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.cm-app-popup {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+.cm-app-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+.cm-app-popup-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.cm-app-popup-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: 6px;
+}
+.cm-app-popup-close:hover {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+.cm-app-popup-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cm-app-popup-field p {
+  margin: 0;
+}
+.cm-app-popup-field p:last-child {
+  font-size: 15px;
+  color: #1a1a1a;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.cm-app-popup-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
 /* ── Support inbox ─────────────────────────────────────────────────────────── */
 .support-card-unread {
   border-color: #b8d4f5;
@@ -8196,6 +8303,197 @@ body {
   }
   .cm-admin-card-header {
     flex-direction: column;
+  }
+}
+
+/* ── Help page ──────────────────────────────────────── */
+.help-hero-subtitle {
+  font-size: 16px;
+  color: #555;
+  margin: 0 0 32px;
+  line-height: 1.6;
+}
+.help-topics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 48px;
+}
+.help-topic-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 12px;
+  border: 1px solid #e8e9e4;
+  border-radius: 12px;
+  background: #fafaf8;
+  text-decoration: none;
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.help-topic-card:hover {
+  border-color: #a8c970;
+  background: #f4f9ec;
+}
+.help-topic-icon {
+  font-size: 22px;
+}
+.help-topic-label {
+  line-height: 1.3;
+}
+.help-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.help-faq-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.help-faq-group-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.help-faq-item {
+  border-bottom: 1px solid #e8e9e4;
+}
+.help-faq-item:first-of-type {
+  border-top: 1px solid #e8e9e4;
+}
+.help-faq-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 4px 14px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+}
+.help-faq-summary::-webkit-details-marker { display: none; }
+.help-faq-summary::after {
+  content: "+";
+  font-size: 18px;
+  font-weight: 400;
+  color: #888;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.help-faq-item[open] .help-faq-summary::after {
+  content: "−";
+}
+.help-faq-body {
+  padding: 0 4px 16px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.65;
+}
+.help-faq-body a {
+  color: #5a8a2f;
+  text-decoration: underline;
+}
+.help-contact-cta {
+  margin-top: 56px;
+  padding: 32px 28px;
+  background: #f4f9ec;
+  border: 1px solid #d4e8b0;
+  border-radius: 16px;
+  text-align: center;
+}
+.help-contact-cta h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px;
+}
+.help-contact-cta p {
+  font-size: 14px;
+  color: #555;
+  margin: 0 0 20px;
+}
+
+/* ── Contact Center ─────────────────────────────────── */
+.contact-page-subtitle {
+  font-size: 15px;
+  color: #555;
+  margin: -8px 0 32px;
+  line-height: 1.6;
+}
+.contact-page-subtitle a {
+  color: #5a8a2f;
+  text-decoration: underline;
+}
+.contact-page-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 40px;
+  align-items: start;
+  max-width: 820px;
+}
+.contact-form-card .support-form {
+  max-width: 100%;
+  margin-top: 0;
+}
+.contact-page-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 4px;
+}
+.contact-aside-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.contact-aside-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.contact-aside-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 3px;
+}
+.contact-aside-text {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+.contact-aside-text a {
+  color: #5a8a2f;
+  text-decoration: underline;
+}
+@media (max-width: 680px) {
+  .contact-page-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .contact-page-aside {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .contact-aside-item {
+    flex: 1 1 200px;
+  }
+  .help-topics-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 }
 

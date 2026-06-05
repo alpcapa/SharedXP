@@ -612,7 +612,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                     <div className="cm-info-benefits">
                       <h4>Benefits</h4>
                       <ul>
-                        <li>Earn 5% commission on every booking from users you referred</li>
+                        <li>Earn 5% commission every time a user you referred books a session as a guest</li>
                         <li>Your own unique invite code (e.g. SXP-LON-A2K5)</li>
                         <li>A personal CM Dashboard to track referrals and earnings in real time</li>
                         <li>Be the face of SharedXP in your city</li>

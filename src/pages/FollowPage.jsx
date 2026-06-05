@@ -48,17 +48,14 @@ const FollowPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section">
-          <section className="follow-page">
-            <div className="follow-page-header">
-              <h1>Follow SharedXP</h1>
-              <p>
-                Connect with us across social media to discover new locals, sports moments, and
-                travel-ready experiences.
-              </p>
-            </div>
+        <main className="middle-section follow-main">
+          <h1 className="admin-title">Follow us on social media</h1>
+          <p className="admin-subtitle">
+            Connect with us across social media to discover new locals, sports moments, and
+            travel-ready experiences.
+          </p>
 
-            <div className="follow-grid">
+          <div className="follow-grid">
               {socialChannels.map((channel) => (
                 <article key={channel.name} className="follow-card">
                   <div className="follow-card-head">
@@ -73,8 +70,7 @@ const FollowPage = ({ currentUser, onLogout }) => {
                   </a>
                 </article>
               ))}
-            </div>
-          </section>
+          </div>
         </main>
 
         <SiteFooter />

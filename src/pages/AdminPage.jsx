@@ -137,6 +137,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [cmSearch, setCmSearch] = useState(initialSearch);
   const [emailFeedback, setEmailFeedback] = useState({});
+  const [viewApplication, setViewApplication] = useState(null);
 
   const toggleExpand = (id) =>
     setExpandedIds((prev) => {
@@ -392,6 +393,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
   if (loading) return <p style={{ marginTop: 24 }}>Loading CM data…</p>;
 
   return (
+    <>
     <div className="cm-admin-panel">
       <div className="support-inbox-controls">
         <div className="cm-admin-subtabs" style={{ marginBottom: 0 }}>
@@ -792,6 +794,11 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                         </div>
                       ) : (
                         <div className="admin-dispute-actions">
+                          {cm._application && (
+                            <button type="button" className="btn btn-light" onClick={() => setViewApplication(cm._application)}>
+                              Application
+                            </button>
+                          )}
                           <button type="button" className="btn btn-light" onClick={() => setCmActionMode({ id: cm.id, action: "email" })}>
                             Email
                           </button>
@@ -821,6 +828,63 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
         );
       })()}
     </div>
+
+    {viewApplication && (
+      <div className="cm-app-popup-backdrop" onClick={() => setViewApplication(null)}>
+        <div className="cm-app-popup" onClick={(e) => e.stopPropagation()}>
+          <div className="cm-app-popup-header">
+            <h3 className="cm-app-popup-title">CM Application</h3>
+            <button type="button" className="cm-app-popup-close" onClick={() => setViewApplication(null)}>✕</button>
+          </div>
+          <div className="cm-app-popup-body">
+            <div className="cm-app-popup-field">
+              <p className="admin-dispute-label">Name</p>
+              <p>{getName(viewApplication.applicant)}</p>
+            </div>
+            <div className="cm-app-popup-field">
+              <p className="admin-dispute-label">Email</p>
+              <p>{viewApplication.applicant?.email ?? "—"}</p>
+            </div>
+            <div className="cm-app-popup-field">
+              <p className="admin-dispute-label">Location</p>
+              <p>{[viewApplication.city, viewApplication.country].filter(Boolean).join(", ") || "—"}</p>
+            </div>
+            <div className="cm-app-popup-field">
+              <p className="admin-dispute-label">Sports background</p>
+              <p>{viewApplication.sports_background || "—"}</p>
+            </div>
+            <div className="cm-app-popup-field">
+              <p className="admin-dispute-label">Motivation</p>
+              <p>{viewApplication.motivation || "—"}</p>
+            </div>
+            {viewApplication.phone && (
+              <div className="cm-app-popup-field">
+                <p className="admin-dispute-label">Phone</p>
+                <p>{viewApplication.phone}</p>
+              </div>
+            )}
+            {viewApplication.contact_times && (
+              <div className="cm-app-popup-field">
+                <p className="admin-dispute-label">Contact times</p>
+                <p>{viewApplication.contact_times}</p>
+              </div>
+            )}
+            <div className="cm-app-popup-field">
+              <p className="admin-dispute-label">Submitted</p>
+              <p>{new Date(viewApplication.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</p>
+            </div>
+            <div className="cm-app-popup-field">
+              <p className="admin-dispute-label">Status</p>
+              <p style={{ textTransform: "capitalize" }}>{viewApplication.status}</p>
+            </div>
+          </div>
+          <div className="cm-app-popup-footer">
+            <button type="button" className="btn btn-light" onClick={() => setViewApplication(null)}>Close</button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

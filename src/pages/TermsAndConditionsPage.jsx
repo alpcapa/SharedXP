@@ -10,9 +10,9 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section legal-content">
-          <article className="simple-page legal-page">
-            <h1>Terms &amp; Conditions</h1>
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">Terms &amp; Conditions</h1>
+          <article className="legal-page">
             <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <p>
               These Terms &amp; Conditions (&quot;Terms&quot;) govern your access to and use of the SharedXP platform
@@ -320,7 +320,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>18. Contact</h2>
               <p>
-                If you have questions about these Terms, please contact SharedXP through our <Link to="/help">Help Center</Link>.
+                If you have questions about these Terms, please <Link to="/contact">contact SharedXP</Link>.
               </p>
             </section>
           </article>

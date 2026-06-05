@@ -67,7 +67,7 @@ function emailHtml(
           <td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #eeeeee;">
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td style="font-size:12px;color:#aaa;line-height:1.5;">
-                This is a noreply email, please visit <a href="${APP_URL}/help" style="color:#aaa;text-decoration:underline;">Help Center</a> to contact us.
+                This is a noreply email, please <a href="${APP_URL}/contact" style="color:#aaa;text-decoration:underline;">contact us</a> if you need support.
               </td>
               <td style="font-size:12px;color:#aaa;text-align:right;white-space:nowrap;padding-left:16px;">
                 © ${new Date().getFullYear()} SharedXP
@@ -566,7 +566,7 @@ function buildDisputeResolvedRefund(
         `Dispute outcome, ${hostName}`,
         [
           `After reviewing the dispute for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team has decided to refund the guest.`,
-          `Payment will not be released for this session. If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
+          `Payment will not be released for this session. If you have any questions, please <a href="${APP_URL}/contact" style="color:#1a1a1a;">contact our support team</a>.`,
         ],
         `${APP_URL}/history`,
         "View History",
@@ -591,7 +591,7 @@ function buildDisputeResolvedPaidHost(
         `Dispute resolved`,
         [
           `Dear ${reqName}, after reviewing both accounts for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team found that the experience was delivered as agreed.`,
-          `The payment has been released to the host. If you have further concerns, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
+          `The payment has been released to the host. If you have further concerns, please <a href="${APP_URL}/contact" style="color:#1a1a1a;">contact our support team</a>.`,
         ],
         `${APP_URL}/history`,
         "View History",
@@ -628,7 +628,7 @@ function buildCmEligible(
       [
         `You've been selected to become our new Community Manager.`,
         `As a host with an outstanding track record on SharedXP, you're now eligible to apply for the Community Manager programme.`,
-        `Community Managers earn 5% commission on every booking made by users they refer, and get their own unique invite code to share with sports enthusiasts in their city.`,
+        `Community Managers earn 5% commission every time a user they referred books a session as a guest, and get their own unique invite code to share with sports enthusiasts in their city.`,
         `Click below to learn more and apply.`,
       ],
       `${APP_URL}/host-settings`,
@@ -696,7 +696,7 @@ function buildCmAccepted(
       `<div style="text-align:center;margin:20px 0 24px;">
         <span style="font-size:24px;font-weight:700;letter-spacing:2px;background:#f5f5f2;padding:12px 24px;border-radius:8px;border:2px solid #1a1a1a;display:inline-block;">${inviteCode}</span>
       </div>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">Share this code with athletes and sports enthusiasts. Anyone who signs up using your code becomes your permanent referral, and you earn 5% commission on every completed booking they make.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">Share this code with athletes and sports enthusiasts. Anyone who signs up using your code becomes your permanent referral, and you earn 5% commission every time they book a session as a guest.</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">Log in to your SharedXP account to access your CM Dashboard and track your referrals and commissions.</p>`,
     ),
   };
@@ -758,10 +758,10 @@ function buildCmStatusChange(
       lines: [
         `Hi ${name}, your SharedXP Community Manager account has been temporarily paused.`,
         `While paused, your invite code will not be active and no new referrals will be attributed. Existing commissions are not affected.`,
-        `If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
+        `If you have any questions, please <a href="${APP_URL}/contact" style="color:#1a1a1a;">contact our support team</a>.`,
       ],
-      label: "Contact Support",
-      url: `${APP_URL}/help`,
+      label: "Contact Center",
+      url: `${APP_URL}/contact`,
     },
     cm_reactivated: {
       heading: `Your CM account is active again, ${name}!`,
@@ -776,10 +776,10 @@ function buildCmStatusChange(
       heading: `Your CM status has been revoked`,
       lines: [
         `Hi ${name}, your SharedXP Community Manager status has been revoked.`,
-        `Any pending approved commissions will still be paid out. If you have any questions, please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;">Help Center</a>.`,
+        `Any pending approved commissions will still be paid out. If you have any questions, please <a href="${APP_URL}/contact" style="color:#1a1a1a;">contact our support team</a>.`,
       ],
-      label: "Contact Support",
-      url: `${APP_URL}/help`,
+      label: "Contact Center",
+      url: `${APP_URL}/contact`,
     },
   };
   const cfg = configs[emailType] ?? configs.cm_paused;
@@ -993,7 +993,7 @@ serve(async (req: Request): Promise<Response> => {
         <tr><td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #eeeeee;">
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td style="font-size:12px;color:#aaa;line-height:1.5;">
-              This is a noreply email, please visit <a href="${APP_URL}/help" style="color:#aaa;text-decoration:underline;">Help Center</a> to contact us.
+              This is a noreply email, please <a href="${APP_URL}/contact" style="color:#aaa;text-decoration:underline;">contact us</a> if you need support.
             </td>
             <td style="font-size:12px;color:#aaa;text-align:right;white-space:nowrap;padding-left:16px;">
               © ${new Date().getFullYear()} SharedXP

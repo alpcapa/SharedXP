@@ -1,6 +1,11 @@
 name: Run Database Migrations
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'supabase/migrations/**'
   workflow_dispatch:
     inputs:
       branch:
@@ -20,8 +25,14 @@ jobs:
         with:
           version: latest
 
+      - name: Link Supabase project
+        run: supabase link --project-ref bwdkelprrvhztpviiujo
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
       - name: Push migrations
-        run: supabase db push --project-ref bwdkelprrvhztpviiujo
+        run: supabase db push --linked
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

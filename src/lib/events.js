@@ -56,6 +56,35 @@ export const loadMajorEvents = async () => {
   return [...staticEvents].filter(isUpcomingOrRecent).sort(sortByStartAscending);
 };
 
+// Paginated variant for the home page scroll row.
+export const loadMajorEventsPage = async ({ limit = 20, offset = 0 } = {}) => {
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  try {
+    const { data, error } = await supabase
+      .from("external_events")
+      .select(
+        "id, source, title, sport, category, country, city, venue, starts_at, ends_at, url, image_url, description"
+      )
+      .gte("starts_at", cutoff)
+      .order("starts_at", { ascending: true })
+      .range(offset, offset + limit - 1);
+    if (error) throw error;
+    if (Array.isArray(data) && data.length > 0) {
+      return {
+        events: data.map(fromSupabaseRow).filter(isUpcomingOrRecent),
+        hasMore: data.length === limit,
+      };
+    }
+  } catch (err) {
+    console.warn("[events] loadMajorEventsPage falling back to static:", err?.message ?? err);
+  }
+  const staticList = [...staticEvents].filter(isUpcomingOrRecent).sort(sortByStartAscending);
+  return {
+    events: staticList.slice(offset, offset + limit),
+    hasMore: offset + limit < staticList.length,
+  };
+};
+
 const MONTH_FORMAT = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric"

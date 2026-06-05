@@ -1,6 +1,6 @@
 // Receives inbound emails forwarded by Resend (via Svix webhook) to
 // support@sharedxp.com, persists them to support_messages, and sends an
-// auto-reply from noreply@sharedxp.com directing the sender to the Help Center.
+// auto-reply from noreply@sharedxp.com directing the sender to the Contact Center.
 //
 // Deploy:  supabase functions deploy inbound-support
 // Secret:  supabase secrets set RESEND_WEBHOOK_SECRET=whsec_...
@@ -82,7 +82,7 @@ async function sendAutoReply(toEmail: string, toName: string, originalSubject: s
         <tr><td style="padding:32px;">
           ${p(greeting)}
           ${p("Unfortunately we are unable to respond to emails sent directly to support@sharedxp.com.")}
-          ${p(`Please visit our <a href="${APP_URL}/help" style="color:#1a1a1a;font-weight:600;">Help Center</a> to reach us — our contact form goes directly to our support team.`)}
+          ${p(`Please visit our <a href="${APP_URL}/contact" style="color:#1a1a1a;font-weight:600;">Contact Center</a> to reach us — our contact form goes directly to our support team.`)}
           ${p("Thank you for your understanding.")}
           <hr style="border:none;border-top:1px solid #e8e9e4;margin:24px 0 16px"/>
           <p style="margin:0 0 4px;font-size:14px;color:#444;">Sincerely,</p>
@@ -91,7 +91,7 @@ async function sendAutoReply(toEmail: string, toName: string, originalSubject: s
         <tr><td style="background:#f9f9f9;padding:16px 32px;border-top:1px solid #eeeeee;">
           <p style="margin:0;font-size:12px;color:#aaa;">
             © ${new Date().getFullYear()} SharedXP &nbsp;·&nbsp;
-            <a href="${APP_URL}/help" style="color:#aaa;text-decoration:none;">Help Center</a>
+            <a href="${APP_URL}/contact" style="color:#aaa;text-decoration:none;">Contact Center</a>
           </p>
         </td></tr>
       </table>

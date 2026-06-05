@@ -10,9 +10,9 @@ const LegalPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section legal-content">
-          <article className="simple-page legal-page">
-            <h1>Legal Center</h1>
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">Legal Center</h1>
+          <article className="legal-page">
             <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <section className="legal-section">
               <h2>1. Scope of this Legal Center</h2>
@@ -179,7 +179,7 @@ const LegalPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>10. Contact and Notices</h2>
               <p>
-                For legal notices, compliance concerns, or policy questions, contact SharedXP through our <Link to="/help">Help Center</Link>.
+                For legal notices, compliance concerns, or policy questions, <Link to="/contact">contact SharedXP</Link>.
               </p>
             </section>
           </article>

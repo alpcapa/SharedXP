@@ -87,40 +87,44 @@ const fetchPosterRatings = async (posts) => {
 };
 
 /**
- * Fetch all field posts from Supabase, newest first.
- * Returns an array of camelCase post objects ready for display.
+ * Fetch a page of field posts from Supabase, newest first.
+ * Returns { posts, hasMore } where hasMore indicates whether more pages exist.
  */
-export const fetchFieldPosts = async () => {
+export const fetchFieldPosts = async ({ limit = 12, offset = 0 } = {}) => {
   try {
     let { data, error } = await supabase
       .from("field_posts")
       .select(
         "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, rating, source_request_id, created_at"
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
     if (error && isMissingRatingColumnError(error)) {
       ({ data, error } = await supabase
         .from("field_posts")
         .select(
           "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, source_request_id, created_at"
         )
-        .order("created_at", { ascending: false }));
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1));
     }
     if (error) {
       console.error("[fieldPosts] fetch error:", error);
-      return [];
+      return { posts: [], hasMore: false };
     }
 
     const posts = (data ?? []).map(mapStorageRow);
     const posterRatings = await fetchPosterRatings(posts);
 
-    return posts.map((post) => {
+    const result = posts.map((post) => {
       const avg = posterRatings[`${post.role}:${post.posterId}`];
       return { ...post, posterRating: avg ? Math.round(avg * 10) / 10 : 0 };
     });
+
+    return { posts: result, hasMore: data.length === limit };
   } catch (e) {
     console.error("[fieldPosts] fetch exception:", e);
-    return [];
+    return { posts: [], hasMore: false };
   }
 };
 

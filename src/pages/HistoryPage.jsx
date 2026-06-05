@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import InlineLoginForm from "../components/InlineLoginForm";
@@ -66,6 +66,7 @@ const HistoryPage = ({
   onSaveHostHistory,
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const queryTab = new URLSearchParams(location.search).get("tab");
   const queryEditRating = new URLSearchParams(location.search).get("editRating");
   const queryBookingId = new URLSearchParams(location.search).get("bookingId");
@@ -91,6 +92,11 @@ const HistoryPage = ({
     openDispute,
     submitRating,
   } = useBookingRequests(currentUser);
+
+  const handleConfirmExperience = useCallback(async (requestId) => {
+    const ok = await confirmExperience(requestId);
+    if (ok) navigate("/history", { replace: true });
+  }, [confirmExperience, navigate]);
 
   const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
   const activeBookingRequests = bookingRequests.filter((r) => ACTIVE_STATUSES.includes(r.status)).sort(sortByTs);
@@ -345,8 +351,9 @@ const HistoryPage = ({
       });
       setSharePosting(false);
       setSharePosted(true);
+      navigate("/field");
     },
-    [shareCaption, currentUser, onSaveHistory, onSaveHostHistory]
+    [shareCaption, currentUser, onSaveHistory, onSaveHostHistory, navigate]
   );
 
   const openGallery = useCallback((item, startIndex = 0) => {
@@ -514,7 +521,7 @@ const HistoryPage = ({
                     onAccept={acceptRequest}
                     onDecline={declineRequest}
                     onCancel={cancelRequest}
-                    onConfirmExperience={confirmExperience}
+                    onConfirmExperience={handleConfirmExperience}
                     onOpenDispute={openDispute}
                     onSubmitRating={submitRating}
                     currentUser={currentUser}
@@ -540,7 +547,7 @@ const HistoryPage = ({
                     onAccept={acceptRequest}
                     onDecline={declineRequest}
                     onCancel={cancelRequest}
-                    onConfirmExperience={confirmExperience}
+                    onConfirmExperience={handleConfirmExperience}
                     onOpenDispute={openDispute}
                     onSubmitRating={submitRating}
                     currentUser={currentUser}
@@ -568,7 +575,7 @@ const HistoryPage = ({
                     onAccept={acceptRequest}
                     onDecline={declineRequest}
                     onCancel={cancelRequest}
-                    onConfirmExperience={confirmExperience}
+                    onConfirmExperience={handleConfirmExperience}
                     onOpenDispute={openDispute}
                     onSubmitRating={submitRating}
                     currentUser={currentUser}
@@ -612,7 +619,7 @@ const HistoryPage = ({
                           onAccept={acceptRequest}
                           onDecline={declineRequest}
                           onCancel={cancelRequest}
-                          onConfirmExperience={confirmExperience}
+                          onConfirmExperience={handleConfirmExperience}
                           onOpenDispute={openDispute}
                           onSubmitRating={submitRating}
                           currentUser={currentUser}
