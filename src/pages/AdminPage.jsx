@@ -1415,47 +1415,50 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
 
                 {isExpanded && (
                   <div className="cm-admin-card-body">
-                    {photo && (
-                      <img
-                        src={photo}
-                        alt="Reported post"
-                        style={{ maxWidth: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 8, marginBottom: 12 }}
-                      />
-                    )}
+                    <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                      {photo && (
+                        <img
+                          src={photo}
+                          alt="Reported post"
+                          style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 8, flexShrink: 0 }}
+                        />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <div className="admin-dispute-accounts">
+                          <div>
+                            <p className="admin-dispute-label">Caption</p>
+                            <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
+                          </div>
+                          <div>
+                            <p className="admin-dispute-label">Host</p>
+                            <p>{post?.host_name || "—"}</p>
+                            <p className="admin-dispute-email">{post?.role ?? ""}</p>
+                          </div>
+                          <div>
+                            <p className="admin-dispute-label">Reported by</p>
+                            <p>{getProfileName(r.reporter)}</p>
+                          </div>
+                        </div>
 
-                    <div className="admin-dispute-accounts">
-                      <div>
-                        <p className="admin-dispute-label">Caption</p>
-                        <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
+                        <div className="admin-dispute-actions">
+                          <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={() => removePost(r.id, r.post_id)}
+                            disabled={acting === r.id}
+                          >
+                            {acting === r.id ? "…" : "Remove Post"}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-light"
+                            onClick={() => dismiss(r.id)}
+                            disabled={acting === r.id}
+                          >
+                            {acting === r.id ? "…" : "Dismiss"}
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <p className="admin-dispute-label">Host</p>
-                        <p>{post?.host_name || "—"}</p>
-                        <p className="admin-dispute-email">{post?.role ?? ""}</p>
-                      </div>
-                      <div>
-                        <p className="admin-dispute-label">Reported by</p>
-                        <p>{getProfileName(r.reporter)}</p>
-                      </div>
-                    </div>
-
-                    <div className="admin-dispute-actions">
-                      <button
-                        type="button"
-                        className="btn btn-danger"
-                        onClick={() => removePost(r.id, r.post_id)}
-                        disabled={acting === r.id}
-                      >
-                        {acting === r.id ? "…" : "Remove Post"}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-light"
-                        onClick={() => dismiss(r.id)}
-                        disabled={acting === r.id}
-                      >
-                        {acting === r.id ? "…" : "Dismiss"}
-                      </button>
                     </div>
                   </div>
                 )}
