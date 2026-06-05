@@ -1406,17 +1406,12 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                   aria-expanded={isExpanded}
                 >
                   <div className="cm-admin-card-summary-left">
-                    <strong>
-                      {post?.sport ?? "Unknown sport"}
-                      <span className="cm-admin-email" style={{ fontWeight: "normal", marginLeft: 6 }}>
-                        {isHost ? "hosted by" : "attended by"} {sharerName}
-                      </span>
-                    </strong>
-                    {(post?.city || post?.country) && (
-                      <span className="cm-admin-email">
-                        {[post.city, post.country].filter(Boolean).join(", ")}
-                      </span>
-                    )}
+                    <strong>{post?.sport ?? "Unknown sport"}</strong>
+                    <span className="cm-admin-email">
+                      {isHost ? "hosted by" : "attended by"} {sharerName}
+                      {(post?.city || post?.country) ? ` / ${[post.city, post.country].filter(Boolean).join(", ")}` : ""}
+                      {` on ${fmtDate(r.created_at)}`}
+                    </span>
                   </div>
                   <div className="cm-admin-card-summary-right">
                     <span className="pending-status-badge status-disputed">Pending</span>
@@ -1448,7 +1443,6 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                           <div>
                             <p className="admin-dispute-label">Reported by</p>
                             <p>{getProfileName(r.reporter)}</p>
-                            <p className="admin-dispute-email">{fmtDate(r.created_at)}</p>
                           </div>
                         </div>
 
