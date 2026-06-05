@@ -8223,9 +8223,6 @@ body {
 }
 
 /* ── Help page ──────────────────────────────────────── */
-.help-main {
-  max-width: 760px;
-}
 .help-hero-subtitle {
   font-size: 16px;
   color: #555;

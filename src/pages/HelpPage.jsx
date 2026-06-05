@@ -170,7 +170,7 @@ const HelpPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section help-main">
+        <main className="middle-section simple-page">
           <h1 className="admin-title">Help Center</h1>
           <p className="help-hero-subtitle">
             Find answers to common questions about booking, payments, hosting, and your account.
