@@ -1514,12 +1514,12 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
 
                 {isExpanded && (
                   <div className="cm-admin-card-body">
-                    <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                    <div className="report-card-media">
                       {photo && (
                         <img
                           src={photo}
                           alt="Reported post"
-                          style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 8, flexShrink: 0 }}
+                          className="report-card-photo"
                         />
                       )}
                       <div style={{ flex: 1 }}>
@@ -1726,10 +1726,6 @@ const MembersPanel = ({ currentUser }) => {
   });
 
   const chevron = (col) => sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : "";
-  const thStyle = (col) => ({
-    padding: "8px 12px", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap",
-    fontWeight: 600, color: sortCol === col ? "#1a1a1a" : "#6b7280", textAlign: "left",
-  });
 
   const tabs = [
     ["all",   "All",    members.length],
@@ -1761,15 +1757,16 @@ const MembersPanel = ({ currentUser }) => {
       {displayed.length === 0 ? (
         <p>No members found.</p>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <div className="members-table-wrapper">
+        <table className="members-table">
           <thead>
-            <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-              <th style={thStyle("name")}     onClick={() => handleSort("name")}>Name{chevron("name")}</th>
-              <th style={thStyle("email")}    onClick={() => handleSort("email")}>Email{chevron("email")}</th>
-              <th style={thStyle("location")} onClick={() => handleSort("location")}>Location{chevron("location")}</th>
-              <th style={thStyle("joined")}   onClick={() => handleSort("joined")}>Member since{chevron("joined")}</th>
-              <th style={{ padding: "8px 12px", color: "#6b7280", fontWeight: 600 }}>Type</th>
-              <th style={{ padding: "8px 12px", color: "#6b7280", fontWeight: 600 }}>Actions</th>
+            <tr>
+              <th className={sortCol === "name" ? "members-th-active" : ""} onClick={() => handleSort("name")}>Name{chevron("name")}</th>
+              <th className={sortCol === "email" ? "members-th-active" : ""} onClick={() => handleSort("email")}>Email{chevron("email")}</th>
+              <th className={sortCol === "location" ? "members-th-active" : ""} onClick={() => handleSort("location")}>Location{chevron("location")}</th>
+              <th className={sortCol === "joined" ? "members-th-active" : ""} onClick={() => handleSort("joined")}>Member since{chevron("joined")}</th>
+              <th>Type</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -1779,13 +1776,13 @@ const MembersPanel = ({ currentUser }) => {
               const isBusy = acting === m.id;
               const isOpen = actionMode?.memberId === m.id;
               const rows = [
-                <tr key={m.id} style={{ borderBottom: isOpen ? "none" : "1px solid #f3f4f6", opacity: isClosed ? 0.6 : 1 }}>
-                  <td style={{ padding: "10px 12px", fontWeight: 500 }}>{m.name}</td>
-                  <td style={{ padding: "10px 12px", color: "#6b7280" }}>{m.email || "—"}</td>
-                  <td style={{ padding: "10px 12px", color: "#6b7280" }}>{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
-                  <td style={{ padding: "10px 12px", color: "#6b7280", whiteSpace: "nowrap" }}>{m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}</td>
-                  <td style={{ padding: "10px 12px" }}>
-                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                <tr key={m.id} className={`members-row${isOpen ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
+                  <td data-label="Name">{m.name}</td>
+                  <td data-label="Email">{m.email || "—"}</td>
+                  <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
+                  <td data-label="Member since">{m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}</td>
+                  <td data-label="Type">
+                    <div className="members-badges">
                       {isClosed    && <span className="pending-status-badge status-disputed">Closed</span>}
                       {isSuspended && !isClosed && <span className="pending-status-badge status-pending">Suspended</span>}
                       {m.is_admin  && <span className="pending-status-badge status-in_progress">Admin</span>}
@@ -1794,20 +1791,20 @@ const MembersPanel = ({ currentUser }) => {
                       {!m.is_host && !m.isCm && !m.is_admin && !isSuspended && !isClosed && <span className="pending-status-badge status-pending">Guest</span>}
                     </div>
                   </td>
-                  <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
+                  <td data-label="Actions">
                     {!m.is_admin && (
-                      <div style={{ display: "flex", gap: 6 }}>
+                      <div className="members-actions">
                         {!isClosed && (
                           isSuspended
-                            ? <button type="button" className="btn btn-light btn-sm" style={{ fontSize: 12, padding: "3px 8px" }} disabled={isBusy} onClick={() => unsuspendAccount(m)}>
+                            ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy} onClick={() => unsuspendAccount(m)}>
                                 {isBusy ? "…" : "Unsuspend"}
                               </button>
-                            : <button type="button" className="btn btn-light btn-sm" style={{ fontSize: 12, padding: "3px 8px" }} disabled={isBusy || isOpen} onClick={() => openAction(m.id, "suspend")}>
+                            : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "suspend")}>
                                 Suspend
                               </button>
                         )}
                         {!isClosed && (
-                          <button type="button" className="btn btn-danger btn-sm" style={{ fontSize: 12, padding: "3px 8px" }} disabled={isBusy || isOpen} onClick={() => openAction(m.id, "close")}>
+                          <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "close")}>
                             Close Account
                           </button>
                         )}
@@ -1820,8 +1817,8 @@ const MembersPanel = ({ currentUser }) => {
 
               if (isOpen) {
                 rows.push(
-                  <tr key={`${m.id}-action`}>
-                    <td colSpan={6} style={{ padding: "0 16px 16px", background: "#f9fafb", borderBottom: "1px solid #f3f4f6" }}>
+                  <tr key={`${m.id}-action`} className="members-action-row">
+                    <td colSpan={6}>
                       <NoteHistory adminNotes={m.admin_notes} adminName={adminName} />
                       <p className="admin-dispute-label" style={{ marginTop: 12 }}>
                         {actionMode.action === "suspend" ? "Reason for suspension" : "Reason for closing account"} (required)
@@ -1858,6 +1855,7 @@ const MembersPanel = ({ currentUser }) => {
             })}
           </tbody>
         </table>
+        </div>
       )}
       <p className="admin-dispute-label" style={{ marginTop: 8 }}>
         {displayed.length} member{displayed.length !== 1 ? "s" : ""}
