@@ -1702,12 +1702,15 @@ const MembersPanel = ({ currentUser }) => {
     setActing(null);
   };
 
+  const isDeleted = (m) => m.full_name === "Deleted User";
+
   const tabFiltered = members.filter((m) => {
-    if (tab === "guest") return !m.is_host && !m.isCm && !m.is_admin;
-    if (tab === "host")  return m.is_host;
-    if (tab === "cm")    return m.isCm;
-    if (tab === "admin") return m.is_admin;
-    return true;
+    if (tab === "deleted") return isDeleted(m);
+    if (tab === "guest") return !isDeleted(m) && !m.is_host && !m.isCm && !m.is_admin;
+    if (tab === "host")  return !isDeleted(m) && m.is_host;
+    if (tab === "cm")    return !isDeleted(m) && m.isCm;
+    if (tab === "admin") return !isDeleted(m) && m.is_admin;
+    return true; // "all" — includes deleted
   });
 
   const displayed = (
@@ -1730,11 +1733,12 @@ const MembersPanel = ({ currentUser }) => {
   const chevron = (col) => sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : "";
 
   const tabs = [
-    ["all",   "All",    members.length],
-    ["guest", "Guests", members.filter((m) => !m.is_host && !m.isCm && !m.is_admin).length],
-    ["host",  "Hosts",  members.filter((m) => m.is_host).length],
-    ["cm",    "CMs",    members.filter((m) => m.isCm).length],
-    ["admin", "Admins", members.filter((m) => m.is_admin).length],
+    ["all",     "All",     members.length],
+    ["guest",   "Guests",  members.filter((m) => !isDeleted(m) && !m.is_host && !m.isCm && !m.is_admin).length],
+    ["host",    "Hosts",   members.filter((m) => !isDeleted(m) && m.is_host).length],
+    ["cm",      "CMs",     members.filter((m) => !isDeleted(m) && m.isCm).length],
+    ["admin",   "Admins",  members.filter((m) => !isDeleted(m) && m.is_admin).length],
+    ["deleted", "Deleted", members.filter(isDeleted).length],
   ];
 
   if (loading) return <p style={{ marginTop: 24 }}>Loading members…</p>;
@@ -1783,6 +1787,7 @@ const MembersPanel = ({ currentUser }) => {
             {displayed.flatMap((m) => {
               const isSuspended = !!m.suspended_at;
               const isClosed = !!m.closed_at;
+              const isPermanentlyDeleted = isDeleted(m);
               const isBusy = acting === m.id;
               const isOpen = actionMode?.memberId === m.id;
               const isHistoryOpen = historyOpen.has(m.id) && !isOpen;
@@ -1809,7 +1814,7 @@ const MembersPanel = ({ currentUser }) => {
                     </div>
                   </td>
                   <td data-label="Actions">
-                    {!m.is_admin && (
+                    {!m.is_admin && !isPermanentlyDeleted && (
                       <div className="members-actions">
                         {!isClosed && (
                           isSuspended
