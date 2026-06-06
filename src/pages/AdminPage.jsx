@@ -1703,14 +1703,17 @@ const MembersPanel = ({ currentUser }) => {
   };
 
   const isDeleted = (m) => m.full_name === "Deleted User";
+  const isClosed  = (m) => !!m.closed_at && !isDeleted(m);
+  const isActive  = (m) => !m.closed_at;
 
   const tabFiltered = members.filter((m) => {
     if (tab === "deleted") return isDeleted(m);
-    if (tab === "guest") return !isDeleted(m) && !m.is_host && !m.isCm && !m.is_admin;
-    if (tab === "host")  return !isDeleted(m) && m.is_host;
-    if (tab === "cm")    return !isDeleted(m) && m.isCm;
-    if (tab === "admin") return !isDeleted(m) && m.is_admin;
-    return true; // "all" — includes deleted
+    if (tab === "closed")  return isClosed(m);
+    if (tab === "guest")   return isActive(m) && !m.is_host && !m.isCm && !m.is_admin;
+    if (tab === "host")    return isActive(m) && m.is_host;
+    if (tab === "cm")      return isActive(m) && m.isCm;
+    if (tab === "admin")   return isActive(m) && m.is_admin;
+    return true; // "all" — includes everything
   });
 
   const displayed = (
@@ -1734,10 +1737,11 @@ const MembersPanel = ({ currentUser }) => {
 
   const tabs = [
     ["all",     "All",     members.length],
-    ["guest",   "Guests",  members.filter((m) => !isDeleted(m) && !m.is_host && !m.isCm && !m.is_admin).length],
-    ["host",    "Hosts",   members.filter((m) => !isDeleted(m) && m.is_host).length],
-    ["cm",      "CMs",     members.filter((m) => !isDeleted(m) && m.isCm).length],
-    ["admin",   "Admins",  members.filter((m) => !isDeleted(m) && m.is_admin).length],
+    ["guest",   "Guests",  members.filter((m) => isActive(m) && !m.is_host && !m.isCm && !m.is_admin).length],
+    ["host",    "Hosts",   members.filter((m) => isActive(m) && m.is_host).length],
+    ["cm",      "CMs",     members.filter((m) => isActive(m) && m.isCm).length],
+    ["admin",   "Admins",  members.filter((m) => isActive(m) && m.is_admin).length],
+    ["closed",  "Closed",  members.filter(isClosed).length],
     ["deleted", "Deleted", members.filter(isDeleted).length],
   ];
 
