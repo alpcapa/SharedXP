@@ -7860,7 +7860,7 @@ body {
 .cm-admin-card-summary {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   width: 100%;
   padding: 14px 20px;
