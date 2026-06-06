@@ -1533,9 +1533,6 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                             <div>
                               <p className="admin-dispute-label">Post shared by</p>
                               <p>{sharerName}</p>
-                              {post?.role === "hosted" || post?.role === "attended" ? (
-                                <p className="admin-dispute-email">{isHost ? "Host" : "Guest"}</p>
-                              ) : null}
                             </div>
                             <div>
                               <p className="admin-dispute-label">Post reported by</p>
