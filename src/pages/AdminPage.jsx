@@ -1620,6 +1620,8 @@ const MembersPanel = ({ currentUser }) => {
   const [actionMode, setActionMode] = useState(null); // { memberId, action }
   const [noteText, setNoteText] = useState("");
   const [acting, setActing] = useState(null);
+  const [historyOpen, setHistoryOpen] = useState(new Set());
+  const toggleHistory = (id) => setHistoryOpen((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
 
   const adminName = currentUser?.fullName ||
     `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() || "Admin";
@@ -1657,14 +1659,18 @@ const MembersPanel = ({ currentUser }) => {
     try {
       const subject = action === "suspend"
         ? "Your SharedXP account has been temporarily suspended"
+        : action === "unsuspend"
+        ? "Your SharedXP account has been unsuspended"
         : action === "reopen"
         ? "Your SharedXP account has been reopened"
         : "Your SharedXP account has been closed";
       const message = action === "suspend"
         ? "Your SharedXP account has been temporarily suspended pending review.\n\nIf you believe this is a mistake, please contact us and we'll look into it right away."
+        : action === "unsuspend"
+        ? "Good news — your SharedXP account has been unsuspended. You can now log in as normal.\n\nIf you have any questions, please don't hesitate to contact us."
         : action === "reopen"
         ? "Good news — your SharedXP account has been reopened. You can now log in as normal.\n\nIf you have any questions, please don't hesitate to contact us."
-        : "Your SharedXP account has been closed.\n\nIf you believe this is a mistake, please contact us.";
+        : "Your SharedXP account has been closed.\n\nYou have a 30-day grace period to reverse this decision. Please contact us if you would like to reopen your account. If we do not hear from you within 30 days, your account and all personal data will be permanently deleted.";
       await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -1679,71 +1685,19 @@ const MembersPanel = ({ currentUser }) => {
     const note = noteText.trim();
     if (!note) { alert("Please enter a reason before proceeding."); return; }
     const action = actionMode.action;
-    if (action === "close" && !confirm(`Close ${member.name}'s account?`)) return;
 
     setActing(member.id);
     const newNotes = appendNote(member.admin_notes, action, note, adminName);
     const update = { admin_notes: newNotes };
-    if (action === "suspend") update.suspended_at = new Date().toISOString();
-    if (action === "close")   { update.closed_at = new Date().toISOString(); update.suspended_at = new Date().toISOString(); }
+    if (action === "suspend")   update.suspended_at = new Date().toISOString();
+    if (action === "unsuspend") update.suspended_at = null;
+    if (action === "close")     { update.closed_at = new Date().toISOString(); update.suspended_at = new Date().toISOString(); }
+    if (action === "reopen")    { update.closed_at = null; update.suspended_at = null; }
 
     const { error } = await supabase.from("profiles").update(update).eq("id", member.id);
-    if (!error) {
-      await sendAccountEmail(member, action);
-      if (action === "close") await anonymiseAccount(member.id);
-    } else console.error("[members] action error:", error);
+    if (!error) await sendAccountEmail(member, action);
+    else console.error("[members] action error:", error);
     closeAction();
-    await loadMembers();
-    setActing(null);
-  };
-
-  const anonymiseAccount = async (userId) => {
-    await supabase.from("profiles").update({
-      first_name: "Deleted",
-      last_name: "User",
-      full_name: "Deleted User",
-      email: `deleted_${userId}@deleted.sharedxp.com`,
-      phone: "",
-      phone_country_code: "",
-      country_dial_code: "",
-      address: "",
-      city: "",
-      country: "",
-      photo_url: "",
-      birthday: "",
-      gender: "",
-    }).eq("id", userId);
-    await supabase.from("host_profiles").update({
-      stripe_email: "",
-      account_holder_name: "",
-      citizen_id_number: "",
-      tax_number: "",
-      bank_name: "",
-      account_number: "",
-      routing_number: "",
-      postcode: "",
-      latitude: null,
-      longitude: null,
-    }).eq("user_id", userId);
-  };
-
-  const unsuspendAccount = async (member) => {
-    if (!confirm(`Unsuspend ${member.name}'s account?`)) return;
-    setActing(member.id);
-    const newNotes = appendNote(member.admin_notes, "unsuspend", "Account unsuspended.", adminName);
-    const { error } = await supabase.from("profiles").update({ suspended_at: null, admin_notes: newNotes }).eq("id", member.id);
-    if (error) console.error("[members] unsuspend error:", error);
-    await loadMembers();
-    setActing(null);
-  };
-
-  const reopenAccount = async (member) => {
-    if (!confirm(`Reopen ${member.name}'s account?`)) return;
-    setActing(member.id);
-    const newNotes = appendNote(member.admin_notes, "reopen", "Account reopened.", adminName);
-    const { error } = await supabase.from("profiles").update({ closed_at: null, suspended_at: null, admin_notes: newNotes }).eq("id", member.id);
-    if (!error) await sendAccountEmail(member, "reopen");
-    else console.error("[members] reopen error:", error);
     await loadMembers();
     setActing(null);
   };
@@ -1831,8 +1785,15 @@ const MembersPanel = ({ currentUser }) => {
               const isClosed = !!m.closed_at;
               const isBusy = acting === m.id;
               const isOpen = actionMode?.memberId === m.id;
+              const isHistoryOpen = historyOpen.has(m.id) && !isOpen;
+              const noteCount = parseNotes(m.admin_notes).length;
+              const graceDaysLeft = isClosed
+                ? Math.max(0, 30 - Math.floor((Date.now() - new Date(m.closed_at).getTime()) / (1000 * 60 * 60 * 24)))
+                : null;
+              const ACTION_LABELS = { suspend: "Reason for suspension", unsuspend: "Reason for unsuspending", close: "Reason for closing account", reopen: "Reason for reopening account" };
+              const ACTION_BTN = { suspend: "Save & Suspend", unsuspend: "Save & Unsuspend", close: "Save & Close", reopen: "Save & Reopen" };
               const rows = [
-                <tr key={m.id} className={`members-row${isOpen ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
+                <tr key={m.id} className={`members-row${isOpen || isHistoryOpen ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
                   <td data-label="Name">{m.name}</td>
                   <td data-label="Email">{m.email || "—"}</td>
                   <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
@@ -1852,8 +1813,8 @@ const MembersPanel = ({ currentUser }) => {
                       <div className="members-actions">
                         {!isClosed && (
                           isSuspended
-                            ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy} onClick={() => unsuspendAccount(m)}>
-                                {isBusy ? "…" : "Unsuspend"}
+                            ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "unsuspend")}>
+                                Unsuspend
                               </button>
                             : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "suspend")}>
                                 Suspend
@@ -1865,8 +1826,18 @@ const MembersPanel = ({ currentUser }) => {
                           </button>
                         )}
                         {isClosed && (
-                          <button type="button" className="btn btn-light btn-sm" disabled={isBusy} onClick={() => reopenAccount(m)}>
-                            {isBusy ? "…" : "Reopen"}
+                          <div className="members-closed-actions">
+                            <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "reopen")}>
+                              Reopen
+                            </button>
+                            <span className={`members-grace-tag${graceDaysLeft === 0 ? " members-grace-expired" : ""}`}>
+                              {graceDaysLeft > 0 ? `${graceDaysLeft}d grace left` : "Grace period expired"}
+                            </span>
+                          </div>
+                        )}
+                        {noteCount > 0 && (
+                          <button type="button" className="members-history-btn" onClick={() => toggleHistory(m.id)}>
+                            {isHistoryOpen ? "Hide history" : `${noteCount} note${noteCount !== 1 ? "s" : ""}`}
                           </button>
                         )}
                       </div>
@@ -1875,23 +1846,33 @@ const MembersPanel = ({ currentUser }) => {
                 </tr>,
               ];
 
+              if (isHistoryOpen) {
+                rows.push(
+                  <tr key={`${m.id}-history`} className="members-action-row">
+                    <td colSpan={6}>
+                      <NoteHistory adminNotes={m.admin_notes} adminName={adminName} />
+                    </td>
+                  </tr>
+                );
+              }
+
               if (isOpen) {
                 rows.push(
                   <tr key={`${m.id}-action`} className="members-action-row">
                     <td colSpan={6}>
                       <NoteHistory adminNotes={m.admin_notes} adminName={adminName} />
                       <p className="admin-dispute-label" style={{ marginTop: 12 }}>
-                        {actionMode.action === "suspend" ? "Reason for suspension" : "Reason for closing account"} (required)
+                        {ACTION_LABELS[actionMode.action]} (required)
                       </p>
                       {actionMode.action === "close" && (
-                        <p style={{ fontSize: 13, color: "#ef4444", margin: "4px 0 8px" }}>
-                          Warning: closing an account is not easily reversible and will notify the member.
+                        <p style={{ fontSize: 13, color: "#92400e", background: "#fef3c7", padding: "8px 12px", borderRadius: 6, margin: "6px 0 10px" }}>
+                          There is a 30-day grace period before the account is permanently closed and all personal data is deleted. The member will be notified and can contact you to reopen their account within this window.
                         </p>
                       )}
                       <textarea
                         className="cm-admin-notes"
                         rows={3}
-                        placeholder="Enter reason…"
+                        placeholder={actionMode.action === "close" ? "e.g. Customer requested, Terms violation…" : actionMode.action === "reopen" ? "e.g. Customer contacted us to reopen…" : actionMode.action === "unsuspend" ? "e.g. Review completed, no violation found…" : "e.g. Terms violation, Abusive behaviour…"}
                         value={noteText}
                         onChange={(e) => setNoteText(e.target.value)}
                         autoFocus
@@ -1904,7 +1885,7 @@ const MembersPanel = ({ currentUser }) => {
                           disabled={isBusy}
                           onClick={() => saveNoteAndAct(m)}
                         >
-                          {isBusy ? "…" : actionMode.action === "suspend" ? "Save & Suspend" : "Save & Close"}
+                          {isBusy ? "…" : ACTION_BTN[actionMode.action]}
                         </button>
                       </div>
                     </td>
