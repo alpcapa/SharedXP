@@ -5737,15 +5737,20 @@ body {
 
 .admin-tabs {
   display: flex;
-  flex-wrap: wrap;
   gap: 4px;
   border-bottom: 2px solid #e8e9e4;
   margin-bottom: 28px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.admin-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .admin-tab {
-  flex: 1;
-  padding: 10px 12px;
+  padding: 10px 20px;
   font-size: 15px;
   font-weight: 500;
   color: #596164;
@@ -5755,7 +5760,7 @@ body {
   margin-bottom: -2px;
   cursor: pointer;
   font-family: inherit;
-  text-align: center;
+  flex-shrink: 0;
   white-space: nowrap;
 }
 
