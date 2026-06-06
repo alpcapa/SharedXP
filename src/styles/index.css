@@ -5901,6 +5901,7 @@ body {
 }
 .members-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -5921,6 +5922,9 @@ body {
   border-bottom: 1px solid #f3f4f6;
   color: #6b7280;
   vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .members-row td:first-child { font-weight: 500; color: #1a1a1a; }
 .members-row.members-row-open td { border-bottom: none; }
@@ -5971,6 +5975,7 @@ body {
     padding-top: 2px;
   }
   .members-row td:first-child { font-weight: 500; }
+  .members-row td { word-break: break-all; white-space: normal; }
   .members-action-row,
   .members-action-row td {
     display: block;
