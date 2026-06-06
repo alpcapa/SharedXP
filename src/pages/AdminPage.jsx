@@ -82,6 +82,7 @@ const NOTE_LABELS = {
   suspend: "Account Suspended",
   unsuspend: "Account Unsuspended",
   close: "Account Closed",
+  reopen: "Account Reopened",
 };
 
 const fmtDateTime = (iso) =>
@@ -1656,9 +1657,13 @@ const MembersPanel = ({ currentUser }) => {
     try {
       const subject = action === "suspend"
         ? "Your SharedXP account has been temporarily suspended"
+        : action === "reopen"
+        ? "Your SharedXP account has been reopened"
         : "Your SharedXP account has been closed";
       const message = action === "suspend"
         ? "Your SharedXP account has been temporarily suspended pending review.\n\nIf you believe this is a mistake, please contact us and we'll look into it right away."
+        : action === "reopen"
+        ? "Good news — your SharedXP account has been reopened. You can now log in as normal.\n\nIf you have any questions, please don't hesitate to contact us."
         : "Your SharedXP account has been closed.\n\nIf you believe this is a mistake, please contact us.";
       await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
         method: "POST",
@@ -1674,7 +1679,7 @@ const MembersPanel = ({ currentUser }) => {
     const note = noteText.trim();
     if (!note) { alert("Please enter a reason before proceeding."); return; }
     const action = actionMode.action;
-    if (action === "close" && !confirm(`Close ${member.name}'s account? This is not easily reversible.`)) return;
+    if (action === "close" && !confirm(`Close ${member.name}'s account?`)) return;
 
     setActing(member.id);
     const newNotes = appendNote(member.admin_notes, action, note, adminName);
@@ -1696,6 +1701,17 @@ const MembersPanel = ({ currentUser }) => {
     const newNotes = appendNote(member.admin_notes, "unsuspend", "Account unsuspended.", adminName);
     const { error } = await supabase.from("profiles").update({ suspended_at: null, admin_notes: newNotes }).eq("id", member.id);
     if (error) console.error("[members] unsuspend error:", error);
+    await loadMembers();
+    setActing(null);
+  };
+
+  const reopenAccount = async (member) => {
+    if (!confirm(`Reopen ${member.name}'s account?`)) return;
+    setActing(member.id);
+    const newNotes = appendNote(member.admin_notes, "reopen", "Account reopened.", adminName);
+    const { error } = await supabase.from("profiles").update({ closed_at: null, suspended_at: null, admin_notes: newNotes }).eq("id", member.id);
+    if (!error) await sendAccountEmail(member, "reopen");
+    else console.error("[members] reopen error:", error);
     await loadMembers();
     setActing(null);
   };
@@ -1816,7 +1832,11 @@ const MembersPanel = ({ currentUser }) => {
                             Close
                           </button>
                         )}
-                        {isClosed && <span className="admin-dispute-label">Account closed</span>}
+                        {isClosed && (
+                          <button type="button" className="btn btn-light btn-sm" disabled={isBusy} onClick={() => reopenAccount(m)}>
+                            {isBusy ? "…" : "Reopen"}
+                          </button>
+                        )}
                       </div>
                     )}
                   </td>
