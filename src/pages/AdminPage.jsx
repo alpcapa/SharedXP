@@ -1390,14 +1390,37 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
     setActing(null);
   };
 
-  const suspend = async (postId) => {
+  const sendModerationEmail = async (posterId, action, post) => {
+    if (!posterId) return;
+    const isSuspend = action === "suspend";
+    const location = [post?.city, post?.country].filter(Boolean).join(", ");
+    const captionLine = post?.caption ? `\n\nPost: "${post.caption}"` : "";
+    const subject = isSuspend
+      ? "Your SharedXP post has been temporarily suspended"
+      : "Your SharedXP post has been removed";
+    const message = isSuspend
+      ? `Your ${post?.sport ?? "field"} post${location ? ` in ${location}` : ""} has been flagged by another user and temporarily suspended pending review.${captionLine}\n\nIf you believe this is a mistake, please contact us — we'll look into it right away.`
+      : `Your ${post?.sport ?? "field"} post${location ? ` in ${location}` : ""} has been flagged and removed after review.${captionLine}\n\nIf you believe this is a mistake, please contact us.`;
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ emailType: "cm_admin_message", userId: posterId, subject, message }),
+      });
+    } catch (e) {
+      console.error("[reports] moderation email error:", e);
+    }
+  };
+
+  const suspend = async (post) => {
     if (!confirm("Suspend this post? It will be hidden from the feed until you unsuspend it.")) return;
-    setActing(postId);
+    setActing(post.id);
     const { error } = await supabase
       .from("field_posts")
       .update({ suspended_at: new Date().toISOString() })
-      .eq("id", postId);
-    if (error) console.error("[reports] suspend error:", error);
+      .eq("id", post.id);
+    if (!error) await sendModerationEmail(post.poster_id, "suspend", post);
+    else console.error("[reports] suspend error:", error);
     await fetchReports();
     setActing(null);
   };
@@ -1424,9 +1447,10 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
     setActing(null);
   };
 
-  const removePost = async (reportId, postId) => {
+  const removePost = async (reportId, postId, posterId, post) => {
     if (!confirm("Remove this post? This cannot be undone.")) return;
     setActing(reportId);
+    await sendModerationEmail(posterId, "remove", post);
     const { error } = await supabase.from("field_posts").delete().eq("id", postId);
     if (error) console.error("[reports] remove post error:", error);
     await fetchReports();
@@ -1518,12 +1542,12 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                             <button
                               type="button"
                               className="btn btn-light"
-                              onClick={() => isSuspended ? unsuspend(post.id) : suspend(post.id)}
+                              onClick={() => isSuspended ? unsuspend(post.id) : suspend(post)}
                               disabled={isBusy}
                             >
                               {isBusy ? "…" : isSuspended ? "Unsuspend" : "Suspend"}
                             </button>
-                            <button type="button" className="btn btn-danger" onClick={() => removePost(r.id, r.post_id)} disabled={isBusy}>
+                            <button type="button" className="btn btn-danger" onClick={() => removePost(r.id, r.post_id, posterId, post)} disabled={isBusy}>
                               {isBusy ? "…" : "Remove Post"}
                             </button>
                             <button type="button" className="btn btn-light" onClick={() => dismiss(r.id)} disabled={isBusy}>
@@ -1575,6 +1599,148 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
           })}
         </div>
       )}
+    </div>
+  );
+};
+
+// ── Members Panel ─────────────────────────────────────────────────────────────
+const MembersPanel = () => {
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("all");
+  const [search, setSearch] = useState("");
+  const [sortCol, setSortCol] = useState("name");
+  const [sortDir, setSortDir] = useState("asc");
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const [profilesRes, cmRes] = await Promise.all([
+        supabase.from("profiles").select("id, email, first_name, last_name, full_name, city, country, is_host, is_admin, signed_up_at"),
+        supabase.from("cm_profiles").select("user_id, status"),
+      ]);
+      const cmSet = new Set((cmRes.data ?? []).map((c) => c.user_id));
+      const rows = (profilesRes.data ?? []).map((p) => ({
+        ...p,
+        isCm: cmSet.has(p.id),
+        name: p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email || "—",
+      }));
+      setMembers(rows);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleSort = (col) => {
+    if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortCol(col); setSortDir("asc"); }
+  };
+
+  const tabFiltered = members.filter((m) => {
+    if (tab === "guest") return !m.is_host && !m.isCm;
+    if (tab === "host") return m.is_host;
+    if (tab === "cm") return m.isCm;
+    return true;
+  });
+
+  const displayed = (
+    search.trim()
+      ? tabFiltered.filter((m) => {
+          const q = search.toLowerCase();
+          return m.name.toLowerCase().includes(q) || (m.email ?? "").toLowerCase().includes(q);
+        })
+      : tabFiltered
+  ).slice().sort((a, b) => {
+    let aVal = "", bVal = "";
+    if (sortCol === "name")     { aVal = a.name; bVal = b.name; }
+    if (sortCol === "email")    { aVal = a.email ?? ""; bVal = b.email ?? ""; }
+    if (sortCol === "location") { aVal = [a.city, a.country].filter(Boolean).join(", "); bVal = [b.city, b.country].filter(Boolean).join(", "); }
+    if (sortCol === "joined")   { aVal = a.signed_up_at ?? ""; bVal = b.signed_up_at ?? ""; }
+    const cmp = aVal.localeCompare(bVal, undefined, { sensitivity: "base" });
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  const chevron = (col) => sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : "";
+  const thStyle = (col) => ({
+    padding: "8px 12px", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap",
+    fontWeight: 600, color: sortCol === col ? "#1a1a1a" : "#6b7280", textAlign: "left",
+  });
+
+  const tabs = [
+    ["all",   "All",    members.length],
+    ["guest", "Guests", members.filter((m) => !m.is_host && !m.isCm).length],
+    ["host",  "Hosts",  members.filter((m) => m.is_host).length],
+    ["cm",    "CMs",    members.filter((m) => m.isCm).length],
+  ];
+
+  if (loading) return <p style={{ marginTop: 24 }}>Loading members…</p>;
+
+  return (
+    <div>
+      <p className="admin-subtitle">All registered members.</p>
+
+      <div className="cm-admin-subtabs" style={{ marginBottom: 12 }}>
+        {tabs.map(([key, label, count]) => (
+          <button
+            key={key}
+            type="button"
+            className={`admin-tab${tab === key ? " admin-tab-active" : ""}`}
+            onClick={() => setTab(key)}
+          >
+            {label}
+            <span className="cm-admin-count" style={{ marginLeft: 4 }}>{count}</span>
+          </button>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: 12 }}>
+        <input
+          type="text"
+          className="support-search-input"
+          placeholder="Search name or email…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {displayed.length === 0 ? (
+        <p>No members found.</p>
+      ) : (
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <thead>
+            <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+              <th style={thStyle("name")}    onClick={() => handleSort("name")}>Name{chevron("name")}</th>
+              <th style={thStyle("email")}   onClick={() => handleSort("email")}>Email{chevron("email")}</th>
+              <th style={thStyle("location")}onClick={() => handleSort("location")}>Location{chevron("location")}</th>
+              <th style={thStyle("joined")}  onClick={() => handleSort("joined")}>Member since{chevron("joined")}</th>
+              <th style={{ padding: "8px 12px", color: "#6b7280", fontWeight: 600 }}>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayed.map((m) => (
+              <tr key={m.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                <td style={{ padding: "10px 12px", fontWeight: 500 }}>{m.name}</td>
+                <td style={{ padding: "10px 12px", color: "#6b7280" }}>{m.email || "—"}</td>
+                <td style={{ padding: "10px 12px", color: "#6b7280" }}>{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
+                <td style={{ padding: "10px 12px", color: "#6b7280", whiteSpace: "nowrap" }}>
+                  {m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}
+                </td>
+                <td style={{ padding: "10px 12px" }}>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {m.is_admin && <span className="pending-status-badge status-in_progress">Admin</span>}
+                    {m.is_host  && <span className="pending-status-badge status-accepted">Host</span>}
+                    {m.isCm     && <span className="pending-status-badge status-completed">CM</span>}
+                    {!m.is_host && !m.isCm && !m.is_admin && <span className="pending-status-badge status-pending">Guest</span>}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <p className="admin-dispute-label" style={{ marginTop: 8 }}>
+        {displayed.length} member{displayed.length !== 1 ? "s" : ""}
+      </p>
     </div>
   );
 };
@@ -1750,6 +1916,13 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             Reports
             {pendingReports > 0 && <span className="cm-admin-count">{pendingReports}</span>}
           </button>
+          <button
+            type="button"
+            className={`admin-tab${activeTab === "members" ? " admin-tab-active" : ""}`}
+            onClick={() => setActiveTab("members")}
+          >
+            Members
+          </button>
         </div>
 
         {activeTab === "disputes" && (
@@ -1848,6 +2021,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
         {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} onCountChange={fetchCmCounts} />}
         {activeTab === "support" && <SupportPanel currentUser={currentUser} onRead={fetchUnreadSupport} />}
         {activeTab === "reports" && <FieldPostReportsPanel onCountChange={setPendingReports} />}
+        {activeTab === "members" && <MembersPanel />}
         </main>
         <SiteFooter />
       </div>
