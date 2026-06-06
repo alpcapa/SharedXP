@@ -1093,7 +1093,7 @@ const SupportPanel = ({ currentUser, onRead }) => {
             className={`admin-tab${supportTab === "archive" ? " admin-tab-active" : ""}`}
             onClick={() => setSupportTab("archive")}
           >
-            Archive
+            Archived
           </button>
         </div>
         <div className="support-filters">
