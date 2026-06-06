@@ -7872,9 +7872,8 @@ body {
 }
 .cm-admin-card-summary {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  flex-direction: column;
+  gap: 4px;
   width: 100%;
   padding: 14px 20px;
   background: none;
@@ -7886,14 +7885,14 @@ body {
 .cm-admin-card-summary:hover {
   background: #f9f9f7;
 }
-.cm-admin-card-summary-left {
+.cm-admin-card-summary-top {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
 }
-.cm-admin-card-summary-left strong {
+.cm-admin-card-summary-top strong {
   font-size: 14px;
   color: #1a1a1a;
 }

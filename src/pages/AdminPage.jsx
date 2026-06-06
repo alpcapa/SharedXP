@@ -1497,20 +1497,20 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                   onClick={() => toggleExpanded(r.id)}
                   aria-expanded={isExpanded}
                 >
-                  <div className="cm-admin-card-summary-left">
+                  <div className="cm-admin-card-summary-top">
                     <strong>{post?.sport ?? "Unknown sport"}</strong>
-                    <span className="cm-admin-email">
-                      Experience hosted by {post?.host_name || "—"}
-                      {(post?.city || post?.country) ? ` / ${[post.city, post.country].filter(Boolean).join(", ")}` : ""}
-                      {` on ${fmtDate(r.created_at)}`}
-                    </span>
+                    <div className="cm-admin-card-summary-right">
+                      <span className={`pending-status-badge ${isSuspended ? "status-pending" : "status-disputed"}`}>
+                        {isSuspended ? "Suspended" : "Pending"}
+                      </span>
+                      <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+                    </div>
                   </div>
-                  <div className="cm-admin-card-summary-right">
-                    <span className={`pending-status-badge ${isSuspended ? "status-pending" : "status-disputed"}`}>
-                      {isSuspended ? "Suspended" : "Pending"}
-                    </span>
-                    <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
-                  </div>
+                  <span className="cm-admin-email">
+                    Experience hosted by {post?.host_name || "—"}
+                    {(post?.city || post?.country) ? ` / ${[post.city, post.country].filter(Boolean).join(", ")}` : ""}
+                    {` on ${fmtDate(r.created_at)}`}
+                  </span>
                 </button>
 
                 {isExpanded && (
