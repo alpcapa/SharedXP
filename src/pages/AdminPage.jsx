@@ -1713,8 +1713,10 @@ const MembersPanel = ({ currentUser }) => {
     if (tab === "host")    return isActive(m) && m.is_host;
     if (tab === "cm")      return isActive(m) && m.isCm;
     if (tab === "admin")   return isActive(m) && m.is_admin;
-    return true; // "all" — includes everything
+    return isActive(m); // "all" — active accounts only
   });
+
+  const isClosedOrDeletedTab = tab === "closed" || tab === "deleted";
 
   const displayed = (
     search.trim()
@@ -1724,6 +1726,9 @@ const MembersPanel = ({ currentUser }) => {
         })
       : tabFiltered
   ).slice().sort((a, b) => {
+    if (isClosedOrDeletedTab) {
+      return (b.closed_at ?? "").localeCompare(a.closed_at ?? "");
+    }
     let aVal = "", bVal = "";
     if (sortCol === "name")     { aVal = a.name; bVal = b.name; }
     if (sortCol === "email")    { aVal = a.email ?? ""; bVal = b.email ?? ""; }
@@ -1736,7 +1741,7 @@ const MembersPanel = ({ currentUser }) => {
   const chevron = (col) => sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : "";
 
   const tabs = [
-    ["all",     "All",     members.length],
+    ["all",     "All",     members.filter(isActive).length],
     ["guest",   "Guests",  members.filter((m) => isActive(m) && !m.is_host && !m.isCm && !m.is_admin).length],
     ["host",    "Hosts",   members.filter((m) => isActive(m) && m.is_host).length],
     ["cm",      "CMs",     members.filter((m) => isActive(m) && m.isCm).length],
