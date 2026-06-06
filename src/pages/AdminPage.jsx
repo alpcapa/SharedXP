@@ -1688,11 +1688,43 @@ const MembersPanel = ({ currentUser }) => {
     if (action === "close")   { update.closed_at = new Date().toISOString(); update.suspended_at = new Date().toISOString(); }
 
     const { error } = await supabase.from("profiles").update(update).eq("id", member.id);
-    if (!error) await sendAccountEmail(member, action);
-    else console.error("[members] action error:", error);
+    if (!error) {
+      await sendAccountEmail(member, action);
+      if (action === "close") await anonymiseAccount(member.id);
+    } else console.error("[members] action error:", error);
     closeAction();
     await loadMembers();
     setActing(null);
+  };
+
+  const anonymiseAccount = async (userId) => {
+    await supabase.from("profiles").update({
+      first_name: "Deleted",
+      last_name: "User",
+      full_name: "Deleted User",
+      email: `deleted_${userId}@deleted.sharedxp.com`,
+      phone: "",
+      phone_country_code: "",
+      country_dial_code: "",
+      address: "",
+      city: "",
+      country: "",
+      photo_url: "",
+      birthday: "",
+      gender: "",
+    }).eq("id", userId);
+    await supabase.from("host_profiles").update({
+      stripe_email: "",
+      account_holder_name: "",
+      citizen_id_number: "",
+      tax_number: "",
+      bank_name: "",
+      account_number: "",
+      routing_number: "",
+      postcode: "",
+      latitude: null,
+      longitude: null,
+    }).eq("user_id", userId);
   };
 
   const unsuspendAccount = async (member) => {
