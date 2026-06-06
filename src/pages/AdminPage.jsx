@@ -1702,21 +1702,21 @@ const MembersPanel = ({ currentUser }) => {
     setActing(null);
   };
 
-  const isDeleted = (m) => m.full_name === "Deleted User";
-  const isClosed  = (m) => !!m.closed_at && !isDeleted(m);
-  const isActive  = (m) => !m.closed_at;
+  const isDeleted          = (m) => m.full_name === "Deleted User";
+  const isSuspendedOrClosed = (m) => !!m.suspended_at && !isDeleted(m);
+  const isActive            = (m) => !m.suspended_at && !m.closed_at && !isDeleted(m);
 
   const tabFiltered = members.filter((m) => {
-    if (tab === "deleted") return isDeleted(m);
-    if (tab === "closed")  return isClosed(m);
-    if (tab === "guest")   return isActive(m) && !m.is_host && !m.isCm && !m.is_admin;
-    if (tab === "host")    return isActive(m) && m.is_host;
-    if (tab === "cm")      return isActive(m) && m.isCm;
-    if (tab === "admin")   return isActive(m) && m.is_admin;
+    if (tab === "restricted") return isSuspendedOrClosed(m);
+    if (tab === "deleted")    return isDeleted(m);
+    if (tab === "guest")      return isActive(m) && !m.is_host && !m.isCm && !m.is_admin;
+    if (tab === "host")       return isActive(m) && m.is_host;
+    if (tab === "cm")         return isActive(m) && m.isCm;
+    if (tab === "admin")      return isActive(m) && m.is_admin;
     return isActive(m); // "all" — active accounts only
   });
 
-  const isClosedOrDeletedTab = tab === "closed" || tab === "deleted";
+  const isRestrictedOrDeletedTab = tab === "restricted" || tab === "deleted";
 
   const displayed = (
     search.trim()
@@ -1726,8 +1726,10 @@ const MembersPanel = ({ currentUser }) => {
         })
       : tabFiltered
   ).slice().sort((a, b) => {
-    if (isClosedOrDeletedTab) {
-      return (b.closed_at ?? "").localeCompare(a.closed_at ?? "");
+    if (isRestrictedOrDeletedTab) {
+      const aDate = a.closed_at ?? a.suspended_at ?? "";
+      const bDate = b.closed_at ?? b.suspended_at ?? "";
+      return bDate.localeCompare(aDate);
     }
     let aVal = "", bVal = "";
     if (sortCol === "name")     { aVal = a.name; bVal = b.name; }
@@ -1741,13 +1743,13 @@ const MembersPanel = ({ currentUser }) => {
   const chevron = (col) => sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : "";
 
   const tabs = [
-    ["all",     "All",     members.filter(isActive).length],
-    ["guest",   "Guests",  members.filter((m) => isActive(m) && !m.is_host && !m.isCm && !m.is_admin).length],
-    ["host",    "Hosts",   members.filter((m) => isActive(m) && m.is_host).length],
-    ["cm",      "CMs",     members.filter((m) => isActive(m) && m.isCm).length],
-    ["admin",   "Admins",  members.filter((m) => isActive(m) && m.is_admin).length],
-    ["closed",  "Closed",  members.filter(isClosed).length],
-    ["deleted", "Deleted", members.filter(isDeleted).length],
+    ["all",        "All",              members.filter(isActive).length],
+    ["guest",      "Guests",           members.filter((m) => isActive(m) && !m.is_host && !m.isCm && !m.is_admin).length],
+    ["host",       "Hosts",            members.filter((m) => isActive(m) && m.is_host).length],
+    ["cm",         "CMs",              members.filter((m) => isActive(m) && m.isCm).length],
+    ["admin",      "Admins",           members.filter((m) => isActive(m) && m.is_admin).length],
+    ["restricted", "Suspended/Closed", members.filter(isSuspendedOrClosed).length],
+    ["deleted",    "Deleted",          members.filter(isDeleted).length],
   ];
 
   if (loading) return <p style={{ marginTop: 24 }}>Loading members…</p>;
