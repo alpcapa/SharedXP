@@ -932,12 +932,14 @@ serve(async (req: Request): Promise<Response> => {
         case "cm_admin_message": {
           const subject = String(body.subject ?? "Message from SharedXP");
           const message = String(body.message ?? "");
+          const ctaLabel = String(body.ctaLabel ?? "Go to My Profile");
+          const ctaUrl = String(body.ctaUrl ?? `${APP_URL}/user/${userId}`);
           const signatureHtml = `<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e8e9e4;"><p style="margin:0 0 2px;font-size:13px;color:#888;">Sincerely,</p><p style="margin:0;font-size:13px;font-weight:700;color:#444;">SharedXP Support</p></div>`;
           const html = emailHtml(
             subject,
             [message],
-            `${APP_URL}/user/${userId}`,
-            "Go to My Profile",
+            ctaUrl,
+            ctaLabel,
             signatureHtml,
           );
           await sendEmail(String(userProfile.email), subject, html);

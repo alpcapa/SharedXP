@@ -576,11 +576,18 @@ const ProfilePage = ({ currentUser, onLogout }) => {
 
         setHostReviews([...brHostRevs, ...legacyHostRevs]);
 
-        // Default to host tab for visitors, guest tab for own profile
+        // Default to host tab for visitors, guest tab for own profile; honour ?tab= from email links
         const ownProfile = currentUser?.id === userId;
-        setActiveTab(ownProfile ? "guest" : "host");
+        const queryTab = new URLSearchParams(location.search).get("tab");
+        const validTabs = ["guest", "host", "cm"];
+        if (queryTab && validTabs.includes(queryTab)) {
+          setActiveTab(queryTab);
+        } else {
+          setActiveTab(ownProfile ? "guest" : "host");
+        }
       } else {
-        setActiveTab("guest");
+        const queryTab = new URLSearchParams(location.search).get("tab");
+        setActiveTab(queryTab === "host" ? "host" : "guest");
       }
 
       setLoading(false);
