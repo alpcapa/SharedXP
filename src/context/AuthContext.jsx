@@ -694,7 +694,8 @@ await supabase.auth.signOut();
 const reason = profile.closed_at ? "closed" : "suspended";
 return {
 success: false,
-message: `This account has been ${reason}. Please contact support if you believe this is a mistake.`,
+suspended: true,
+message: `This account has been ${reason}.`,
 };
 }
 }

@@ -14,6 +14,7 @@ const LoginPage = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [accountSuspended, setAccountSuspended] = useState(false);
   const [resetMode, setResetMode] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
   const resetSuccessMessage =
@@ -66,11 +67,18 @@ const LoginPage = ({
     }
 
     if (!loginResult?.success) {
-      setErrorMessage(loginResult?.message ?? "Unable to login.");
+      if (loginResult?.suspended) {
+        setAccountSuspended(true);
+        setErrorMessage(loginResult.message);
+      } else {
+        setAccountSuspended(false);
+        setErrorMessage(loginResult?.message ?? "Unable to login.");
+      }
       return;
     }
 
     setErrorMessage("");
+    setAccountSuspended(false);
     sessionStorage.removeItem("postAuthRedirect");
     navigate(destination);
   };
@@ -101,6 +109,7 @@ const LoginPage = ({
                 onChange={(event) => {
                   setEmail(event.target.value);
                   if (errorMessage) setErrorMessage("");
+                  if (accountSuspended) setAccountSuspended(false);
                   if (resetMessage) setResetMessage("");
                 }}
               />
@@ -119,7 +128,14 @@ const LoginPage = ({
               )}
 
               {emailUpdatedMessage && <p className="auth-success">{emailUpdatedMessage}</p>}
-              {errorMessage && <p className="auth-error">{errorMessage}</p>}
+              {errorMessage && (
+                <p className="auth-error">
+                  {errorMessage}{" "}
+                  {accountSuspended && (
+                    <Link to="/contact">Contact support</Link>
+                  )}
+                </p>
+              )}
               {resetMessage && <p className="auth-success">{resetMessage}</p>}
               <button type="submit" className="btn btn-primary auth-submit">
                 {resetMode ? "Send" : "Log in"}
