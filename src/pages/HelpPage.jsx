@@ -139,7 +139,7 @@ const faqGroups = [
         q: "What happens if my account is suspended?",
         a: (
           <>
-            If your account is suspended, you will receive an email explaining the action. Suspension is typically a temporary measure pending a review of reported behaviour or a Terms violation. To appeal or ask questions, please <Link to="/contact">contact our support team</Link> and we will review your case.
+            If your account is suspended, you will receive an email explaining the action. Any pending or upcoming booking requests that have not yet started will be automatically cancelled. If you have an experience already in progress at the time of the action, it will be allowed to complete. Suspension is typically a temporary measure pending a review. To appeal or ask questions, please <Link to="/contact">contact our support team</Link> and we will review your case.
           </>
         ),
       },

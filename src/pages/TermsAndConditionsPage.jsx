@@ -283,6 +283,11 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
                 </li>
               </ul>
               <p>
+                Where a suspension or closure is applied, any booking requests still in the booking phase
+                (pending, accepted, or awaiting payment confirmation) will be automatically cancelled.
+                Experiences already in progress at the time of the action will be permitted to complete.
+              </p>
+              <p>
                 You may also request account closure at any time by contacting our{" "}
                 <Link to="/contact">support team</Link>. The same 30-day grace period applies to
                 self-requested closures. To appeal a suspension or closure, please{" "}
