@@ -1489,7 +1489,7 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
             const posterId = post?.poster_id;
             const isBusy = acting === r.id || acting === post?.id;
             return (
-              <article key={r.id} className="admin-dispute-card">
+              <article key={r.id} className="cm-admin-card">
                 <button
                   type="button"
                   className="cm-admin-card-summary"
