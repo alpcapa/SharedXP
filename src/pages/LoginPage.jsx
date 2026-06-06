@@ -13,7 +13,7 @@ const LoginPage = ({
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [loginError, setLoginError] = useState(null);
   const [resetMode, setResetMode] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
   const resetSuccessMessage =
@@ -33,7 +33,7 @@ const LoginPage = ({
         resetResult = await onForgotPassword(email);
       } catch (e) {
         console.error("onForgotPassword error:", e);
-        setErrorMessage("");
+        setLoginError(null);
         setResetMessage(resetSuccessMessage);
         return;
       }
@@ -42,16 +42,11 @@ const LoginPage = ({
         const resetError = typeof resetResult?.message === "string"
           ? resetResult.message
           : "";
-        if (resetError) {
-          setErrorMessage(resetError);
-          setResetMessage("");
-          return;
-        }
-        setErrorMessage("We couldn't send a reset link right now. Please try again.");
+        setLoginError({ message: resetError || "We couldn't send a reset link right now. Please try again." });
         setResetMessage("");
         return;
       }
-      setErrorMessage("");
+      setLoginError(null);
       setResetMessage(resetSuccessMessage);
       return;
     }
@@ -61,16 +56,19 @@ const LoginPage = ({
       loginResult = await onEmailLogin?.(email, password);
     } catch (e) {
       console.error("onEmailLogin error:", e);
-      setErrorMessage("Login failed. Please try again.");
+      setLoginError({ message: "Login failed. Please try again." });
       return;
     }
 
     if (!loginResult?.success) {
-      setErrorMessage(loginResult?.message ?? "Unable to login.");
+      setLoginError({
+        message: loginResult?.message ?? "Unable to login.",
+        suspended: !!loginResult?.suspended,
+      });
       return;
     }
 
-    setErrorMessage("");
+    setLoginError(null);
     sessionStorage.removeItem("postAuthRedirect");
     navigate(destination);
   };
@@ -100,7 +98,7 @@ const LoginPage = ({
                 value={email}
                 onChange={(event) => {
                   setEmail(event.target.value);
-                  if (errorMessage) setErrorMessage("");
+                  if (loginError) setLoginError(null);
                   if (resetMessage) setResetMessage("");
                 }}
               />
@@ -119,7 +117,14 @@ const LoginPage = ({
               )}
 
               {emailUpdatedMessage && <p className="auth-success">{emailUpdatedMessage}</p>}
-              {errorMessage && <p className="auth-error">{errorMessage}</p>}
+              {loginError?.message && (
+                <p className="auth-error">
+                  {loginError.message}{" "}
+                  {loginError.suspended && (
+                    <Link to="/contact">Contact support</Link>
+                  )}
+                </p>
+              )}
               {resetMessage && <p className="auth-success">{resetMessage}</p>}
               <button type="submit" className="btn btn-primary auth-submit">
                 {resetMode ? "Send" : "Log in"}
@@ -132,7 +137,7 @@ const LoginPage = ({
                 className="auth-text-link"
                 onClick={() => {
                   setResetMode((prev) => !prev);
-                  setErrorMessage("");
+                  setLoginError(null);
                   setResetMessage("");
                 }}
               >

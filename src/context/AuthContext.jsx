@@ -660,7 +660,7 @@ const normalizedEmail = newUser.email.trim().toLowerCase();
 
 onEmailLogin: async (email, password) => {
 try {
-const { error } = await supabase.auth.signInWithPassword({
+const { data: signInData, error } = await supabase.auth.signInWithPassword({
 email: email.trim().toLowerCase(),
 password,
 });
@@ -680,6 +680,24 @@ return {
 success: false,
 message: error.message || "Incorrect email or password.",
 };
+}
+const userId = signInData?.user?.id;
+if (userId) {
+const { data: profileRows } = await supabase
+.from("profiles")
+.select("suspended_at, closed_at, is_admin")
+.eq("id", userId)
+.limit(1);
+const profile = profileRows?.[0];
+if (profile && !profile.is_admin && (profile.suspended_at || profile.closed_at)) {
+await supabase.auth.signOut();
+const reason = profile.closed_at ? "closed" : "suspended";
+return {
+success: false,
+suspended: true,
+message: `This account has been ${reason}.`,
+};
+}
 }
 return { success: true };
 } catch (e) {

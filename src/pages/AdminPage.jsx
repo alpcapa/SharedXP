@@ -1093,7 +1093,7 @@ const SupportPanel = ({ currentUser, onRead }) => {
             className={`admin-tab${supportTab === "archive" ? " admin-tab-active" : ""}`}
             onClick={() => setSupportTab("archive")}
           >
-            Archive
+            Archived
           </button>
         </div>
         <div className="support-filters">
@@ -1529,14 +1529,16 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                             <p className="admin-dispute-label">Caption</p>
                             <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
                           </div>
-                          <div>
-                            <p className="admin-dispute-label">Shared by</p>
-                            <p>{sharerName}</p>
-                            <p className="admin-dispute-email">{isHost ? "Host" : "Guest"}</p>
-                          </div>
-                          <div>
-                            <p className="admin-dispute-label">Reported by</p>
-                            <p>{getProfileName(r.reporter)}</p>
+                          <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+                            <div>
+                              <p className="admin-dispute-label">Shared by</p>
+                              <p>{sharerName}</p>
+                              <p className="admin-dispute-email">{isHost ? "Host" : "Guest"}</p>
+                            </div>
+                            <div>
+                              <p className="admin-dispute-label">Reported by</p>
+                              <p>{getProfileName(r.reporter)}</p>
+                            </div>
                           </div>
                         </div>
 
