@@ -12,7 +12,7 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
         <main className="middle-section simple-page">
           <h1 className="admin-title">Privacy Notice</h1>
           <article className="legal-page">
-            <p className="legal-last-updated">Last updated: May 18, 2026</p>
+            <p className="legal-last-updated">Last updated: June 6, 2026</p>
             <p>
               This Privacy Notice explains how SharedXP collects and uses personal data for account access, host
               onboarding, booking workflows, support, and platform security. It is drafted using GDPR transparency
@@ -51,6 +51,17 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
                   <strong>Cancellation data:</strong> the cancellation policy selected by a host for each
                   offering, cancellation events, refund amounts, and timestamps. This data is used to process
                   refunds and enforce the applicable cancellation terms.
+                </li>
+                <li>
+                  <strong>Field post content and reports:</strong> captions, photos, sport tags, and location
+                  information published to The Field community feed; reports submitted by users flagging posts
+                  as inappropriate; and moderation outcomes (suspension or removal of posts). This data is used
+                  to operate the community feed, review flagged content, and detect patterns of abuse.
+                </li>
+                <li>
+                  <strong>Account action history:</strong> records of account-level moderation actions
+                  (suspension, closure, reopen), the dates those actions were taken, and the associated
+                  administrative notes. This data is retained for audit, safety, and legal compliance purposes.
                 </li>
               </ul>
             </section>
@@ -110,6 +121,13 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
                 safety/security controls, dispute handling, and legal record-keeping. Retention periods vary by data type
                 and applicable legal obligations.
               </p>
+              <p>
+                When an account is closed — whether by user request or platform action — a 30-day grace period
+                applies before permanent deletion. During this window the account remains inactive but restorable
+                upon request. After 30 days, the account and all associated personal data are permanently deleted.
+                Transaction and legal records required for financial, tax, or safety obligations may be retained
+                for longer periods as required by applicable law.
+              </p>
             </section>
 
             <section className="legal-section">
@@ -117,7 +135,11 @@ const PrivacyNoticePage = ({ currentUser, onLogout }) => {
               <ul>
                 <li>Access your personal data and request a copy.</li>
                 <li>Request correction of inaccurate or incomplete personal data.</li>
-                <li>Request deletion where processing is no longer necessary or lawful.</li>
+                <li>
+                  Request deletion where processing is no longer necessary or lawful. Account deletion requests
+                  are processed via a 30-day closure and grace period, after which all personal data is
+                  permanently erased (subject to legal retention requirements).
+                </li>
                 <li>Object to processing based on legitimate interests.</li>
                 <li>Request restriction of processing in specific circumstances.</li>
                 <li>Receive portable data for transfer where legally applicable.</li>

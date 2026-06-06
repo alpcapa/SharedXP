@@ -128,10 +128,18 @@ const faqGroups = [
         ),
       },
       {
-        q: "How do I delete my account?",
+        q: "How do I close or delete my account?",
         a: (
           <>
-            To request account deletion, <Link to="/contact">contact our support team</Link>. We'll process the request and confirm by email.
+            To close your account, <Link to="/contact">contact our support team</Link>. Once closed, your account enters a 30-day grace period during which you can contact us to reopen it. After 30 days, your account and all associated personal data are permanently deleted in line with our GDPR obligations.
+          </>
+        ),
+      },
+      {
+        q: "What happens if my account is suspended?",
+        a: (
+          <>
+            If your account is suspended, you will receive an email explaining the action. Any pending or upcoming booking requests that have not yet started will be automatically cancelled. If you have an experience already in progress at the time of the action, it will be allowed to complete. Suspension is typically a temporary measure pending a review. To appeal or ask questions, please <Link to="/contact">contact our support team</Link> and we will review your case.
           </>
         ),
       },
@@ -149,6 +157,10 @@ const faqGroups = [
       {
         q: "What if there is a dispute?",
         a: "If you have an issue with a completed booking, you can open a dispute from the booking details page within the allowed window. Our team reviews all disputes and works toward a fair resolution.",
+      },
+      {
+        q: "How do I report inappropriate content on The Field?",
+        a: "If you see a post on The Field that you believe is inappropriate, tap the Report button on that post. Our moderation team reviews all reports and will suspend or remove posts that violate our community standards. You will receive a confirmation when your report has been received.",
       },
       {
         q: "What should I do in an emergency?",
