@@ -1611,35 +1611,84 @@ const MembersPanel = () => {
   const [search, setSearch] = useState("");
   const [sortCol, setSortCol] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
+  const [acting, setActing] = useState(null); // "memberId:action"
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const [profilesRes, cmRes] = await Promise.all([
-        supabase.from("profiles").select("id, email, first_name, last_name, full_name, city, country, is_host, is_admin, signed_up_at"),
-        supabase.from("cm_profiles").select("user_id, status"),
-      ]);
-      const cmSet = new Set((cmRes.data ?? []).map((c) => c.user_id));
-      const rows = (profilesRes.data ?? []).map((p) => ({
-        ...p,
-        isCm: cmSet.has(p.id),
-        name: p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email || "—",
-      }));
-      setMembers(rows);
-      setLoading(false);
-    };
-    load();
+  const loadMembers = useCallback(async () => {
+    setLoading(true);
+    const [profilesRes, cmRes] = await Promise.all([
+      supabase.from("profiles").select("id, email, first_name, last_name, full_name, city, country, is_host, is_admin, signed_up_at, suspended_at, closed_at"),
+      supabase.from("cm_profiles").select("user_id, status"),
+    ]);
+    const cmSet = new Set((cmRes.data ?? []).map((c) => c.user_id));
+    const rows = (profilesRes.data ?? []).map((p) => ({
+      ...p,
+      isCm: cmSet.has(p.id),
+      name: p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email || "—",
+    }));
+    setMembers(rows);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { loadMembers(); }, [loadMembers]);
 
   const handleSort = (col) => {
     if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortCol(col); setSortDir("asc"); }
   };
 
+  const sendAccountEmail = async (member, action) => {
+    try {
+      const subject = action === "suspend"
+        ? "Your SharedXP account has been temporarily suspended"
+        : "Your SharedXP account has been closed";
+      const message = action === "suspend"
+        ? `Your SharedXP account has been temporarily suspended pending review.\n\nIf you believe this is a mistake, please contact us and we'll look into it right away.`
+        : `Your SharedXP account has been closed.\n\nIf you believe this is a mistake, please contact us.`;
+      await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ emailType: "cm_admin_message", userId: member.id, subject, message }),
+      });
+    } catch (e) {
+      console.error("[members] account email error:", e);
+    }
+  };
+
+  const suspendAccount = async (member) => {
+    if (!confirm(`Suspend ${member.name}'s account? They will be signed out immediately and cannot log back in until unsuspended.`)) return;
+    setActing(`${member.id}:suspend`);
+    const { error } = await supabase.from("profiles").update({ suspended_at: new Date().toISOString() }).eq("id", member.id);
+    if (!error) await sendAccountEmail(member, "suspend");
+    else console.error("[members] suspend error:", error);
+    await loadMembers();
+    setActing(null);
+  };
+
+  const unsuspendAccount = async (member) => {
+    if (!confirm(`Unsuspend ${member.name}'s account?`)) return;
+    setActing(`${member.id}:unsuspend`);
+    const { error } = await supabase.from("profiles").update({ suspended_at: null }).eq("id", member.id);
+    if (error) console.error("[members] unsuspend error:", error);
+    await loadMembers();
+    setActing(null);
+  };
+
+  const closeAccount = async (member) => {
+    if (!confirm(`Close ${member.name}'s account? This will prevent them from logging in. This action should be used for serious violations.`)) return;
+    if (!confirm(`Are you sure? Type-confirm: closing ${member.name}'s account is not easily reversible.`)) return;
+    setActing(`${member.id}:close`);
+    const { error } = await supabase.from("profiles").update({ closed_at: new Date().toISOString(), suspended_at: new Date().toISOString() }).eq("id", member.id);
+    if (!error) await sendAccountEmail(member, "close");
+    else console.error("[members] close error:", error);
+    await loadMembers();
+    setActing(null);
+  };
+
   const tabFiltered = members.filter((m) => {
-    if (tab === "guest") return !m.is_host && !m.isCm;
-    if (tab === "host") return m.is_host;
-    if (tab === "cm") return m.isCm;
+    if (tab === "guest")  return !m.is_host && !m.isCm && !m.is_admin;
+    if (tab === "host")   return m.is_host;
+    if (tab === "cm")     return m.isCm;
+    if (tab === "admin")  return m.is_admin;
     return true;
   });
 
@@ -1668,9 +1717,10 @@ const MembersPanel = () => {
 
   const tabs = [
     ["all",   "All",    members.length],
-    ["guest", "Guests", members.filter((m) => !m.is_host && !m.isCm).length],
+    ["guest", "Guests", members.filter((m) => !m.is_host && !m.isCm && !m.is_admin).length],
     ["host",  "Hosts",  members.filter((m) => m.is_host).length],
     ["cm",    "CMs",    members.filter((m) => m.isCm).length],
+    ["admin", "Admins", members.filter((m) => m.is_admin).length],
   ];
 
   if (loading) return <p style={{ marginTop: 24 }}>Loading members…</p>;
@@ -1681,12 +1731,7 @@ const MembersPanel = () => {
 
       <div className="cm-admin-subtabs" style={{ marginBottom: 12 }}>
         {tabs.map(([key, label, count]) => (
-          <button
-            key={key}
-            type="button"
-            className={`admin-tab${tab === key ? " admin-tab-active" : ""}`}
-            onClick={() => setTab(key)}
-          >
+          <button key={key} type="button" className={`admin-tab${tab === key ? " admin-tab-active" : ""}`} onClick={() => setTab(key)}>
             {label}
             <span className="cm-admin-count" style={{ marginLeft: 4 }}>{count}</span>
           </button>
@@ -1694,13 +1739,7 @@ const MembersPanel = () => {
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <input
-          type="text"
-          className="support-search-input"
-          placeholder="Search name or email…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <input type="text" className="support-search-input" placeholder="Search name or email…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       {displayed.length === 0 ? (
@@ -1709,32 +1748,67 @@ const MembersPanel = () => {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-              <th style={thStyle("name")}    onClick={() => handleSort("name")}>Name{chevron("name")}</th>
-              <th style={thStyle("email")}   onClick={() => handleSort("email")}>Email{chevron("email")}</th>
-              <th style={thStyle("location")}onClick={() => handleSort("location")}>Location{chevron("location")}</th>
-              <th style={thStyle("joined")}  onClick={() => handleSort("joined")}>Member since{chevron("joined")}</th>
+              <th style={thStyle("name")}     onClick={() => handleSort("name")}>Name{chevron("name")}</th>
+              <th style={thStyle("email")}    onClick={() => handleSort("email")}>Email{chevron("email")}</th>
+              <th style={thStyle("location")} onClick={() => handleSort("location")}>Location{chevron("location")}</th>
+              <th style={thStyle("joined")}   onClick={() => handleSort("joined")}>Member since{chevron("joined")}</th>
               <th style={{ padding: "8px 12px", color: "#6b7280", fontWeight: 600 }}>Type</th>
+              <th style={{ padding: "8px 12px", color: "#6b7280", fontWeight: 600 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {displayed.map((m) => (
-              <tr key={m.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                <td style={{ padding: "10px 12px", fontWeight: 500 }}>{m.name}</td>
-                <td style={{ padding: "10px 12px", color: "#6b7280" }}>{m.email || "—"}</td>
-                <td style={{ padding: "10px 12px", color: "#6b7280" }}>{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
-                <td style={{ padding: "10px 12px", color: "#6b7280", whiteSpace: "nowrap" }}>
-                  {m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}
-                </td>
-                <td style={{ padding: "10px 12px" }}>
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {m.is_admin && <span className="pending-status-badge status-in_progress">Admin</span>}
-                    {m.is_host  && <span className="pending-status-badge status-accepted">Host</span>}
-                    {m.isCm     && <span className="pending-status-badge status-completed">CM</span>}
-                    {!m.is_host && !m.isCm && !m.is_admin && <span className="pending-status-badge status-pending">Guest</span>}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {displayed.map((m) => {
+              const isSuspended = !!m.suspended_at;
+              const isClosed = !!m.closed_at;
+              const isBusy = acting?.startsWith(m.id);
+              return (
+                <tr key={m.id} style={{ borderBottom: "1px solid #f3f4f6", opacity: isClosed ? 0.6 : 1 }}>
+                  <td style={{ padding: "10px 12px", fontWeight: 500 }}>{m.name}</td>
+                  <td style={{ padding: "10px 12px", color: "#6b7280" }}>{m.email || "—"}</td>
+                  <td style={{ padding: "10px 12px", color: "#6b7280" }}>{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
+                  <td style={{ padding: "10px 12px", color: "#6b7280", whiteSpace: "nowrap" }}>{m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}</td>
+                  <td style={{ padding: "10px 12px" }}>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {isClosed     && <span className="pending-status-badge status-disputed">Closed</span>}
+                      {isSuspended && !isClosed && <span className="pending-status-badge status-pending">Suspended</span>}
+                      {m.is_admin   && <span className="pending-status-badge status-in_progress">Admin</span>}
+                      {m.is_host    && <span className="pending-status-badge status-accepted">Host</span>}
+                      {m.isCm       && <span className="pending-status-badge status-completed">CM</span>}
+                      {!m.is_host && !m.isCm && !m.is_admin && !isSuspended && !isClosed && <span className="pending-status-badge status-pending">Guest</span>}
+                    </div>
+                  </td>
+                  <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
+                    {!m.is_admin && (
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {!isClosed && (
+                          <button
+                            type="button"
+                            className="btn btn-light btn-sm"
+                            style={{ fontSize: 12, padding: "3px 8px" }}
+                            disabled={isBusy}
+                            onClick={() => isSuspended ? unsuspendAccount(m) : suspendAccount(m)}
+                          >
+                            {isBusy && acting === `${m.id}:${isSuspended ? "unsuspend" : "suspend"}` ? "…" : isSuspended ? "Unsuspend" : "Suspend"}
+                          </button>
+                        )}
+                        {!isClosed && (
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-sm"
+                            style={{ fontSize: 12, padding: "3px 8px" }}
+                            disabled={isBusy}
+                            onClick={() => closeAccount(m)}
+                          >
+                            {isBusy && acting === `${m.id}:close` ? "…" : "Close Account"}
+                          </button>
+                        )}
+                        {isClosed && <span className="admin-dispute-label">Account closed</span>}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
