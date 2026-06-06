@@ -1531,12 +1531,14 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                           </div>
                           <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
                             <div>
-                              <p className="admin-dispute-label">Shared by</p>
+                              <p className="admin-dispute-label">Post shared by</p>
                               <p>{sharerName}</p>
-                              <p className="admin-dispute-email">{isHost ? "Host" : "Guest"}</p>
+                              {post?.role === "hosted" || post?.role === "attended" ? (
+                                <p className="admin-dispute-email">{isHost ? "Host" : "Guest"}</p>
+                              ) : null}
                             </div>
                             <div>
-                              <p className="admin-dispute-label">Reported by</p>
+                              <p className="admin-dispute-label">Post reported by</p>
                               <p>{getProfileName(r.reporter)}</p>
                             </div>
                           </div>
