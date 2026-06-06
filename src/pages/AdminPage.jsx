@@ -82,6 +82,7 @@ const NOTE_LABELS = {
   suspend: "Account Suspended",
   unsuspend: "Account Unsuspended",
   close: "Account Closed",
+  reopen: "Account Reopened",
 };
 
 const fmtDateTime = (iso) =>
@@ -1489,7 +1490,7 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
             const posterId = post?.poster_id;
             const isBusy = acting === r.id || acting === post?.id;
             return (
-              <article key={r.id} className="admin-dispute-card">
+              <article key={r.id} className="cm-admin-card">
                 <button
                   type="button"
                   className="cm-admin-card-summary"
@@ -1619,6 +1620,8 @@ const MembersPanel = ({ currentUser }) => {
   const [actionMode, setActionMode] = useState(null); // { memberId, action }
   const [noteText, setNoteText] = useState("");
   const [acting, setActing] = useState(null);
+  const [historyOpen, setHistoryOpen] = useState(new Set());
+  const toggleHistory = (id) => setHistoryOpen((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
 
   const adminName = currentUser?.fullName ||
     `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() || "Admin";
@@ -1656,10 +1659,18 @@ const MembersPanel = ({ currentUser }) => {
     try {
       const subject = action === "suspend"
         ? "Your SharedXP account has been temporarily suspended"
+        : action === "unsuspend"
+        ? "Your SharedXP account has been unsuspended"
+        : action === "reopen"
+        ? "Your SharedXP account has been reopened"
         : "Your SharedXP account has been closed";
       const message = action === "suspend"
         ? "Your SharedXP account has been temporarily suspended pending review.\n\nIf you believe this is a mistake, please contact us and we'll look into it right away."
-        : "Your SharedXP account has been closed.\n\nIf you believe this is a mistake, please contact us.";
+        : action === "unsuspend"
+        ? "Good news — your SharedXP account has been unsuspended. You can now log in as normal.\n\nIf you have any questions, please don't hesitate to contact us."
+        : action === "reopen"
+        ? "Good news — your SharedXP account has been reopened. You can now log in as normal.\n\nIf you have any questions, please don't hesitate to contact us."
+        : "Your SharedXP account has been closed.\n\nYou have a 30-day grace period to reverse this decision. Please contact us if you would like to reopen your account. If we do not hear from you within 30 days, your account and all personal data will be permanently deleted.";
       await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -1674,13 +1685,14 @@ const MembersPanel = ({ currentUser }) => {
     const note = noteText.trim();
     if (!note) { alert("Please enter a reason before proceeding."); return; }
     const action = actionMode.action;
-    if (action === "close" && !confirm(`Close ${member.name}'s account? This is not easily reversible.`)) return;
 
     setActing(member.id);
     const newNotes = appendNote(member.admin_notes, action, note, adminName);
     const update = { admin_notes: newNotes };
-    if (action === "suspend") update.suspended_at = new Date().toISOString();
-    if (action === "close")   { update.closed_at = new Date().toISOString(); update.suspended_at = new Date().toISOString(); }
+    if (action === "suspend")   update.suspended_at = new Date().toISOString();
+    if (action === "unsuspend") update.suspended_at = null;
+    if (action === "close")     { update.closed_at = new Date().toISOString(); update.suspended_at = new Date().toISOString(); }
+    if (action === "reopen")    { update.closed_at = null; update.suspended_at = null; }
 
     const { error } = await supabase.from("profiles").update(update).eq("id", member.id);
     if (!error) await sendAccountEmail(member, action);
@@ -1690,23 +1702,21 @@ const MembersPanel = ({ currentUser }) => {
     setActing(null);
   };
 
-  const unsuspendAccount = async (member) => {
-    if (!confirm(`Unsuspend ${member.name}'s account?`)) return;
-    setActing(member.id);
-    const newNotes = appendNote(member.admin_notes, "unsuspend", "Account unsuspended.", adminName);
-    const { error } = await supabase.from("profiles").update({ suspended_at: null, admin_notes: newNotes }).eq("id", member.id);
-    if (error) console.error("[members] unsuspend error:", error);
-    await loadMembers();
-    setActing(null);
-  };
+  const isDeleted          = (m) => m.full_name === "Deleted User";
+  const isSuspendedOrClosed = (m) => !!m.suspended_at && !isDeleted(m);
+  const isActive            = (m) => !m.suspended_at && !m.closed_at && !isDeleted(m);
 
   const tabFiltered = members.filter((m) => {
-    if (tab === "guest") return !m.is_host && !m.isCm && !m.is_admin;
-    if (tab === "host")  return m.is_host;
-    if (tab === "cm")    return m.isCm;
-    if (tab === "admin") return m.is_admin;
-    return true;
+    if (tab === "restricted") return isSuspendedOrClosed(m);
+    if (tab === "deleted")    return isDeleted(m);
+    if (tab === "guest")      return isActive(m) && !m.is_host && !m.isCm && !m.is_admin;
+    if (tab === "host")       return isActive(m) && m.is_host;
+    if (tab === "cm")         return isActive(m) && m.isCm;
+    if (tab === "admin")      return isActive(m) && m.is_admin;
+    return isActive(m); // "all" — active accounts only
   });
+
+  const isRestrictedOrDeletedTab = tab === "restricted" || tab === "deleted";
 
   const displayed = (
     search.trim()
@@ -1716,6 +1726,11 @@ const MembersPanel = ({ currentUser }) => {
         })
       : tabFiltered
   ).slice().sort((a, b) => {
+    if (isRestrictedOrDeletedTab) {
+      const aDate = a.closed_at ?? a.suspended_at ?? "";
+      const bDate = b.closed_at ?? b.suspended_at ?? "";
+      return bDate.localeCompare(aDate);
+    }
     let aVal = "", bVal = "";
     if (sortCol === "name")     { aVal = a.name; bVal = b.name; }
     if (sortCol === "email")    { aVal = a.email ?? ""; bVal = b.email ?? ""; }
@@ -1728,11 +1743,13 @@ const MembersPanel = ({ currentUser }) => {
   const chevron = (col) => sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : "";
 
   const tabs = [
-    ["all",   "All",    members.length],
-    ["guest", "Guests", members.filter((m) => !m.is_host && !m.isCm && !m.is_admin).length],
-    ["host",  "Hosts",  members.filter((m) => m.is_host).length],
-    ["cm",    "CMs",    members.filter((m) => m.isCm).length],
-    ["admin", "Admins", members.filter((m) => m.is_admin).length],
+    ["all",        "All",              members.filter(isActive).length],
+    ["guest",      "Guests",           members.filter((m) => isActive(m) && !m.is_host && !m.isCm && !m.is_admin).length],
+    ["host",       "Hosts",            members.filter((m) => isActive(m) && m.is_host).length],
+    ["cm",         "CMs",              members.filter((m) => isActive(m) && m.isCm).length],
+    ["admin",      "Admins",           members.filter((m) => isActive(m) && m.is_admin).length],
+    ["restricted", "Suspended/Closed", members.filter(isSuspendedOrClosed).length],
+    ["deleted",    "Deleted",          members.filter(isDeleted).length],
   ];
 
   if (loading) return <p style={{ marginTop: 24 }}>Loading members…</p>;
@@ -1759,6 +1776,14 @@ const MembersPanel = ({ currentUser }) => {
       ) : (
         <div className="members-table-wrapper">
         <table className="members-table">
+          <colgroup>
+            <col style={{width: "17%"}} />
+            <col style={{width: "20%"}} />
+            <col style={{width: "15%"}} />
+            <col style={{width: "13%"}} />
+            <col style={{width: "16%"}} />
+            <col style={{width: "19%"}} />
+          </colgroup>
           <thead>
             <tr>
               <th className={sortCol === "name" ? "members-th-active" : ""} onClick={() => handleSort("name")}>Name{chevron("name")}</th>
@@ -1773,10 +1798,18 @@ const MembersPanel = ({ currentUser }) => {
             {displayed.flatMap((m) => {
               const isSuspended = !!m.suspended_at;
               const isClosed = !!m.closed_at;
+              const isPermanentlyDeleted = isDeleted(m);
               const isBusy = acting === m.id;
               const isOpen = actionMode?.memberId === m.id;
+              const isHistoryOpen = historyOpen.has(m.id) && !isOpen;
+              const noteCount = parseNotes(m.admin_notes).length;
+              const graceDaysLeft = isClosed
+                ? Math.max(0, 30 - Math.floor((Date.now() - new Date(m.closed_at).getTime()) / (1000 * 60 * 60 * 24)))
+                : null;
+              const ACTION_LABELS = { suspend: "Reason for suspension", unsuspend: "Reason for unsuspending", close: "Reason for closing account", reopen: "Reason for reopening account" };
+              const ACTION_BTN = { suspend: "Save & Suspend", unsuspend: "Save & Unsuspend", close: "Save & Close", reopen: "Save & Reopen" };
               const rows = [
-                <tr key={m.id} className={`members-row${isOpen ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
+                <tr key={m.id} className={`members-row${isOpen || isHistoryOpen ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
                   <td data-label="Name">{m.name}</td>
                   <td data-label="Email">{m.email || "—"}</td>
                   <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
@@ -1792,28 +1825,46 @@ const MembersPanel = ({ currentUser }) => {
                     </div>
                   </td>
                   <td data-label="Actions">
-                    {!m.is_admin && (
+                    {!m.is_admin && !isPermanentlyDeleted && (
                       <div className="members-actions">
-                        {!isClosed && (
-                          isSuspended
-                            ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy} onClick={() => unsuspendAccount(m)}>
-                                {isBusy ? "…" : "Unsuspend"}
-                              </button>
-                            : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "suspend")}>
-                                Suspend
-                              </button>
-                        )}
-                        {!isClosed && (
-                          <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "close")}>
-                            Close
+                        <div className="members-actions-btns">
+                          {!isClosed && (
+                            isSuspended
+                              ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "unsuspend")}>Unsuspend</button>
+                              : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "suspend")}>Suspend</button>
+                          )}
+                          {!isClosed && (
+                            <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "close")}>Close</button>
+                          )}
+                          {isClosed && (
+                            <>
+                              <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "reopen")}>Reopen</button>
+                              <span className={`members-grace-tag${graceDaysLeft === 0 ? " members-grace-expired" : ""}`}>
+                                {graceDaysLeft > 0 ? `${graceDaysLeft}d left` : "Grace expired"}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {noteCount > 0 && (
+                          <button type="button" className="members-history-btn" onClick={() => toggleHistory(m.id)}>
+                            {isHistoryOpen ? "Hide history" : `${noteCount} note${noteCount !== 1 ? "s" : ""}`}
                           </button>
                         )}
-                        {isClosed && <span className="admin-dispute-label">Account closed</span>}
                       </div>
                     )}
                   </td>
                 </tr>,
               ];
+
+              if (isHistoryOpen) {
+                rows.push(
+                  <tr key={`${m.id}-history`} className="members-action-row">
+                    <td colSpan={6}>
+                      <NoteHistory adminNotes={m.admin_notes} adminName={adminName} />
+                    </td>
+                  </tr>
+                );
+              }
 
               if (isOpen) {
                 rows.push(
@@ -1821,17 +1872,17 @@ const MembersPanel = ({ currentUser }) => {
                     <td colSpan={6}>
                       <NoteHistory adminNotes={m.admin_notes} adminName={adminName} />
                       <p className="admin-dispute-label" style={{ marginTop: 12 }}>
-                        {actionMode.action === "suspend" ? "Reason for suspension" : "Reason for closing account"} (required)
+                        {ACTION_LABELS[actionMode.action]} (required)
                       </p>
                       {actionMode.action === "close" && (
-                        <p style={{ fontSize: 13, color: "#ef4444", margin: "4px 0 8px" }}>
-                          Warning: closing an account is not easily reversible and will notify the member.
+                        <p style={{ fontSize: 13, color: "#92400e", background: "#fef3c7", padding: "8px 12px", borderRadius: 6, margin: "6px 0 10px" }}>
+                          There is a 30-day grace period before the account is permanently closed and all personal data is deleted. The member will be notified and can contact you to reopen their account within this window.
                         </p>
                       )}
                       <textarea
                         className="cm-admin-notes"
                         rows={3}
-                        placeholder="Enter reason…"
+                        placeholder={actionMode.action === "close" ? "e.g. Customer requested, Terms violation…" : actionMode.action === "reopen" ? "e.g. Customer contacted us to reopen…" : actionMode.action === "unsuspend" ? "e.g. Review completed, no violation found…" : "e.g. Terms violation, Abusive behaviour…"}
                         value={noteText}
                         onChange={(e) => setNoteText(e.target.value)}
                         autoFocus
@@ -1844,7 +1895,7 @@ const MembersPanel = ({ currentUser }) => {
                           disabled={isBusy}
                           onClick={() => saveNoteAndAct(m)}
                         >
-                          {isBusy ? "…" : actionMode.action === "suspend" ? "Save & Suspend" : "Save & Close"}
+                          {isBusy ? "…" : ACTION_BTN[actionMode.action]}
                         </button>
                       </div>
                     </td>
