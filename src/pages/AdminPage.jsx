@@ -1550,7 +1550,7 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                               onClick={() => isSuspended ? unsuspend(post.id) : suspend(post)}
                               disabled={isBusy}
                             >
-                              {isBusy ? "…" : isSuspended ? "Unsuspend" : "Suspend"}
+                              {isBusy ? "…" : isSuspended ? "Unsuspend Post" : "Suspend Post"}
                             </button>
                             <button type="button" className="btn btn-danger" onClick={() => removePost(r.id, r.post_id, posterId, post)} disabled={isBusy}>
                               {isBusy ? "…" : "Remove Post"}
