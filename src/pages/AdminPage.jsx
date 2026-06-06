@@ -1391,6 +1391,7 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
   };
 
   const suspend = async (postId) => {
+    if (!confirm("Suspend this post? It will be hidden from the feed until you unsuspend it.")) return;
     setActing(postId);
     const { error } = await supabase
       .from("field_posts")
