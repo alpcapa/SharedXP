@@ -1759,6 +1759,14 @@ const MembersPanel = ({ currentUser }) => {
       ) : (
         <div className="members-table-wrapper">
         <table className="members-table">
+          <colgroup>
+            <col style={{width: "17%"}} />
+            <col style={{width: "20%"}} />
+            <col style={{width: "15%"}} />
+            <col style={{width: "13%"}} />
+            <col style={{width: "16%"}} />
+            <col style={{width: "19%"}} />
+          </colgroup>
           <thead>
             <tr>
               <th className={sortCol === "name" ? "members-th-active" : ""} onClick={() => handleSort("name")}>Name{chevron("name")}</th>

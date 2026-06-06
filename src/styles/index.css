@@ -5929,8 +5929,10 @@ body {
 .members-row td:first-child { font-weight: 500; color: #1a1a1a; }
 .members-row.members-row-open td { border-bottom: none; }
 .members-row.members-row-closed { opacity: 0.6; }
-.members-badges { display: flex; gap: 4px; flex-wrap: wrap; }
-.members-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.members-badges { display: flex; gap: 4px; flex-wrap: nowrap; }
+.members-badges .pending-status-badge { padding: 3px 8px; }
+.members-actions { display: flex; gap: 5px; flex-wrap: nowrap; align-items: center; }
+.members-actions .btn { padding: 4px 10px; font-size: 12px; }
 .members-action-row td {
   padding: 0 16px 16px;
   background: #f9fafb;
