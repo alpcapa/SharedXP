@@ -1766,7 +1766,7 @@ const MembersPanel = ({ currentUser }) => {
               <th className={sortCol === "location" ? "members-th-active" : ""} onClick={() => handleSort("location")}>Location{chevron("location")}</th>
               <th className={sortCol === "joined" ? "members-th-active" : ""} onClick={() => handleSort("joined")}>Member since{chevron("joined")}</th>
               <th>Type</th>
-              <th>Actions</th>
+              <th>Account Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -1805,7 +1805,7 @@ const MembersPanel = ({ currentUser }) => {
                         )}
                         {!isClosed && (
                           <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "close")}>
-                            Close Account
+                            Close
                           </button>
                         )}
                         {isClosed && <span className="admin-dispute-label">Account closed</span>}
@@ -1844,7 +1844,7 @@ const MembersPanel = ({ currentUser }) => {
                           disabled={isBusy}
                           onClick={() => saveNoteAndAct(m)}
                         >
-                          {isBusy ? "…" : actionMode.action === "suspend" ? "Save & Suspend" : "Save & Close Account"}
+                          {isBusy ? "…" : actionMode.action === "suspend" ? "Save & Suspend" : "Save & Close"}
                         </button>
                       </div>
                     </td>
