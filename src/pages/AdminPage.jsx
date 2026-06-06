@@ -1321,7 +1321,7 @@ const fmtDate = (iso) =>
           .format(new Date(iso)) : "—";
 
 // ── Field Post Reports Panel ──────────────────────────────────────────────────
-const FieldPostReportsPanel = ({ onCountChange }) => {
+const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(null);
@@ -1330,6 +1330,11 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
   const [emailSubjects, setEmailSubjects] = useState({});
   const [emailMessages, setEmailMessages] = useState({});
   const [emailFeedback, setEmailFeedback] = useState({});
+  const [postActionMode, setPostActionMode] = useState(null); // { reportId, postId, posterId, action, post }
+  const [postNoteText, setPostNoteText] = useState("");
+
+  const adminName = currentUser?.fullName ||
+    `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() || "Admin";
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -1338,7 +1343,7 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
       .select(`
         id, created_at, status, post_id, reporter_id,
         post:field_posts!post_id(
-          id, poster_id, caption, sport, city, country, photos, host_name, role, suspended_at,
+          id, poster_id, caption, sport, city, country, photos, host_name, role, suspended_at, admin_notes,
           poster:profiles!poster_id(full_name, first_name, last_name)
         ),
         reporter:profiles!reporter_id(full_name, first_name, last_name, email)
@@ -1418,26 +1423,31 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
     }
   };
 
-  const suspend = async (post) => {
-    if (!confirm("Suspend this post? It will be hidden from the feed until you unsuspend it.")) return;
-    setActing(post.id);
-    const { error } = await supabase
-      .from("field_posts")
-      .update({ suspended_at: new Date().toISOString() })
-      .eq("id", post.id);
-    if (!error) await sendModerationEmail(post.poster_id, "suspend", post);
-    else console.error("[reports] suspend error:", error);
-    await fetchReports();
-    setActing(null);
+  const openPostAction = (reportId, postId, posterId, action, post) => {
+    setPostActionMode({ reportId, postId, posterId, action, post });
+    setPostNoteText("");
   };
 
-  const unsuspend = async (postId) => {
+  const confirmPostAction = async () => {
+    if (!postActionMode) return;
+    const { postId, posterId, action, post } = postActionMode;
+    const note = postNoteText.trim() || `Post ${action}d`;
     setActing(postId);
-    const { error } = await supabase
-      .from("field_posts")
-      .update({ suspended_at: null })
-      .eq("id", postId);
-    if (error) console.error("[reports] unsuspend error:", error);
+    setPostActionMode(null);
+    setPostNoteText("");
+    if (action === "remove") {
+      await sendModerationEmail(posterId, "remove", post);
+      const { error } = await supabase.from("field_posts").delete().eq("id", postId);
+      if (error) console.error("[reports] remove post error:", error);
+    } else {
+      const newNotes = appendNote(post?.admin_notes, action, note, adminName);
+      const update = action === "suspend"
+        ? { suspended_at: new Date().toISOString(), admin_notes: newNotes }
+        : { suspended_at: null, admin_notes: newNotes };
+      const { error } = await supabase.from("field_posts").update(update).eq("id", postId);
+      if (!error && action === "suspend") await sendModerationEmail(posterId, "suspend", post);
+      else if (error) console.error(`[reports] ${action} error:`, error);
+    }
     await fetchReports();
     setActing(null);
   };
@@ -1449,16 +1459,6 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
       .update({ status: "dismissed" })
       .eq("id", reportId);
     if (error) console.error("[reports] dismiss error:", error);
-    await fetchReports();
-    setActing(null);
-  };
-
-  const removePost = async (reportId, postId, posterId, post) => {
-    if (!confirm("Remove this post? This cannot be undone.")) return;
-    setActing(reportId);
-    await sendModerationEmail(posterId, "remove", post);
-    const { error } = await supabase.from("field_posts").delete().eq("id", postId);
-    if (error) console.error("[reports] remove post error:", error);
     await fetchReports();
     setActing(null);
   };
@@ -1489,6 +1489,7 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
             const sharerName = isHost ? (post?.host_name || "—") : getProfileName(post?.poster);
             const posterId = post?.poster_id;
             const isBusy = acting === r.id || acting === post?.id;
+            const isPostActionOpen = postActionMode?.reportId === r.id;
             return (
               <article key={r.id} className="cm-admin-card">
                 <button
@@ -1497,20 +1498,20 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                   onClick={() => toggleExpanded(r.id)}
                   aria-expanded={isExpanded}
                 >
-                  <div className="cm-admin-card-summary-left">
+                  <div className="cm-admin-card-summary-top">
                     <strong>{post?.sport ?? "Unknown sport"}</strong>
-                    <span className="cm-admin-email">
-                      Experience hosted by {post?.host_name || "—"}
-                      {(post?.city || post?.country) ? ` / ${[post.city, post.country].filter(Boolean).join(", ")}` : ""}
-                      {` on ${fmtDate(r.created_at)}`}
-                    </span>
+                    <div className="cm-admin-card-summary-right">
+                      <span className={`pending-status-badge ${isSuspended ? "status-pending" : "status-disputed"}`}>
+                        {isSuspended ? "Suspended" : "Pending"}
+                      </span>
+                      <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+                    </div>
                   </div>
-                  <div className="cm-admin-card-summary-right">
-                    <span className={`pending-status-badge ${isSuspended ? "status-pending" : "status-disputed"}`}>
-                      {isSuspended ? "Suspended" : "Pending"}
-                    </span>
-                    <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
-                  </div>
+                  <span className="cm-admin-email">
+                    Experience hosted by {post?.host_name || "—"}
+                    {(post?.city || post?.country) ? ` / ${[post.city, post.country].filter(Boolean).join(", ")}` : ""}
+                    {` on ${fmtDate(r.created_at)}`}
+                  </span>
                 </button>
 
                 {isExpanded && (
@@ -1531,18 +1532,17 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                           </div>
                           <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
                             <div>
-                              <p className="admin-dispute-label">Shared by</p>
+                              <p className="admin-dispute-label">Post shared by</p>
                               <p>{sharerName}</p>
-                              <p className="admin-dispute-email">{isHost ? "Host" : "Guest"}</p>
                             </div>
                             <div>
-                              <p className="admin-dispute-label">Reported by</p>
+                              <p className="admin-dispute-label">Post reported by</p>
                               <p>{getProfileName(r.reporter)}</p>
                             </div>
                           </div>
                         </div>
 
-                        {!isEmailOpen ? (
+                        {!isEmailOpen && !isPostActionOpen && (
                           <div className="admin-dispute-actions">
                             <button type="button" className="btn btn-light" onClick={() => openEmail(r.id)} disabled={isBusy}>
                               Email
@@ -1550,19 +1550,24 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                             <button
                               type="button"
                               className="btn btn-light"
-                              onClick={() => isSuspended ? unsuspend(post.id) : suspend(post)}
+                              onClick={() => openPostAction(r.id, post.id, posterId, isSuspended ? "unsuspend" : "suspend", post)}
                               disabled={isBusy}
                             >
                               {isBusy ? "…" : isSuspended ? "Unsuspend Post" : "Suspend Post"}
                             </button>
-                            <button type="button" className="btn btn-danger" onClick={() => removePost(r.id, r.post_id, posterId, post)} disabled={isBusy}>
+                            <button type="button" className="btn btn-danger" onClick={() => openPostAction(r.id, post.id, posterId, "remove", post)} disabled={isBusy}>
                               {isBusy ? "…" : "Remove Post"}
+                            </button>
+                            <button type="button" className="btn btn-light" onClick={() => onViewMember?.(sharerName)} disabled={isBusy}>
+                              View Member
                             </button>
                             <button type="button" className="btn btn-light" onClick={() => dismiss(r.id)} disabled={isBusy}>
                               {isBusy ? "…" : "Dismiss"}
                             </button>
                           </div>
-                        ) : (
+                        )}
+
+                        {isEmailOpen && (
                           <div className="cm-admin-notes-row" style={{ marginTop: 12 }}>
                             <p className="admin-dispute-label">Email {sharerName}</p>
                             <input
@@ -1598,6 +1603,34 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                             </div>
                           </div>
                         )}
+
+                        {isPostActionOpen && (
+                          <div className="cm-admin-notes-row" style={{ marginTop: 12 }}>
+                            <p className="admin-dispute-label">
+                              {postActionMode.action === "remove" ? "Remove post" : postActionMode.action === "suspend" ? "Suspend post" : "Unsuspend post"} — note (optional)
+                            </p>
+                            <textarea
+                              className="cm-admin-notes"
+                              rows={3}
+                              placeholder="Reason or note…"
+                              value={postNoteText}
+                              onChange={(e) => setPostNoteText(e.target.value)}
+                              autoFocus
+                            />
+                            <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                              <button type="button" className="btn btn-light" onClick={() => setPostActionMode(null)}>Cancel</button>
+                              <button
+                                type="button"
+                                className={`btn ${postActionMode.action === "remove" ? "btn-danger" : "btn-primary"}`}
+                                onClick={confirmPostAction}
+                                disabled={!!acting}
+                              >
+                                {acting ? "…" : "Confirm"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                       </div>
                     </div>
                   </div>
@@ -1612,11 +1645,11 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
 };
 
 // ── Members Panel ─────────────────────────────────────────────────────────────
-const MembersPanel = ({ currentUser }) => {
+const MembersPanel = ({ currentUser, initialSearch = "" }) => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [sortCol, setSortCol] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
   const [actionMode, setActionMode] = useState(null); // { memberId, action }
@@ -1966,6 +1999,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "disputes");
+  const [memberSearch, setMemberSearch] = useState("");
   const [cmCounts, setCmCounts] = useState({ pendingApps: 0, pendingComms: 0 });
   const [unreadSupport, setUnreadSupport] = useState(0);
   const [pendingReports, setPendingReports] = useState(0);
@@ -2235,8 +2269,8 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
 
         {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} onCountChange={fetchCmCounts} />}
         {activeTab === "support" && <SupportPanel currentUser={currentUser} onRead={fetchUnreadSupport} />}
-        {activeTab === "reports" && <FieldPostReportsPanel onCountChange={setPendingReports} />}
-        {activeTab === "members" && <MembersPanel currentUser={currentUser} />}
+        {activeTab === "reports" && <FieldPostReportsPanel currentUser={currentUser} onCountChange={setPendingReports} onViewMember={(name) => { setMemberSearch(name); setActiveTab("members"); }} />}
+        {activeTab === "members" && <MembersPanel currentUser={currentUser} initialSearch={memberSearch} />}
         </main>
         <SiteFooter />
       </div>

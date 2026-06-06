@@ -225,6 +225,9 @@ export const reportFieldPost = async (postId, reporterId) => {
       console.error("[fieldPosts] report error:", error);
       return false;
     }
+    supabase.functions.invoke("booking-notify", {
+      body: { emailType: "field_post_reported", postId },
+    }).catch((e) => console.error("[fieldPosts] report alert error:", e));
     return true;
   } catch (e) {
     console.error("[fieldPosts] report exception:", e);
