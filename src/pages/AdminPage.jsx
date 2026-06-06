@@ -1619,7 +1619,7 @@ const MembersPanel = ({ currentUser }) => {
   const [sortDir, setSortDir] = useState("asc");
   const [actionMode, setActionMode] = useState(null); // { memberId, action }
   const [noteText, setNoteText] = useState("");
-  const [actionError, setActionError] = useState("");
+  const [blockMessage, setBlockMessage] = useState(null); // { memberId, message } | null
   const [acting, setActing] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(new Set());
   const toggleHistory = (id) => setHistoryOpen((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
@@ -1650,12 +1650,29 @@ const MembersPanel = ({ currentUser }) => {
     else { setSortCol(col); setSortDir("asc"); }
   };
 
-  const openAction = (memberId, action) => {
+  const openAction = async (memberId, action) => {
+    if (action === "suspend" || action === "close") {
+      setActing(memberId);
+      const { data: inProgress } = await supabase
+        .from("booking_requests")
+        .select("id")
+        .or(`requester_id.eq.${memberId},host_id.eq.${memberId}`)
+        .eq("status", "in_progress")
+        .limit(1);
+      setActing(null);
+      if (inProgress?.length > 0) {
+        setBlockMessage({
+          memberId,
+          message: "This member has an experience in progress. You cannot suspend or close their account right now. Come back later.",
+        });
+        return;
+      }
+    }
+    setBlockMessage(null);
     setActionMode({ memberId, action });
     setNoteText("");
-    setActionError("");
   };
-  const closeAction = () => { setActionMode(null); setNoteText(""); setActionError(""); };
+  const closeAction = () => { setActionMode(null); setNoteText(""); setBlockMessage(null); };
 
   const sendAccountEmail = async (member, action) => {
     try {
@@ -1688,31 +1705,15 @@ const MembersPanel = ({ currentUser }) => {
     if (!note) { alert("Please enter a reason before proceeding."); return; }
     const action = actionMode.action;
 
+    setActing(member.id);
     if (action === "suspend" || action === "close") {
-      setActing(member.id);
-      const { data: inProgress } = await supabase
-        .from("booking_requests")
-        .select("id")
-        .or(`requester_id.eq.${member.id},host_id.eq.${member.id}`)
-        .eq("status", "in_progress")
-        .limit(1);
-      if (inProgress?.length > 0) {
-        setActionError(
-          "This member has an experience in progress. You cannot suspend or close their account right now. Come back later."
-        );
-        setActing(null);
-        return;
-      }
       // Auto-cancel any bookings still in the booking phase
       await supabase
         .from("booking_requests")
         .update({ status: "cancelled" })
         .or(`requester_id.eq.${member.id},host_id.eq.${member.id}`)
         .in("status", ["pending", "accepted", "payment_pending"]);
-      setActing(null);
     }
-
-    setActing(member.id);
     const newNotes = appendNote(member.admin_notes, action, note, adminName);
     const update = { admin_notes: newNotes };
     if (action === "suspend")   update.suspended_at = new Date().toISOString();
@@ -1827,7 +1828,8 @@ const MembersPanel = ({ currentUser }) => {
               const isPermanentlyDeleted = isDeleted(m);
               const isBusy = acting === m.id;
               const isOpen = actionMode?.memberId === m.id;
-              const isHistoryOpen = historyOpen.has(m.id) && !isOpen;
+              const isBlocked = blockMessage?.memberId === m.id;
+              const isHistoryOpen = historyOpen.has(m.id) && !isOpen && !isBlocked;
               const noteCount = parseNotes(m.admin_notes).length;
               const graceDaysLeft = isClosed
                 ? Math.max(0, 30 - Math.floor((Date.now() - new Date(m.closed_at).getTime()) / (1000 * 60 * 60 * 24)))
@@ -1835,7 +1837,7 @@ const MembersPanel = ({ currentUser }) => {
               const ACTION_LABELS = { suspend: "Reason for suspension", unsuspend: "Reason for unsuspending", close: "Reason for closing account", reopen: "Reason for reopening account" };
               const ACTION_BTN = { suspend: "Save & Suspend", unsuspend: "Save & Unsuspend", close: "Save & Close", reopen: "Save & Reopen" };
               const rows = [
-                <tr key={m.id} className={`members-row${isOpen || isHistoryOpen ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
+                <tr key={m.id} className={`members-row${isOpen || isHistoryOpen || isBlocked ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
                   <td data-label="Name">{m.name}</td>
                   <td data-label="Email">{m.email || "—"}</td>
                   <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
@@ -1856,15 +1858,15 @@ const MembersPanel = ({ currentUser }) => {
                         <div className="members-actions-btns">
                           {!isClosed && (
                             isSuspended
-                              ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "unsuspend")}>Unsuspend</button>
-                              : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "suspend")}>Suspend</button>
+                              ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "unsuspend")}>Unsuspend</button>
+                              : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "suspend")}>{isBusy ? "…" : "Suspend"}</button>
                           )}
                           {!isClosed && (
-                            <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "close")}>Close</button>
+                            <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "close")}>{isBusy ? "…" : "Close"}</button>
                           )}
                           {isClosed && (
                             <>
-                              <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "reopen")}>Reopen</button>
+                              <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "reopen")}>Reopen</button>
                               <span className={`members-grace-tag${graceDaysLeft === 0 ? " members-grace-expired" : ""}`}>
                                 {graceDaysLeft > 0 ? `${graceDaysLeft}d left` : "Grace expired"}
                               </span>
@@ -1892,6 +1894,21 @@ const MembersPanel = ({ currentUser }) => {
                 );
               }
 
+              if (isBlocked) {
+                rows.push(
+                  <tr key={`${m.id}-block`} className="members-action-row">
+                    <td colSpan={6}>
+                      <p style={{ fontSize: 13, color: "#b91c1c", background: "#fef2f2", padding: "8px 12px", borderRadius: 6, margin: 0 }}>
+                        {blockMessage.message}
+                      </p>
+                      <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                        <button type="button" className="btn btn-light" onClick={() => setBlockMessage(null)}>Dismiss</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              }
+
               if (isOpen) {
                 rows.push(
                   <tr key={`${m.id}-action`} className="members-action-row">
@@ -1913,29 +1930,17 @@ const MembersPanel = ({ currentUser }) => {
                         onChange={(e) => setNoteText(e.target.value)}
                         autoFocus
                       />
-                      {actionError && actionMode?.memberId === m.id && (
-                        <p style={{ fontSize: 13, color: "#b91c1c", background: "#fef2f2", padding: "8px 12px", borderRadius: 6, margin: "10px 0 0" }}>
-                          {actionError}
-                        </p>
-                      )}
-                      {!actionError && (
-                        <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
-                          <button type="button" className="btn btn-light" onClick={closeAction}>Cancel</button>
-                          <button
-                            type="button"
-                            className={actionMode.action === "close" ? "btn btn-danger" : "btn btn-light"}
-                            disabled={isBusy}
-                            onClick={() => saveNoteAndAct(m)}
-                          >
-                            {isBusy ? "…" : ACTION_BTN[actionMode.action]}
-                          </button>
-                        </div>
-                      )}
-                      {actionError && (
-                        <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
-                          <button type="button" className="btn btn-light" onClick={closeAction}>Dismiss</button>
-                        </div>
-                      )}
+                      <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                        <button type="button" className="btn btn-light" onClick={closeAction}>Cancel</button>
+                        <button
+                          type="button"
+                          className={actionMode.action === "close" ? "btn btn-danger" : "btn btn-light"}
+                          disabled={isBusy}
+                          onClick={() => saveNoteAndAct(m)}
+                        >
+                          {isBusy ? "…" : ACTION_BTN[actionMode.action]}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
