@@ -13,7 +13,7 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
         <main className="middle-section simple-page">
           <h1 className="admin-title">Terms &amp; Conditions</h1>
           <article className="legal-page">
-            <p className="legal-last-updated">Last updated: May 18, 2026</p>
+            <p className="legal-last-updated">Last updated: June 6, 2026</p>
             <p>
               These Terms &amp; Conditions (&quot;Terms&quot;) govern your access to and use of the SharedXP platform
               (the &quot;Platform&quot;), including the website, product features, and related services. By using
@@ -240,11 +240,16 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
               </p>
               <ul>
                 <li>
-                  You retain ownership of the content you submit (such as photos, profile data, and reviews), but
-                  grant SharedXP a non-exclusive right to display and process that content for platform operation.
+                  You retain ownership of the content you submit (such as photos, profile data, reviews, and
+                  Field posts), but grant SharedXP a non-exclusive right to display and process that content
+                  for platform operation.
                 </li>
                 <li>You must have rights to all content you upload and must not infringe third-party rights.</li>
-                <li>Reviews must be honest and not defamatory, misleading, or abusive.</li>
+                <li>Reviews and Field posts must be honest and not defamatory, misleading, or abusive.</li>
+                <li>
+                  Other users may report content they believe is inappropriate. SharedXP will review flagged
+                  content and may suspend, remove, or take no action depending on the outcome of that review.
+                </li>
               </ul>
             </section>
 
@@ -253,17 +258,35 @@ const TermsAndConditionsPage = ({ currentUser, onLogout }) => {
               <ul>
                 <li>Impersonation, identity fraud, or false profile information.</li>
                 <li>Harassment, hate speech, threats, or violent behavior.</li>
-                <li>Posting illegal, infringing, or malicious content.</li>
+                <li>Posting illegal, infringing, malicious, or inappropriate content.</li>
                 <li>Attempting to disrupt, reverse engineer, or misuse platform systems.</li>
+                <li>Submitting false or vexatious reports about other users' content.</li>
               </ul>
             </section>
 
             <section className="legal-section">
               <h2>12. Suspension and Termination</h2>
               <p>
-                SharedXP may suspend or terminate access to the Platform for violations of these Terms, suspected
-                fraud, safety concerns, legal requirements, or operational reasons. You may stop using the Platform at
-                any time.
+                SharedXP may take the following account actions for violations of these Terms, suspected fraud,
+                safety concerns, legal requirements, or operational reasons:
+              </p>
+              <ul>
+                <li>
+                  <strong>Temporary suspension:</strong> your account is restricted pending review. You will
+                  receive an email notification. The suspension may be lifted once the review is complete.
+                </li>
+                <li>
+                  <strong>Account closure:</strong> your account is closed and enters a 30-day grace period.
+                  You will receive an email notification and may contact support to reopen your account within
+                  that window. After 30 days, your account and all associated personal data are permanently
+                  deleted in accordance with applicable law.
+                </li>
+              </ul>
+              <p>
+                You may also request account closure at any time by contacting our{" "}
+                <Link to="/contact">support team</Link>. The same 30-day grace period applies to
+                self-requested closures. To appeal a suspension or closure, please{" "}
+                <Link to="/contact">contact us</Link>.
               </p>
             </section>
 

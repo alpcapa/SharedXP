@@ -13,7 +13,7 @@ const SafetyAndRiskPolicyPage = ({ currentUser, onLogout }) => {
         <main className="middle-section simple-page">
           <h1 className="admin-title">Safety and Risk Policy</h1>
           <article className="legal-page">
-            <p className="legal-last-updated">Last updated: May 18, 2026</p>
+            <p className="legal-last-updated">Last updated: June 6, 2026</p>
             <p>
               SharedXP promotes safer experiences by defining minimum safety expectations for hosts and participants.
               Because activities may involve physical risk, users remain responsible for informed participation,
@@ -78,8 +78,28 @@ const SafetyAndRiskPolicyPage = ({ currentUser, onLogout }) => {
             <section className="legal-section">
               <h2>7. Review and Enforcement</h2>
               <p>
-                SharedXP may review reports, request additional information, and apply measures including warnings,
-                temporary restrictions, content removal, or account suspension/termination for material safety breaches.
+                SharedXP may review reports, request additional information, and apply proportional measures
+                depending on the nature and severity of the issue:
+              </p>
+              <ul>
+                <li>
+                  <strong>Content moderation:</strong> Field posts reported as inappropriate may be temporarily
+                  suspended pending review or permanently removed. The poster is notified of the action taken.
+                </li>
+                <li>
+                  <strong>Account suspension:</strong> accounts may be temporarily suspended where a safety or
+                  conduct concern requires investigation. The affected user is notified by email and may contact
+                  support to appeal.
+                </li>
+                <li>
+                  <strong>Account closure:</strong> accounts may be permanently closed for serious or repeated
+                  violations. A 30-day grace period applies before account data is deleted. The affected user
+                  is notified by email and may contact support to appeal within that window.
+                </li>
+              </ul>
+              <p>
+                SharedXP reserves the right to take immediate protective action without prior notice where there
+                is an urgent safety or fraud concern.
               </p>
             </section>
 

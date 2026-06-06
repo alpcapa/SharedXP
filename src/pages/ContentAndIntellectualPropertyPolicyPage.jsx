@@ -12,7 +12,7 @@ const ContentAndIntellectualPropertyPolicyPage = ({ currentUser, onLogout }) => 
         <main className="middle-section simple-page">
           <h1 className="admin-title">Content and Intellectual Property Policy</h1>
           <article className="legal-page">
-            <p className="legal-last-updated">Last updated: May 18, 2026</p>
+            <p className="legal-last-updated">Last updated: June 6, 2026</p>
             <p>
               This policy explains how SharedXP handles user-generated content, platform intellectual property, and
               notice-and-action requests. It is designed to align with EU transparency and rights-protection principles.
@@ -22,7 +22,8 @@ const ContentAndIntellectualPropertyPolicyPage = ({ currentUser, onLogout }) => 
               <h2>1. Scope and Content Types</h2>
               <p>
                 This policy applies to profile text, photos, listings, messages submitted through platform channels,
-                reviews, and other content published or transmitted through SharedXP features.
+                reviews, Field community posts (captions and images shared to The Field experience feed), and other
+                content published or transmitted through SharedXP features.
               </p>
             </section>
 
@@ -63,19 +64,23 @@ const ContentAndIntellectualPropertyPolicyPage = ({ currentUser, onLogout }) => 
             </section>
 
             <section className="legal-section">
-              <h2>6. Notice-and-Action Process</h2>
+              <h2>6. Reporting Inappropriate Content</h2>
               <p>
-                Rights holders may report allegedly infringing content through SharedXP support/legal channels. Notices
-                should include identification of the protected work, the location of allegedly infringing content,
-                supporting rationale, and contact details for follow-up.
+                Users can report Field posts they believe are inappropriate directly within the app using the Report
+                button on each post. Reports are reviewed by the SharedXP moderation team. For intellectual property
+                or legal infringement notices, rights holders may also report through SharedXP support/legal channels.
+                IP notices should include identification of the protected work, the location of allegedly infringing
+                content, supporting rationale, and contact details for follow-up.
               </p>
             </section>
 
             <section className="legal-section">
               <h2>7. Review and Interim Measures</h2>
               <p>
-                SharedXP may remove, disable access to, label, or restrict reported content during review. We may request
-                additional information from reporters and impacted users to assess legitimacy and proportional action.
+                SharedXP may remove, disable access to, label, suspend, or restrict reported content during review.
+                Field posts may be temporarily suspended pending review or permanently removed following a moderation
+                decision. We may request additional information from reporters and impacted users to assess legitimacy
+                and proportional action.
               </p>
             </section>
 
