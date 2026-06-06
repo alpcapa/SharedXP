@@ -13,7 +13,7 @@ export const useHosts = ({ sports, excludeId } = {}) => {
       .from("host_profiles")
       .select(
         `pause_hosting, city, country,
-         profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday),
+         profile:profiles!user_id(id, full_name, first_name, last_name, photo_url, gender, birthday, suspended_at, closed_at),
          host_sports(sport, pricing, pricing_currency, level, description, about, equipment_available, paused, cancellation_policy)`
       )
       .eq("pause_hosting", false)
@@ -39,6 +39,7 @@ export const useHosts = ({ sports, excludeId } = {}) => {
           .map((hp) => {
             const profile = hp.profile;
             if (!profile) return null;
+            if (profile.suspended_at || profile.closed_at) return null;
             if (excludeId && profile.id === excludeId) return null;
 
             const activeSports = (hp.host_sports || []).filter((s) => !s.paused);

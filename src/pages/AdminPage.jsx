@@ -1619,6 +1619,7 @@ const MembersPanel = ({ currentUser }) => {
   const [sortDir, setSortDir] = useState("asc");
   const [actionMode, setActionMode] = useState(null); // { memberId, action }
   const [noteText, setNoteText] = useState("");
+  const [actionError, setActionError] = useState("");
   const [acting, setActing] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(new Set());
   const toggleHistory = (id) => setHistoryOpen((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
@@ -1652,8 +1653,9 @@ const MembersPanel = ({ currentUser }) => {
   const openAction = (memberId, action) => {
     setActionMode({ memberId, action });
     setNoteText("");
+    setActionError("");
   };
-  const closeAction = () => { setActionMode(null); setNoteText(""); };
+  const closeAction = () => { setActionMode(null); setNoteText(""); setActionError(""); };
 
   const sendAccountEmail = async (member, action) => {
     try {
@@ -1685,6 +1687,30 @@ const MembersPanel = ({ currentUser }) => {
     const note = noteText.trim();
     if (!note) { alert("Please enter a reason before proceeding."); return; }
     const action = actionMode.action;
+
+    if (action === "suspend" || action === "close") {
+      setActing(member.id);
+      const { data: inProgress } = await supabase
+        .from("booking_requests")
+        .select("id")
+        .or(`requester_id.eq.${member.id},host_id.eq.${member.id}`)
+        .eq("status", "in_progress")
+        .limit(1);
+      if (inProgress?.length > 0) {
+        setActionError(
+          "This member has an experience in progress. You cannot suspend or close their account right now. Come back later."
+        );
+        setActing(null);
+        return;
+      }
+      // Auto-cancel any bookings still in the booking phase
+      await supabase
+        .from("booking_requests")
+        .update({ status: "cancelled" })
+        .or(`requester_id.eq.${member.id},host_id.eq.${member.id}`)
+        .in("status", ["pending", "accepted", "payment_pending"]);
+      setActing(null);
+    }
 
     setActing(member.id);
     const newNotes = appendNote(member.admin_notes, action, note, adminName);
@@ -1887,17 +1913,29 @@ const MembersPanel = ({ currentUser }) => {
                         onChange={(e) => setNoteText(e.target.value)}
                         autoFocus
                       />
-                      <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
-                        <button type="button" className="btn btn-light" onClick={closeAction}>Cancel</button>
-                        <button
-                          type="button"
-                          className={actionMode.action === "close" ? "btn btn-danger" : "btn btn-light"}
-                          disabled={isBusy}
-                          onClick={() => saveNoteAndAct(m)}
-                        >
-                          {isBusy ? "…" : ACTION_BTN[actionMode.action]}
-                        </button>
-                      </div>
+                      {actionError && actionMode?.memberId === m.id && (
+                        <p style={{ fontSize: 13, color: "#b91c1c", background: "#fef2f2", padding: "8px 12px", borderRadius: 6, margin: "10px 0 0" }}>
+                          {actionError}
+                        </p>
+                      )}
+                      {!actionError && (
+                        <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                          <button type="button" className="btn btn-light" onClick={closeAction}>Cancel</button>
+                          <button
+                            type="button"
+                            className={actionMode.action === "close" ? "btn btn-danger" : "btn btn-light"}
+                            disabled={isBusy}
+                            onClick={() => saveNoteAndAct(m)}
+                          >
+                            {isBusy ? "…" : ACTION_BTN[actionMode.action]}
+                          </button>
+                        </div>
+                      )}
+                      {actionError && (
+                        <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                          <button type="button" className="btn btn-light" onClick={closeAction}>Dismiss</button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
