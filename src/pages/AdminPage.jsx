@@ -1321,7 +1321,7 @@ const fmtDate = (iso) =>
           .format(new Date(iso)) : "—";
 
 // ── Field Post Reports Panel ──────────────────────────────────────────────────
-const FieldPostReportsPanel = ({ currentUser, onCountChange }) => {
+const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(null);
@@ -1332,9 +1332,6 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange }) => {
   const [emailFeedback, setEmailFeedback] = useState({});
   const [postActionMode, setPostActionMode] = useState(null); // { reportId, postId, posterId, action, post }
   const [postNoteText, setPostNoteText] = useState("");
-  const [userActionMode, setUserActionMode] = useState(null); // { reportId, posterId, posterProfile, action }
-  const [userNoteText, setUserNoteText] = useState("");
-  const [userActing, setUserActing] = useState(null);
 
   const adminName = currentUser?.fullName ||
     `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() || "Admin";
@@ -1347,7 +1344,7 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange }) => {
         id, created_at, status, post_id, reporter_id,
         post:field_posts!post_id(
           id, poster_id, caption, sport, city, country, photos, host_name, role, suspended_at, admin_notes,
-          poster:profiles!poster_id(full_name, first_name, last_name, email, suspended_at, closed_at, admin_notes)
+          poster:profiles!poster_id(full_name, first_name, last_name)
         ),
         reporter:profiles!reporter_id(full_name, first_name, last_name, email)
       `)
@@ -1466,55 +1463,6 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange }) => {
     setActing(null);
   };
 
-  const openUserAction = (reportId, posterId, posterProfile, action) => {
-    setUserActionMode({ reportId, posterId, posterProfile, action });
-    setUserNoteText("");
-  };
-
-  const confirmUserAction = async () => {
-    if (!userActionMode) return;
-    const { posterId, posterProfile, action } = userActionMode;
-    const note = userNoteText.trim();
-    if (!note) { alert("Please enter a reason before proceeding."); return; }
-    setUserActing(posterId);
-    setUserActionMode(null);
-    setUserNoteText("");
-    if (action === "suspend" || action === "close") {
-      await supabase
-        .from("booking_requests")
-        .update({ status: "cancelled" })
-        .or(`requester_id.eq.${posterId},host_id.eq.${posterId}`)
-        .in("status", ["pending", "accepted", "payment_pending"]);
-    }
-    const newNotes = appendNote(posterProfile?.admin_notes, action, note, adminName);
-    const update = { admin_notes: newNotes };
-    if (action === "suspend") update.suspended_at = new Date().toISOString();
-    if (action === "unsuspend") update.suspended_at = null;
-    if (action === "close") { update.closed_at = new Date().toISOString(); update.suspended_at = new Date().toISOString(); }
-    const { error } = await supabase.from("profiles").update(update).eq("id", posterId);
-    if (!error) {
-      const subject = action === "suspend"
-        ? "Your SharedXP account has been temporarily suspended"
-        : action === "unsuspend"
-        ? "Your SharedXP account has been unsuspended"
-        : "Your SharedXP account has been closed";
-      const message = action === "suspend"
-        ? "Your SharedXP account has been temporarily suspended pending review.\n\nIf you believe this is a mistake, please contact us and we'll look into it right away."
-        : action === "unsuspend"
-        ? "Good news — your SharedXP account has been unsuspended. You can now log in as normal.\n\nIf you have any questions, please don't hesitate to contact us."
-        : "Your SharedXP account has been closed.\n\nYou have a 30-day grace period to reverse this decision. Please contact us if you would like to reopen your account.";
-      fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ emailType: "cm_admin_message", userId: posterId, subject, message }),
-      }).catch((e) => console.error("[reports] user email error:", e));
-    } else {
-      console.error("[reports] user action error:", error);
-    }
-    await fetchReports();
-    setUserActing(null);
-  };
-
   const getProfileName = (profile) => {
     if (!profile) return "Anonymous";
     return profile.full_name ||
@@ -1540,11 +1488,8 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange }) => {
             const isSuspended = !!post?.suspended_at;
             const sharerName = isHost ? (post?.host_name || "—") : getProfileName(post?.poster);
             const posterId = post?.poster_id;
-            const isBusy = acting === r.id || acting === post?.id || userActing === posterId;
-            const isPosterSuspended = !!post?.poster?.suspended_at;
-            const isPosterClosed = !!post?.poster?.closed_at;
+            const isBusy = acting === r.id || acting === post?.id;
             const isPostActionOpen = postActionMode?.reportId === r.id;
-            const isUserActionOpen = userActionMode?.reportId === r.id;
             return (
               <article key={r.id} className="cm-admin-card">
                 <button
@@ -1597,45 +1542,29 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange }) => {
                           </div>
                         </div>
 
-                        {!isEmailOpen && !isPostActionOpen && !isUserActionOpen && (
-                          <>
-                            <div className="admin-dispute-actions">
-                              <button type="button" className="btn btn-light" onClick={() => openEmail(r.id)} disabled={isBusy}>
-                                Email
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-light"
-                                onClick={() => openPostAction(r.id, post.id, posterId, isSuspended ? "unsuspend" : "suspend", post)}
-                                disabled={isBusy}
-                              >
-                                {isBusy ? "…" : isSuspended ? "Unsuspend Post" : "Suspend Post"}
-                              </button>
-                              <button type="button" className="btn btn-danger" onClick={() => openPostAction(r.id, post.id, posterId, "remove", post)} disabled={isBusy}>
-                                {isBusy ? "…" : "Remove Post"}
-                              </button>
-                              <button type="button" className="btn btn-light" onClick={() => dismiss(r.id)} disabled={isBusy}>
-                                {isBusy ? "…" : "Dismiss"}
-                              </button>
-                            </div>
-                            <div className="admin-dispute-actions" style={{ borderTop: "1px solid #e8e9e4", paddingTop: 10, marginTop: 4 }}>
-                              {!isPosterSuspended && (
-                                <button type="button" className="btn btn-light" onClick={() => openUserAction(r.id, posterId, post.poster, "suspend")} disabled={isBusy}>
-                                  Suspend User
-                                </button>
-                              )}
-                              {isPosterSuspended && !isPosterClosed && (
-                                <button type="button" className="btn btn-light" onClick={() => openUserAction(r.id, posterId, post.poster, "unsuspend")} disabled={isBusy}>
-                                  Unsuspend User
-                                </button>
-                              )}
-                              {!isPosterClosed && (
-                                <button type="button" className="btn btn-danger" onClick={() => openUserAction(r.id, posterId, post.poster, "close")} disabled={isBusy}>
-                                  Close User
-                                </button>
-                              )}
-                            </div>
-                          </>
+                        {!isEmailOpen && !isPostActionOpen && (
+                          <div className="admin-dispute-actions">
+                            <button type="button" className="btn btn-light" onClick={() => openEmail(r.id)} disabled={isBusy}>
+                              Email
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-light"
+                              onClick={() => openPostAction(r.id, post.id, posterId, isSuspended ? "unsuspend" : "suspend", post)}
+                              disabled={isBusy}
+                            >
+                              {isBusy ? "…" : isSuspended ? "Unsuspend Post" : "Suspend Post"}
+                            </button>
+                            <button type="button" className="btn btn-danger" onClick={() => openPostAction(r.id, post.id, posterId, "remove", post)} disabled={isBusy}>
+                              {isBusy ? "…" : "Remove Post"}
+                            </button>
+                            <button type="button" className="btn btn-light" onClick={() => onViewMember?.(sharerName)} disabled={isBusy}>
+                              View Member
+                            </button>
+                            <button type="button" className="btn btn-light" onClick={() => dismiss(r.id)} disabled={isBusy}>
+                              {isBusy ? "…" : "Dismiss"}
+                            </button>
+                          </div>
                         )}
 
                         {isEmailOpen && (
@@ -1702,32 +1631,6 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange }) => {
                           </div>
                         )}
 
-                        {isUserActionOpen && (
-                          <div className="cm-admin-notes-row" style={{ marginTop: 12 }}>
-                            <p className="admin-dispute-label">
-                              {userActionMode.action === "suspend" ? "Suspend" : userActionMode.action === "unsuspend" ? "Unsuspend" : "Close"} {sharerName} — reason (required)
-                            </p>
-                            <textarea
-                              className="cm-admin-notes"
-                              rows={3}
-                              placeholder="Reason…"
-                              value={userNoteText}
-                              onChange={(e) => setUserNoteText(e.target.value)}
-                              autoFocus
-                            />
-                            <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
-                              <button type="button" className="btn btn-light" onClick={() => setUserActionMode(null)}>Cancel</button>
-                              <button
-                                type="button"
-                                className={`btn ${userActionMode.action === "close" ? "btn-danger" : "btn-primary"}`}
-                                onClick={confirmUserAction}
-                                disabled={!!userActing}
-                              >
-                                {userActing ? "…" : "Confirm"}
-                              </button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1742,11 +1645,11 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange }) => {
 };
 
 // ── Members Panel ─────────────────────────────────────────────────────────────
-const MembersPanel = ({ currentUser }) => {
+const MembersPanel = ({ currentUser, initialSearch = "" }) => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [sortCol, setSortCol] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
   const [actionMode, setActionMode] = useState(null); // { memberId, action }
@@ -2096,6 +1999,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "disputes");
+  const [memberSearch, setMemberSearch] = useState("");
   const [cmCounts, setCmCounts] = useState({ pendingApps: 0, pendingComms: 0 });
   const [unreadSupport, setUnreadSupport] = useState(0);
   const [pendingReports, setPendingReports] = useState(0);
@@ -2365,8 +2269,8 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
 
         {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} onCountChange={fetchCmCounts} />}
         {activeTab === "support" && <SupportPanel currentUser={currentUser} onRead={fetchUnreadSupport} />}
-        {activeTab === "reports" && <FieldPostReportsPanel currentUser={currentUser} onCountChange={setPendingReports} />}
-        {activeTab === "members" && <MembersPanel currentUser={currentUser} />}
+        {activeTab === "reports" && <FieldPostReportsPanel currentUser={currentUser} onCountChange={setPendingReports} onViewMember={(name) => { setMemberSearch(name); setActiveTab("members"); }} />}
+        {activeTab === "members" && <MembersPanel currentUser={currentUser} initialSearch={memberSearch} />}
         </main>
         <SiteFooter />
       </div>
