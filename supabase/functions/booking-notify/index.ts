@@ -828,7 +828,7 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, supportMessageId, subject, message, replyTo, repliedBy } = body as {
+  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, supportMessageId, postId, subject, message, replyTo, repliedBy } = body as {
     emailType: string;
     bookingRequestId?: string;
     disputeId?: string;
@@ -838,6 +838,7 @@ serve(async (req: Request): Promise<Response> => {
     inviteCode?: string;
     commissionId?: string;
     supportMessageId?: string;
+    postId?: string;
     subject?: string;
     message?: string;
     replyTo?: string;
@@ -961,6 +962,44 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
   // ── End CM emails ──────────────────────────────────────────────────────────
+
+  // ── Field post reported — alert CS ───────────────────────────────────────
+  if (emailType === "field_post_reported") {
+    if (!postId) {
+      return new Response(JSON.stringify({ error: "postId required" }), {
+        status: 400,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+    const { data: post } = await db
+      .from("field_posts")
+      .select("sport, host_name, city, country, caption")
+      .eq("id", postId)
+      .maybeSingle();
+    const sport = post?.sport || "Unknown sport";
+    const posterName = post?.host_name || "Unknown";
+    const location = [post?.city, post?.country].filter(Boolean).join(", ") || "Unknown location";
+    const caption = post?.caption ? String(post.caption).substring(0, 300) : "—";
+    const subj = `Field post reported — ${sport}`;
+    const html = emailHtml(
+      subj,
+      [
+        "A field post has been flagged as inappropriate and requires review.",
+        `<strong>Sport:</strong> ${sport}`,
+        `<strong>Posted by:</strong> ${posterName}`,
+        `<strong>Location:</strong> ${location}`,
+        `<strong>Caption:</strong> &ldquo;${caption}&rdquo;`,
+      ],
+      `${APP_URL}/admin?tab=reports`,
+      "Review in Admin Panel",
+    );
+    await sendEmail(CS_EMAIL, subj, html);
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
+  // ── End field post reported ────────────────────────────────────────────────
 
   // ── Support reply (no booking data needed) ────────────────────────────────
   if (emailType === "support_reply") {
