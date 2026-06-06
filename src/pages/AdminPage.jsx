@@ -1529,7 +1529,7 @@ const FieldPostReportsPanel = ({ onCountChange }) => {
                             <p className="admin-dispute-label">Caption</p>
                             <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
                           </div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                          <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
                             <div>
                               <p className="admin-dispute-label">Shared by</p>
                               <p>{sharerName}</p>
