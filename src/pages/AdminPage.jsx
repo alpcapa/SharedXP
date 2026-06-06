@@ -1725,10 +1725,17 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
         : action === "reopen"
         ? "Good news — your SharedXP account has been reopened. You can now log in as normal.\n\nIf you have any questions, please don't hesitate to contact us."
         : "Your SharedXP account has been closed.\n\nYou have a 30-day grace period to reverse this decision. Please contact us if you would like to reopen your account. If we do not hear from you within 30 days, your account and all personal data will be permanently deleted.";
+      const useSupportCta = action === "suspend" || action === "close";
       await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ emailType: "cm_admin_message", userId: member.id, subject, message }),
+        body: JSON.stringify({
+          emailType: "cm_admin_message",
+          userId: member.id,
+          subject,
+          message,
+          ...(useSupportCta && { ctaLabel: "Go to Support", ctaUrl: `${window.location.origin}/contact` }),
+        }),
       });
     } catch (e) {
       console.error("[members] account email error:", e);
