@@ -303,6 +303,11 @@ let profile = profileResult.data?.[0] ?? null;
 let languagesData = languagesResult.data || [];
 let sportsData = sportsResult.data || [];
 
+if (profile && !profile.is_admin && (profile.suspended_at || profile.closed_at)) {
+  await supabase.auth.signOut();
+  return null;
+}
+
 if (!profile) {
   const meta = authUser.user_metadata?.sharedxp_pending_profile;
   if (meta) {

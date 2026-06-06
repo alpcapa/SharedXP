@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import RolePill from "../components/RolePill";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, toggleFieldPostLike } from "../utils/fieldPosts";
+import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, reportFieldPost, toggleFieldPostLike } from "../utils/fieldPosts";
 
 const PAGE_SIZE = 12;
 
@@ -358,6 +358,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
                            className="field-post-action-link"
                            onClick={() => {
                              if (window.confirm("Report this post as inappropriate?\n\nWe will review it and take action if needed.")) {
+                               reportFieldPost(post.id, currentUser?.id);
                                window.alert("Thank you — your report has been received.");
                              }
                            }}

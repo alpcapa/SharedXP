@@ -7,7 +7,7 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { loadMajorEventsPage } from "../lib/events";
 import { supabase } from "../lib/supabase";
-import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, toggleFieldPostLike } from "../utils/fieldPosts";
+import { deleteFieldPost, fetchFieldPosts, fetchLikedPostIds, reportFieldPost, toggleFieldPostLike } from "../utils/fieldPosts";
 import { getAgeFromBirthday } from "../utils/profileAge";
 
 
@@ -666,6 +666,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                               className="field-post-action-link"
                               onClick={() => {
                                 if (window.confirm("Report this post as inappropriate?\n\nWe will review it and take action if needed.")) {
+                                  reportFieldPost(post.id, currentUser?.id);
                                   window.alert("Thank you — your report has been received.");
                                 }
                               }}

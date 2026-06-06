@@ -62,9 +62,11 @@ const mergeAdminNotes = (cmNotes, appNotes) => {
   return merged.length === 0 ? null : JSON.stringify(merged);
 };
 
-const appendNote = (existing, action, noteText) => {
+const appendNote = (existing, action, noteText, by) => {
   const notes = parseNotes(existing);
-  notes.push({ action, note: noteText.trim(), at: new Date().toISOString() });
+  const entry = { action, note: noteText.trim(), at: new Date().toISOString() };
+  if (by) entry.by = by;
+  notes.push(entry);
   return JSON.stringify(notes);
 };
 
@@ -77,6 +79,9 @@ const NOTE_LABELS = {
   revoked: "Revoked",
   email: "Email Sent",
   note: "Note",
+  suspend: "Account Suspended",
+  unsuspend: "Account Unsuspended",
+  close: "Account Closed",
 };
 
 const fmtDateTime = (iso) =>
@@ -112,7 +117,7 @@ const NoteHistory = ({ adminNotes, adminName = "Admin", fallbackDate = null }) =
               ) : (
                 <>
                   <span className="admin-note-action-label">{NOTE_LABELS[n.action] ?? n.action}</span>
-                  <span className="admin-note-time">· {fmtDateTime(n.at)} · {adminName}</span>
+                  <span className="admin-note-time">· {fmtDateTime(n.at)} · {n.by || adminName}</span>
                 </>
               )}
             </div>
@@ -1314,6 +1319,551 @@ const fmtDate = (iso) =>
   iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" })
           .format(new Date(iso)) : "—";
 
+// ── Field Post Reports Panel ──────────────────────────────────────────────────
+const FieldPostReportsPanel = ({ onCountChange }) => {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState(null);
+  const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const [emailMode, setEmailMode] = useState(() => new Set());
+  const [emailSubjects, setEmailSubjects] = useState({});
+  const [emailMessages, setEmailMessages] = useState({});
+  const [emailFeedback, setEmailFeedback] = useState({});
+
+  const fetchReports = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("field_post_reports")
+      .select(`
+        id, created_at, status, post_id, reporter_id,
+        post:field_posts!post_id(
+          id, poster_id, caption, sport, city, country, photos, host_name, role, suspended_at,
+          poster:profiles!poster_id(full_name, first_name, last_name)
+        ),
+        reporter:profiles!reporter_id(full_name, first_name, last_name, email)
+      `)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    if (error) console.error("[reports] fetch error:", error);
+    const rows = data ?? [];
+    setReports(rows);
+    setLoading(false);
+    onCountChange?.(rows.length);
+  }, [onCountChange]);
+
+  useEffect(() => { fetchReports(); }, [fetchReports]);
+
+  const toggleExpanded = (id) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const openEmail = (id) => setEmailMode((prev) => new Set([...prev, id]));
+  const closeEmail = (id) => {
+    setEmailMode((prev) => { const s = new Set(prev); s.delete(id); return s; });
+    setEmailSubjects((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    setEmailMessages((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    setEmailFeedback((prev) => { const n = { ...prev }; delete n[id]; return n; });
+  };
+
+  const sendReportEmail = async (reportId, posterId, recipientName) => {
+    const subject = (emailSubjects[reportId] ?? "").trim();
+    const message = (emailMessages[reportId] ?? "").trim();
+    if (!subject) { setEmailFeedback((p) => ({ ...p, [reportId]: { type: "error", msg: "Please enter a subject." } })); return; }
+    if (!message) { setEmailFeedback((p) => ({ ...p, [reportId]: { type: "error", msg: "Please enter a message." } })); return; }
+    setActing(reportId);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ emailType: "cm_admin_message", userId: posterId, subject, message }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setEmailFeedback((p) => ({ ...p, [reportId]: { type: "error", msg: `Failed: ${json.error ?? res.status}` } }));
+      } else {
+        setEmailFeedback((p) => ({ ...p, [reportId]: { type: "success", msg: "Sent" } }));
+        setTimeout(() => closeEmail(reportId), 1500);
+      }
+    } catch (e) {
+      setEmailFeedback((p) => ({ ...p, [reportId]: { type: "error", msg: `Error: ${e.message}` } }));
+    }
+    setActing(null);
+  };
+
+  const sendModerationEmail = async (posterId, action, post) => {
+    if (!posterId) return;
+    const isSuspend = action === "suspend";
+    const location = [post?.city, post?.country].filter(Boolean).join(", ");
+    const captionLine = post?.caption ? `\n\nPost: "${post.caption}"` : "";
+    const subject = isSuspend
+      ? "Your SharedXP post has been temporarily suspended"
+      : "Your SharedXP post has been removed";
+    const message = isSuspend
+      ? `Your ${post?.sport ?? "field"} post${location ? ` in ${location}` : ""} has been flagged by another user and temporarily suspended pending review.${captionLine}\n\nIf you believe this is a mistake, please contact us — we'll look into it right away.`
+      : `Your ${post?.sport ?? "field"} post${location ? ` in ${location}` : ""} has been flagged and removed after review.${captionLine}\n\nIf you believe this is a mistake, please contact us.`;
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ emailType: "cm_admin_message", userId: posterId, subject, message }),
+      });
+    } catch (e) {
+      console.error("[reports] moderation email error:", e);
+    }
+  };
+
+  const suspend = async (post) => {
+    if (!confirm("Suspend this post? It will be hidden from the feed until you unsuspend it.")) return;
+    setActing(post.id);
+    const { error } = await supabase
+      .from("field_posts")
+      .update({ suspended_at: new Date().toISOString() })
+      .eq("id", post.id);
+    if (!error) await sendModerationEmail(post.poster_id, "suspend", post);
+    else console.error("[reports] suspend error:", error);
+    await fetchReports();
+    setActing(null);
+  };
+
+  const unsuspend = async (postId) => {
+    setActing(postId);
+    const { error } = await supabase
+      .from("field_posts")
+      .update({ suspended_at: null })
+      .eq("id", postId);
+    if (error) console.error("[reports] unsuspend error:", error);
+    await fetchReports();
+    setActing(null);
+  };
+
+  const dismiss = async (reportId) => {
+    setActing(reportId);
+    const { error } = await supabase
+      .from("field_post_reports")
+      .update({ status: "dismissed" })
+      .eq("id", reportId);
+    if (error) console.error("[reports] dismiss error:", error);
+    await fetchReports();
+    setActing(null);
+  };
+
+  const removePost = async (reportId, postId, posterId, post) => {
+    if (!confirm("Remove this post? This cannot be undone.")) return;
+    setActing(reportId);
+    await sendModerationEmail(posterId, "remove", post);
+    const { error } = await supabase.from("field_posts").delete().eq("id", postId);
+    if (error) console.error("[reports] remove post error:", error);
+    await fetchReports();
+    setActing(null);
+  };
+
+  const getProfileName = (profile) => {
+    if (!profile) return "Anonymous";
+    return profile.full_name ||
+      `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() ||
+      profile.email || "Unknown";
+  };
+
+  if (loading) return <p style={{ marginTop: 24 }}>Loading reports…</p>;
+
+  return (
+    <div>
+      <p className="admin-subtitle">Field posts flagged by users as inappropriate.</p>
+      {reports.length === 0 ? (
+        <p>No pending reports.</p>
+      ) : (
+        <div className="admin-dispute-list">
+          {reports.map((r) => {
+            const post = r.post;
+            const isExpanded = expandedIds.has(r.id);
+            const isEmailOpen = emailMode.has(r.id);
+            const photo = Array.isArray(post?.photos) && post.photos.length > 0 ? post.photos[0] : null;
+            const isHost = post?.role === "hosted";
+            const isSuspended = !!post?.suspended_at;
+            const sharerName = isHost ? (post?.host_name || "—") : getProfileName(post?.poster);
+            const posterId = post?.poster_id;
+            const isBusy = acting === r.id || acting === post?.id;
+            return (
+              <article key={r.id} className="admin-dispute-card">
+                <button
+                  type="button"
+                  className="cm-admin-card-summary"
+                  onClick={() => toggleExpanded(r.id)}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="cm-admin-card-summary-left">
+                    <strong>{post?.sport ?? "Unknown sport"}</strong>
+                    <span className="cm-admin-email">
+                      Experience hosted by {post?.host_name || "—"}
+                      {(post?.city || post?.country) ? ` / ${[post.city, post.country].filter(Boolean).join(", ")}` : ""}
+                      {` on ${fmtDate(r.created_at)}`}
+                    </span>
+                  </div>
+                  <div className="cm-admin-card-summary-right">
+                    <span className={`pending-status-badge ${isSuspended ? "status-pending" : "status-disputed"}`}>
+                      {isSuspended ? "Suspended" : "Pending"}
+                    </span>
+                    <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div className="cm-admin-card-body">
+                    <div className="report-card-media">
+                      {photo && (
+                        <img
+                          src={photo}
+                          alt="Reported post"
+                          className="report-card-photo"
+                        />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <div className="admin-dispute-accounts">
+                          <div>
+                            <p className="admin-dispute-label">Caption</p>
+                            <blockquote className="dispute-quote">{post?.caption || "—"}</blockquote>
+                          </div>
+                          <div>
+                            <p className="admin-dispute-label">Shared by</p>
+                            <p>{sharerName}</p>
+                            <p className="admin-dispute-email">{isHost ? "Host" : "Guest"}</p>
+                          </div>
+                          <div>
+                            <p className="admin-dispute-label">Reported by</p>
+                            <p>{getProfileName(r.reporter)}</p>
+                          </div>
+                        </div>
+
+                        {!isEmailOpen ? (
+                          <div className="admin-dispute-actions">
+                            <button type="button" className="btn btn-light" onClick={() => openEmail(r.id)} disabled={isBusy}>
+                              Email
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-light"
+                              onClick={() => isSuspended ? unsuspend(post.id) : suspend(post)}
+                              disabled={isBusy}
+                            >
+                              {isBusy ? "…" : isSuspended ? "Unsuspend Post" : "Suspend Post"}
+                            </button>
+                            <button type="button" className="btn btn-danger" onClick={() => removePost(r.id, r.post_id, posterId, post)} disabled={isBusy}>
+                              {isBusy ? "…" : "Remove Post"}
+                            </button>
+                            <button type="button" className="btn btn-light" onClick={() => dismiss(r.id)} disabled={isBusy}>
+                              {isBusy ? "…" : "Dismiss"}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="cm-admin-notes-row" style={{ marginTop: 12 }}>
+                            <p className="admin-dispute-label">Email {sharerName}</p>
+                            <input
+                              type="text"
+                              className="cm-admin-email-subject"
+                              placeholder="Subject…"
+                              value={emailSubjects[r.id] ?? ""}
+                              onChange={(e) => setEmailSubjects((p) => ({ ...p, [r.id]: e.target.value }))}
+                              autoFocus
+                            />
+                            <textarea
+                              className="cm-admin-notes"
+                              rows={4}
+                              placeholder="Message…"
+                              value={emailMessages[r.id] ?? ""}
+                              onChange={(e) => setEmailMessages((p) => ({ ...p, [r.id]: e.target.value }))}
+                            />
+                            {emailFeedback[r.id] && (
+                              <p style={{ margin: "6px 0 0", fontSize: 13, color: emailFeedback[r.id].type === "error" ? "#ef4444" : "#2e7d32" }}>
+                                {emailFeedback[r.id].msg}
+                              </p>
+                            )}
+                            <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                              <button type="button" className="btn btn-light" onClick={() => closeEmail(r.id)}>Cancel</button>
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                disabled={isBusy || emailFeedback[r.id]?.type === "success"}
+                                onClick={() => sendReportEmail(r.id, posterId, sharerName)}
+                              >
+                                {emailFeedback[r.id]?.type === "success" ? "Sent" : isBusy ? "Sending…" : "Send Email"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Members Panel ─────────────────────────────────────────────────────────────
+const MembersPanel = ({ currentUser }) => {
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("all");
+  const [search, setSearch] = useState("");
+  const [sortCol, setSortCol] = useState("name");
+  const [sortDir, setSortDir] = useState("asc");
+  const [actionMode, setActionMode] = useState(null); // { memberId, action }
+  const [noteText, setNoteText] = useState("");
+  const [acting, setActing] = useState(null);
+
+  const adminName = currentUser?.fullName ||
+    `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() || "Admin";
+
+  const loadMembers = useCallback(async () => {
+    setLoading(true);
+    const [profilesRes, cmRes] = await Promise.all([
+      supabase.from("profiles").select("id, email, first_name, last_name, full_name, city, country, is_host, is_admin, signed_up_at, suspended_at, closed_at, admin_notes"),
+      supabase.from("cm_profiles").select("user_id, status"),
+    ]);
+    const cmSet = new Set((cmRes.data ?? []).map((c) => c.user_id));
+    const rows = (profilesRes.data ?? []).map((p) => ({
+      ...p,
+      isCm: cmSet.has(p.id),
+      name: p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email || "—",
+    }));
+    setMembers(rows);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadMembers(); }, [loadMembers]);
+
+  const handleSort = (col) => {
+    if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortCol(col); setSortDir("asc"); }
+  };
+
+  const openAction = (memberId, action) => {
+    setActionMode({ memberId, action });
+    setNoteText("");
+  };
+  const closeAction = () => { setActionMode(null); setNoteText(""); };
+
+  const sendAccountEmail = async (member, action) => {
+    try {
+      const subject = action === "suspend"
+        ? "Your SharedXP account has been temporarily suspended"
+        : "Your SharedXP account has been closed";
+      const message = action === "suspend"
+        ? "Your SharedXP account has been temporarily suspended pending review.\n\nIf you believe this is a mistake, please contact us and we'll look into it right away."
+        : "Your SharedXP account has been closed.\n\nIf you believe this is a mistake, please contact us.";
+      await fetch(`${supabaseUrl}/functions/v1/booking-notify`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ emailType: "cm_admin_message", userId: member.id, subject, message }),
+      });
+    } catch (e) {
+      console.error("[members] account email error:", e);
+    }
+  };
+
+  const saveNoteAndAct = async (member) => {
+    const note = noteText.trim();
+    if (!note) { alert("Please enter a reason before proceeding."); return; }
+    const action = actionMode.action;
+    if (action === "close" && !confirm(`Close ${member.name}'s account? This is not easily reversible.`)) return;
+
+    setActing(member.id);
+    const newNotes = appendNote(member.admin_notes, action, note, adminName);
+    const update = { admin_notes: newNotes };
+    if (action === "suspend") update.suspended_at = new Date().toISOString();
+    if (action === "close")   { update.closed_at = new Date().toISOString(); update.suspended_at = new Date().toISOString(); }
+
+    const { error } = await supabase.from("profiles").update(update).eq("id", member.id);
+    if (!error) await sendAccountEmail(member, action);
+    else console.error("[members] action error:", error);
+    closeAction();
+    await loadMembers();
+    setActing(null);
+  };
+
+  const unsuspendAccount = async (member) => {
+    if (!confirm(`Unsuspend ${member.name}'s account?`)) return;
+    setActing(member.id);
+    const newNotes = appendNote(member.admin_notes, "unsuspend", "Account unsuspended.", adminName);
+    const { error } = await supabase.from("profiles").update({ suspended_at: null, admin_notes: newNotes }).eq("id", member.id);
+    if (error) console.error("[members] unsuspend error:", error);
+    await loadMembers();
+    setActing(null);
+  };
+
+  const tabFiltered = members.filter((m) => {
+    if (tab === "guest") return !m.is_host && !m.isCm && !m.is_admin;
+    if (tab === "host")  return m.is_host;
+    if (tab === "cm")    return m.isCm;
+    if (tab === "admin") return m.is_admin;
+    return true;
+  });
+
+  const displayed = (
+    search.trim()
+      ? tabFiltered.filter((m) => {
+          const q = search.toLowerCase();
+          return m.name.toLowerCase().includes(q) || (m.email ?? "").toLowerCase().includes(q);
+        })
+      : tabFiltered
+  ).slice().sort((a, b) => {
+    let aVal = "", bVal = "";
+    if (sortCol === "name")     { aVal = a.name; bVal = b.name; }
+    if (sortCol === "email")    { aVal = a.email ?? ""; bVal = b.email ?? ""; }
+    if (sortCol === "location") { aVal = [a.city, a.country].filter(Boolean).join(", "); bVal = [b.city, b.country].filter(Boolean).join(", "); }
+    if (sortCol === "joined")   { aVal = a.signed_up_at ?? ""; bVal = b.signed_up_at ?? ""; }
+    const cmp = aVal.localeCompare(bVal, undefined, { sensitivity: "base" });
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  const chevron = (col) => sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : "";
+
+  const tabs = [
+    ["all",   "All",    members.length],
+    ["guest", "Guests", members.filter((m) => !m.is_host && !m.isCm && !m.is_admin).length],
+    ["host",  "Hosts",  members.filter((m) => m.is_host).length],
+    ["cm",    "CMs",    members.filter((m) => m.isCm).length],
+    ["admin", "Admins", members.filter((m) => m.is_admin).length],
+  ];
+
+  if (loading) return <p style={{ marginTop: 24 }}>Loading members…</p>;
+
+  return (
+    <div>
+      <p className="admin-subtitle">All registered members.</p>
+
+      <div className="cm-admin-subtabs" style={{ marginBottom: 12 }}>
+        {tabs.map(([key, label, count]) => (
+          <button key={key} type="button" className={`admin-tab${tab === key ? " admin-tab-active" : ""}`} onClick={() => setTab(key)}>
+            {label}
+            <span className="cm-admin-count" style={{ marginLeft: 4 }}>{count}</span>
+          </button>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: 12 }}>
+        <input type="text" className="support-search-input" placeholder="Search name or email…" value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+
+      {displayed.length === 0 ? (
+        <p>No members found.</p>
+      ) : (
+        <div className="members-table-wrapper">
+        <table className="members-table">
+          <thead>
+            <tr>
+              <th className={sortCol === "name" ? "members-th-active" : ""} onClick={() => handleSort("name")}>Name{chevron("name")}</th>
+              <th className={sortCol === "email" ? "members-th-active" : ""} onClick={() => handleSort("email")}>Email{chevron("email")}</th>
+              <th className={sortCol === "location" ? "members-th-active" : ""} onClick={() => handleSort("location")}>Location{chevron("location")}</th>
+              <th className={sortCol === "joined" ? "members-th-active" : ""} onClick={() => handleSort("joined")}>Member since{chevron("joined")}</th>
+              <th>Type</th>
+              <th>Account Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayed.flatMap((m) => {
+              const isSuspended = !!m.suspended_at;
+              const isClosed = !!m.closed_at;
+              const isBusy = acting === m.id;
+              const isOpen = actionMode?.memberId === m.id;
+              const rows = [
+                <tr key={m.id} className={`members-row${isOpen ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
+                  <td data-label="Name">{m.name}</td>
+                  <td data-label="Email">{m.email || "—"}</td>
+                  <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
+                  <td data-label="Member since">{m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}</td>
+                  <td data-label="Type">
+                    <div className="members-badges">
+                      {isClosed    && <span className="pending-status-badge status-disputed">Closed</span>}
+                      {isSuspended && !isClosed && <span className="pending-status-badge status-pending">Suspended</span>}
+                      {m.is_admin  && <span className="pending-status-badge status-in_progress">Admin</span>}
+                      {m.is_host   && <span className="pending-status-badge status-accepted">Host</span>}
+                      {m.isCm      && <span className="pending-status-badge status-completed">CM</span>}
+                      {!m.is_host && !m.isCm && !m.is_admin && !isSuspended && !isClosed && <span className="pending-status-badge status-pending">Guest</span>}
+                    </div>
+                  </td>
+                  <td data-label="Actions">
+                    {!m.is_admin && (
+                      <div className="members-actions">
+                        {!isClosed && (
+                          isSuspended
+                            ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy} onClick={() => unsuspendAccount(m)}>
+                                {isBusy ? "…" : "Unsuspend"}
+                              </button>
+                            : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "suspend")}>
+                                Suspend
+                              </button>
+                        )}
+                        {!isClosed && (
+                          <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen} onClick={() => openAction(m.id, "close")}>
+                            Close
+                          </button>
+                        )}
+                        {isClosed && <span className="admin-dispute-label">Account closed</span>}
+                      </div>
+                    )}
+                  </td>
+                </tr>,
+              ];
+
+              if (isOpen) {
+                rows.push(
+                  <tr key={`${m.id}-action`} className="members-action-row">
+                    <td colSpan={6}>
+                      <NoteHistory adminNotes={m.admin_notes} adminName={adminName} />
+                      <p className="admin-dispute-label" style={{ marginTop: 12 }}>
+                        {actionMode.action === "suspend" ? "Reason for suspension" : "Reason for closing account"} (required)
+                      </p>
+                      {actionMode.action === "close" && (
+                        <p style={{ fontSize: 13, color: "#ef4444", margin: "4px 0 8px" }}>
+                          Warning: closing an account is not easily reversible and will notify the member.
+                        </p>
+                      )}
+                      <textarea
+                        className="cm-admin-notes"
+                        rows={3}
+                        placeholder="Enter reason…"
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                        <button type="button" className="btn btn-light" onClick={closeAction}>Cancel</button>
+                        <button
+                          type="button"
+                          className={actionMode.action === "close" ? "btn btn-danger" : "btn btn-light"}
+                          disabled={isBusy}
+                          onClick={() => saveNoteAndAct(m)}
+                        >
+                          {isBusy ? "…" : actionMode.action === "suspend" ? "Save & Suspend" : "Save & Close"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              }
+              return rows;
+            })}
+          </tbody>
+        </table>
+        </div>
+      )}
+      <p className="admin-dispute-label" style={{ marginTop: 8 }}>
+        {displayed.length} member{displayed.length !== 1 ? "s" : ""}
+      </p>
+    </div>
+  );
+};
+
 const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const [searchParams] = useSearchParams();
   const [disputes, setDisputes] = useState([]);
@@ -1322,6 +1872,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "disputes");
   const [cmCounts, setCmCounts] = useState({ pendingApps: 0, pendingComms: 0 });
   const [unreadSupport, setUnreadSupport] = useState(0);
+  const [pendingReports, setPendingReports] = useState(0);
   const { resolveDispute } = useBookingRequests(currentUser);
 
   const fetchDisputes = useCallback(async () => {
@@ -1363,15 +1914,24 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
     setUnreadSupport(count ?? 0);
   }, []);
 
+  const fetchPendingReports = useCallback(async () => {
+    const { count } = await supabase
+      .from("field_post_reports")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending");
+    setPendingReports(count ?? 0);
+  }, []);
+
   useEffect(() => {
     if (currentUser?.isAdmin) {
       fetchDisputes();
       fetchCmCounts();
       fetchUnreadSupport();
+      fetchPendingReports();
     } else {
       setLoading(false);
     }
-  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts, fetchUnreadSupport]);
+  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts, fetchUnreadSupport, fetchPendingReports]);
 
   const handleResolve = async (disputeId, resolution) => {
     if (!confirm(`Resolve as "${resolution}"?`)) return;
@@ -1466,6 +2026,21 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
           >
             Support
             {unreadSupport > 0 && <span className="cm-admin-count">{unreadSupport}</span>}
+          </button>
+          <button
+            type="button"
+            className={`admin-tab${activeTab === "reports" ? " admin-tab-active" : ""}`}
+            onClick={() => setActiveTab("reports")}
+          >
+            Reports
+            {pendingReports > 0 && <span className="cm-admin-count">{pendingReports}</span>}
+          </button>
+          <button
+            type="button"
+            className={`admin-tab${activeTab === "members" ? " admin-tab-active" : ""}`}
+            onClick={() => setActiveTab("members")}
+          >
+            Members
           </button>
         </div>
 
@@ -1564,6 +2139,8 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
 
         {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} onCountChange={fetchCmCounts} />}
         {activeTab === "support" && <SupportPanel currentUser={currentUser} onRead={fetchUnreadSupport} />}
+        {activeTab === "reports" && <FieldPostReportsPanel onCountChange={setPendingReports} />}
+        {activeTab === "members" && <MembersPanel currentUser={currentUser} />}
         </main>
         <SiteFooter />
       </div>

@@ -97,6 +97,7 @@ export const fetchFieldPosts = async ({ limit = 12, offset = 0 } = {}) => {
       .select(
         "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, rating, source_request_id, created_at"
       )
+      .is("suspended_at", null)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
     if (error && isMissingRatingColumnError(error)) {
@@ -105,6 +106,7 @@ export const fetchFieldPosts = async ({ limit = 12, offset = 0 } = {}) => {
         .select(
           "id, poster_id, role, host_name, host_photo, sport, city, country, caption, photos, likes, source_request_id, created_at"
         )
+        .is("suspended_at", null)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1));
     }
@@ -207,6 +209,26 @@ export const saveFieldPost = async (post) => {
   } catch (e) {
     console.error("[fieldPosts] save exception:", e);
     return null;
+  }
+};
+
+/**
+ * Report a field post as inappropriate. Returns true on success.
+ */
+export const reportFieldPost = async (postId, reporterId) => {
+  if (!postId) return false;
+  try {
+    const { error } = await supabase
+      .from("field_post_reports")
+      .insert({ post_id: postId, reporter_id: reporterId ?? null });
+    if (error) {
+      console.error("[fieldPosts] report error:", error);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[fieldPosts] report exception:", e);
+    return false;
   }
 };
 
