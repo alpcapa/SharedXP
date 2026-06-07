@@ -1513,8 +1513,8 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
                   <div className="cm-admin-card-summary-top">
                     <strong>{post?.sport ?? "Unknown sport"}</strong>
                     <div className="cm-admin-card-summary-right">
-                      <span className={`pending-status-badge ${isSuspended ? "status-pending" : "status-disputed"}`}>
-                        {isSuspended ? "Suspended" : "Pending"}
+                      <span className={`pending-status-badge ${isSuspended ? "status-pending" : r.status === "dismissed" ? "cm-status-approved" : "status-disputed"}`}>
+                        {isSuspended ? "Suspended" : r.status === "dismissed" ? "Dismissed" : "Pending"}
                       </span>
                       <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
                     </div>
