@@ -2176,7 +2176,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
           >
             Dispute Management
             {disputes.filter((d) => !d.resolved_at).length > 0 && (
-              <span className="cm-admin-count">{disputes.filter((d) => !d.resolved_at).length}</span>
+              <span className="cm-admin-count cm-admin-count-alert">{disputes.filter((d) => !d.resolved_at).length}</span>
             )}
           </button>
           <button
@@ -2195,7 +2195,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             onClick={() => setActiveTab("support")}
           >
             Support
-            {unreadSupport > 0 && <span className="cm-admin-count">{unreadSupport}</span>}
+            {unreadSupport > 0 && <span className="cm-admin-count cm-admin-count-alert">{unreadSupport}</span>}
           </button>
           <button
             type="button"
@@ -2203,7 +2203,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             onClick={() => setActiveTab("reports")}
           >
             Reports
-            {pendingReports > 0 && <span className="cm-admin-count">{pendingReports}</span>}
+            {pendingReports > 0 && <span className="cm-admin-count cm-admin-count-alert">{pendingReports}</span>}
           </button>
           <button
             type="button"
@@ -2220,7 +2220,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             {!loading && (
               <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
                 <button type="button" className={`admin-tab${disputeTab === "open" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("open")}>
-                  Open <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !d.resolved_at && !d.resolution).length}</span>
+                  Open <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{disputes.filter((d) => !d.resolved_at && !d.resolution).length}</span>
                 </button>
                 <button type="button" className={`admin-tab${disputeTab === "resolved" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("resolved")}>
                   Resolved <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !!d.resolved_at || !!d.resolution).length}</span>
