@@ -5936,9 +5936,9 @@ body {
 .members-actions-btns .btn { padding: 4px 10px; font-size: 12px; }
 .members-grace-tag { font-size: 11px; color: #92400e; background: #fef3c7; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 .members-grace-expired { color: #991b1b; background: #fee2e2; }
-.members-notes-btn { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; color: #374151; cursor: pointer; padding: 3px 8px; font-family: inherit; white-space: nowrap; }
-.members-notes-btn:hover { background: #e5e7eb; }
-.members-notes-btn-active { background: #e5e7eb; border-color: #9ca3af; }
+.members-notes-btn { background: #e0e7ff; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 12px; font-weight: 600; color: #3730a3; cursor: pointer; padding: 4px 10px; font-family: inherit; white-space: nowrap; }
+.members-notes-btn:hover { background: #c7d2fe; }
+.members-notes-btn-active { background: #c7d2fe; border-color: #a5b4fc; }
 .members-action-row td {
   padding: 0 16px 16px;
   background: #f9fafb;

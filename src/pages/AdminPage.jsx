@@ -1927,7 +1927,7 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
                         )}
                         {noteCount > 0 && (
                           <button type="button" className={`members-notes-btn${isHistoryOpen ? " members-notes-btn-active" : ""}`} onClick={() => toggleHistory(m.id)}>
-                            📝 {isHistoryOpen ? "×" : noteCount}
+                            {noteCount} {isHistoryOpen ? "▲" : "▼"}
                           </button>
                         )}
                       </div>
