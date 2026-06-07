@@ -1323,6 +1323,7 @@ const fmtDate = (iso) =>
 // ── Field Post Reports Panel ──────────────────────────────────────────────────
 const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => {
   const [reports, setReports] = useState([]);
+  const [reportTab, setReportTab] = useState("pending");
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(null);
   const [expandedIds, setExpandedIds] = useState(() => new Set());
@@ -1348,13 +1349,12 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
         ),
         reporter:profiles!reporter_id(full_name, first_name, last_name, email)
       `)
-      .eq("status", "pending")
       .order("created_at", { ascending: false });
     if (error) console.error("[reports] fetch error:", error);
     const rows = data ?? [];
     setReports(rows);
     setLoading(false);
-    onCountChange?.(rows.length);
+    onCountChange?.(rows.filter((r) => r.status === "pending").length);
   }, [onCountChange]);
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
@@ -1472,14 +1472,26 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
 
   if (loading) return <p style={{ marginTop: 24 }}>Loading reports…</p>;
 
+  const pendingCount   = reports.filter((r) => r.status === "pending").length;
+  const dismissedCount = reports.filter((r) => r.status === "dismissed").length;
+  const visibleReports = reports.filter((r) => r.status === reportTab);
+
   return (
     <div>
       <p className="admin-subtitle">Field posts flagged by users as inappropriate.</p>
-      {reports.length === 0 ? (
-        <p>No pending reports.</p>
+      <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
+        <button type="button" className={`admin-tab${reportTab === "pending" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("pending")}>
+          Pending <span className="cm-admin-count" style={{ marginLeft: 4 }}>{pendingCount}</span>
+        </button>
+        <button type="button" className={`admin-tab${reportTab === "dismissed" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("dismissed")}>
+          Dismissed <span className="cm-admin-count" style={{ marginLeft: 4 }}>{dismissedCount}</span>
+        </button>
+      </div>
+      {visibleReports.length === 0 ? (
+        <p>No {reportTab} reports.</p>
       ) : (
         <div className="admin-dispute-list">
-          {reports.map((r) => {
+          {visibleReports.map((r) => {
             const post = r.post;
             const isExpanded = expandedIds.has(r.id);
             const isEmailOpen = emailMode.has(r.id);
