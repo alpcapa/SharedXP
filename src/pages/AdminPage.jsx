@@ -1477,7 +1477,7 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
       <p className="admin-subtitle">Field posts flagged by users as inappropriate.</p>
       <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
         <button type="button" className={`admin-tab${reportTab === "pending" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("pending")}>
-          Pending <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{pendingCount}</span>
+          Pending <span className={`cm-admin-count${pendingCount > 0 ? " cm-admin-count-alert" : ""}`} style={{ marginLeft: 4 }}>{pendingCount}</span>
         </button>
         <button type="button" className={`admin-tab${reportTab === "dismissed" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("dismissed")}>
           Dismissed <span className="cm-admin-count" style={{ marginLeft: 4 }}>{dismissedCount}</span>
