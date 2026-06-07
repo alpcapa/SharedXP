@@ -1901,7 +1901,7 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
                   <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
                   <td data-label="Member since">
                     {m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}
-                    {tab === "guest" && m.referredBy && (
+                    {m.referredBy && (
                       <div className="members-referred-by">Referred by {m.referredBy}</div>
                     )}
                   </td>
