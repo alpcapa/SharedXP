@@ -408,7 +408,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           className={`admin-tab${subTab === "applications" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("applications")}
         >
-          Applications <span className="cm-admin-count">{pendingApps.length}</span>
+          Applications <span className={`cm-admin-count${pendingApps.length > 0 ? " cm-admin-count-alert" : ""}`}>{pendingApps.length}</span>
         </button>
         <button
           type="button"
@@ -2198,8 +2198,8 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             onClick={() => setActiveTab("cm")}
           >
             CM Management
-            {(cmCounts.pendingApps + cmCounts.pendingComms) > 0 && (
-              <span className="cm-admin-count">{cmCounts.pendingApps + cmCounts.pendingComms}</span>
+            {cmCounts.pendingApps > 0 && (
+              <span className="cm-admin-count cm-admin-count-alert">{cmCounts.pendingApps}</span>
             )}
           </button>
           <button
