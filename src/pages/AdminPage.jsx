@@ -1684,6 +1684,8 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
     const allProfiles  = profilesRes.data ?? [];
     const cmProfiles   = cmRes.data ?? [];
     const referrals    = referralsRes.data ?? [];
+    console.log("[Members] referrals raw:", referrals, "error:", referralsRes.error);
+    console.log("[Members] cmProfiles:", cmProfiles.map(c => ({id:c.id, user_id:c.user_id})));
     const cmSet        = new Set(cmProfiles.map((c) => c.user_id));
     const profileById  = new Map(allProfiles.map((p) => [p.id, p]));
     const cmById       = new Map(cmProfiles.map((c) => [c.id, c]));
