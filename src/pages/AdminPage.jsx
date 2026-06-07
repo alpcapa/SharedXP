@@ -1676,19 +1676,27 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
 
   const loadMembers = useCallback(async () => {
     setLoading(true);
-    const [profilesRes, cmRes] = await Promise.all([
-      supabase.from("profiles").select(`id, email, first_name, last_name, full_name, city, country, is_host, is_admin, signed_up_at, suspended_at, closed_at, admin_notes, cm_referrals!referred_user_id(cm_profiles(owner:profiles!user_id(full_name, first_name, last_name)))`),
-      supabase.from("cm_profiles").select("user_id, status"),
+    const [profilesRes, cmRes, referralsRes] = await Promise.all([
+      supabase.from("profiles").select("id, email, first_name, last_name, full_name, city, country, is_host, is_admin, signed_up_at, suspended_at, closed_at, admin_notes"),
+      supabase.from("cm_profiles").select("id, user_id, status"),
+      supabase.from("cm_referrals").select("referred_user_id, cm_id"),
     ]);
-    const cmSet = new Set((cmRes.data ?? []).map((c) => c.user_id));
-    const rows = (profilesRes.data ?? []).map((p) => ({
+    const allProfiles  = profilesRes.data ?? [];
+    const cmProfiles   = cmRes.data ?? [];
+    const referrals    = referralsRes.data ?? [];
+    const cmSet        = new Set(cmProfiles.map((c) => c.user_id));
+    const profileById  = new Map(allProfiles.map((p) => [p.id, p]));
+    const cmById       = new Map(cmProfiles.map((c) => [c.id, c]));
+    const referralMap  = new Map(referrals.map((r) => {
+      const owner = profileById.get(cmById.get(r.cm_id)?.user_id);
+      const name  = owner ? (owner.full_name || `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim()) || null : null;
+      return [r.referred_user_id, name];
+    }));
+    const rows = allProfiles.map((p) => ({
       ...p,
-      isCm: cmSet.has(p.id),
-      name: p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email || "—",
-      referredBy: (() => {
-        const o = p.cm_referrals?.[0]?.cm_profiles?.owner;
-        return o ? (o.full_name || `${o.first_name ?? ""} ${o.last_name ?? ""}`.trim()) || null : null;
-      })(),
+      isCm:       cmSet.has(p.id),
+      name:       p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email || "—",
+      referredBy: referralMap.get(p.id) ?? null,
     }));
     setMembers(rows);
     setLoading(false);
