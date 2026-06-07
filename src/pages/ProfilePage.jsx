@@ -36,6 +36,33 @@ const fmtMoney = (amount, currency) => `${currency ?? ""} ${Number(amount ?? 0).
 const CM_STATUS_LABEL = { pending: "Pending", approved: "Approved", paid: "Paid" };
 const CM_STATUS_CLASS = { pending: "cm-status-pending", approved: "cm-status-approved", paid: "cm-status-paid" };
 
+const BOOKING_STATUS_LABEL = {
+  pending: "Pending", accepted: "Accepted", payment_pending: "Payment Pending",
+  in_progress: "In Progress", completed: "Completed", declined: "Declined",
+  cancelled: "Cancelled", disputed: "Disputed",
+  resolved_paid_host: "Resolved", resolved_refunded: "Resolved",
+};
+const BOOKING_STATUS_CLASS = {
+  pending: "cm-booking-pending", accepted: "cm-booking-accepted",
+  payment_pending: "cm-booking-payment-pending", in_progress: "cm-booking-in-progress",
+  completed: "cm-booking-completed", declined: "cm-booking-declined",
+  cancelled: "cm-booking-cancelled", disputed: "cm-booking-disputed",
+  resolved_paid_host: "cm-booking-resolved", resolved_refunded: "cm-booking-resolved",
+};
+
+const PIE_COLORS = ["#5a9e3a", "#9ab87a", "#d4a843", "#e07f4e", "#c26b6b", "#7ba8c4", "#a87bc4"];
+
+const fmtCurrency = (amount, currency) => {
+  try {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency", currency: currency ?? "EUR",
+      minimumFractionDigits: 0, maximumFractionDigits: 0,
+    }).format(Number(amount ?? 0));
+  } catch {
+    return `${currency ?? ""} ${Number(amount ?? 0).toFixed(0)}`;
+  }
+};
+
 const getCmName = (p) =>
   p ? p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "—" : "—";
 
@@ -199,8 +226,10 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   // CM dashboard (own profile only)
   const [cmStats, setCmStats] = useState(null);
   const [cmCommissions, setCmCommissions] = useState([]);
+  const [cmReferrals, setCmReferrals] = useState([]);
   const [cmLoading, setCmLoading] = useState(false);
   const [cmCopied, setCmCopied] = useState(false);
+  const [collapsedMembers, setCollapsedMembers] = useState(new Set());
 
   // Guest role
   const [guestReviews, setGuestReviews] = useState([]);
@@ -608,26 +637,46 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     setCmLoading(true);
     const cmId = currentUser.cmProfile.id;
     const [referralsRes, commissionsRes] = await Promise.all([
-      supabase.from("cm_referrals").select("id").eq("cm_id", cmId),
+      supabase
+        .from("cm_referrals")
+        .select(`id, signed_up_at, referred_user_id,
+          profile:profiles!referred_user_id(id, full_name, first_name, last_name, country, city, is_host)`)
+        .eq("cm_id", cmId)
+        .order("signed_up_at", { ascending: true }),
       supabase
         .from("cm_commissions")
         .select(`id, gmv, commission_amount, currency, status, approved_at, paid_at, created_at,
-          booking_request:booking_requests(requested_date, sport,
-            requester:profiles!requester_id(full_name, first_name, last_name))`)
+          booking_request:booking_requests(id, requested_date, sport, price, currency, status,
+            host:profiles!host_id(full_name, first_name, last_name, city, country),
+            requester:profiles!requester_id(id, full_name, first_name, last_name))`)
         .eq("cm_id", cmId)
         .order("created_at", { ascending: false }),
     ]);
     const commList = commissionsRes.data ?? [];
-    const currency = commList[0]?.currency ?? "EUR";
+    const referralList = referralsRes.data ?? [];
+    const currency = commList[0]?.currency ?? referralList[0]?.profile?.currency ?? "EUR";
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     setCmStats({
-      referredCount: referralsRes.data?.length ?? 0,
+      referredCount: referralList.length,
       completedBookings: commList.length,
       totalEarnings: commList.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.commission_amount), 0),
       pendingEarnings: commList.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.commission_amount), 0),
       approvedEarnings: commList.filter((c) => c.status === "approved").reduce((s, c) => s + Number(c.commission_amount), 0),
       currency,
+      membersAcquired: referralList.length,
+      membersThisMonth: referralList.filter((r) => r.signed_up_at >= thisMonthStart).length,
+      becameHost: referralList.filter((r) => r.profile?.is_host).length,
+      hostConversionRate: referralList.length > 0
+        ? Math.round((referralList.filter((r) => r.profile?.is_host).length / referralList.length) * 100)
+        : 0,
+      totalExperiences: commList.length,
+      expThisMonth: commList.filter((c) => c.created_at >= thisMonthStart).length,
+      totalGmv: commList.reduce((s, c) => s + Number(c.gmv ?? 0), 0),
+      gmvThisMonth: commList.filter((c) => c.created_at >= thisMonthStart).reduce((s, c) => s + Number(c.gmv ?? 0), 0),
     });
     setCmCommissions(commList);
+    setCmReferrals(referralList);
     setCmLoading(false);
   }, [currentUser?.cmProfile?.id]);
 
@@ -641,6 +690,41 @@ const ProfilePage = ({ currentUser, onLogout }) => {
       setTimeout(() => setCmCopied(false), 2000);
     });
   };
+
+  const toggleMember = (memberId) => {
+    setCollapsedMembers((prev) => {
+      const next = new Set(prev);
+      if (next.has(memberId)) next.delete(memberId);
+      else next.add(memberId);
+      return next;
+    });
+  };
+
+  const cityData = useMemo(() => {
+    if (!cmCommissions.length) return [];
+    const map = {};
+    for (const c of cmCommissions) {
+      const city = c.booking_request?.host?.city || "Unknown";
+      const country = c.booking_request?.host?.country || "—";
+      if (!map[city]) map[city] = { city, country, expCount: 0, gmv: 0 };
+      map[city].expCount += 1;
+      map[city].gmv += Number(c.gmv ?? 0);
+    }
+    const list = Object.values(map).sort((a, b) => b.expCount - a.expCount);
+    const totalExp = list.reduce((s, c) => s + c.expCount, 0);
+    return list.map((c) => ({ ...c, pct: totalExp > 0 ? Math.round((c.expCount / totalExp) * 100) : 0 }));
+  }, [cmCommissions]);
+
+  const pieGradient = useMemo(() => {
+    if (!cityData.length) return "#e0e0e0";
+    let acc = 0;
+    const stops = cityData.map((c, i) => {
+      const start = acc;
+      acc += c.pct;
+      return `${PIE_COLORS[i % PIE_COLORS.length]} ${start}% ${acc}%`;
+    });
+    return `conic-gradient(${stops.join(", ")})`;
+  }, [cityData]);
 
   // ── Derived: host booking engine ────────────────────────────────────────────
   const hostSports = useMemo(
@@ -1249,58 +1333,149 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                 <p>Loading stats…</p>
               ) : cmStats ? (
                 <>
-                  <div className="cm-stats-grid">
+                  <div className="cm-stats-grid cm-stats-grid--6">
                     <div className="cm-stat-card">
-                      <p className="cm-stat-value">{cmStats.referredCount}</p>
-                      <p className="cm-stat-label">Referred users</p>
+                      <p className="cm-stat-label">Members Acquired</p>
+                      <p className="cm-stat-value">{cmStats.membersAcquired}</p>
+                      <p className="cm-stat-sub">+{cmStats.membersThisMonth} this month</p>
                     </div>
                     <div className="cm-stat-card">
-                      <p className="cm-stat-value">{cmStats.completedBookings}</p>
-                      <p className="cm-stat-label">Completed bookings</p>
+                      <p className="cm-stat-label">Became Host</p>
+                      <p className="cm-stat-value">{cmStats.becameHost}</p>
+                      <p className="cm-stat-sub">{cmStats.hostConversionRate}% conversion</p>
                     </div>
                     <div className="cm-stat-card">
-                      <p className="cm-stat-value">{fmtMoney(cmStats.totalEarnings, cmStats.currency)}</p>
-                      <p className="cm-stat-label">Total paid out</p>
+                      <p className="cm-stat-label">Experiences</p>
+                      <p className="cm-stat-value">{cmStats.totalExperiences}</p>
+                      <p className="cm-stat-sub">+{cmStats.expThisMonth} this month</p>
                     </div>
                     <div className="cm-stat-card">
-                      <p className="cm-stat-value">{fmtMoney(cmStats.pendingEarnings + cmStats.approvedEarnings, cmStats.currency)}</p>
-                      <p className="cm-stat-label">Pending commission</p>
+                      <p className="cm-stat-label">GMV Generated</p>
+                      <p className="cm-stat-value">{fmtCurrency(cmStats.totalGmv, cmStats.currency)}</p>
+                      <p className="cm-stat-sub">{fmtCurrency(cmStats.gmvThisMonth, cmStats.currency)} this month</p>
+                    </div>
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-label">Commission Pending</p>
+                      <p className="cm-stat-value">{fmtCurrency(cmStats.pendingEarnings + cmStats.approvedEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-sub">Awaiting approval</p>
+                    </div>
+                    <div className="cm-stat-card">
+                      <p className="cm-stat-label">Commission Paid</p>
+                      <p className="cm-stat-value">{fmtCurrency(cmStats.totalEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-sub">{fmtCurrency(cmStats.pendingEarnings + cmStats.approvedEarnings + cmStats.totalEarnings, cmStats.currency)} approved</p>
                     </div>
                   </div>
-                  <h2 className="cm-section-title">Commission history</h2>
-                  {cmCommissions.length === 0 ? (
-                    <p className="cm-empty">No commissions yet. Share your invite code to get started!</p>
-                  ) : (
-                    <div className="cm-commission-table-wrap">
-                      <table className="cm-commission-table">
-                        <thead>
-                          <tr>
-                            <th>Date</th>
-                            <th>User</th>
-                            <th>Sport</th>
-                            <th>GBV</th>
-                            <th>Commission</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {cmCommissions.map((c) => (
-                            <tr key={c.id}>
-                              <td>{fmtDate(c.created_at)}</td>
-                              <td>{getCmName(c.booking_request?.requester)}</td>
-                              <td>{c.booking_request?.sport ?? "—"}</td>
-                              <td>{fmtMoney(c.gmv, c.currency)}</td>
-                              <td>{fmtMoney(c.commission_amount, c.currency)}</td>
-                              <td>
-                                <span className={`cm-status-badge ${CM_STATUS_CLASS[c.status] ?? ""}`}>
-                                  {CM_STATUS_LABEL[c.status] ?? c.status}
+
+                  {cityData.length > 0 && (
+                    <>
+                      <h2 className="cm-section-title">Global Reach</h2>
+                      <p className="cm-section-desc">Referred members book worldwide — you earn commission on all of them:</p>
+                      <div className="cm-global-reach">
+                        <div className="cm-reach-table-wrap">
+                          <table className="cm-reach-table">
+                            <thead>
+                              <tr>
+                                <th>City</th>
+                                <th>Country</th>
+                                <th>Exp</th>
+                                <th>GMV</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {cityData.map((c) => (
+                                <tr key={c.city}>
+                                  <td><strong>{c.city}</strong></td>
+                                  <td>{c.country}</td>
+                                  <td>{c.expCount}</td>
+                                  <td>{fmtCurrency(c.gmv, cmStats.currency)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="cm-pie-chart-wrap">
+                          <div className="cm-pie-chart" style={{ background: pieGradient }} />
+                          <div className="cm-pie-legend">
+                            {cityData.map((c, i) => (
+                              <div key={c.city} className="cm-pie-legend-item">
+                                <span className="cm-pie-legend-dot" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                                <span>{c.city} {c.pct}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {cmReferrals.length > 0 && (
+                    <>
+                      <h2 className="cm-section-title">Acquired Members</h2>
+                      {cmReferrals.map((ref) => {
+                        const memberBookings = cmCommissions.filter(
+                          (c) => c.booking_request?.requester?.id === ref.referred_user_id
+                        );
+                        const isExpanded = !collapsedMembers.has(ref.referred_user_id);
+                        const name = getCmName(ref.profile);
+                        return (
+                          <div key={ref.id} className="cm-member-card">
+                            <button
+                              type="button"
+                              className="cm-member-header"
+                              onClick={() => toggleMember(ref.referred_user_id)}
+                            >
+                              <div className="cm-member-header-info">
+                                <span className="cm-member-name">{name}</span>
+                                <span className="cm-member-meta">
+                                  {ref.profile?.country ?? "—"} · Joined {fmtDate(ref.signed_up_at)} · {memberBookings.length} experience{memberBookings.length !== 1 ? "s" : ""}
                                 </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                              </div>
+                              <span className="cm-member-toggle">{isExpanded ? "▲" : "▼"}</span>
+                            </button>
+                            {isExpanded && (
+                              memberBookings.length === 0 ? (
+                                <p className="cm-member-empty">No experiences yet.</p>
+                              ) : (
+                                <div className="cm-member-bookings-wrap">
+                                  <table className="cm-member-bookings-table">
+                                    <thead>
+                                      <tr>
+                                        <th>Host</th>
+                                        <th>Sport</th>
+                                        <th>Date</th>
+                                        <th>City</th>
+                                        <th>Price</th>
+                                        <th>Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {memberBookings.map((c) => (
+                                        <tr key={c.id}>
+                                          <td>{getCmName(c.booking_request?.host)}</td>
+                                          <td>{c.booking_request?.sport ?? "—"}</td>
+                                          <td>{fmtDate(c.booking_request?.requested_date)}</td>
+                                          <td>{c.booking_request?.host?.city ?? "—"}</td>
+                                          <td>{fmtCurrency(c.booking_request?.price, c.booking_request?.currency)}</td>
+                                          <td>
+                                            <span className={`cm-status-badge ${BOOKING_STATUS_CLASS[c.booking_request?.status] ?? ""}`}>
+                                              {BOOKING_STATUS_LABEL[c.booking_request?.status] ?? c.booking_request?.status ?? "—"}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  {cmReferrals.length === 0 && (
+                    <p className="cm-empty">No referrals yet. Share your invite code to get started!</p>
                   )}
                 </>
               ) : null}
