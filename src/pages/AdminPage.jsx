@@ -2015,6 +2015,7 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
 const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const [searchParams] = useSearchParams();
   const [disputes, setDisputes] = useState([]);
+  const [disputeTab, setDisputeTab] = useState("open");
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "disputes");
@@ -2196,13 +2197,23 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
         {activeTab === "disputes" && (
           <>
             <p className="admin-subtitle">Customer service view — all open and resolved disputes.</p>
+            {!loading && (
+              <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
+                <button type="button" className={`admin-tab${disputeTab === "open" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("open")}>
+                  Open <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !d.resolved_at).length}</span>
+                </button>
+                <button type="button" className={`admin-tab${disputeTab === "resolved" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("resolved")}>
+                  Resolved <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !!d.resolved_at).length}</span>
+                </button>
+              </div>
+            )}
             {loading ? (
               <p>Loading disputes…</p>
-            ) : disputes.length === 0 ? (
-              <p>No disputes found.</p>
+            ) : disputes.filter((d) => disputeTab === "open" ? !d.resolved_at : !!d.resolved_at).length === 0 ? (
+              <p>No {disputeTab} disputes.</p>
             ) : (
               <div className="admin-dispute-list">
-                {disputes.map((d) => {
+                {disputes.filter((d) => disputeTab === "open" ? !d.resolved_at : !!d.resolved_at).map((d) => {
               const br = d.booking_request;
               const requesterName = br ? getName(br.requester) : "—";
               const hostName = br ? getName(br.host) : "—";
