@@ -5932,7 +5932,7 @@ body {
 .members-row.members-row-closed { opacity: 0.6; }
 .members-badges { display: flex; gap: 4px; flex-wrap: nowrap; }
 .members-badges .pending-status-badge { padding: 3px 8px; }
-.members-actions-btns { display: flex; flex-direction: row; gap: 5px; align-items: center; flex-wrap: wrap; }
+.members-actions-btns { display: flex; flex-direction: row; gap: 5px; align-items: center; flex-wrap: nowrap; }
 .members-actions-btns .btn { padding: 4px 10px; font-size: 12px; }
 .members-grace-tag { font-size: 11px; color: #92400e; background: #fef3c7; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 .members-grace-expired { color: #991b1b; background: #fee2e2; }
