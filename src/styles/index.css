@@ -5984,6 +5984,7 @@ body {
   }
   .members-row td:first-child { font-weight: 500; }
   .members-row td { word-break: break-all; white-space: normal; }
+  .members-actions-btns { flex-wrap: wrap; }
   .members-action-row,
   .members-action-row td {
     display: block;
