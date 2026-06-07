@@ -1327,7 +1327,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                   </button>
                 </div>
                 <p className="cm-invite-hint">
-                  Share this code with athletes and sports enthusiasts. Anyone who signs up with your code becomes your referral permanently.
+                  Share this code with athletes and sports enthusiasts. Anyone who signs up with your code becomes your referral permanently, and you will earn 5% commission on every experience they complete.
                 </p>
               </div>
               {cmLoading ? (
