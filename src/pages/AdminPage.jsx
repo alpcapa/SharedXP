@@ -1905,12 +1905,10 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
               const rows = [
                 <tr key={m.id} className={`members-row${isOpen || isHistoryOpen || isBlocked ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
                   <td data-label="Name">
-                    <div>
-                      {m.referredBy && (
-                        <span className="members-ref-badge" title={`Referred by ${m.referredBy}`}>R</span>
-                      )}
-                      {m.name}
-                    </div>
+                    {m.referredBy && (
+                      <span className="members-ref-badge" title={`Referred by ${m.referredBy}`}>R</span>
+                    )}
+                    {m.name}
                     {m.referredBy && (
                       <div className="members-referred-by">({m.referredBy})</div>
                     )}
