@@ -1772,7 +1772,7 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
   };
 
   const isDeleted          = (m) => m.full_name === "Deleted User";
-  const isSuspendedOrClosed = (m) => !!m.suspended_at && !isDeleted(m);
+  const isSuspendedOrClosed = (m) => (!!m.suspended_at || !!m.closed_at) && !isDeleted(m);
   const isActive            = (m) => !m.suspended_at && !m.closed_at && !isDeleted(m);
 
   const tabFiltered = members.filter((m) => {
@@ -1829,7 +1829,7 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
 
       <div className="cm-admin-subtabs" style={{ marginBottom: 12 }}>
         {tabs.map(([key, label, count]) => (
-          <button key={key} type="button" className={`admin-tab${tab === key ? " admin-tab-active" : ""}`} onClick={() => setTab(key)}>
+          <button key={key} type="button" className={`admin-tab${tab === key ? " admin-tab-active" : ""}`} onClick={() => { setTab(key); setSearch(""); }}>
             {label}
             <span className="cm-admin-count" style={{ marginLeft: 4 }}>{count}</span>
           </button>
