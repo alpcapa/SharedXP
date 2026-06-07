@@ -1082,18 +1082,14 @@ const SupportPanel = ({ currentUser, onRead }) => {
             onClick={() => setSupportTab("open")}
           >
             Open
-            {threads.filter((t) => !t.allClosed && t.hasUnread).length > 0 && (
-              <span className="cm-admin-count cm-admin-count-alert">
-                {threads.filter((t) => !t.allClosed && t.hasUnread).length}
-              </span>
-            )}
+            {(() => { const open = threads.filter((t) => !t.allClosed); const unread = open.filter((t) => t.hasUnread).length; return <span className={`cm-admin-count${unread > 0 ? " cm-admin-count-alert" : ""}`}>{open.length}</span>; })()}
           </button>
           <button
             type="button"
             className={`admin-tab${supportTab === "archive" ? " admin-tab-active" : ""}`}
             onClick={() => setSupportTab("archive")}
           >
-            Archived
+            Archived <span className="cm-admin-count">{threads.filter((t) => t.allClosed).length}</span>
           </button>
         </div>
         <div className="support-filters">
