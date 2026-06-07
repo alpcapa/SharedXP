@@ -1083,7 +1083,7 @@ const SupportPanel = ({ currentUser, onRead }) => {
           >
             Open
             {threads.filter((t) => !t.allClosed && t.hasUnread).length > 0 && (
-              <span className="cm-admin-count">
+              <span className="cm-admin-count cm-admin-count-alert">
                 {threads.filter((t) => !t.allClosed && t.hasUnread).length}
               </span>
             )}
@@ -1153,7 +1153,7 @@ const SupportPanel = ({ currentUser, onRead }) => {
               </div>
               <div className="cm-admin-card-summary-right">
                 {threadUnread > 0 && (
-                  <span className="cm-admin-count">{threadUnread} unread</span>
+                  <span className="cm-admin-count cm-admin-count-alert">{threadUnread} unread</span>
                 )}
                 <span className="cm-admin-email" style={{ whiteSpace: "nowrap" }}>
                   {fmtMsgDate(latestMsg.received_at)}
@@ -1481,7 +1481,7 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
       <p className="admin-subtitle">Field posts flagged by users as inappropriate.</p>
       <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
         <button type="button" className={`admin-tab${reportTab === "pending" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("pending")}>
-          Pending <span className="cm-admin-count" style={{ marginLeft: 4 }}>{pendingCount}</span>
+          Pending <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{pendingCount}</span>
         </button>
         <button type="button" className={`admin-tab${reportTab === "dismissed" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("dismissed")}>
           Dismissed <span className="cm-admin-count" style={{ marginLeft: 4 }}>{dismissedCount}</span>

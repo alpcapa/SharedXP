@@ -8208,14 +8208,18 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #e53e3e;
-  color: #fff;
+  background: #e5e7eb;
+  color: #374151;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
   padding: 1px 7px;
   margin-left: 6px;
   line-height: 1.4;
+}
+.cm-admin-count-alert {
+  background: #e53e3e;
+  color: #fff;
 }
 .admin-note-history {
   background: #f8f9f4;
