@@ -53,13 +53,14 @@ const BOOKING_STATUS_CLASS = {
 const PIE_COLORS = ["#5a9e3a", "#9ab87a", "#d4a843", "#e07f4e", "#c26b6b", "#7ba8c4", "#a87bc4"];
 
 const fmtCurrency = (amount, currency) => {
+  if (!currency) return Number(amount ?? 0).toLocaleString("en-GB");
   try {
     return new Intl.NumberFormat("en-GB", {
-      style: "currency", currency: currency ?? "EUR",
+      style: "currency", currency,
       minimumFractionDigits: 0, maximumFractionDigits: 0,
     }).format(Number(amount ?? 0));
   } catch {
-    return `${currency ?? ""} ${Number(amount ?? 0).toFixed(0)}`;
+    return `${currency} ${Number(amount ?? 0).toFixed(0)}`;
   }
 };
 
@@ -654,7 +655,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     ]);
     const commList = commissionsRes.data ?? [];
     const referralList = referralsRes.data ?? [];
-    const currency = commList[0]?.currency ?? referralList[0]?.profile?.currency ?? "EUR";
+    const currency = commList[0]?.currency ?? null;
     const now = new Date();
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     setCmStats({
