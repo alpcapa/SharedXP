@@ -1905,18 +1905,15 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
               const rows = [
                 <tr key={m.id} className={`members-row${isOpen || isHistoryOpen || isBlocked ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
                   <td data-label="Name">
-                    {m.referredBy && (
-                      <span className="members-ref-badge" title={`Referred by ${m.referredBy}`}>R</span>
-                    )}
                     {m.name}
+                    {m.referredBy && (
+                      <div className="members-referred-by">({m.referredBy})</div>
+                    )}
                   </td>
                   <td data-label="Email">{m.email || "—"}</td>
                   <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
                   <td data-label="Member since">
                     {m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}
-                    {m.referredBy && (
-                      <div className="members-referred-by">Referred by {m.referredBy}</div>
-                    )}
                   </td>
                   <td data-label="Type">
                     <div className="members-badges">
