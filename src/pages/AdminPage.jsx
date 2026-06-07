@@ -408,35 +408,35 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           className={`admin-tab${subTab === "applications" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("applications")}
         >
-          Applications {pendingApps.length > 0 && <span className="cm-admin-count">{pendingApps.length}</span>}
+          Applications <span className={`cm-admin-count${pendingApps.length > 0 ? " cm-admin-count-alert" : ""}`}>{pendingApps.length}</span>
         </button>
         <button
           type="button"
           className={`admin-tab${subTab === "active" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("active")}
         >
-          Active CMs {pendingCommsTotal > 0 && <span className="cm-admin-count">{pendingCommsTotal}</span>}
+          Active CMs <span className="cm-admin-count">{activeCms.length}</span>
         </button>
         <button
           type="button"
           className={`admin-tab${subTab === "paused" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("paused")}
         >
-          Paused {pausedCms.length > 0 && <span className="cm-admin-count">{pausedCms.length}</span>}
+          Paused <span className="cm-admin-count">{pausedCms.length}</span>
         </button>
         <button
           type="button"
           className={`admin-tab${subTab === "revoked" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("revoked")}
         >
-          Revoked {revokedCms.length > 0 && <span className="cm-admin-count">{revokedCms.length}</span>}
+          Revoked <span className="cm-admin-count">{revokedCms.length}</span>
         </button>
         <button
           type="button"
           className={`admin-tab${subTab === "declined" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("declined")}
         >
-          Declined {declinedApps.length > 0 && <span className="cm-admin-count">{declinedApps.length}</span>}
+          Declined <span className="cm-admin-count">{declinedApps.length}</span>
         </button>
         </div>
         <div className="support-filters">
@@ -1082,18 +1082,14 @@ const SupportPanel = ({ currentUser, onRead }) => {
             onClick={() => setSupportTab("open")}
           >
             Open
-            {threads.filter((t) => !t.allClosed && t.hasUnread).length > 0 && (
-              <span className="cm-admin-count">
-                {threads.filter((t) => !t.allClosed && t.hasUnread).length}
-              </span>
-            )}
+            {(() => { const open = threads.filter((t) => !t.allClosed); const unread = open.filter((t) => t.hasUnread).length; return <span className={`cm-admin-count${unread > 0 ? " cm-admin-count-alert" : ""}`}>{open.length}</span>; })()}
           </button>
           <button
             type="button"
             className={`admin-tab${supportTab === "archive" ? " admin-tab-active" : ""}`}
             onClick={() => setSupportTab("archive")}
           >
-            Archived
+            Archived <span className="cm-admin-count">{threads.filter((t) => t.allClosed).length}</span>
           </button>
         </div>
         <div className="support-filters">
@@ -1153,7 +1149,7 @@ const SupportPanel = ({ currentUser, onRead }) => {
               </div>
               <div className="cm-admin-card-summary-right">
                 {threadUnread > 0 && (
-                  <span className="cm-admin-count">{threadUnread} unread</span>
+                  <span className="cm-admin-count cm-admin-count-alert">{threadUnread} unread</span>
                 )}
                 <span className="cm-admin-email" style={{ whiteSpace: "nowrap" }}>
                   {fmtMsgDate(latestMsg.received_at)}
@@ -1481,7 +1477,7 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
       <p className="admin-subtitle">Field posts flagged by users as inappropriate.</p>
       <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
         <button type="button" className={`admin-tab${reportTab === "pending" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("pending")}>
-          Pending <span className="cm-admin-count" style={{ marginLeft: 4 }}>{pendingCount}</span>
+          Pending <span className={`cm-admin-count${pendingCount > 0 ? " cm-admin-count-alert" : ""}`} style={{ marginLeft: 4 }}>{pendingCount}</span>
         </button>
         <button type="button" className={`admin-tab${reportTab === "dismissed" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("dismissed")}>
           Dismissed <span className="cm-admin-count" style={{ marginLeft: 4 }}>{dismissedCount}</span>
@@ -1905,18 +1901,18 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
               const rows = [
                 <tr key={m.id} className={`members-row${isOpen || isHistoryOpen || isBlocked ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
                   <td data-label="Name">
-                    {m.referredBy && (
-                      <span className="members-ref-badge" title={`Referred by ${m.referredBy}`}>R</span>
-                    )}
                     {m.name}
+                    {m.referredBy && (
+                      <div className="members-referred-by">
+                        <span className="members-ref-badge" title={`Referred by ${m.referredBy}`}>R</span>
+                        {m.referredBy}
+                      </div>
+                    )}
                   </td>
                   <td data-label="Email">{m.email || "—"}</td>
                   <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
                   <td data-label="Member since">
                     {m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}
-                    {m.referredBy && (
-                      <div className="members-referred-by">Referred by {m.referredBy}</div>
-                    )}
                   </td>
                   <td data-label="Type">
                     <div className="members-badges">
@@ -2048,17 +2044,30 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   const fetchDisputes = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("disputes")
+      .from("booking_requests")
       .select(`
-        *,
-        booking_request:booking_requests(
-          sport, requested_date, price, currency,
-          requester:profiles!requester_id(full_name, first_name, last_name, email),
-          host:profiles!host_id(full_name, first_name, last_name, email)
-        )
+        id, status, sport, requested_date, price, currency, updated_at,
+        requester:profiles!requester_id(full_name, first_name, last_name, email),
+        host:profiles!host_id(full_name, first_name, last_name, email),
+        dispute:disputes(id, requester_explanation, host_response, opened_at, resolved_at, resolution, resolved_by)
       `)
-      .order("opened_at", { ascending: false });
-    setDisputes(data ?? []);
+      .in("status", ["disputed", "resolved_refunded", "resolved_paid_host"])
+      .order("updated_at", { ascending: false });
+    const rows = (data ?? []).map((br) => {
+      const d = br.dispute?.[0] ?? {};
+      return {
+        id: d.id ?? null,
+        booking_request_id: br.id,
+        requester_explanation: d.requester_explanation ?? null,
+        host_response: d.host_response ?? null,
+        opened_at: d.opened_at ?? null,
+        resolved_at: d.resolved_at ?? null,
+        resolution: d.resolution ?? null,
+        resolved_by: d.resolved_by ?? null,
+        booking_request: { status: br.status, sport: br.sport, requested_date: br.requested_date, price: br.price, currency: br.currency, requester: br.requester, host: br.host },
+      };
+    });
+    setDisputes(rows);
     setLoading(false);
   }, []);
 
@@ -2175,8 +2184,8 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             onClick={() => setActiveTab("disputes")}
           >
             Dispute Management
-            {disputes.filter((d) => !d.resolved_at).length > 0 && (
-              <span className="cm-admin-count">{disputes.filter((d) => !d.resolved_at).length}</span>
+            {disputes.filter((d) => d.booking_request?.status === "disputed").length > 0 && (
+              <span className="cm-admin-count cm-admin-count-alert">{disputes.filter((d) => d.booking_request?.status === "disputed").length}</span>
             )}
           </button>
           <button
@@ -2185,8 +2194,8 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             onClick={() => setActiveTab("cm")}
           >
             CM Management
-            {(cmCounts.pendingApps + cmCounts.pendingComms) > 0 && (
-              <span className="cm-admin-count">{cmCounts.pendingApps + cmCounts.pendingComms}</span>
+            {cmCounts.pendingApps > 0 && (
+              <span className="cm-admin-count cm-admin-count-alert">{cmCounts.pendingApps}</span>
             )}
           </button>
           <button
@@ -2195,7 +2204,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             onClick={() => setActiveTab("support")}
           >
             Support
-            {unreadSupport > 0 && <span className="cm-admin-count">{unreadSupport}</span>}
+            {unreadSupport > 0 && <span className="cm-admin-count cm-admin-count-alert">{unreadSupport}</span>}
           </button>
           <button
             type="button"
@@ -2203,7 +2212,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             onClick={() => setActiveTab("reports")}
           >
             Reports
-            {pendingReports > 0 && <span className="cm-admin-count">{pendingReports}</span>}
+            {pendingReports > 0 && <span className="cm-admin-count cm-admin-count-alert">{pendingReports}</span>}
           </button>
           <button
             type="button"
@@ -2220,24 +2229,24 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             {!loading && (
               <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
                 <button type="button" className={`admin-tab${disputeTab === "open" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("open")}>
-                  Open <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !d.resolved_at && !d.resolution).length}</span>
+                  {(() => { const n = disputes.filter((d) => d.booking_request?.status === "disputed").length; return <>Open <span className={`cm-admin-count${n > 0 ? " cm-admin-count-alert" : ""}`} style={{ marginLeft: 4 }}>{n}</span></>; })()}
                 </button>
                 <button type="button" className={`admin-tab${disputeTab === "resolved" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("resolved")}>
-                  Resolved <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !!d.resolved_at || !!d.resolution).length}</span>
+                  Resolved <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => d.booking_request?.status?.startsWith("resolved_")).length}</span>
                 </button>
               </div>
             )}
             {loading ? (
               <p>Loading disputes…</p>
-            ) : disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution) : (!!d.resolved_at || !!d.resolution)).length === 0 ? (
+            ) : disputes.filter((d) => disputeTab === "open" ? d.booking_request?.status === "disputed" : d.booking_request?.status?.startsWith("resolved_")).length === 0 ? (
               <p>No {disputeTab} disputes.</p>
             ) : (
               <div className="admin-dispute-list">
-                {disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution) : (!!d.resolved_at || !!d.resolution)).map((d) => {
+                {disputes.filter((d) => disputeTab === "open" ? d.booking_request?.status === "disputed" : d.booking_request?.status?.startsWith("resolved_")).map((d) => {
               const br = d.booking_request;
               const requesterName = br ? getName(br.requester) : "—";
               const hostName = br ? getName(br.host) : "—";
-              const isResolved = !!d.resolved_at || !!d.resolution;
+              const isResolved = !!br?.status?.startsWith("resolved_");
 
               return (
                 <article key={d.id} className={`admin-dispute-card${isResolved ? " resolved" : ""}`}>
@@ -2247,7 +2256,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
                       <p className="admin-dispute-date">{fmtDate(br?.requested_date)}</p>
                     </div>
                     <span className={`pending-status-badge status-${isResolved ? "resolved" : "disputed"}`}>
-                      {isResolved ? `Resolved: ${d.resolution}` : "Open"}
+                      {isResolved ? `Resolved: ${d.resolution ?? br?.status?.replace("resolved_", "")}` : "Open"}
                     </span>
                   </div>
 
