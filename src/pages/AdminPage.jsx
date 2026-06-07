@@ -1917,6 +1917,11 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
                         {!isClosed && (
                           <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "close")}>{isBusy ? "…" : "Close"}</button>
                         )}
+                        {noteCount > 0 && (
+                          <button type="button" className={`members-notes-btn${isHistoryOpen ? " members-notes-btn-active" : ""}`} onClick={() => toggleHistory(m.id)}>
+                            {noteCount} {isHistoryOpen ? "▲" : "▼"}
+                          </button>
+                        )}
                         {isClosed && (
                           <>
                             <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "reopen")}>Reopen</button>
@@ -1924,11 +1929,6 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
                               {graceDaysLeft > 0 ? `${graceDaysLeft}d left` : "Grace expired"}
                             </span>
                           </>
-                        )}
-                        {noteCount > 0 && (
-                          <button type="button" className={`members-notes-btn${isHistoryOpen ? " members-notes-btn-active" : ""}`} onClick={() => toggleHistory(m.id)}>
-                            {noteCount} {isHistoryOpen ? "▲" : "▼"}
-                          </button>
                         )}
                       </div>
                     )}
