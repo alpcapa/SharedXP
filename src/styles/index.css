@@ -5934,6 +5934,7 @@ body {
 .members-badges .pending-status-badge { padding: 3px 8px; }
 .members-actions-btns { display: flex; flex-direction: row; gap: 5px; align-items: center; flex-wrap: nowrap; }
 .members-actions-btns .btn { padding: 4px 10px; font-size: 12px; }
+.members-referred-by { font-size: 11px; color: #6b7280; margin-top: 2px; }
 .members-grace-tag { font-size: 11px; color: #92400e; background: #fef3c7; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 .members-grace-expired { color: #991b1b; background: #fee2e2; }
 .members-notes-btn { background: #e0e7ff; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 12px; font-weight: 600; color: #3730a3; cursor: pointer; padding: 4px 10px; font-family: inherit; white-space: nowrap; }

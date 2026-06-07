@@ -1677,7 +1677,7 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
   const loadMembers = useCallback(async () => {
     setLoading(true);
     const [profilesRes, cmRes] = await Promise.all([
-      supabase.from("profiles").select("id, email, first_name, last_name, full_name, city, country, is_host, is_admin, signed_up_at, suspended_at, closed_at, admin_notes"),
+      supabase.from("profiles").select(`id, email, first_name, last_name, full_name, city, country, is_host, is_admin, signed_up_at, suspended_at, closed_at, admin_notes, cm_referrals!referred_user_id(cm_profiles(owner:profiles!user_id(full_name, first_name, last_name)))`),
       supabase.from("cm_profiles").select("user_id, status"),
     ]);
     const cmSet = new Set((cmRes.data ?? []).map((c) => c.user_id));
@@ -1685,6 +1685,10 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
       ...p,
       isCm: cmSet.has(p.id),
       name: p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email || "—",
+      referredBy: (() => {
+        const o = p.cm_referrals?.[0]?.cm_profiles?.owner;
+        return o ? (o.full_name || `${o.first_name ?? ""} ${o.last_name ?? ""}`.trim()) || null : null;
+      })(),
     }));
     setMembers(rows);
     setLoading(false);
@@ -1895,7 +1899,12 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
                   <td data-label="Name">{m.name}</td>
                   <td data-label="Email">{m.email || "—"}</td>
                   <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
-                  <td data-label="Member since">{m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}</td>
+                  <td data-label="Member since">
+                    {m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}
+                    {tab === "guest" && m.referredBy && (
+                      <div className="members-referred-by">Referred by {m.referredBy}</div>
+                    )}
+                  </td>
                   <td data-label="Type">
                     <div className="members-badges">
                       {isClosed    && <span className="pending-status-badge status-disputed">Closed</span>}
