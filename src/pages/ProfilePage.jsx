@@ -231,7 +231,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const [cmLoading, setCmLoading] = useState(false);
   const [cmCopied, setCmCopied] = useState(false);
   const [collapsedMembers, setCollapsedMembers] = useState(new Set());
-  const [referrerName, setReferrerName] = useState(null);
+  const [referrer, setReferrer] = useState(null);
 
   // Guest role
   const [guestReviews, setGuestReviews] = useState([]);
@@ -693,8 +693,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
         if (!ref) return;
         const { data: cm } = await supabase.from("cm_profiles").select("user_id").eq("id", ref.cm_id).maybeSingle();
         if (!cm) return;
-        const { data: owner } = await supabase.from("profiles").select("full_name, first_name, last_name").eq("id", cm.user_id).maybeSingle();
-        if (owner) setReferrerName(owner.full_name || `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim() || null);
+        const { data: owner } = await supabase.from("profiles").select("id, full_name, first_name, last_name").eq("id", cm.user_id).maybeSingle();
+        if (owner) setReferrer({ id: owner.id, name: owner.full_name || `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim() || null });
       });
   }, [currentUser?.id, userId]);
 
@@ -989,8 +989,8 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                   </span>
                 )}
               </h1>
-              {isOwnProfile && referrerName && (
-                <p className="profile-referred-by">Referred by {referrerName} <span className="profile-referred-by-note">(seen only by me)</span></p>
+              {isOwnProfile && referrer?.name && (
+                <p className="profile-referred-by">Referred by <Link to={`/profile/${referrer.id}`}>{referrer.name}</Link> <span className="profile-referred-by-note">(seen only by me)</span></p>
               )}
               {locationLine && <p className="guest-profile-location">{locationLine}</p>}
               {memberSince && <p className="guest-profile-member-since">Member since {memberSince}</p>}
