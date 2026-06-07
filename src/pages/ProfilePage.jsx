@@ -436,7 +436,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     Promise.all([
       supabase
         .from("profiles")
-        .select("id, full_name, first_name, last_name, photo_url, signed_up_at, is_host, birthday, city, country")
+        .select("id, full_name, first_name, last_name, photo_url, signed_up_at, is_host, birthday, city, country, user_languages(language, position)")
         .eq("id", userId)
         .maybeSingle(),
       supabase
@@ -859,7 +859,15 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const selectedPrice = formatPrice(activeSport.pricing, activeSport.pricingCurrency);
   const perLabel = activeSport.priceUnit ?? "per session";
   const canBook = Boolean(selectedDate && selectedTime);
-  const hostLanguages = Array.isArray(hostData?.languages) ? hostData.languages.filter(Boolean).join(", ") : "";
+  const hostLanguages = (() => {
+    if (Array.isArray(hostData?.languages) && hostData.languages.filter(Boolean).length) {
+      return hostData.languages.filter(Boolean).join(", ");
+    }
+    const langs = Array.isArray(profile?.user_languages)
+      ? profile.user_languages.sort((a, b) => a.position - b.position).map((l) => l.language).filter(Boolean)
+      : [];
+    return langs.join(", ");
+  })();
 
   const totalGuestReviewPages = Math.max(1, Math.ceil(guestReviews.length / REVIEWS_PER_PAGE));
   const visibleGuestReviews = guestReviews.slice(guestReviewsPage * REVIEWS_PER_PAGE, (guestReviewsPage + 1) * REVIEWS_PER_PAGE);
@@ -970,7 +978,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
               </h1>
               {locationLine && <p className="guest-profile-location">{locationLine}</p>}
               {memberSince && <p className="guest-profile-member-since">Member since {memberSince}</p>}
-              {isHost && hostLanguages && (
+              {hostLanguages && (
                 <p className="unified-profile-languages"><strong>Languages:</strong> {hostLanguages}</p>
               )}
             </div>
