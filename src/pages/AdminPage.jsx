@@ -1659,7 +1659,6 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
 // ── Members Panel ─────────────────────────────────────────────────────────────
 const MembersPanel = ({ currentUser, initialSearch = "" }) => {
   const [members, setMembers] = useState([]);
-  const [referralDebug, setReferralDebug] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState(initialSearch);
@@ -1685,7 +1684,6 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
     const allProfiles  = profilesRes.data ?? [];
     const cmProfiles   = cmRes.data ?? [];
     const referrals    = referralsRes.data ?? [];
-    setReferralDebug({ count: referrals.length, error: referralsRes.error?.message ?? null, rows: referrals, cmCount: cmProfiles.length });
     const cmSet        = new Set(cmProfiles.map((c) => c.user_id));
     const profileById  = new Map(allProfiles.map((p) => [p.id, p]));
     const cmById       = new Map(cmProfiles.map((c) => [c.id, c]));
@@ -1852,12 +1850,6 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
   return (
     <div>
       <p className="admin-subtitle">All registered members.</p>
-      {referralDebug && (
-        <pre style={{ fontSize: 11, background: "#f3f4f6", padding: 8, borderRadius: 6, marginBottom: 8, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-          DEBUG referrals: count={referralDebug.count} cmProfiles={referralDebug.cmCount} error={referralDebug.error ?? "none"}{"\n"}
-          rows={JSON.stringify(referralDebug.rows)}
-        </pre>
-      )}
 
       <div className="cm-admin-subtabs" style={{ marginBottom: 12 }}>
         {tabs.map(([key, label, count]) => (
