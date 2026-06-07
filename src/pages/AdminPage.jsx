@@ -2048,17 +2048,30 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   const fetchDisputes = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("disputes")
+      .from("booking_requests")
       .select(`
-        *,
-        booking_request:booking_requests(
-          status, sport, requested_date, price, currency,
-          requester:profiles!requester_id(full_name, first_name, last_name, email),
-          host:profiles!host_id(full_name, first_name, last_name, email)
-        )
+        id, status, sport, requested_date, price, currency, updated_at,
+        requester:profiles!requester_id(full_name, first_name, last_name, email),
+        host:profiles!host_id(full_name, first_name, last_name, email),
+        dispute:disputes(id, requester_explanation, host_response, opened_at, resolved_at, resolution, resolved_by)
       `)
-      .order("opened_at", { ascending: false });
-    setDisputes(data ?? []);
+      .in("status", ["disputed", "resolved_refunded", "resolved_paid_host"])
+      .order("updated_at", { ascending: false });
+    const rows = (data ?? []).map((br) => {
+      const d = br.dispute?.[0] ?? {};
+      return {
+        id: d.id ?? null,
+        booking_request_id: br.id,
+        requester_explanation: d.requester_explanation ?? null,
+        host_response: d.host_response ?? null,
+        opened_at: d.opened_at ?? null,
+        resolved_at: d.resolved_at ?? null,
+        resolution: d.resolution ?? null,
+        resolved_by: d.resolved_by ?? null,
+        booking_request: { status: br.status, sport: br.sport, requested_date: br.requested_date, price: br.price, currency: br.currency, requester: br.requester, host: br.host },
+      };
+    });
+    setDisputes(rows);
     setLoading(false);
   }, []);
 
@@ -2175,8 +2188,8 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             onClick={() => setActiveTab("disputes")}
           >
             Dispute Management
-            {disputes.filter((d) => !d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")).length > 0 && (
-              <span className="cm-admin-count cm-admin-count-alert">{disputes.filter((d) => !d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")).length}</span>
+            {disputes.filter((d) => d.booking_request?.status === "disputed").length > 0 && (
+              <span className="cm-admin-count cm-admin-count-alert">{disputes.filter((d) => d.booking_request?.status === "disputed").length}</span>
             )}
           </button>
           <button
@@ -2220,24 +2233,24 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             {!loading && (
               <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
                 <button type="button" className={`admin-tab${disputeTab === "open" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("open")}>
-                  {(() => { const n = disputes.filter((d) => !d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")).length; return <>Open <span className={`cm-admin-count${n > 0 ? " cm-admin-count-alert" : ""}`} style={{ marginLeft: 4 }}>{n}</span></>; })()}
+                  {(() => { const n = disputes.filter((d) => d.booking_request?.status === "disputed").length; return <>Open <span className={`cm-admin-count${n > 0 ? " cm-admin-count-alert" : ""}`} style={{ marginLeft: 4 }}>{n}</span></>; })()}
                 </button>
                 <button type="button" className={`admin-tab${disputeTab === "resolved" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("resolved")}>
-                  Resolved <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !!d.resolved_at || !!d.resolution || d.booking_request?.status?.startsWith("resolved_")).length}</span>
+                  Resolved <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => d.booking_request?.status?.startsWith("resolved_")).length}</span>
                 </button>
               </div>
             )}
             {loading ? (
               <p>Loading disputes…</p>
-            ) : disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")) : (!!d.resolved_at || !!d.resolution || d.booking_request?.status?.startsWith("resolved_"))).length === 0 ? (
+            ) : disputes.filter((d) => disputeTab === "open" ? d.booking_request?.status === "disputed" : d.booking_request?.status?.startsWith("resolved_")).length === 0 ? (
               <p>No {disputeTab} disputes.</p>
             ) : (
               <div className="admin-dispute-list">
-                {disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")) : (!!d.resolved_at || !!d.resolution || d.booking_request?.status?.startsWith("resolved_"))).map((d) => {
+                {disputes.filter((d) => disputeTab === "open" ? d.booking_request?.status === "disputed" : d.booking_request?.status?.startsWith("resolved_")).map((d) => {
               const br = d.booking_request;
               const requesterName = br ? getName(br.requester) : "—";
               const hostName = br ? getName(br.host) : "—";
-              const isResolved = !!d.resolved_at || !!d.resolution;
+              const isResolved = !!br?.status?.startsWith("resolved_");
 
               return (
                 <article key={d.id} className={`admin-dispute-card${isResolved ? " resolved" : ""}`}>
@@ -2247,7 +2260,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
                       <p className="admin-dispute-date">{fmtDate(br?.requested_date)}</p>
                     </div>
                     <span className={`pending-status-badge status-${isResolved ? "resolved" : "disputed"}`}>
-                      {isResolved ? `Resolved: ${d.resolution}` : "Open"}
+                      {isResolved ? `Resolved: ${d.resolution ?? br?.status?.replace("resolved_", "")}` : "Open"}
                     </span>
                   </div>
 
