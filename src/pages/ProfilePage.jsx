@@ -231,6 +231,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const [cmLoading, setCmLoading] = useState(false);
   const [cmCopied, setCmCopied] = useState(false);
   const [collapsedMembers, setCollapsedMembers] = useState(new Set());
+  const [referrerName, setReferrerName] = useState(null);
 
   // Guest role
   const [guestReviews, setGuestReviews] = useState([]);
@@ -685,6 +686,18 @@ const ProfilePage = ({ currentUser, onLogout }) => {
     if (activeTab === "cm" && currentUser?.id === userId && currentUser?.isCm && !cmStats) fetchCmData();
   }, [activeTab, userId, currentUser?.id, currentUser?.isCm, cmStats, fetchCmData]);
 
+  useEffect(() => {
+    if (!currentUser?.id || currentUser.id !== userId) return;
+    supabase.from("cm_referrals").select("cm_id").eq("referred_user_id", currentUser.id).maybeSingle()
+      .then(async ({ data: ref }) => {
+        if (!ref) return;
+        const { data: cm } = await supabase.from("cm_profiles").select("user_id").eq("id", ref.cm_id).maybeSingle();
+        if (!cm) return;
+        const { data: owner } = await supabase.from("profiles").select("full_name, first_name, last_name").eq("id", cm.user_id).maybeSingle();
+        if (owner) setReferrerName(owner.full_name || `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim() || null);
+      });
+  }, [currentUser?.id, userId]);
+
   const copyCmCode = () => {
     navigator.clipboard.writeText(currentUser?.cmProfile?.inviteCode ?? "").then(() => {
       setCmCopied(true);
@@ -976,6 +989,9 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                   </span>
                 )}
               </h1>
+              {isOwnProfile && referrerName && (
+                <p className="profile-referred-by">Referred by {referrerName} <span className="profile-referred-by-note">(seen only by me)</span></p>
+              )}
               {locationLine && <p className="guest-profile-location">{locationLine}</p>}
               {memberSince && <p className="guest-profile-member-since">Member since {memberSince}</p>}
               {hostLanguages && (
