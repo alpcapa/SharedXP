@@ -990,7 +990,7 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                 )}
               </h1>
               {isOwnProfile && referrer?.name && (
-                <p className="profile-referred-by">(<Link to={`/profile/${referrer.id}`}>{referrer.name}</Link>) <span className="profile-referred-by-note">(seen only by me)</span></p>
+                <p className="profile-referred-by">Referred by <Link to={`/profile/${referrer.id}`}>{referrer.name}</Link> <span className="profile-referred-by-note">(seen only by me)</span></p>
               )}
               {locationLine && <p className="guest-profile-location">{locationLine}</p>}
               {memberSince && <p className="guest-profile-member-since">Member since {memberSince}</p>}
