@@ -1896,7 +1896,12 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
               const ACTION_BTN = { suspend: "Save & Suspend", unsuspend: "Save & Unsuspend", close: "Save & Close", reopen: "Save & Reopen" };
               const rows = [
                 <tr key={m.id} className={`members-row${isOpen || isHistoryOpen || isBlocked ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
-                  <td data-label="Name">{m.name}</td>
+                  <td data-label="Name">
+                    {m.referredBy && (
+                      <span className="members-ref-badge" title={`Referred by ${m.referredBy}`}>R</span>
+                    )}
+                    {m.name}
+                  </td>
                   <td data-label="Email">{m.email || "—"}</td>
                   <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
                   <td data-label="Member since">
