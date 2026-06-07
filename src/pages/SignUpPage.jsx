@@ -309,6 +309,9 @@ const SignUpPage = ({ currentUser, onLogout, onEmailSignUp, onSocialLogin }) => 
       setErrorMessage(result?.message || "Sign up failed. Please try again.");
       return;
     }
+    if (resolvedInviteCode) {
+      try { localStorage.setItem("sharedxp_pending_invite", resolvedInviteCode); } catch {}
+    }
     setPendingVerification({ email: formValues.email.trim().toLowerCase() });
   };
 

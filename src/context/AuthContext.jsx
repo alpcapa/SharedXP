@@ -318,18 +318,25 @@ if (!profile) {
     languagesData = langRows;
     sportsData = sportRows;
     // Process invite code if provided at sign-up.
-    if (meta.inviteCode) {
+    const pendingInvite = meta.inviteCode || (() => {
+      try { return localStorage.getItem("sharedxp_pending_invite") || ""; } catch { return ""; }
+    })();
+    if (pendingInvite) {
+      try { localStorage.removeItem("sharedxp_pending_invite"); } catch {}
       const { data: cmRow } = await supabase
         .from("cm_profiles")
         .select("id")
-        .eq("invite_code", meta.inviteCode.trim().toUpperCase())
+        .eq("invite_code", pendingInvite.trim().toUpperCase())
         .eq("status", "active")
         .maybeSingle();
       if (cmRow) {
-        await supabase.from("cm_referrals").insert({
+        const { error: refErr } = await supabase.from("cm_referrals").insert({
           cm_id: cmRow.id,
           referred_user_id: authUser.id,
         });
+        if (refErr) console.error("[auth] cm_referrals insert:", refErr);
+      } else {
+        console.warn("[auth] invite code not matched:", pendingInvite);
       }
     }
   } else {
