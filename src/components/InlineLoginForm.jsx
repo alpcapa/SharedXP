@@ -13,13 +13,16 @@ const InlineLoginForm = ({ onEmailLogin, onForgotPassword, title, description })
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [errorSuspended, setErrorSuspended] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
   const [resetMode, setResetMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const clearError = () => { setError(""); setErrorSuspended(false); };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    clearError();
     setResetMessage("");
     setLoading(true);
 
@@ -40,7 +43,10 @@ const InlineLoginForm = ({ onEmailLogin, onForgotPassword, title, description })
 
     try {
       const result = await onEmailLogin?.(email, password);
-      if (!result?.success) setError(result?.message ?? "Login failed. Please try again.");
+      if (!result?.success) {
+        setError(result?.message ?? "Login failed. Please try again.");
+        setErrorSuspended(!!result?.suspended);
+      }
     } catch {
       setError("Login failed. Please try again.");
     }
@@ -58,7 +64,7 @@ const InlineLoginForm = ({ onEmailLogin, onForgotPassword, title, description })
           type="email"
           autoComplete="email"
           value={email}
-          onChange={(e) => { setEmail(e.target.value); setError(""); setResetMessage(""); }}
+          onChange={(e) => { setEmail(e.target.value); clearError(); setResetMessage(""); }}
           required
         />
         {!resetMode && (
@@ -69,12 +75,17 @@ const InlineLoginForm = ({ onEmailLogin, onForgotPassword, title, description })
               type="password"
               autoComplete="current-password"
               value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              onChange={(e) => { setPassword(e.target.value); clearError(); }}
               required
             />
           </>
         )}
-        {error && <p className="auth-error" role="alert">{error}</p>}
+        {error && (
+          <p className="auth-error" role="alert">
+            {error}{" "}
+            {errorSuspended && <Link to="/contact">Contact support</Link>}
+          </p>
+        )}
         {resetMessage && <p className="auth-success" role="status">{resetMessage}</p>}
         <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
           {loading ? (resetMode ? "Sending…" : "Logging in…") : (resetMode ? "Send reset link" : "Log in")}
@@ -84,7 +95,7 @@ const InlineLoginForm = ({ onEmailLogin, onForgotPassword, title, description })
         <button
           type="button"
           className="auth-text-link"
-          onClick={() => { setResetMode((m) => !m); setError(""); setResetMessage(""); }}
+          onClick={() => { setResetMode((m) => !m); clearError(); setResetMessage(""); }}
         >
           {resetMode ? "Back to Log in" : "Forgot Password?"}
         </button>

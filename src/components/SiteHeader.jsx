@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress", "disputed"];
@@ -23,6 +23,7 @@ const createInitials = (name) =>
 const sanitizeInitials = (initials) => initials.replace(/[^A-Z0-9]/g, "").slice(0, 2) || "U";
 
 const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTags, setActiveTags] = useState([]);
   const menuRef = useRef(null);
@@ -156,9 +157,10 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
               <button
                 type="button"
                 className="user-dropdown-link user-dropdown-logout"
-                onClick={() => {
+                onClick={async () => {
                   setIsMenuOpen(false);
-                  onLogout?.();
+                  await onLogout?.();
+                  navigate("/");
                 }}
               >
                 Log out

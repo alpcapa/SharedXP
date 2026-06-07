@@ -5932,13 +5932,18 @@ body {
 .members-row.members-row-closed { opacity: 0.6; }
 .members-badges { display: flex; gap: 4px; flex-wrap: nowrap; }
 .members-badges .pending-status-badge { padding: 3px 8px; }
-.members-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .members-actions-btns { display: flex; flex-direction: row; gap: 5px; align-items: center; flex-wrap: nowrap; }
 .members-actions-btns .btn { padding: 4px 10px; font-size: 12px; }
+.members-referred-by { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.profile-referred-by { font-size: 13px; color: #6b7280; margin: 2px 0 0; }
+.profile-referred-by a { color: inherit; text-decoration: underline; }
+.profile-referred-by-note { font-size: 11px; color: #9ca3af; }
+.members-ref-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #e0e7ff; color: #3730a3; font-size: 10px; font-weight: 700; margin-right: 5px; cursor: default; flex-shrink: 0; vertical-align: middle; position: relative; top: -1px; }
 .members-grace-tag { font-size: 11px; color: #92400e; background: #fef3c7; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 .members-grace-expired { color: #991b1b; background: #fee2e2; }
-.members-history-btn { background: none; border: none; font-size: 11px; color: #9ca3af; cursor: pointer; padding: 2px 0; text-decoration: underline; font-family: inherit; }
-.members-history-btn:hover { color: #374151; }
+.members-notes-btn { background: #e0e7ff; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 12px; font-weight: 600; color: #3730a3; cursor: pointer; padding: 4px 10px; font-family: inherit; white-space: nowrap; }
+.members-notes-btn:hover { background: #c7d2fe; }
+.members-notes-btn-active { background: #c7d2fe; border-color: #a5b4fc; }
 .members-action-row td {
   padding: 0 16px 16px;
   background: #f9fafb;
@@ -5984,6 +5989,7 @@ body {
   }
   .members-row td:first-child { font-weight: 500; }
   .members-row td { word-break: break-all; white-space: normal; }
+  .members-actions-btns { flex-wrap: wrap; }
   .members-action-row,
   .members-action-row td {
     display: block;
@@ -7845,6 +7851,206 @@ body {
 .cm-status-pending { background: #fff8e1; color: #b45309; }
 .cm-status-approved { background: #e8f5e9; color: #2e7d32; }
 .cm-status-paid { background: #e3f2fd; color: #1565c0; }
+
+/* Enhanced stats grid (6-card layout) */
+.cm-stats-grid--6 {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 600px) {
+  .cm-stats-grid--6 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.cm-stats-grid--6 .cm-stat-card {
+  text-align: left;
+}
+.cm-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #888;
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.cm-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 4px;
+}
+.cm-stat-sub {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+/* Section description */
+.cm-section-desc {
+  font-size: 13px;
+  color: #666;
+  margin: -10px 0 16px;
+}
+
+/* Global Reach */
+.cm-global-reach {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 36px;
+}
+@media (max-width: 600px) {
+  .cm-global-reach {
+    flex-direction: column;
+  }
+}
+.cm-reach-table-wrap {
+  flex: 1;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e8e9e4;
+}
+.cm-reach-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.cm-reach-table th {
+  background: #f5f5f2;
+  text-align: left;
+  padding: 9px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #666;
+  border-bottom: 1px solid #e8e9e4;
+}
+.cm-reach-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid #e8e9e4;
+  color: #1a1a1a;
+}
+.cm-reach-table tr:last-child td {
+  border-bottom: none;
+}
+.cm-pie-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 160px;
+}
+.cm-pie-chart {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cm-pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cm-pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #444;
+}
+.cm-pie-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Acquired Members */
+.cm-member-card {
+  border: 1px solid #e8e9e4;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.cm-member-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  gap: 12px;
+}
+.cm-member-header:hover {
+  background: #fafaf8;
+}
+.cm-member-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cm-member-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.cm-member-meta {
+  font-size: 13px;
+  color: #666;
+}
+.cm-member-toggle {
+  font-size: 11px;
+  color: #888;
+  flex-shrink: 0;
+}
+.cm-member-empty {
+  font-size: 13px;
+  color: #888;
+  padding: 10px 18px 14px;
+  margin: 0;
+}
+.cm-member-bookings-wrap {
+  overflow-x: auto;
+  border-top: 1px solid #e8e9e4;
+}
+.cm-member-bookings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.cm-member-bookings-table th {
+  background: #f5f5f2;
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #666;
+  border-bottom: 1px solid #e8e9e4;
+}
+.cm-member-bookings-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid #e8e9e4;
+  color: #1a1a1a;
+}
+.cm-member-bookings-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Booking status badges (used in Acquired Members table) */
+.cm-booking-pending { background: #fff8e1; color: #b45309; }
+.cm-booking-accepted { background: #e8f5e9; color: #2e7d32; }
+.cm-booking-payment-pending { background: #e3f2fd; color: #1565c0; }
+.cm-booking-in-progress { background: #fff3e0; color: #e65100; }
+.cm-booking-completed { background: #e8f5e9; color: #2e7d32; }
+.cm-booking-declined { background: #fde8e8; color: #b91c1c; }
+.cm-booking-cancelled { background: #f5f5f5; color: #666; }
+.cm-booking-disputed { background: #fde8e8; color: #b91c1c; }
+.cm-booking-resolved { background: #e3f2fd; color: #1565c0; }
 
 /* Admin CM panel */
 .cm-admin-panel {

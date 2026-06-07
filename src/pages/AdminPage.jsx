@@ -1323,6 +1323,7 @@ const fmtDate = (iso) =>
 // ── Field Post Reports Panel ──────────────────────────────────────────────────
 const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => {
   const [reports, setReports] = useState([]);
+  const [reportTab, setReportTab] = useState("pending");
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(null);
   const [expandedIds, setExpandedIds] = useState(() => new Set());
@@ -1348,13 +1349,12 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
         ),
         reporter:profiles!reporter_id(full_name, first_name, last_name, email)
       `)
-      .eq("status", "pending")
       .order("created_at", { ascending: false });
     if (error) console.error("[reports] fetch error:", error);
     const rows = data ?? [];
     setReports(rows);
     setLoading(false);
-    onCountChange?.(rows.length);
+    onCountChange?.(rows.filter((r) => r.status === "pending").length);
   }, [onCountChange]);
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
@@ -1472,14 +1472,26 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
 
   if (loading) return <p style={{ marginTop: 24 }}>Loading reports…</p>;
 
+  const pendingCount   = reports.filter((r) => r.status === "pending").length;
+  const dismissedCount = reports.filter((r) => r.status === "dismissed").length;
+  const visibleReports = reports.filter((r) => r.status === reportTab);
+
   return (
     <div>
       <p className="admin-subtitle">Field posts flagged by users as inappropriate.</p>
-      {reports.length === 0 ? (
-        <p>No pending reports.</p>
+      <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
+        <button type="button" className={`admin-tab${reportTab === "pending" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("pending")}>
+          Pending <span className="cm-admin-count" style={{ marginLeft: 4 }}>{pendingCount}</span>
+        </button>
+        <button type="button" className={`admin-tab${reportTab === "dismissed" ? " admin-tab-active" : ""}`} onClick={() => setReportTab("dismissed")}>
+          Dismissed <span className="cm-admin-count" style={{ marginLeft: 4 }}>{dismissedCount}</span>
+        </button>
+      </div>
+      {visibleReports.length === 0 ? (
+        <p>No {reportTab} reports.</p>
       ) : (
         <div className="admin-dispute-list">
-          {reports.map((r) => {
+          {visibleReports.map((r) => {
             const post = r.post;
             const isExpanded = expandedIds.has(r.id);
             const isEmailOpen = emailMode.has(r.id);
@@ -1501,8 +1513,8 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
                   <div className="cm-admin-card-summary-top">
                     <strong>{post?.sport ?? "Unknown sport"}</strong>
                     <div className="cm-admin-card-summary-right">
-                      <span className={`pending-status-badge ${isSuspended ? "status-pending" : "status-disputed"}`}>
-                        {isSuspended ? "Suspended" : "Pending"}
+                      <span className={`pending-status-badge ${isSuspended ? "status-pending" : r.status === "dismissed" ? "cm-status-approved" : "status-disputed"}`}>
+                        {isSuspended ? "Suspended" : r.status === "dismissed" ? "Dismissed" : "Pending"}
                       </span>
                       <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
                     </div>
@@ -1664,15 +1676,27 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
 
   const loadMembers = useCallback(async () => {
     setLoading(true);
-    const [profilesRes, cmRes] = await Promise.all([
+    const [profilesRes, cmRes, referralsRes] = await Promise.all([
       supabase.from("profiles").select("id, email, first_name, last_name, full_name, city, country, is_host, is_admin, signed_up_at, suspended_at, closed_at, admin_notes"),
-      supabase.from("cm_profiles").select("user_id, status"),
+      supabase.from("cm_profiles").select("id, user_id, status"),
+      supabase.from("cm_referrals").select("referred_user_id, cm_id"),
     ]);
-    const cmSet = new Set((cmRes.data ?? []).map((c) => c.user_id));
-    const rows = (profilesRes.data ?? []).map((p) => ({
+    const allProfiles  = profilesRes.data ?? [];
+    const cmProfiles   = cmRes.data ?? [];
+    const referrals    = referralsRes.data ?? [];
+    const cmSet        = new Set(cmProfiles.map((c) => c.user_id));
+    const profileById  = new Map(allProfiles.map((p) => [p.id, p]));
+    const cmById       = new Map(cmProfiles.map((c) => [c.id, c]));
+    const referralMap  = new Map(referrals.map((r) => {
+      const owner = profileById.get(cmById.get(r.cm_id)?.user_id);
+      const name  = owner ? (owner.full_name || `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim()) || null : null;
+      return [r.referred_user_id, name];
+    }));
+    const rows = allProfiles.map((p) => ({
       ...p,
-      isCm: cmSet.has(p.id),
-      name: p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email || "—",
+      isCm:       cmSet.has(p.id),
+      name:       p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email || "—",
+      referredBy: referralMap.get(p.id) ?? null,
     }));
     setMembers(rows);
     setLoading(false);
@@ -1772,7 +1796,7 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
   };
 
   const isDeleted          = (m) => m.full_name === "Deleted User";
-  const isSuspendedOrClosed = (m) => !!m.suspended_at && !isDeleted(m);
+  const isSuspendedOrClosed = (m) => (!!m.suspended_at || !!m.closed_at) && !isDeleted(m);
   const isActive            = (m) => !m.suspended_at && !m.closed_at && !isDeleted(m);
 
   const tabFiltered = members.filter((m) => {
@@ -1829,7 +1853,7 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
 
       <div className="cm-admin-subtabs" style={{ marginBottom: 12 }}>
         {tabs.map(([key, label, count]) => (
-          <button key={key} type="button" className={`admin-tab${tab === key ? " admin-tab-active" : ""}`} onClick={() => setTab(key)}>
+          <button key={key} type="button" className={`admin-tab${tab === key ? " admin-tab-active" : ""}`} onClick={() => { setTab(key); setSearch(""); }}>
             {label}
             <span className="cm-admin-count" style={{ marginLeft: 4 }}>{count}</span>
           </button>
@@ -1880,10 +1904,20 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
               const ACTION_BTN = { suspend: "Save & Suspend", unsuspend: "Save & Unsuspend", close: "Save & Close", reopen: "Save & Reopen" };
               const rows = [
                 <tr key={m.id} className={`members-row${isOpen || isHistoryOpen || isBlocked ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
-                  <td data-label="Name">{m.name}</td>
+                  <td data-label="Name">
+                    {m.referredBy && (
+                      <span className="members-ref-badge" title={`Referred by ${m.referredBy}`}>R</span>
+                    )}
+                    {m.name}
+                  </td>
                   <td data-label="Email">{m.email || "—"}</td>
                   <td data-label="Location">{[m.city, m.country].filter(Boolean).join(", ") || "—"}</td>
-                  <td data-label="Member since">{m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}</td>
+                  <td data-label="Member since">
+                    {m.signed_up_at ? fmtDate(m.signed_up_at) : "—"}
+                    {m.referredBy && (
+                      <div className="members-referred-by">Referred by {m.referredBy}</div>
+                    )}
+                  </td>
                   <td data-label="Type">
                     <div className="members-badges">
                       {isClosed    && <span className="pending-status-badge status-disputed">Closed</span>}
@@ -1896,29 +1930,27 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
                   </td>
                   <td data-label="Actions">
                     {!m.is_admin && !isPermanentlyDeleted && (
-                      <div className="members-actions">
-                        <div className="members-actions-btns">
-                          {!isClosed && (
-                            isSuspended
-                              ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "unsuspend")}>Unsuspend</button>
-                              : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "suspend")}>{isBusy ? "…" : "Suspend"}</button>
-                          )}
-                          {!isClosed && (
-                            <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "close")}>{isBusy ? "…" : "Close"}</button>
-                          )}
-                          {isClosed && (
-                            <>
-                              <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "reopen")}>Reopen</button>
-                              <span className={`members-grace-tag${graceDaysLeft === 0 ? " members-grace-expired" : ""}`}>
-                                {graceDaysLeft > 0 ? `${graceDaysLeft}d left` : "Grace expired"}
-                              </span>
-                            </>
-                          )}
-                        </div>
+                      <div className="members-actions-btns">
+                        {!isClosed && (
+                          isSuspended
+                            ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "unsuspend")}>Unsuspend</button>
+                            : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "suspend")}>{isBusy ? "…" : "Suspend"}</button>
+                        )}
+                        {!isClosed && (
+                          <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "close")}>{isBusy ? "…" : "Close"}</button>
+                        )}
                         {noteCount > 0 && (
-                          <button type="button" className="members-history-btn" onClick={() => toggleHistory(m.id)}>
-                            {isHistoryOpen ? "Hide history" : `${noteCount} note${noteCount !== 1 ? "s" : ""}`}
+                          <button type="button" className={`members-notes-btn${isHistoryOpen ? " members-notes-btn-active" : ""}`} onClick={() => toggleHistory(m.id)}>
+                            {noteCount} {isHistoryOpen ? "▲" : "▼"}
                           </button>
+                        )}
+                        {isClosed && (
+                          <>
+                            <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "reopen")}>Reopen</button>
+                            <span className={`members-grace-tag${graceDaysLeft === 0 ? " members-grace-expired" : ""}`}>
+                              {graceDaysLeft > 0 ? `${graceDaysLeft}d left` : "Grace expired"}
+                            </span>
+                          </>
                         )}
                       </div>
                     )}
@@ -2003,6 +2035,7 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
 const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPassword }) => {
   const [searchParams] = useSearchParams();
   const [disputes, setDisputes] = useState([]);
+  const [disputeTab, setDisputeTab] = useState("open");
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "disputes");
@@ -2184,17 +2217,27 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
         {activeTab === "disputes" && (
           <>
             <p className="admin-subtitle">Customer service view — all open and resolved disputes.</p>
+            {!loading && (
+              <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
+                <button type="button" className={`admin-tab${disputeTab === "open" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("open")}>
+                  Open <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !d.resolved_at && !d.resolution).length}</span>
+                </button>
+                <button type="button" className={`admin-tab${disputeTab === "resolved" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("resolved")}>
+                  Resolved <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !!d.resolved_at || !!d.resolution).length}</span>
+                </button>
+              </div>
+            )}
             {loading ? (
               <p>Loading disputes…</p>
-            ) : disputes.length === 0 ? (
-              <p>No disputes found.</p>
+            ) : disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution) : (!!d.resolved_at || !!d.resolution)).length === 0 ? (
+              <p>No {disputeTab} disputes.</p>
             ) : (
               <div className="admin-dispute-list">
-                {disputes.map((d) => {
+                {disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution) : (!!d.resolved_at || !!d.resolution)).map((d) => {
               const br = d.booking_request;
               const requesterName = br ? getName(br.requester) : "—";
               const hostName = br ? getName(br.host) : "—";
-              const isResolved = !!d.resolved_at;
+              const isResolved = !!d.resolved_at || !!d.resolution;
 
               return (
                 <article key={d.id} className={`admin-dispute-card${isResolved ? " resolved" : ""}`}>
