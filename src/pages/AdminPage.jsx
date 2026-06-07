@@ -1908,28 +1908,26 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
                   </td>
                   <td data-label="Actions">
                     {!m.is_admin && !isPermanentlyDeleted && (
-                      <div className="members-actions">
-                        <div className="members-actions-btns">
-                          {!isClosed && (
-                            isSuspended
-                              ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "unsuspend")}>Unsuspend</button>
-                              : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "suspend")}>{isBusy ? "…" : "Suspend"}</button>
-                          )}
-                          {!isClosed && (
-                            <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "close")}>{isBusy ? "…" : "Close"}</button>
-                          )}
-                          {isClosed && (
-                            <>
-                              <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "reopen")}>Reopen</button>
-                              <span className={`members-grace-tag${graceDaysLeft === 0 ? " members-grace-expired" : ""}`}>
-                                {graceDaysLeft > 0 ? `${graceDaysLeft}d left` : "Grace expired"}
-                              </span>
-                            </>
-                          )}
-                        </div>
+                      <div className="members-actions-btns">
+                        {!isClosed && (
+                          isSuspended
+                            ? <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "unsuspend")}>Unsuspend</button>
+                            : <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "suspend")}>{isBusy ? "…" : "Suspend"}</button>
+                        )}
+                        {!isClosed && (
+                          <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "close")}>{isBusy ? "…" : "Close"}</button>
+                        )}
+                        {isClosed && (
+                          <>
+                            <button type="button" className="btn btn-light btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "reopen")}>Reopen</button>
+                            <span className={`members-grace-tag${graceDaysLeft === 0 ? " members-grace-expired" : ""}`}>
+                              {graceDaysLeft > 0 ? `${graceDaysLeft}d left` : "Grace expired"}
+                            </span>
+                          </>
+                        )}
                         {noteCount > 0 && (
-                          <button type="button" className="members-history-btn" onClick={() => toggleHistory(m.id)}>
-                            {isHistoryOpen ? "Hide history" : `${noteCount} note${noteCount !== 1 ? "s" : ""}`}
+                          <button type="button" className={`members-notes-btn${isHistoryOpen ? " members-notes-btn-active" : ""}`} onClick={() => toggleHistory(m.id)}>
+                            📝 {isHistoryOpen ? "×" : noteCount}
                           </button>
                         )}
                       </div>
