@@ -2052,7 +2052,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
       .select(`
         *,
         booking_request:booking_requests(
-          sport, requested_date, price, currency,
+          status, sport, requested_date, price, currency,
           requester:profiles!requester_id(full_name, first_name, last_name, email),
           host:profiles!host_id(full_name, first_name, last_name, email)
         )
@@ -2175,8 +2175,8 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             onClick={() => setActiveTab("disputes")}
           >
             Dispute Management
-            {disputes.filter((d) => !d.resolved_at).length > 0 && (
-              <span className="cm-admin-count cm-admin-count-alert">{disputes.filter((d) => !d.resolved_at).length}</span>
+            {disputes.filter((d) => !d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")).length > 0 && (
+              <span className="cm-admin-count cm-admin-count-alert">{disputes.filter((d) => !d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")).length}</span>
             )}
           </button>
           <button
@@ -2220,20 +2220,20 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             {!loading && (
               <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
                 <button type="button" className={`admin-tab${disputeTab === "open" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("open")}>
-                  Open <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{disputes.filter((d) => !d.resolved_at && !d.resolution).length}</span>
+                  {(() => { const n = disputes.filter((d) => !d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")).length; return <>Open <span className={`cm-admin-count${n > 0 ? " cm-admin-count-alert" : ""}`} style={{ marginLeft: 4 }}>{n}</span></>; })()}
                 </button>
                 <button type="button" className={`admin-tab${disputeTab === "resolved" ? " admin-tab-active" : ""}`} onClick={() => setDisputeTab("resolved")}>
-                  Resolved <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !!d.resolved_at || !!d.resolution).length}</span>
+                  Resolved <span className="cm-admin-count" style={{ marginLeft: 4 }}>{disputes.filter((d) => !!d.resolved_at || !!d.resolution || d.booking_request?.status?.startsWith("resolved_")).length}</span>
                 </button>
               </div>
             )}
             {loading ? (
               <p>Loading disputes…</p>
-            ) : disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution) : (!!d.resolved_at || !!d.resolution)).length === 0 ? (
+            ) : disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")) : (!!d.resolved_at || !!d.resolution || d.booking_request?.status?.startsWith("resolved_"))).length === 0 ? (
               <p>No {disputeTab} disputes.</p>
             ) : (
               <div className="admin-dispute-list">
-                {disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution) : (!!d.resolved_at || !!d.resolution)).map((d) => {
+                {disputes.filter((d) => disputeTab === "open" ? (!d.resolved_at && !d.resolution && !d.booking_request?.status?.startsWith("resolved_")) : (!!d.resolved_at || !!d.resolution || d.booking_request?.status?.startsWith("resolved_"))).map((d) => {
               const br = d.booking_request;
               const requesterName = br ? getName(br.requester) : "—";
               const hostName = br ? getName(br.host) : "—";
