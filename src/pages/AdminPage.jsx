@@ -408,35 +408,35 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           className={`admin-tab${subTab === "applications" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("applications")}
         >
-          Applications {pendingApps.length > 0 && <span className="cm-admin-count">{pendingApps.length}</span>}
+          Applications <span className="cm-admin-count">{pendingApps.length}</span>
         </button>
         <button
           type="button"
           className={`admin-tab${subTab === "active" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("active")}
         >
-          Active CMs {pendingCommsTotal > 0 && <span className="cm-admin-count">{pendingCommsTotal}</span>}
+          Active CMs <span className="cm-admin-count">{activeCms.length}</span>
         </button>
         <button
           type="button"
           className={`admin-tab${subTab === "paused" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("paused")}
         >
-          Paused {pausedCms.length > 0 && <span className="cm-admin-count">{pausedCms.length}</span>}
+          Paused <span className="cm-admin-count">{pausedCms.length}</span>
         </button>
         <button
           type="button"
           className={`admin-tab${subTab === "revoked" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("revoked")}
         >
-          Revoked {revokedCms.length > 0 && <span className="cm-admin-count">{revokedCms.length}</span>}
+          Revoked <span className="cm-admin-count">{revokedCms.length}</span>
         </button>
         <button
           type="button"
           className={`admin-tab${subTab === "declined" ? " admin-tab-active" : ""}`}
           onClick={() => setSubTab("declined")}
         >
-          Declined {declinedApps.length > 0 && <span className="cm-admin-count">{declinedApps.length}</span>}
+          Declined <span className="cm-admin-count">{declinedApps.length}</span>
         </button>
         </div>
         <div className="support-filters">
