@@ -1384,11 +1384,11 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
                       <p className="cm-stat-sub">{fmtCurrency(cmStats.gmvThisMonth, cmStats.currency)} this month</p>
                     </div>
                     <div className="cm-stat-card">
-                      <p className="cm-stat-label">Pending Payment</p>
-                      <p className="cm-stat-value">{fmtCurrency(cmStats.pendingEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-label">Awaiting Payment</p>
+                      <p className="cm-stat-value">{fmtCurrency(cmStats.pendingEarnings + cmStats.approvedEarnings, cmStats.currency)}</p>
                       <p className="cm-stat-sub">
                         {cmStats.approvedEarnings > 0
-                          ? `+ ${fmtCurrency(cmStats.approvedEarnings, cmStats.currency)} approved`
+                          ? `${fmtCurrency(cmStats.approvedEarnings, cmStats.currency)} approved`
                           : `${fmtCurrency(CM_PAYOUT_THRESHOLD, cmStats.currency ?? "EUR")} threshold`}
                       </p>
                     </div>
