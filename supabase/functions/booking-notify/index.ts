@@ -739,7 +739,30 @@ function buildCmCommissionApproved(
         `Great news! A commission has been approved for your CM account.`,
         `<strong>Booking:</strong> ${bookingDetails}`,
         `<strong>Commission amount:</strong> ${currency} ${fmt(commissionAmount)}`,
-        `Payment will be made via bank transfer within 10 business days. View your full commission history on your CM Dashboard.`,
+        `Payment will be sent to your registered payout method. You'll receive a separate confirmation once the payment is processed.`,
+      ],
+      `${APP_URL}/user/${cm.id}?tab=cm`,
+      "View CM Dashboard",
+    ),
+  };
+}
+
+function buildCmCommissionPaid(
+  cm: Record<string, unknown>,
+  totalAmount: number,
+  currency: string,
+): { to: string; subject: string; html: string } {
+  const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
+  const fmt = (n: number) => Number(n).toFixed(2);
+  return {
+    to: String(cm.email),
+    subject: `Commission payment sent — ${currency} ${fmt(totalAmount)} — SharedXP`,
+    html: emailHtml(
+      `Payment sent, ${name}!`,
+      [
+        `Your SharedXP commission of <strong>${currency} ${fmt(totalAmount)}</strong> has been paid.`,
+        `Please allow 2–3 business days for funds to arrive depending on your payment method.`,
+        `Thank you for growing the SharedXP community — keep sharing your invite code!`,
       ],
       `${APP_URL}/user/${cm.id}?tab=cm`,
       "View CM Dashboard",
@@ -828,7 +851,7 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, supportMessageId, postId, subject, message, replyTo, repliedBy } = body as {
+  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, commissionIds, totalAmount, supportMessageId, postId, subject, message, replyTo, repliedBy } = body as {
     emailType: string;
     bookingRequestId?: string;
     disputeId?: string;
@@ -837,6 +860,8 @@ serve(async (req: Request): Promise<Response> => {
     adminNotes?: string;
     inviteCode?: string;
     commissionId?: string;
+    commissionIds?: string[];
+    totalAmount?: number;
     supportMessageId?: string;
     postId?: string;
     subject?: string;
@@ -919,6 +944,23 @@ serve(async (req: Request): Promise<Response> => {
             }
           }
           const e = buildCmCommissionApproved(userProfile, commAmount, currency, bookingDetails);
+          await sendEmail(e.to, e.subject, e.html);
+          break;
+        }
+        case "cm_commission_paid": {
+          let paidAmount = Number(totalAmount ?? 0);
+          let paidCurrency = "EUR";
+          if (commissionIds?.length) {
+            const { data: comms } = await db
+              .from("cm_commissions")
+              .select("commission_amount, currency")
+              .in("id", commissionIds);
+            if (comms?.length) {
+              paidCurrency = String(comms[0].currency);
+              paidAmount = comms.reduce((s, c) => s + Number(c.commission_amount), 0);
+            }
+          }
+          const e = buildCmCommissionPaid(userProfile, paidAmount, paidCurrency);
           await sendEmail(e.to, e.subject, e.html);
           break;
         }

@@ -7891,6 +7891,61 @@ body {
   margin: -10px 0 16px;
 }
 
+/* Payout status banner */
+.cm-payout-status {
+  background: #f8f8f2;
+  border: 1px solid #e0e0d0;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+.cm-payout-status--ready {
+  background: #f0faf0;
+  border-color: #a8d8a8;
+}
+.cm-payout-status-text { font-size: 14px; color: #2e6b2e; margin: 0; }
+.cm-payout-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.cm-payout-progress-label { font-size: 13px; font-weight: 600; color: #444; }
+.cm-payout-progress-amount { font-size: 13px; color: #666; }
+.cm-payout-progress-track {
+  height: 8px;
+  background: #e0e0d0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.cm-payout-progress-fill {
+  height: 100%;
+  background: #1a1a1a;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  min-width: 4px;
+}
+.cm-payout-progress-hint { font-size: 12px; color: #888; margin: 0; }
+
+/* Payout details form */
+.cm-payout-settings { margin-bottom: 32px; }
+.cm-payout-info-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #d0d0c0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1a1a1a;
+  background: #fff;
+  resize: vertical;
+  margin-bottom: 12px;
+  display: block;
+}
+.cm-payout-info-input:focus { outline: none; border-color: #1a1a1a; }
+
 /* Global Reach */
 .cm-global-reach {
   display: flex;
@@ -8292,6 +8347,23 @@ body {
   font-size: 14px;
 }
 .cm-pending-comm-row:last-child { border-bottom: none; }
+.cm-comm-date { font-size: 12px; color: #888; margin-left: 6px; }
+.cm-admin-payment-info {
+  font-size: 13px;
+  color: #444;
+  background: #fff;
+  border: 1px solid #e0d8b0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 0 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.cm-admin-payment-info--missing {
+  color: #c05000;
+  background: #fff8f0;
+  border-color: #f0c090;
+}
 .btn-sm {
   padding: 6px 14px;
   font-size: 13px;

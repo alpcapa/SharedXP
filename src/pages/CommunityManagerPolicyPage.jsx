@@ -152,8 +152,9 @@ const CommunityManagerPolicyPage = ({ currentUser, onLogout }) => {
                 their jurisdiction.
               </p>
               <p>
-                Commission payments below a minimum threshold may be held and combined with the next payment cycle.
-                SharedXP will communicate the current minimum threshold to active Community Managers.
+                Commissions are automatically approved for payment once your total reaches <strong>€25</strong>,
+                or after <strong>45 days</strong> if the threshold has not been met. Payments are sent to the
+                payout method you have registered in your CM Dashboard.
               </p>
             </section>
 

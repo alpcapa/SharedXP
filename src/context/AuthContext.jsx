@@ -199,6 +199,7 @@ status: cmProfile.status || "active",
 city: cmProfile.city || "",
 country: cmProfile.country || "",
 createdAt: cmProfile.created_at || "",
+paymentInfo: cmProfile.payment_info || "",
 };
 };
 
@@ -1084,6 +1085,22 @@ setCurrentUser((prev) =>
 prev ? { ...prev, hostHistory: items } : null
 );
 syncBookings(currentUser.id, "hosted", items);
+},
+
+onSaveCmPaymentInfo: async (paymentInfo) => {
+if (!currentUser?.cmProfile?.id) return { success: false, message: "Not logged in." };
+const { error } = await supabase
+  .from("cm_profiles")
+  .update({ payment_info: paymentInfo })
+  .eq("id", currentUser.cmProfile.id);
+if (error) {
+  console.error("[auth] onSaveCmPaymentInfo:", error);
+  return { success: false, message: error.message || "Save failed." };
+}
+setCurrentUser((prev) =>
+  prev ? { ...prev, cmProfile: { ...prev.cmProfile, paymentInfo } } : null
+);
+return { success: true };
 },
 
 onSubmitCmApplication: async (formData) => {

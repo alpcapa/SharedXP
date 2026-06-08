@@ -10,6 +10,7 @@ import { getAgeFromBirthday } from "../utils/profileAge";
 import { sendNotification } from "../utils/sendNotification";
 import { CURRENCY_SYMBOLS } from "../utils/pricing";
 import { CANCELLATION_POLICIES, computeRefundPct, refundLabel } from "../utils/cancellationPolicy";
+import { CM_PAYOUT_THRESHOLD, CM_PAYOUT_DAYS_FALLBACK } from "../utils/cmCommission";
 
 const FALLBACK_PHOTO =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='840' height='480' viewBox='0 0 840 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2384cc16'/%3E%3Cstop offset='1' stop-color='%23065f46'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='840' height='480' fill='url(%23g)'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='52' fill='white'%3ESharedXP Event%3C/text%3E%3C/svg%3E";
@@ -198,7 +199,7 @@ const StarRating = ({ rating }) => {
 const getName = (p) =>
   p?.full_name || [p?.first_name, p?.last_name].filter(Boolean).join(" ") || "User";
 
-const ProfilePage = ({ currentUser, onLogout }) => {
+const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
   const { userId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -232,6 +233,9 @@ const ProfilePage = ({ currentUser, onLogout }) => {
   const [cmCopied, setCmCopied] = useState(false);
   const [collapsedMembers, setCollapsedMembers] = useState(new Set());
   const [referrer, setReferrer] = useState(null);
+  const [cmPaymentInfo, setCmPaymentInfo] = useState(() => currentUser?.cmProfile?.paymentInfo ?? "");
+  const [cmPaymentSaving, setCmPaymentSaving] = useState(false);
+  const [cmPaymentSaved, setCmPaymentSaved] = useState(false);
 
   // Guest role
   const [guestReviews, setGuestReviews] = useState([]);
@@ -1380,15 +1384,74 @@ const ProfilePage = ({ currentUser, onLogout }) => {
                       <p className="cm-stat-sub">{fmtCurrency(cmStats.gmvThisMonth, cmStats.currency)} this month</p>
                     </div>
                     <div className="cm-stat-card">
-                      <p className="cm-stat-label">Commission Pending</p>
-                      <p className="cm-stat-value">{fmtCurrency(cmStats.pendingEarnings + cmStats.approvedEarnings, cmStats.currency)}</p>
-                      <p className="cm-stat-sub">Awaiting approval</p>
+                      <p className="cm-stat-label">Pending Payment</p>
+                      <p className="cm-stat-value">{fmtCurrency(cmStats.pendingEarnings, cmStats.currency)}</p>
+                      <p className="cm-stat-sub">
+                        {cmStats.approvedEarnings > 0
+                          ? `+ ${fmtCurrency(cmStats.approvedEarnings, cmStats.currency)} approved`
+                          : `${fmtCurrency(CM_PAYOUT_THRESHOLD, cmStats.currency ?? "EUR")} threshold`}
+                      </p>
                     </div>
                     <div className="cm-stat-card">
                       <p className="cm-stat-label">Commission Paid</p>
                       <p className="cm-stat-value">{fmtCurrency(cmStats.totalEarnings, cmStats.currency)}</p>
-                      <p className="cm-stat-sub">{fmtCurrency(cmStats.pendingEarnings + cmStats.approvedEarnings + cmStats.totalEarnings, cmStats.currency)} approved</p>
+                      <p className="cm-stat-sub">lifetime</p>
                     </div>
+                  </div>
+
+                  {/* ── Payout status ── */}
+                  {cmStats.approvedEarnings > 0 ? (
+                    <div className="cm-payout-status cm-payout-status--ready">
+                      <p className="cm-payout-status-text">
+                        <strong>{fmtCurrency(cmStats.approvedEarnings, cmStats.currency)} approved</strong> — payment is being processed. You'll receive a confirmation email once it's sent.
+                      </p>
+                    </div>
+                  ) : cmStats.pendingEarnings > 0 ? (
+                    <div className="cm-payout-status">
+                      <div className="cm-payout-progress-header">
+                        <span className="cm-payout-progress-label">Payout progress</span>
+                        <span className="cm-payout-progress-amount">
+                          {fmtCurrency(cmStats.pendingEarnings, cmStats.currency)} / {fmtCurrency(CM_PAYOUT_THRESHOLD, cmStats.currency ?? "EUR")}
+                        </span>
+                      </div>
+                      <div className="cm-payout-progress-track">
+                        <div
+                          className="cm-payout-progress-fill"
+                          style={{ width: `${Math.min(100, (cmStats.pendingEarnings / CM_PAYOUT_THRESHOLD) * 100).toFixed(1)}%` }}
+                        />
+                      </div>
+                      <p className="cm-payout-progress-hint">
+                        {fmtCurrency(Math.max(0, CM_PAYOUT_THRESHOLD - cmStats.pendingEarnings), cmStats.currency ?? "EUR")} to go — or your commissions pay out automatically after {CM_PAYOUT_DAYS_FALLBACK} days.
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {/* ── Payout details form ── */}
+                  <div className="cm-payout-settings">
+                    <h2 className="cm-section-title">Payout Details</h2>
+                    <p className="cm-section-desc">
+                      Enter your bank account, PayPal, or other payment details so we can send your commissions.
+                    </p>
+                    <textarea
+                      className="cm-payout-info-input"
+                      rows={3}
+                      placeholder="e.g. Bank: IBAN DE89 3704 0044 0532 0130 00 · BIC: COBADEFFXXX · Account holder: Jane Smith&#10;or: PayPal: jane@example.com"
+                      value={cmPaymentInfo}
+                      onChange={(e) => { setCmPaymentInfo(e.target.value); setCmPaymentSaved(false); }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      disabled={cmPaymentSaving}
+                      onClick={async () => {
+                        setCmPaymentSaving(true);
+                        const result = await onSaveCmPaymentInfo?.(cmPaymentInfo);
+                        setCmPaymentSaving(false);
+                        if (result?.success !== false) setCmPaymentSaved(true);
+                      }}
+                    >
+                      {cmPaymentSaving ? "Saving…" : cmPaymentSaved ? "Saved!" : "Save Payout Details"}
+                    </button>
                   </div>
 
                   {cityData.length > 0 && (
