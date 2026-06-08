@@ -6648,6 +6648,11 @@ body {
   color: #6b21a8;
 }
 
+.invoice-role-badge--commission {
+  background: #e6f4ea;
+  color: #1e6b35;
+}
+
 /* ── Summary row ──────────────────────────────────── */
 .payment-history-summary {
   display: flex;

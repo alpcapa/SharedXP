@@ -40,19 +40,92 @@ const XpInfoPopup = ({ onClose }) => (
 );
 
 const getStatusInfo = (inv) => {
-  if (inv.released_at)                              return { label: "Experience Completed — Payment Released",  cls: "released"  };
-  if (inv.bookingStatus === "resolved_paid_host")   return { label: "Experience Completed — Dispute Resolved", cls: "released"  };
-  if (inv.bookingStatus === "resolved_refunded")    return { label: "Experience Disputed — Refunded",          cls: "refunded"  };
-  if (inv.bookingStatus === "disputed")             return { label: "Experience Disputed — In Progress",       cls: "disputed"  };
+  if (inv.type === "commission")                       return { label: "Commission Paid",                            cls: "released"  };
+  if (inv.released_at)                                 return { label: "Experience Completed — Payment Released",    cls: "released"  };
+  if (inv.bookingStatus === "resolved_paid_host")      return { label: "Experience Completed — Dispute Resolved",   cls: "released"  };
+  if (inv.bookingStatus === "resolved_refunded")       return { label: "Experience Disputed — Refunded",            cls: "refunded"  };
+  if (inv.bookingStatus === "disputed")                return { label: "Experience Disputed — In Progress",         cls: "disputed"  };
   if (inv.bookingStatus === "cancelled") {
-    if (inv.refundPct === 0)                        return { label: "Experience Cancelled — No Refund",        cls: "no-refund" };
-    return                                                 { label: "Experience Cancelled — Refunded",         cls: "refunded"  };
+    if (inv.refundPct === 0)                           return { label: "Experience Cancelled — No Refund",          cls: "no-refund" };
+    return                                                    { label: "Experience Cancelled — Refunded",           cls: "refunded"  };
   }
-  return                                                   { label: "Experience In Progress — Awaiting Release", cls: "paid"  };
+  return                                                      { label: "Experience In Progress — Awaiting Release", cls: "paid"      };
 };
 
 const InvoiceDetailModal = ({ invoice, onClose }) => {
   const sym = CURRENCY_SYMBOLS[invoice.currency] ?? invoice.currency;
+
+  if (invoice.type === "commission") {
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal-box invoice-detail-box" onClick={(e) => e.stopPropagation()}>
+          <div className="invoice-detail-header">
+            <div className="invoice-detail-title-row">
+              <h3 className="invoice-detail-sport">{invoice.sport || "CM Commission"}</h3>
+              <span className="invoice-role-badge invoice-role-badge--commission">Commission</span>
+            </div>
+            <span className="invoice-status invoice-status--released">Commission Paid</span>
+            <p className="invoice-detail-host">Guest: {invoice.guestName}</p>
+          </div>
+
+          {invoice.requestedDate && (
+            <div className="invoice-detail-row">
+              <span className="invoice-detail-label">Session</span>
+              <span className="invoice-detail-value">
+                {new Date(invoice.requestedDate).toLocaleDateString("en-GB", {
+                  day: "2-digit", month: "short", year: "numeric",
+                })}
+              </span>
+            </div>
+          )}
+
+          <div className="invoice-detail-row">
+            <span className="invoice-detail-label">Paid on</span>
+            <span className="invoice-detail-value">
+              {invoice.paid_at
+                ? new Date(invoice.paid_at).toLocaleDateString("en-GB", {
+                    day: "2-digit", month: "short", year: "numeric",
+                  })
+                : "—"}
+            </span>
+          </div>
+
+          <div className="invoice-detail-divider" />
+          <p className="invoice-detail-section-title">Commission breakdown</p>
+
+          <div className="invoice-detail-row">
+            <span className="invoice-detail-label">Booking value (GMV)</span>
+            <span className="invoice-detail-value invoice-detail-total">
+              {fmt(sym, invoice.currency, invoice.gmv)}{" "}
+              <span className="invoice-currency">{invoice.currency}</span>
+            </span>
+          </div>
+
+          <div className="invoice-detail-row invoice-detail-row--sub">
+            <span className="invoice-detail-label">Commission rate</span>
+            <span className="invoice-detail-value">5%</span>
+          </div>
+
+          <div className="invoice-detail-row invoice-detail-row--net">
+            <span className="invoice-detail-label">Commission earned</span>
+            <span className="invoice-detail-value">
+              {fmt(sym, invoice.currency, invoice.commission_amount)}{" "}
+              <span className="invoice-currency">{invoice.currency}</span>
+            </span>
+          </div>
+
+          <div className="invoice-detail-ref">
+            Ref: <span>{invoice.id}</span>
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" className="btn btn-light" onClick={onClose}>Close</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const { label: statusLabel, cls: statusCls } = getStatusInfo(invoice);
   const isHosted = invoice.role === "hosted";
 
@@ -182,6 +255,7 @@ const formatDate = (iso) => {
 const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
+  const [cmCommissions, setCmCommissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showXpInfo, setShowXpInfo] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -200,10 +274,10 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
       return;
     }
 
-    const fetchInvoices = async () => {
+    const fetchAll = async () => {
       setLoading(true);
 
-      // Fetch both guest bookings (as requester) and host bookings (as host) in parallel
+      // Booking invoices ────────────────────────────────────────────────────
       const [guestResult, hostResult] = await Promise.all([
         supabase
           .from("booking_requests")
@@ -222,7 +296,6 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
       const hostBrMap = Object.fromEntries(hostBookingRequests.map((br) => [br.id, br]));
       const hostBrIds = new Set(hostBookingRequests.map((br) => br.id));
 
-      // Deduplicate booking request IDs (a user cannot be both requester and host)
       const allBrIds = [
         ...new Set([
           ...guestBookingRequests.map((br) => br.id),
@@ -230,77 +303,108 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
         ]),
       ];
 
-      if (allBrIds.length === 0) {
-        setInvoices([]);
-        setLoading(false);
-        return;
+      let enrichedInvoices = [];
+      if (allBrIds.length > 0) {
+        const { data: invData } = await supabase
+          .from("invoices")
+          .select("*")
+          .in("booking_request_id", allBrIds)
+          .order("paid_at", { ascending: false });
+
+        const hostIds = [...new Set(guestBookingRequests.map((br) => br.host_id).filter(Boolean))];
+        const requesterIds = [...new Set(hostBookingRequests.map((br) => br.requester_id).filter(Boolean))];
+        const profileIds = [...new Set([...hostIds, ...requesterIds])];
+        let profileMap = {};
+        if (profileIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", profileIds);
+          for (const p of profiles ?? []) profileMap[p.id] = p;
+        }
+
+        enrichedInvoices = (invData ?? []).map((inv) => {
+          const isHosted = hostBrIds.has(inv.booking_request_id);
+          const br = isHosted ? hostBrMap[inv.booking_request_id] : guestBrMap[inv.booking_request_id];
+          return {
+            ...inv,
+            type: "invoice",
+            sport: br?.sport ?? "",
+            requestedDate: br?.requested_date ?? "",
+            requestedTime: br?.requested_time ?? "",
+            bookingStatus: br?.status ?? "",
+            role: isHosted ? "hosted" : "booked",
+            hostName: isHosted ? null : (profileMap[br?.host_id]?.full_name ?? "Host"),
+            guestName: isHosted ? (profileMap[br?.requester_id]?.full_name ?? "Guest") : null,
+            refundPct: br?.refund_pct ?? null,
+            xpEarned: inv.xp_earned != null ? inv.xp_earned : toNSU(inv.gross_amount, inv.currency),
+          };
+        });
       }
+      setInvoices(enrichedInvoices);
 
-      const { data: invData, error: invError } = await supabase
-        .from("invoices")
-        .select("*")
-        .in("booking_request_id", allBrIds)
-        .order("paid_at", { ascending: false });
+      // CM commission payouts ───────────────────────────────────────────────
+      let normalizedComms = [];
+      if (currentUser.isCm && currentUser.cmProfile?.id) {
+        const { data: cmData } = await supabase
+          .from("cm_commissions")
+          .select(`
+            id, gmv, commission_amount, currency, paid_at, created_at,
+            booking_request:booking_requests(
+              sport, requested_date,
+              requester:profiles!requester_id(full_name)
+            )
+          `)
+          .eq("cm_id", currentUser.cmProfile.id)
+          .eq("status", "paid")
+          .order("paid_at", { ascending: false });
 
-      if (invError) {
-        setLoading(false);
-        return;
+        normalizedComms = (cmData ?? []).map((cm) => ({
+          id: cm.id,
+          type: "commission",
+          role: "commission",
+          sport: cm.booking_request?.sport ?? "",
+          currency: cm.currency,
+          gross_amount: cm.commission_amount,
+          commission_amount: cm.commission_amount,
+          gmv: cm.gmv,
+          paid_at: cm.paid_at,
+          released_at: cm.paid_at,
+          requestedDate: cm.booking_request?.requested_date ?? "",
+          requestedTime: "",
+          bookingStatus: "paid",
+          guestName: cm.booking_request?.requester?.full_name ?? "Member",
+          hostName: null,
+          refundPct: null,
+          xpEarned: 0,
+        }));
       }
+      setCmCommissions(normalizedComms);
 
-      // Fetch host profiles for guest bookings and requester profiles for host bookings in parallel
-      const hostIds = [
-        ...new Set(guestBookingRequests.map((br) => br.host_id).filter(Boolean)),
-      ];
-      const requesterIds = [
-        ...new Set(hostBookingRequests.map((br) => br.requester_id).filter(Boolean)),
-      ];
-
-      const profileIds = [...new Set([...hostIds, ...requesterIds])];
-      let profileMap = {};
-      if (profileIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", profileIds);
-        for (const p of profiles ?? []) profileMap[p.id] = p;
-      }
-
-      const enriched = (invData ?? []).map((inv) => {
-        const isHosted = hostBrIds.has(inv.booking_request_id);
-        const br = isHosted ? hostBrMap[inv.booking_request_id] : guestBrMap[inv.booking_request_id];
-        return {
-          ...inv,
-          sport: br?.sport ?? "",
-          requestedDate: br?.requested_date ?? "",
-          requestedTime: br?.requested_time ?? "",
-          bookingStatus: br?.status ?? "",
-          role: isHosted ? "hosted" : "booked",
-          hostName: isHosted ? null : (profileMap[br?.host_id]?.full_name ?? "Host"),
-          guestName: isHosted ? (profileMap[br?.requester_id]?.full_name ?? "Guest") : null,
-          // Use DB value when explicitly set (null = pre-migration, 0 = reclaimed after refund).
-          refundPct: br?.refund_pct ?? null,
-          xpEarned: inv.xp_earned != null ? inv.xp_earned : toNSU(inv.gross_amount, inv.currency),
-        };
-      });
-
-      setInvoices(enriched);
       setLoading(false);
     };
 
-    fetchInvoices();
+    fetchAll();
   }, [currentUser, authLoading, navigate]);
 
-  const sports = [...new Set(invoices.map((i) => i.sport).filter(Boolean))].sort();
-  const currencies = [...new Set(invoices.map((i) => i.currency).filter(Boolean))].sort();
-  const totalXp = invoices.reduce((sum, inv) => sum + inv.xpEarned, 0);
-  const hasHosted = invoices.some((i) => i.role === "hosted");
-  const hasBooked = invoices.some((i) => i.role === "booked");
+  // Merge and sort newest-first by paid_at
+  const allTransactions = [...invoices, ...cmCommissions].sort(
+    (a, b) => new Date(b.paid_at || b.created_at || 0) - new Date(a.paid_at || a.created_at || 0)
+  );
+
+  const sports = [...new Set(allTransactions.map((i) => i.sport).filter(Boolean))].sort();
+  const currencies = [...new Set(allTransactions.map((i) => i.currency).filter(Boolean))].sort();
+  const totalXp = allTransactions.reduce((sum, t) => sum + t.xpEarned, 0);
+  const hasHosted = allTransactions.some((i) => i.role === "hosted");
+  const hasBooked = allTransactions.some((i) => i.role === "booked");
+  const hasCommissions = allTransactions.some((i) => i.type === "commission");
+  const showRoleFilter = [hasBooked, hasHosted, hasCommissions].filter(Boolean).length >= 2;
 
   const isRefunded = (inv) =>
     inv.bookingStatus === "resolved_refunded" ||
     (inv.bookingStatus === "cancelled" && inv.refundPct !== 0);
 
-  const filtered = invoices.filter((inv) => {
+  const filtered = allTransactions.filter((inv) => {
     if (filterSport && inv.sport !== filterSport) return false;
     if (filterCurrency && inv.currency !== filterCurrency) return false;
     if (filterRole !== "all" && inv.role !== filterRole) return false;
@@ -314,8 +418,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
 
   const filteredXp = filtered.reduce((sum, inv) => sum + inv.xpEarned, 0);
   const mixedCurrencies = new Set(filtered.map((i) => i.currency).filter(Boolean)).size > 1;
-  const singleCurrency =
-    !mixedCurrencies && filtered.length > 0 ? filtered[0]?.currency : null;
+  const singleCurrency = !mixedCurrencies && filtered.length > 0 ? filtered[0]?.currency : null;
   const totalFiltered = filtered.reduce((sum, inv) => sum + Number(inv.gross_amount || 0), 0);
 
   const resetFilters = () => {
@@ -329,6 +432,11 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
 
   const hasActiveFilters =
     filterSport || filterStatus !== "all" || filterCurrency || filterRole !== "all" || filterFrom || filterTo;
+
+  const txLabel = (n) =>
+    hasCommissions
+      ? `${n} transaction${n !== 1 ? "s" : ""}`
+      : `${n} invoice${n !== 1 ? "s" : ""}`;
 
   if (authLoading) {
     return (
@@ -400,14 +508,12 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
               >
                 <option value="">All sports</option>
                 {sports.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
 
-            {(hasBooked && hasHosted) && (
+            {showRoleFilter && (
               <div className="payment-filter-group">
                 <label htmlFor="ph-role">Role</label>
                 <select
@@ -416,8 +522,9 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
                   onChange={(e) => setFilterRole(e.target.value)}
                 >
                   <option value="all">All</option>
-                  <option value="booked">Booked</option>
-                  <option value="hosted">Hosted</option>
+                  {hasBooked && <option value="booked">Booked</option>}
+                  {hasHosted && <option value="hosted">Hosted</option>}
+                  {hasCommissions && <option value="commission">Commission</option>}
                 </select>
               </div>
             )}
@@ -445,9 +552,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
               >
                 <option value="">All currencies</option>
                 {currencies.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
@@ -485,7 +590,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
 
           {loading ? (
             <p className="history-loading">Loading payment history…</p>
-          ) : invoices.length === 0 ? (
+          ) : allTransactions.length === 0 ? (
             <div className="payment-history-empty">
               <p className="payment-history-empty-title">No payments yet</p>
               <p className="payment-history-empty-sub">
@@ -502,54 +607,55 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
             </div>
           ) : (
             <div className="payment-history-list">
-              {filtered.map((inv) => (
-                <button
-                  key={inv.id}
-                  type="button"
-                  className="payment-invoice-card"
-                  onClick={() => setSelectedInvoice(inv)}
-                  aria-label={`View invoice for ${inv.sport || "experience"} — ${inv.role === "hosted" ? `Guest: ${inv.guestName}` : `Host: ${inv.hostName}`}`}
-                >
-                  <div className="invoice-card-left">
-                    <p className="invoice-sport">{inv.sport || "Experience"}</p>
-                    <p className="invoice-host">
-                      {inv.role === "hosted" ? `Guest: ${inv.guestName}` : `Host: ${inv.hostName}`}
-                    </p>
-                    <p className="invoice-date">
-                      {inv.requestedDate
-                        ? formatDate(inv.requestedDate)
-                        : formatDate(inv.paid_at)}
-                      {inv.requestedTime ? ` · ${inv.requestedTime}` : ""}
-                    </p>
-                    <p className="invoice-paid-on">Paid: {formatDate(inv.paid_at)}</p>
-                  </div>
-                  <div className="invoice-card-right">
-                    <p className="invoice-amount">
-                      {CURRENCY_SYMBOLS[inv.currency] ?? inv.currency}
-                      {Number(inv.gross_amount || 0).toFixed(2)}{" "}
-                      <span className="invoice-currency">{inv.currency}</span>
-                    </p>
-                    <p className="invoice-xp">+{inv.xpEarned} XP</p>
-                    <span className={`invoice-role-badge invoice-role-badge--${inv.role}`}>
-                      {inv.role === "hosted" ? "Hosted" : "Booked"}
+              {filtered.map((inv) => {
+                const isCommission = inv.type === "commission";
+                const { label, cls } = getStatusInfo(inv);
+                return (
+                  <button
+                    key={inv.id}
+                    type="button"
+                    className="payment-invoice-card"
+                    onClick={() => setSelectedInvoice(inv)}
+                    aria-label={`View ${isCommission ? "commission" : "invoice"} for ${inv.sport || "experience"}`}
+                  >
+                    <div className="invoice-card-left">
+                      <p className="invoice-sport">{inv.sport || (isCommission ? "CM Commission" : "Experience")}</p>
+                      <p className="invoice-host">
+                        {isCommission || inv.role === "hosted"
+                          ? `Guest: ${inv.guestName}`
+                          : `Host: ${inv.hostName}`}
+                      </p>
+                      <p className="invoice-date">
+                        {inv.requestedDate ? formatDate(inv.requestedDate) : formatDate(inv.paid_at)}
+                        {inv.requestedTime ? ` · ${inv.requestedTime}` : ""}
+                      </p>
+                      <p className="invoice-paid-on">Paid: {formatDate(inv.paid_at)}</p>
+                    </div>
+                    <div className="invoice-card-right">
+                      <p className="invoice-amount">
+                        {CURRENCY_SYMBOLS[inv.currency] ?? inv.currency}
+                        {Number(inv.gross_amount || 0).toFixed(2)}{" "}
+                        <span className="invoice-currency">{inv.currency}</span>
+                      </p>
+                      {!isCommission && <p className="invoice-xp">+{inv.xpEarned} XP</p>}
+                      <span className={`invoice-role-badge invoice-role-badge--${isCommission ? "commission" : inv.role}`}>
+                        {isCommission ? "Commission" : inv.role === "hosted" ? "Hosted" : "Booked"}
+                      </span>
+                      <span className={`invoice-status invoice-status--${cls}`}>{label}</span>
+                    </div>
+                    <span className="invoice-card-chevron" aria-hidden="true">
+                      <span className="invoice-card-chevron-label">{isCommission ? "DETAILS" : "INVOICE"}</span>
+                      ›
                     </span>
-                    {(() => {
-                      const { label, cls } = getStatusInfo(inv);
-                      return <span className={`invoice-status invoice-status--${cls}`}>{label}</span>;
-                    })()}
-                  </div>
-                  <span className="invoice-card-chevron" aria-hidden="true">
-                    <span className="invoice-card-chevron-label">INVOICE</span>
-                    ›
-                  </span>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
 
               <div className="payment-history-summary">
                 <div className="payment-summary-count">
-                  {filtered.length === invoices.length
-                    ? `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""}`
-                    : `${filtered.length} of ${invoices.length} invoices`}
+                  {filtered.length === allTransactions.length
+                    ? txLabel(allTransactions.length)
+                    : `${filtered.length} of ${txLabel(allTransactions.length)}`}
                   {singleCurrency && !mixedCurrencies && (
                     <span className="payment-summary-total">
                       {" "}· Total:{" "}
