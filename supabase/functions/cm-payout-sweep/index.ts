@@ -37,7 +37,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function emailHtml(heading: string, bodyLines: string[], ctaUrl: string, ctaLabel: string): string {
+function emailHtml(heading: string, bodyLines: string[], ctaUrl: string, ctaLabel: string, extraHtml = ""): string {
   const body = bodyLines
     .map((l) => `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444;">${l}</p>`)
     .join("\n");
@@ -55,6 +55,7 @@ function emailHtml(heading: string, bodyLines: string[], ctaUrl: string, ctaLabe
           <h1 style="margin:0 0 20px;font-size:22px;font-weight:700;color:#1a1a1a;">${heading}</h1>
           ${body}
           <a href="${ctaUrl}" style="display:inline-block;background:#1a1a1a;color:#fff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 28px;border-radius:6px;margin-top:20px;">${ctaLabel}</a>
+          ${extraHtml}
         </td></tr>
         <tr><td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #eee;">
           <p style="margin:0;font-size:12px;color:#aaa;">© ${new Date().getFullYear()} SharedXP</p>
