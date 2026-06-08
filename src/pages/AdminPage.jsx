@@ -139,6 +139,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
   const [actionNotes, setActionNotes] = useState({});
   const [emailSubjects, setEmailSubjects] = useState({});
   const [actionBusy, setActionBusy] = useState(null);
+  const [appActionMode, setAppActionMode] = useState(null); // { id, action }
   const [cmActionMode, setCmActionMode] = useState(null); // { id, action }
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [cmSearch, setCmSearch] = useState(initialSearch);
@@ -239,22 +240,21 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
 
   // Applications actions
   const moveToInterview = async (app) => {
-    if (!getNote(app.id).trim()) { alert("Please enter a reason before moving to interview."); return; }
+    if (!getNote(app.id).trim()) return;
     if (busy(app.id)) return;
-    if (!confirm("Move this application to interview stage?")) return;
     setActionBusy(app.id);
     const newNotes = appendNote(app.admin_notes, "interview", getNote(app.id));
     await supabase.from("cm_applications").update({ status: "interview", admin_notes: newNotes }).eq("id", app.id);
     await sendCmEmail("cm_interview", app.user_id);
     setNote(app.id, "");
+    setAppActionMode(null);
     await fetchAll();
     setActionBusy(null);
   };
 
   const acceptApplication = async (app) => {
-    if (!getNote(app.id).trim()) { alert("Please enter the interview outcome before accepting."); return; }
+    if (!getNote(app.id).trim()) return;
     if (busy(app.id)) return;
-    if (!confirm("Accept this application and generate a welcome invite code?")) return;
     setActionBusy(app.id);
     const city = app.applicant?.city || app.city || "XP";
     let inviteCode = generateInviteCode(city);
@@ -281,19 +281,20 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
     await supabase.from("cm_applications").update({ status: "accepted", admin_notes: newNotes }).eq("id", app.id);
     await sendCmEmail("cm_accepted", app.user_id, { inviteCode });
     setNote(app.id, "");
+    setAppActionMode(null);
     await fetchAll();
     setActionBusy(null);
   };
 
   const declineApplication = async (app) => {
-    if (!getNote(app.id).trim()) { alert("Please enter a reason before declining."); return; }
+    if (!getNote(app.id).trim()) return;
     if (busy(app.id)) return;
-    if (!confirm("Decline this application?")) return;
     setActionBusy(app.id);
     const newNotes = appendNote(app.admin_notes, "declined", getNote(app.id));
     await supabase.from("cm_applications").update({ status: "declined", admin_notes: newNotes }).eq("id", app.id);
     await sendCmEmail("cm_declined", app.user_id);
     setNote(app.id, "");
+    setAppActionMode(null);
     await fetchAll();
     setActionBusy(null);
   };
@@ -528,49 +529,72 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                         <NoteHistory adminNotes={app.admin_notes} adminName={adminName} fallbackDate={app.updated_at} />
                       </div>
                     )}
-                    <div className="cm-admin-notes-row">
-                      <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">
-                        {isInterview
-                          ? "Interview outcome / review (required to accept or decline)"
-                          : "Reason (required — saved to record only, not sent in email)"}
-                      </label>
-                      <textarea
-                        id={`notes-${app.id}`}
-                        className="cm-admin-notes"
-                        rows={2}
-                        placeholder={isInterview
-                          ? "How did the interview go? Note key impressions before accepting or declining…"
-                          : "Internal notes for this application…"}
-                        value={getNote(app.id)}
-                        onChange={(e) => setNote(app.id, e.target.value)}
-                      />
-                    </div>
-                    <div className="admin-dispute-actions">
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        disabled={busy(app.id) || isInterview}
-                        onClick={() => moveToInterview(app)}
-                      >
-                        {busy(app.id) ? "…" : "Move to Interview"}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        disabled={busy(app.id)}
-                        onClick={() => acceptApplication(app)}
-                      >
-                        {busy(app.id) ? "…" : "Accept & Welcome"}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-danger"
-                        disabled={busy(app.id)}
-                        onClick={() => declineApplication(app)}
-                      >
-                        {busy(app.id) ? "…" : "Decline"}
-                      </button>
-                    </div>
+                    {appActionMode?.id === app.id ? (
+                      <div className="cm-admin-notes-row">
+                        <label htmlFor={`notes-${app.id}`} className="admin-dispute-label">
+                          {appActionMode.action === "interview"
+                            ? "Write reason to move to interview"
+                            : appActionMode.action === "accept"
+                            ? "Write reason to accept"
+                            : "Write reason to decline"}
+                        </label>
+                        <textarea
+                          id={`notes-${app.id}`}
+                          className="cm-admin-notes"
+                          rows={3}
+                          placeholder="Enter your notes…"
+                          value={getNote(app.id)}
+                          onChange={(e) => setNote(app.id, e.target.value)}
+                          autoFocus
+                        />
+                        <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                          <button
+                            type="button"
+                            className="btn btn-light"
+                            onClick={() => { setAppActionMode(null); setNote(app.id, ""); }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn ${appActionMode.action === "decline" ? "btn-danger" : "btn-primary"}`}
+                            disabled={busy(app.id) || !getNote(app.id).trim()}
+                            onClick={() => {
+                              if (appActionMode.action === "interview") moveToInterview(app);
+                              else if (appActionMode.action === "accept") acceptApplication(app);
+                              else declineApplication(app);
+                            }}
+                          >
+                            {busy(app.id) ? "…" : "Confirm"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="admin-dispute-actions">
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          disabled={isInterview}
+                          onClick={() => setAppActionMode({ id: app.id, action: "interview" })}
+                        >
+                          Move to Interview
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={() => setAppActionMode({ id: app.id, action: "accept" })}
+                        >
+                          Accept &amp; Welcome
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={() => setAppActionMode({ id: app.id, action: "decline" })}
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </article>
