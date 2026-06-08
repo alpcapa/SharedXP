@@ -1053,6 +1053,34 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
           {/* ── Guest tab ── */}
           {activeTab === "guest" && (
             <>
+              {(currentUser || !isHost) && (
+                <section className="guest-profile-gallery">
+                  <h2 className="guest-profile-section-title">Photo gallery</h2>
+                  {guestPhotos.length === 0 ? (
+                    <p>No photos yet.</p>
+                  ) : (
+                    <>
+                      <div className="gallery-grid">
+                        {visibleGuestPhotos.map((src) => (
+                          <img key={src} src={src} alt="Experience photo" />
+                        ))}
+                      </div>
+                      {totalGuestPhotoPages > 1 && (
+                        <div className="locals-nav-row">
+                          <button type="button" className="locals-nav" aria-label="Previous photos"
+                            onClick={() => setGuestPhotosPage((p) => Math.max(p - 1, 0))}
+                            disabled={guestPhotosPage === 0}>‹</button>
+                          <span className="locals-nav-info">{guestPhotosPage + 1} / {totalGuestPhotoPages}</span>
+                          <button type="button" className="locals-nav" aria-label="Next photos"
+                            onClick={() => setGuestPhotosPage((p) => Math.min(p + 1, totalGuestPhotoPages - 1))}
+                            disabled={guestPhotosPage >= totalGuestPhotoPages - 1}>›</button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </section>
+              )}
+
               <section className="guest-profile-reviews">
                 <h2 className="guest-profile-section-title">Reviews from hosts</h2>
                 {guestReviews.length === 0 ? (
@@ -1088,34 +1116,6 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
                   </>
                 )}
               </section>
-
-              {(currentUser || !isHost) && (
-                <section className="guest-profile-gallery">
-                  <h2 className="guest-profile-section-title">Photo gallery</h2>
-                  {guestPhotos.length === 0 ? (
-                    <p>No photos yet.</p>
-                  ) : (
-                    <>
-                      <div className="gallery-grid">
-                        {visibleGuestPhotos.map((src) => (
-                          <img key={src} src={src} alt="Experience photo" />
-                        ))}
-                      </div>
-                      {totalGuestPhotoPages > 1 && (
-                        <div className="locals-nav-row">
-                          <button type="button" className="locals-nav" aria-label="Previous photos"
-                            onClick={() => setGuestPhotosPage((p) => Math.max(p - 1, 0))}
-                            disabled={guestPhotosPage === 0}>‹</button>
-                          <span className="locals-nav-info">{guestPhotosPage + 1} / {totalGuestPhotoPages}</span>
-                          <button type="button" className="locals-nav" aria-label="Next photos"
-                            onClick={() => setGuestPhotosPage((p) => Math.min(p + 1, totalGuestPhotoPages - 1))}
-                            disabled={guestPhotosPage >= totalGuestPhotoPages - 1}>›</button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </section>
-              )}
 
               {/* Recommendations — always in guest tab */}
               <section className="recommendations">
