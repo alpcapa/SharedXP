@@ -448,6 +448,9 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           onClick={() => setSubTab("active")}
         >
           Active CMs <span className="cm-admin-count">{activeCms.length}</span>
+          {pendingCommsTotal > 0 && (
+            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{pendingCommsTotal} pending</span>
+          )}
           {approvedCommsTotal > 0 && (
             <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{approvedCommsTotal} to pay</span>
           )}
@@ -714,7 +717,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                         <span className="cm-admin-count cm-admin-count-alert">{approvedComms.length} to pay</span>
                       )}
                       {pendingComms.length > 0 && (
-                        <span className="cm-admin-count">{pendingComms.length} pending</span>
+                        <span className="cm-admin-count cm-admin-count-pending">{pendingComms.length} pending</span>
                       )}
                       <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
                     </div>
