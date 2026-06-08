@@ -1,0 +1,16 @@
+name: CM Payout Sweep (daily)
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # 06:00 UTC every day
+  workflow_dispatch:       # allow manual trigger from GitHub Actions tab
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke cm-payout-sweep edge function
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            https://bwdkelprrvhztpviiujo.supabase.co/functions/v1/cm-payout-sweep

@@ -46,3 +46,8 @@ jobs:
         run: supabase functions deploy gdpr-erasure --project-ref bwdkelprrvhztpviiujo --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy cm-payout-sweep
+        run: supabase functions deploy cm-payout-sweep --project-ref bwdkelprrvhztpviiujo --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
