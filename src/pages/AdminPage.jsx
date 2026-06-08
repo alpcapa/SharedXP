@@ -158,6 +158,10 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
     (sum, cm) => sum + (cm.cm_commissions ?? []).filter((c) => c.status === "pending").length,
     0
   );
+  const approvedCommsTotal = cmProfiles.reduce(
+    (sum, cm) => sum + (cm.cm_commissions ?? []).filter((c) => c.status === "approved" && !c.paid_at).length,
+    0
+  );
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -172,7 +176,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           *,
           owner:profiles!user_id(full_name, first_name, last_name, email),
           cm_referrals(count),
-          cm_commissions(id, commission_amount, status)
+          cm_commissions(id, commission_amount, currency, status, approved_at, paid_at, created_at)
         `)
         .order("created_at", { ascending: false }),
     ]);
@@ -350,6 +354,33 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
     setActionBusy(null);
   };
 
+  const markCommissionPaid = async (cm, commissionIds) => {
+    const ids = Array.isArray(commissionIds) ? commissionIds : [commissionIds];
+    const key = `pay-${cm.id}`;
+    if (busy(key)) return;
+    setActionBusy(key);
+    const { error } = await supabase
+      .from("cm_commissions")
+      .update({ status: "paid", paid_at: new Date().toISOString() })
+      .in("id", ids);
+    if (!error) {
+      const total = (cm.cm_commissions ?? [])
+        .filter((c) => ids.includes(c.id))
+        .reduce((s, c) => s + Number(c.commission_amount), 0);
+      await sendCmEmail("cm_commission_paid", cm.user_id, { commissionIds: ids, totalAmount: total });
+    }
+    await fetchAll();
+    setActionBusy(null);
+  };
+
+  const markAllApprovedPaid = async (cm) => {
+    const approvedIds = (cm.cm_commissions ?? [])
+      .filter((c) => c.status === "approved" && !c.paid_at)
+      .map((c) => c.id);
+    if (!approvedIds.length) return;
+    await markCommissionPaid(cm, approvedIds);
+  };
+
   const matchesCmSearch = (name, email) => {
     if (!cmSearch.trim()) return true;
     const q = cmSearch.toLowerCase();
@@ -416,6 +447,9 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           onClick={() => setSubTab("active")}
         >
           Active CMs <span className="cm-admin-count">{activeCms.length}</span>
+          {approvedCommsTotal > 0 && (
+            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{approvedCommsTotal} to pay</span>
+          )}
         </button>
         <button
           type="button"
@@ -635,6 +669,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
             {list.map((cm) => {
               const s = cmStats(cm);
               const pendingComms = (cm.cm_commissions ?? []).filter((c) => c.status === "pending");
+              const approvedComms = (cm.cm_commissions ?? []).filter((c) => c.status === "approved" && !c.paid_at);
               const isExpanded = expandedIds.has(cm.id);
               return (
                 <article key={cm.id} className="cm-admin-card">
@@ -651,6 +686,9 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                     </div>
                     <div className="cm-admin-card-summary-right">
                       {statusBadge(cm.status)}
+                      {approvedComms.length > 0 && (
+                        <span className="cm-admin-count cm-admin-count-alert">{approvedComms.length} to pay</span>
+                      )}
                       {pendingComms.length > 0 && (
                         <span className="cm-admin-count">{pendingComms.length} pending</span>
                       )}
@@ -689,22 +727,73 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                           {busy(`welcome-${cm.id}`) ? "Sending…" : "Resend Welcome Email"}
                         </button>
                       </div>
-                      {pendingComms.length > 0 && (
+                      {(approvedComms.length > 0 || pendingComms.length > 0) && (
                         <div className="cm-admin-pending-comms">
-                          <p className="admin-dispute-label">Pending commissions to approve:</p>
-                          {pendingComms.map((c) => (
-                            <div key={c.id} className="cm-pending-comm-row">
-                              <span>{c.currency} {Number(c.commission_amount).toFixed(2)}</span>
-                              <button
-                                type="button"
-                                className="btn btn-primary btn-sm"
-                                disabled={busy(`${cm.id}-${c.id}`)}
-                                onClick={() => approveCommission(cm, c.id)}
-                              >
-                                {busy(`${cm.id}-${c.id}`) ? "…" : "Approve"}
-                              </button>
-                            </div>
-                          ))}
+                          {approvedComms.length > 0 && (
+                            <>
+                              <p className="admin-dispute-label">
+                                Commissions ready to pay:
+                              </p>
+                              {cm.payment_info ? (
+                                <p className="cm-admin-payment-info">
+                                  <strong>Send payment to:</strong> {cm.payment_info}
+                                </p>
+                              ) : (
+                                <p className="cm-admin-payment-info cm-admin-payment-info--missing">
+                                  No payment details provided — ask CM to add them in their dashboard.
+                                </p>
+                              )}
+                              {approvedComms.map((c) => (
+                                <div key={c.id} className="cm-pending-comm-row">
+                                  <span>
+                                    <strong>{c.currency} {Number(c.commission_amount).toFixed(2)}</strong>
+                                    <span className="cm-comm-date"> · approved {c.approved_at ? new Date(c.approved_at).toLocaleDateString("en-GB") : "—"}</span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="btn btn-secondary btn-sm"
+                                    disabled={busy(`pay-${cm.id}`)}
+                                    onClick={() => markCommissionPaid(cm, c.id)}
+                                  >
+                                    {busy(`pay-${cm.id}`) ? "…" : "Mark Paid"}
+                                  </button>
+                                </div>
+                              ))}
+                              <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  disabled={busy(`pay-${cm.id}`)}
+                                  onClick={() => markAllApprovedPaid(cm)}
+                                >
+                                  {busy(`pay-${cm.id}`) ? "Processing…" : `Pay All Approved (${approvedComms.length})`}
+                                </button>
+                              </div>
+                            </>
+                          )}
+                          {pendingComms.length > 0 && (
+                            <>
+                              <p className="admin-dispute-label" style={{ marginTop: approvedComms.length > 0 ? 16 : 0 }}>
+                                Pending commissions (below threshold — manual approval):
+                              </p>
+                              {pendingComms.map((c) => (
+                                <div key={c.id} className="cm-pending-comm-row">
+                                  <span>
+                                    <strong>{c.currency} {Number(c.commission_amount).toFixed(2)}</strong>
+                                    <span className="cm-comm-date"> · {c.created_at ? new Date(c.created_at).toLocaleDateString("en-GB") : "—"}</span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="btn btn-primary btn-sm"
+                                    disabled={busy(`${cm.id}-${c.id}`)}
+                                    onClick={() => approveCommission(cm, c.id)}
+                                  >
+                                    {busy(`${cm.id}-${c.id}`) ? "…" : "Approve"}
+                                  </button>
+                                </div>
+                              ))}
+                            </>
+                          )}
                         </div>
                       )}
                       {(cm.admin_notes || cm._application?.admin_notes) && (
