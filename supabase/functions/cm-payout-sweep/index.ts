@@ -191,7 +191,7 @@ serve(async (req: Request): Promise<Response> => {
     const owner = (profile?.owner as Record<string, unknown> | null);
     if (!owner?.email) continue;
 
-    const cmName = String(owner.full_name ?? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim() || "CM");
+    const cmName = String(owner.full_name ?? (`${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim() || "CM"));
     const cmEmail = String(owner.email);
     const paymentInfo = String(profile?.payment_info ?? "").trim() || "No payment details provided — ask CM to add them in their dashboard.";
 
