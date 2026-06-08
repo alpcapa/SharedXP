@@ -30,7 +30,7 @@ const APP_URL              = Deno.env.get("APP_URL") ?? "https://project-gq4ge.v
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const CS_EMAIL             = Deno.env.get("CS_EMAIL") ?? "support@sharedxp.com";
-const PAYOUT_DAYS          = 45;
+const PAYOUT_DAYS          = 10;
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
