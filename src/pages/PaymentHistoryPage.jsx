@@ -398,7 +398,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const hasHosted = allTransactions.some((i) => i.role === "hosted");
   const hasBooked = allTransactions.some((i) => i.role === "booked");
   const hasCommissions = allTransactions.some((i) => i.type === "commission");
-  const showRoleFilter = [hasBooked, hasHosted, hasCommissions].filter(Boolean).length >= 2;
+  const showRoleFilter = hasCommissions && (hasBooked || hasHosted);
 
   const isRefunded = (inv) =>
     inv.bookingStatus === "resolved_refunded" ||
@@ -407,7 +407,8 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
   const filtered = allTransactions.filter((inv) => {
     if (filterSport && inv.sport !== filterSport) return false;
     if (filterCurrency && inv.currency !== filterCurrency) return false;
-    if (filterRole !== "all" && inv.role !== filterRole) return false;
+    if (filterRole === "bookings" && inv.type === "commission") return false;
+    if (filterRole === "commission" && inv.type !== "commission") return false;
     if (filterStatus === "released" && !inv.released_at) return false;
     if (filterStatus === "paid" && (inv.released_at || isRefunded(inv) || inv.bookingStatus === "cancelled")) return false;
     if (filterStatus === "refunded" && !isRefunded(inv)) return false;
@@ -515,16 +516,15 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
 
             {showRoleFilter && (
               <div className="payment-filter-group">
-                <label htmlFor="ph-role">Role</label>
+                <label htmlFor="ph-role">Type</label>
                 <select
                   id="ph-role"
                   value={filterRole}
                   onChange={(e) => setFilterRole(e.target.value)}
                 >
                   <option value="all">All</option>
-                  {hasBooked && <option value="booked">Booked</option>}
-                  {hasHosted && <option value="hosted">Hosted</option>}
-                  {hasCommissions && <option value="commission">Commission</option>}
+                  <option value="bookings">Bookings</option>
+                  <option value="commission">CM Commissions</option>
                 </select>
               </div>
             )}
