@@ -648,7 +648,7 @@ function buildCmApplicationReceived(
       `Application received, ${name}!`,
       [
         `Thank you for applying to become a SharedXP Community Manager.`,
-        `Our team will review your application and get back to you within 5 business days.`,
+        `Our team will review your application and get back to you as soon as possible.`,
         `In the meantime, keep sharing your love of sport and check out our Community Manager Policy for more details.`,
       ],
       `${APP_URL}/community-manager-policy`,

@@ -398,6 +398,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
       country: cmForm.country.trim(),
       city: cmForm.city.trim(),
       phone: fullPhone,
+      phoneCountryCode: cmForm.phoneCountryCode,
       sportsBackground: cmForm.sportsBackground.trim(),
       motivation: cmForm.motivation.trim(),
       contactTimes: cmForm.contactTimes.trim(),
@@ -627,7 +628,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
                   <>
                     <h2 className="cm-modal-title">Apply to become our Community Manager</h2>
                     <p className="cm-modal-intro">
-                      Tell us about yourself and why you'd be a great SharedXP ambassador. We'll review your application and get back to you within 5 business days.
+                      Tell us about yourself and why you'd be a great SharedXP ambassador. We'll review your application and get back to you as soon as possible.
                     </p>
                     <form onSubmit={onCmSubmit} className="cm-application-form">
                       <p className="cm-form-section-label">Contact details</p>

@@ -342,7 +342,7 @@ const PendingBookingCard = ({
         setExistingFieldPostId(savedId);
         setExistingFieldCaption(shareCaption.trim());
         setSharePosted(true);
-        navigate("/field");
+        navigate("/the-field");
       } else {
         window.alert("Could not post to The Field right now. Please try again.");
       }
