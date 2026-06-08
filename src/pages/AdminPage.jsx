@@ -717,7 +717,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                         <span className="cm-admin-count cm-admin-count-alert">{approvedComms.length} to pay</span>
                       )}
                       {pendingComms.length > 0 && (
-                        <span className="cm-admin-count cm-admin-count-pending">{pendingComms.length} pending</span>
+                        <span className="cm-admin-count" style={{ background: "#fef9c3", color: "#854d0e" }}>{pendingComms.length} pending</span>
                       )}
                       <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
                     </div>
