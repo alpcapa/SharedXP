@@ -351,7 +351,7 @@ const HistoryPage = ({
       });
       setSharePosting(false);
       setSharePosted(true);
-      navigate("/field");
+      navigate("/the-field");
     },
     [shareCaption, currentUser, onSaveHistory, onSaveHostHistory, navigate]
   );
