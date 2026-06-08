@@ -747,13 +747,49 @@ function buildCmCommissionApproved(
   };
 }
 
+function commissionBreakdownHtml(
+  items: Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }>,
+  totalAmount: number,
+  currency: string,
+): string {
+  const fmt = (n: number) => Number(n).toFixed(2);
+  const fmtDate = (iso: string) =>
+    iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+  const thStyle = `padding:8px 12px;text-align:left;font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;`;
+  const thRStyle = `${thStyle}text-align:right;`;
+  const tdStyle = `padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#444;`;
+  const tdRStyle = `${tdStyle}text-align:right;`;
+  const rows = items.map((item) => `
+    <tr>
+      <td style="${tdStyle}">${item.sport || "—"}</td>
+      <td style="${tdStyle}">${fmtDate(item.date)}</td>
+      <td style="${tdRStyle}color:#666;">${item.currency} ${fmt(item.gmv)}</td>
+      <td style="${tdRStyle}font-weight:600;color:#1a1a1a;">${item.currency} ${fmt(item.commissionAmount)}</td>
+    </tr>`).join("");
+  return `<table style="width:100%;border-collapse:collapse;margin:16px 0;">
+    <thead><tr style="background:#f5f5f0;">
+      <th style="${thStyle}">Sport</th>
+      <th style="${thStyle}">Session</th>
+      <th style="${thRStyle}">Booking value</th>
+      <th style="${thRStyle}">Commission (5%)</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr style="background:#f5f5f0;">
+      <td colspan="3" style="padding:8px 12px;font-size:14px;font-weight:700;color:#1a1a1a;">Total</td>
+      <td style="padding:8px 12px;font-size:14px;font-weight:700;color:#1a1a1a;text-align:right;">${currency} ${fmt(totalAmount)}</td>
+    </tr></tfoot>
+  </table>`;
+}
+
 function buildCmCommissionPaid(
   cm: Record<string, unknown>,
   totalAmount: number,
   currency: string,
+  lineItems: Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }> = [],
 ): { to: string; subject: string; html: string } {
   const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
   const fmt = (n: number) => Number(n).toFixed(2);
+  const breakdown = lineItems.length > 0 ? commissionBreakdownHtml(lineItems, totalAmount, currency) : "";
   return {
     to: String(cm.email),
     subject: `Commission payment sent — ${currency} ${fmt(totalAmount)} — SharedXP`,
@@ -762,10 +798,10 @@ function buildCmCommissionPaid(
       [
         `Your SharedXP commission of <strong>${currency} ${fmt(totalAmount)}</strong> has been paid.`,
         `Please allow 2–3 business days for funds to arrive depending on your payment method.`,
-        `Thank you for growing the SharedXP community — keep sharing your invite code!`,
       ],
       `${APP_URL}/user/${cm.id}?tab=cm`,
       "View CM Dashboard",
+      `${breakdown}<p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#444;">Thank you for growing the SharedXP community — keep sharing your invite code!</p>`,
     ),
   };
 }
@@ -950,17 +986,25 @@ serve(async (req: Request): Promise<Response> => {
         case "cm_commission_paid": {
           let paidAmount = Number(totalAmount ?? 0);
           let paidCurrency = "EUR";
+          let lineItems: Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }> = [];
           if (commissionIds?.length) {
             const { data: comms } = await db
               .from("cm_commissions")
-              .select("commission_amount, currency")
+              .select("commission_amount, currency, gmv, booking_request:booking_requests(sport, requested_date)")
               .in("id", commissionIds);
             if (comms?.length) {
               paidCurrency = String(comms[0].currency);
-              paidAmount = comms.reduce((s, c) => s + Number(c.commission_amount), 0);
+              paidAmount = comms.reduce((s: number, c: Record<string, unknown>) => s + Number(c.commission_amount), 0);
+              lineItems = comms.map((c: Record<string, unknown>) => ({
+                sport: String((c.booking_request as Record<string, unknown>)?.sport ?? ""),
+                date: String((c.booking_request as Record<string, unknown>)?.requested_date ?? ""),
+                gmv: Number(c.gmv),
+                commissionAmount: Number(c.commission_amount),
+                currency: String(c.currency),
+              }));
             }
           }
-          const e = buildCmCommissionPaid(userProfile, paidAmount, paidCurrency);
+          const e = buildCmCommissionPaid(userProfile, paidAmount, paidCurrency, lineItems);
           await sendEmail(e.to, e.subject, e.html);
           break;
         }

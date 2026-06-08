@@ -65,6 +65,40 @@ function emailHtml(heading: string, bodyLines: string[], ctaUrl: string, ctaLabe
 </body></html>`;
 }
 
+function commissionBreakdownHtml(
+  items: Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }>,
+  totalAmount: number,
+  currency: string,
+): string {
+  const fmt = (n: number) => Number(n).toFixed(2);
+  const fmtDate = (iso: string) =>
+    iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+  const thStyle = `padding:8px 12px;text-align:left;font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;`;
+  const thRStyle = `${thStyle}text-align:right;`;
+  const tdStyle = `padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#444;`;
+  const tdRStyle = `${tdStyle}text-align:right;`;
+  const rows = items.map((item) => `
+    <tr>
+      <td style="${tdStyle}">${item.sport || "—"}</td>
+      <td style="${tdStyle}">${fmtDate(item.date)}</td>
+      <td style="${tdRStyle}color:#666;">${item.currency} ${fmt(item.gmv)}</td>
+      <td style="${tdRStyle}font-weight:600;color:#1a1a1a;">${item.currency} ${fmt(item.commissionAmount)}</td>
+    </tr>`).join("");
+  return `<table style="width:100%;border-collapse:collapse;margin:16px 0;">
+    <thead><tr style="background:#f5f5f0;">
+      <th style="${thStyle}">Sport</th>
+      <th style="${thStyle}">Session</th>
+      <th style="${thRStyle}">Booking value</th>
+      <th style="${thRStyle}">Commission (5%)</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr style="background:#f5f5f0;">
+      <td colspan="3" style="padding:8px 12px;font-size:14px;font-weight:700;color:#1a1a1a;">Total</td>
+      <td style="padding:8px 12px;font-size:14px;font-weight:700;color:#1a1a1a;text-align:right;">${currency} ${fmt(totalAmount)}</td>
+    </tr></tfoot>
+  </table>`;
+}
+
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -121,7 +155,8 @@ serve(async (req: Request): Promise<Response> => {
   const { data: unnotified } = await db
     .from("cm_commissions")
     .select(`
-      id, cm_id, commission_amount, currency, approved_at,
+      id, cm_id, commission_amount, currency, gmv, approved_at,
+      booking_request:booking_requests(sport, requested_date),
       cm_profile:cm_profiles!cm_id(
         id, payment_info,
         owner:profiles!user_id(id, full_name, first_name, last_name, email)
@@ -189,6 +224,27 @@ serve(async (req: Request): Promise<Response> => {
       ),
     );
 
+    // Build per-currency breakdown for CM email
+    const byCurrencyItems = new Map<string, Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }>>();
+    for (const c of comms) {
+      const cur = String(c.currency);
+      if (!byCurrencyItems.has(cur)) byCurrencyItems.set(cur, []);
+      const br = (c.booking_request as Record<string, unknown> | null);
+      byCurrencyItems.get(cur)!.push({
+        sport: String(br?.sport ?? ""),
+        date: String(br?.requested_date ?? ""),
+        gmv: Number(c.gmv),
+        commissionAmount: Number(c.commission_amount),
+        currency: cur,
+      });
+    }
+    const breakdownHtml = [...byCurrencyItems.entries()]
+      .map(([cur, items]) => {
+        const total = items.reduce((s, i) => s + i.commissionAmount, 0);
+        return commissionBreakdownHtml(items, total, cur);
+      })
+      .join("");
+
     // Email CM
     await sendEmail(
       cmEmail,
@@ -198,10 +254,10 @@ serve(async (req: Request): Promise<Response> => {
         [
           `Your SharedXP commissions totalling <strong>${amountLines}</strong> have been approved for payment.`,
           `Our team will process the payment to your registered payout method. You'll receive a confirmation email once the payment is sent.`,
-          `You can track the status of all your commissions on your CM Dashboard.`,
         ],
         `${APP_URL}/user/${owner.id}?tab=cm`,
         "View CM Dashboard",
+        `${breakdownHtml}<p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#444;">You can track all your commissions on your CM Dashboard.</p>`,
       ),
     );
 
