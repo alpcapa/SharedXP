@@ -177,7 +177,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           *,
           owner:profiles!user_id(full_name, first_name, last_name, email),
           cm_referrals(count),
-          cm_commissions(id, commission_amount, currency, status, approved_at, paid_at, created_at)
+          cm_commissions(id, commission_amount, currency, status, approved_at, paid_at, created_at, booking_request:booking_requests(sport, requested_date, requester:profiles!requester_id(full_name, first_name, last_name), host:profiles!host_id(full_name, first_name, last_name)))
         `)
         .order("created_at", { ascending: false }),
     ]);
@@ -807,7 +807,19 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                                 <div key={c.id} className="cm-pending-comm-row">
                                   <span>
                                     <strong>{c.currency} {Number(c.commission_amount).toFixed(2)}</strong>
-                                    <span className="cm-comm-date"> · {c.created_at ? new Date(c.created_at).toLocaleDateString("en-GB") : "—"}</span>
+                                    {c.booking_request && (
+                                      <span className="cm-comm-date">
+                                        {" — from "}
+                                        {getName(c.booking_request.requester)}
+                                        {" "}
+                                        {c.booking_request.sport}
+                                        {" experience with "}
+                                        {getName(c.booking_request.host)}
+                                        {c.booking_request.requested_date
+                                          ? ` on ${new Date(c.booking_request.requested_date).toLocaleDateString("en-GB")}`
+                                          : ""}
+                                      </span>
+                                    )}
                                   </span>
                                   <button
                                     type="button"
