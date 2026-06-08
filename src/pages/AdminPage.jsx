@@ -449,7 +449,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
         >
           Active CMs <span className="cm-admin-count">{activeCms.length}</span>
           {pendingCommsTotal > 0 && (
-            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{pendingCommsTotal} pending</span>
+            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{pendingCommsTotal}</span>
           )}
           {approvedCommsTotal > 0 && (
             <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{approvedCommsTotal} to pay</span>
@@ -717,7 +717,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                         <span className="cm-admin-count cm-admin-count-alert">{approvedComms.length} to pay</span>
                       )}
                       {pendingComms.length > 0 && (
-                        <span className="cm-admin-count" style={{ background: "#fef9c3", color: "#854d0e" }}>{pendingComms.length} pending</span>
+                        <span className="cm-admin-count cm-admin-count-alert">{pendingComms.length} pending</span>
                       )}
                       <span className={`cm-admin-chevron${isExpanded ? " cm-admin-chevron-open" : ""}`}>▾</span>
                     </div>
@@ -2312,6 +2312,9 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
             CM Management
             {cmCounts.pendingApps > 0 && (
               <span className="cm-admin-count cm-admin-count-alert">{cmCounts.pendingApps}</span>
+            )}
+            {cmCounts.pendingComms > 0 && (
+              <span className="cm-admin-count cm-admin-count-alert">{cmCounts.pendingComms}</span>
             )}
           </button>
           <button
