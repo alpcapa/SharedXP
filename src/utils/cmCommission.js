@@ -1,7 +1,7 @@
 const CM_COMMISSION_RATE = 0.05;
 
 export const CM_PAYOUT_THRESHOLD = 25;
-export const CM_PAYOUT_DAYS_FALLBACK = 45;
+export const CM_PAYOUT_DAYS_FALLBACK = 10;
 
 /**
  * Compute the CM commission amount for a given gross booking value.
