@@ -1266,7 +1266,7 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
               )}
 
               {/* Host photo gallery */}
-              <section className="gallery">
+              <section className="guest-profile-gallery">
                 <h3>Photo gallery</h3>
                 {activeHostPhotos.length === 0 ? (
                   <p>{isOwnProfile ? "No session photos yet." : "No photos yet for this sport."}</p>
