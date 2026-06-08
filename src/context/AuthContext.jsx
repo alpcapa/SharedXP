@@ -1131,6 +1131,28 @@ if (error) {
   console.error("[auth] onSubmitCmApplication:", error);
   return { success: false, message: error.message || "Submission failed. Please try again." };
 }
+// Sync contact fields entered in the CM application back to the user profile.
+const profileSync = {
+  phone: formData.phone || currentUser.phone || "",
+  phone_country_code: formData.phoneCountryCode || currentUser.phoneCountryCode || "",
+  city: formData.city || currentUser.city || "",
+  country: formData.country || currentUser.country || "",
+};
+const { error: profileError } = await supabase
+  .from("profiles")
+  .update(profileSync)
+  .eq("id", currentUser.id);
+if (profileError) {
+  console.error("[auth] onSubmitCmApplication profile sync:", profileError);
+} else {
+  setCurrentUser((prev) => prev ? {
+    ...prev,
+    phone: profileSync.phone,
+    phoneCountryCode: profileSync.phone_country_code,
+    city: profileSync.city,
+    country: profileSync.country,
+  } : null);
+}
 // Fire-and-forget confirmation email.
 supabase.functions.invoke("booking-notify", {
   body: { emailType: "cm_application_received", userId: currentUser.id },

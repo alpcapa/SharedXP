@@ -398,6 +398,7 @@ const HostPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotPa
       country: cmForm.country.trim(),
       city: cmForm.city.trim(),
       phone: fullPhone,
+      phoneCountryCode: cmForm.phoneCountryCode,
       sportsBackground: cmForm.sportsBackground.trim(),
       motivation: cmForm.motivation.trim(),
       contactTimes: cmForm.contactTimes.trim(),
