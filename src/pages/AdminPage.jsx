@@ -2440,7 +2440,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
                       </p>
                       <textarea
                         className="admin-dispute-note-input"
-                        placeholder="Admin note (optional — shown to both parties after resolution)"
+                        placeholder="Admin note (optional — internal only)"
                         value={adminNote}
                         onChange={(e) => setAdminNote(e.target.value)}
                         rows={3}
