@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
@@ -15,9 +15,6 @@ const ContactPage = ({ currentUser, onLogout }) => {
   const [errorMsg, setErrorMsg] = useState("Something went wrong. Please try again.");
   const [turnstileToken, setTurnstileToken] = useState(null);
 
-  const containerRef = useRef(null);
-  const widgetIdRef  = useRef(null);
-
   const userEmail = currentUser?.email ?? "";
   const userName = currentUser
     ? currentUser.fullName || `${currentUser.firstName ?? ""} ${currentUser.lastName ?? ""}`.trim()
@@ -26,36 +23,16 @@ const ContactPage = ({ currentUser, onLogout }) => {
   useEffect(() => {
     if (currentUser) return;
 
-    let mounted = true;
+    // Pick up token if Turnstile already fired before this component mounted
+    if (window.__tsToken) setTurnstileToken(window.__tsToken);
 
-    const doRender = () => {
-      if (!mounted || widgetIdRef.current != null || !containerRef.current) return;
-      widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey:            TURNSTILE_SITE_KEY,
-        theme:              "light",
-        appearance:         "always",
-        callback:           (token) => { if (mounted) setTurnstileToken(token); },
-        "expired-callback": () => { if (mounted) setTurnstileToken(null); },
-      });
-    };
-
-    if (window.__tsReady) {
-      doRender();
-    } else {
-      window.__tsQueue = window.__tsQueue || [];
-      window.__tsQueue.push(doRender);
-    }
-
+    const onSuccess = (e) => setTurnstileToken(e.detail);
+    const onExpired = ()  => setTurnstileToken(null);
+    window.addEventListener("ts-success", onSuccess);
+    window.addEventListener("ts-expired",  onExpired);
     return () => {
-      mounted = false;
-      if (Array.isArray(window.__tsQueue)) {
-        const idx = window.__tsQueue.indexOf(doRender);
-        if (idx !== -1) window.__tsQueue.splice(idx, 1);
-      }
-      if (widgetIdRef.current != null && window.turnstile) {
-        window.turnstile.remove(widgetIdRef.current);
-        widgetIdRef.current = null;
-      }
+      window.removeEventListener("ts-success", onSuccess);
+      window.removeEventListener("ts-expired",  onExpired);
     };
   }, [currentUser]);
 
@@ -99,17 +76,20 @@ const ContactPage = ({ currentUser, onLogout }) => {
       if (res.error || res.data?.error) {
         setErrorMsg(res.data?.error ?? "Something went wrong. Please try again.");
         setStatus("error");
-        window.turnstile?.reset(widgetIdRef.current);
+        window.__tsToken = null;
         setTurnstileToken(null);
+        window.turnstile?.reset();
       } else {
         setStatus("sent");
         setSubject(""); setMessage(""); setName(""); setEmail("");
+        window.__tsToken = null;
       }
     } catch (err) {
       console.error("[contact] edge function error:", err);
       setStatus("error");
-      window.turnstile?.reset(widgetIdRef.current);
+      window.__tsToken = null;
       setTurnstileToken(null);
+      window.turnstile?.reset();
     }
   };
 
@@ -191,7 +171,14 @@ const ContactPage = ({ currentUser, onLogout }) => {
                   </div>
                   {!currentUser && (
                     <div className="support-form-row">
-                      <div ref={containerRef} />
+                      <div
+                        className="cf-turnstile"
+                        data-sitekey={TURNSTILE_SITE_KEY}
+                        data-theme="light"
+                        data-appearance="always"
+                        data-callback="__tsOnSuccess"
+                        data-expired-callback="__tsOnExpired"
+                      />
                     </div>
                   )}
                   {status === "error" && (
