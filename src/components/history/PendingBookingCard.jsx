@@ -588,37 +588,32 @@ const PendingBookingCard = ({
         {/* Disputed */}
         {request.status === "disputed" && (
           <div className="pending-card-disputed">
-            <p>This booking is under review by our customer service team. We'll be in touch within 24 hours.</p>
-            {request.dispute && (
-              <div className="dispute-accounts">
-                <div className="dispute-account-block">
-                  <p className="dispute-account-label">{requesterName}'s response</p>
-                  <blockquote className="dispute-quote">{request.dispute.requester_explanation}</blockquote>
-                </div>
-                {request.dispute.host_response ? (
-                  <div className="dispute-account-block">
-                    <p className="dispute-account-label">{hostName}'s response</p>
-                    <blockquote className="dispute-quote dispute-quote-host">{request.dispute.host_response}</blockquote>
-                  </div>
-                ) : isHost ? (
-                  <div className="dispute-account-block">
-                    <p className="dispute-account-label">Your response</p>
-                    <p className="dispute-pending-note">You haven't submitted your response yet.</p>
-                    <a
-                      href={`/dispute-response/${request.dispute.id}`}
-                      className="find-button pending-pay-btn"
-                      style={{ display: "inline-block", marginTop: 8 }}
-                    >
-                      Submit My Response
-                    </a>
-                  </div>
-                ) : (
-                  <div className="dispute-account-block">
-                    <p className="dispute-account-label">{hostName}'s response</p>
-                    <p className="dispute-pending-note">Awaiting host's response.</p>
-                  </div>
-                )}
+            <p>This booking is under review by our customer service team. We'll be in touch as soon as possible.</p>
+            {request.dispute && isHost && !request.dispute.host_response && (
+              <div className="dispute-account-block" style={{ marginTop: 12 }}>
+                <p className="dispute-pending-note">You haven't submitted your response yet.</p>
+                <a
+                  href={`/dispute-response/${request.dispute.id}`}
+                  className="find-button pending-pay-btn"
+                  style={{ display: "inline-block", marginTop: 8 }}
+                >
+                  Submit My Response
+                </a>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Resolved dispute verdict */}
+        {(request.status === "resolved_paid_host" || request.status === "resolved_refunded") && request.dispute && (
+          <div className="pending-card-disputed pending-card-dispute-resolved">
+            <p className="dispute-verdict-label">
+              {request.status === "resolved_refunded"
+                ? "Our team reviewed this dispute and decided to refund the guest."
+                : "Our team reviewed this dispute and decided to release payment to the host."}
+            </p>
+            {request.dispute.admin_note && (
+              <blockquote className="dispute-quote dispute-verdict-note">{request.dispute.admin_note}</blockquote>
             )}
           </div>
         )}

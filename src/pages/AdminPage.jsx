@@ -2162,6 +2162,8 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   const [disputeTab, setDisputeTab] = useState("open");
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
+  const [resolvePanel, setResolvePanel] = useState(null); // { disputeId, resolution }
+  const [adminNote, setAdminNote] = useState("");
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "disputes");
   const [memberSearch, setMemberSearch] = useState("");
   const [cmCounts, setCmCounts] = useState({ pendingApps: 0, pendingComms: 0 });
@@ -2177,7 +2179,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
         id, status, sport, requested_date, price, currency, updated_at,
         requester:profiles!requester_id(full_name, first_name, last_name, email),
         host:profiles!host_id(full_name, first_name, last_name, email),
-        dispute:disputes(id, requester_explanation, host_response, opened_at, resolved_at, resolution, resolved_by)
+        dispute:disputes(id, requester_explanation, host_response, opened_at, resolved_at, resolution, resolved_by, admin_note)
       `)
       .in("status", ["disputed", "resolved_refunded", "resolved_paid_host"])
       .order("updated_at", { ascending: false });
@@ -2192,6 +2194,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
         resolved_at: d.resolved_at ?? null,
         resolution: d.resolution ?? null,
         resolved_by: d.resolved_by ?? null,
+        admin_note: d.admin_note ?? null,
         booking_request: { status: br.status, sport: br.sport, requested_date: br.requested_date, price: br.price, currency: br.currency, requester: br.requester, host: br.host },
       };
     });
@@ -2240,12 +2243,19 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
     }
   }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts, fetchUnreadSupport, fetchPendingReports]);
 
-  const handleResolve = async (disputeId, resolution) => {
-    if (!confirm(`Resolve as "${resolution}"?`)) return;
-    setResolving(disputeId);
-    await resolveDispute(disputeId, resolution);
+  const handleResolve = (disputeId, resolution) => {
+    setResolvePanel({ disputeId, resolution });
+    setAdminNote("");
+  };
+
+  const handleResolveConfirm = async () => {
+    if (!resolvePanel) return;
+    setResolving(resolvePanel.disputeId);
+    setResolvePanel(null);
+    await resolveDispute(resolvePanel.disputeId, resolvePanel.resolution, adminNote.trim() || undefined);
     await fetchDisputes();
     setResolving(null);
+    setAdminNote("");
   };
 
   if (!currentUser) {
@@ -2423,7 +2433,26 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
                     </div>
                   </div>
 
-                  {!isResolved && (
+                  {!isResolved && resolvePanel?.disputeId === d.id ? (
+                    <div className="admin-dispute-resolve-panel">
+                      <p className="admin-dispute-label">
+                        Resolving as: <strong>{resolvePanel.resolution === "refunded" ? "Refund Guest" : "Release to Host"}</strong>
+                      </p>
+                      <textarea
+                        className="admin-dispute-note-input"
+                        placeholder="Admin note (optional — shown to both parties after resolution)"
+                        value={adminNote}
+                        onChange={(e) => setAdminNote(e.target.value)}
+                        rows={3}
+                      />
+                      <div className="admin-dispute-actions">
+                        <button type="button" className="btn btn-light" onClick={() => setResolvePanel(null)}>Cancel</button>
+                        <button type="button" className={resolvePanel.resolution === "refunded" ? "btn btn-danger" : "btn btn-primary"} onClick={handleResolveConfirm}>
+                          Confirm
+                        </button>
+                      </div>
+                    </div>
+                  ) : !isResolved && (
                     <div className="admin-dispute-actions">
                       <button
                         type="button"
@@ -2445,9 +2474,17 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
                   )}
 
                   {isResolved && (
-                    <p className="admin-dispute-resolved-info">
-                      Resolved {fmtDate(d.resolved_at)} by {d.resolved_by ?? "admin"}
-                    </p>
+                    <div className="admin-dispute-resolved-thread">
+                      <p className="admin-dispute-resolved-info">
+                        Resolved {fmtDate(d.resolved_at)} by {d.resolved_by ?? "admin"} — {d.resolution === "refunded" ? "Guest refunded" : "Payment released to host"}
+                      </p>
+                      {d.admin_note && (
+                        <div className="admin-dispute-note-block">
+                          <p className="admin-dispute-label">Admin note</p>
+                          <blockquote className="dispute-quote">{d.admin_note}</blockquote>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </article>
               );

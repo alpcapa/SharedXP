@@ -49,13 +49,15 @@ export const useBookingRequests = (currentUser) => {
         for (const p of profiles ?? []) profileMap[p.id] = p;
       }
 
-      const disputedIds = rows.filter((r) => r.status === "disputed").map((r) => r.id);
+      const disputeRelatedIds = rows
+        .filter((r) => r.status === "disputed" || r.status?.startsWith("resolved_"))
+        .map((r) => r.id);
       let disputeMap = {};
-      if (disputedIds.length > 0) {
+      if (disputeRelatedIds.length > 0) {
         const { data: disputes } = await supabase
           .from("disputes")
           .select("*")
-          .in("booking_request_id", disputedIds);
+          .in("booking_request_id", disputeRelatedIds);
         for (const d of disputes ?? []) disputeMap[d.booking_request_id] = d;
       }
 
@@ -364,7 +366,7 @@ export const useBookingRequests = (currentUser) => {
     return { ok: true, errorMessage: null, photoUrls };
   }, [fetchRequests, currentUser]);
 
-  const resolveDispute = useCallback(async (disputeId, resolution) => {
+  const resolveDispute = useCallback(async (disputeId, resolution, adminNote) => {
     const { data: dispute } = await supabase
       .from("disputes")
       .select("*, booking_request:booking_requests(*)")
@@ -374,11 +376,13 @@ export const useBookingRequests = (currentUser) => {
 
     const now = new Date().toISOString();
     const status = resolution === "refunded" ? "resolved_refunded" : "resolved_paid_host";
+    const disputeUpdate = { resolution, resolved_at: now, resolved_by: currentUser?.email ?? "admin" };
+    if (adminNote) disputeUpdate.admin_note = adminNote;
 
     await Promise.all([
       supabase
         .from("disputes")
-        .update({ resolution, resolved_at: now, resolved_by: currentUser?.email ?? "admin" })
+        .update(disputeUpdate)
         .eq("id", disputeId),
       supabase
         .from("booking_requests")

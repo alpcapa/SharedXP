@@ -156,7 +156,7 @@ const DisputeResponsePage = ({ currentUser, authLoading, onLogout, onEmailLogin,
           <div className="dispute-submitted">
             <div className="dispute-submitted-icon">✓</div>
             <h2>Response submitted</h2>
-            <p>Thank you. Our customer service team will review both accounts and contact you within 24 hours.</p>
+            <p>Thank you. Our customer service team will review both accounts and be in touch as soon as possible.</p>
             <Link to="/history?tab=pending" className="btn btn-primary">Back to History</Link>
           </div>
         ) : (
