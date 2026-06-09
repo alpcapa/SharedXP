@@ -28,11 +28,32 @@ const ContactPage = ({ currentUser, onLogout }) => {
     if (currentUser) return;
 
     const renderWidget = () => {
-      if (!containerRef.current || widgetIdRef.current != null) return;
+      // Retry up to 20 times (100 ms apart) if the container ref isn't mounted yet.
+      if (!containerRef.current) {
+        let attempts = 0;
+        const poll = setInterval(() => {
+          attempts++;
+          if (containerRef.current && widgetIdRef.current == null) {
+            clearInterval(poll);
+            widgetIdRef.current = window.turnstile.render(containerRef.current, {
+              sitekey:            TURNSTILE_SITE_KEY,
+              theme:              "light",
+              appearance:         "always",
+              callback:           (token) => setTurnstileToken(token),
+              "expired-callback": () => setTurnstileToken(null),
+            });
+          } else if (attempts >= 20) {
+            clearInterval(poll);
+          }
+        }, 100);
+        return;
+      }
+      if (widgetIdRef.current != null) return;
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey:           TURNSTILE_SITE_KEY,
-        theme:             "light",
-        callback:          (token) => setTurnstileToken(token),
+        sitekey:            TURNSTILE_SITE_KEY,
+        theme:              "light",
+        appearance:         "always",
+        callback:           (token) => setTurnstileToken(token),
         "expired-callback": () => setTurnstileToken(null),
       });
     };
