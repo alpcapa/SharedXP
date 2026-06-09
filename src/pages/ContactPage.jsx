@@ -5,7 +5,6 @@ import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
 
 const TURNSTILE_SITE_KEY = "0x4AAAAAAbejGrw3iA0PU0T";
-const TURNSTILE_CB       = "__cfTurnstileReady";
 
 const ContactPage = ({ currentUser, onLogout }) => {
   const [subject, setSubject] = useState("");
@@ -27,58 +26,32 @@ const ContactPage = ({ currentUser, onLogout }) => {
   useEffect(() => {
     if (currentUser) return;
 
-    const renderWidget = () => {
-      // Retry up to 20 times (100 ms apart) if the container ref isn't mounted yet.
-      if (!containerRef.current) {
-        let attempts = 0;
-        const poll = setInterval(() => {
-          attempts++;
-          if (containerRef.current && widgetIdRef.current == null) {
-            clearInterval(poll);
-            widgetIdRef.current = window.turnstile.render(containerRef.current, {
-              sitekey:            TURNSTILE_SITE_KEY,
-              theme:              "light",
-              appearance:         "always",
-              callback:           (token) => setTurnstileToken(token),
-              "expired-callback": () => setTurnstileToken(null),
-            });
-          } else if (attempts >= 20) {
-            clearInterval(poll);
-          }
-        }, 100);
-        return;
-      }
-      if (widgetIdRef.current != null) return;
+    let mounted = true;
+
+    const doRender = () => {
+      if (!mounted || widgetIdRef.current != null || !containerRef.current) return;
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey:            TURNSTILE_SITE_KEY,
         theme:              "light",
         appearance:         "always",
-        callback:           (token) => setTurnstileToken(token),
-        "expired-callback": () => setTurnstileToken(null),
+        callback:           (token) => { if (mounted) setTurnstileToken(token); },
+        "expired-callback": () => { if (mounted) setTurnstileToken(null); },
       });
     };
 
-    // Register the callback Turnstile will invoke once fully initialised.
-    // This must be set BEFORE the script tag is added to the DOM.
-    window[TURNSTILE_CB] = renderWidget;
-
-    if (window.turnstile) {
-      // Script already loaded from an earlier page visit in this session
-      renderWidget();
-    } else if (!document.getElementById("cf-turnstile-script")) {
-      const s = document.createElement("script");
-      s.id    = "cf-turnstile-script";
-      // ?onload fires only after Turnstile finishes its internal async setup —
-      // unlike script.onload which fires as soon as the JS file executes.
-      // ?render=explicit prevents the script from auto-scanning the DOM.
-      s.src   = `https://challenges.cloudflare.com/turnstile/v0/api.js?onload=${TURNSTILE_CB}&render=explicit`;
-      s.async = true;
-      document.head.appendChild(s);
+    if (window.__tsReady) {
+      doRender();
+    } else {
+      window.__tsQueue = window.__tsQueue || [];
+      window.__tsQueue.push(doRender);
     }
-    // If the script tag is already loading, the ?onload callback will fire when ready.
 
     return () => {
-      delete window[TURNSTILE_CB];
+      mounted = false;
+      if (Array.isArray(window.__tsQueue)) {
+        const idx = window.__tsQueue.indexOf(doRender);
+        if (idx !== -1) window.__tsQueue.splice(idx, 1);
+      }
       if (widgetIdRef.current != null && window.turnstile) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
