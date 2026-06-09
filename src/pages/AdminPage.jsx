@@ -2496,7 +2496,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
                           </p>
                           {d.admin_note && (
                             <div className="admin-dispute-note-block">
-                              <p className="admin-dispute-label">Admin note</p>
+                              <p className="admin-dispute-label">Admin note — {d.resolved_by ?? "admin"} · {fmtDateTime(d.resolved_at)}</p>
                               <p className="admin-dispute-note-text">{d.admin_note}</p>
                             </div>
                           )}
