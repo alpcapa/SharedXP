@@ -63,6 +63,43 @@ function extractName(raw: string): string {
   return m ? m[1].trim() : "";
 }
 
+// Returns true if the sender appears to be automated (bounce, noreply, OOF, etc.)
+// Used to break auto-reply loops before they consume quota.
+function isAutomatedSender(
+  fromEmail: string,
+  headers: Record<string, string>,
+): boolean {
+  const lowerFrom = fromEmail.toLowerCase();
+
+  // Block our own domain — never reply to @sharedxp.com addresses
+  if (lowerFrom.endsWith("@sharedxp.com")) return true;
+
+  // Common automated / no-reply local-part patterns
+  const automatedLocalParts = [
+    "noreply", "no-reply", "donotreply", "do-not-reply",
+    "mailer-daemon", "postmaster", "bounce", "bounces",
+    "notifications", "notification", "auto", "automailer",
+    "mailerdaemon",
+  ];
+  const localPart = lowerFrom.split("@")[0] ?? "";
+  if (automatedLocalParts.some((p) => localPart === p || localPart.startsWith(p + "+"))) {
+    return true;
+  }
+
+  // RFC 3834 — if Auto-Submitted is present and not "no", skip reply
+  const autoSubmitted = (headers["auto-submitted"] ?? "").toLowerCase();
+  if (autoSubmitted && autoSubmitted !== "no") return true;
+
+  // Outlook / Exchange OOF suppression header
+  if (headers["x-auto-response-suppress"]) return true;
+
+  // Mailing-list / bulk precedence
+  const precedence = (headers["precedence"] ?? "").toLowerCase();
+  if (["bulk", "list", "junk"].includes(precedence)) return true;
+
+  return false;
+}
+
 async function sendAutoReply(toEmail: string, toName: string, originalSubject: string): Promise<void> {
   if (!RESEND_API_KEY || !toEmail) return;
 
@@ -111,6 +148,13 @@ async function sendAutoReply(toEmail: string, toName: string, originalSubject: s
       to: [toEmail],
       subject: `Re: ${originalSubject}`,
       html,
+      headers: {
+        // RFC 3834: tells receiving mail systems this is an auto-reply
+        // so they won't generate their own auto-replies back to us
+        "Auto-Submitted": "auto-replied",
+        "X-Auto-Response-Suppress": "OOF, AutoReply",
+        "Precedence": "auto_reply",
+      },
     }),
   });
 }
@@ -147,6 +191,22 @@ serve(async (req) => {
     : String(data.reply_to ?? "");
   const replyTo  = replyToRaw ? extractEmail(replyToRaw) : fromEmail;
 
+  // Normalise headers from the inbound payload (Resend sends them as an array
+  // of {name, value} objects or as a flat object depending on version)
+  const rawHeaders = data.headers;
+  const normalisedHeaders: Record<string, string> = {};
+  if (Array.isArray(rawHeaders)) {
+    for (const h of rawHeaders as Array<{ name: string; value: string }>) {
+      if (h?.name) normalisedHeaders[h.name.toLowerCase()] = String(h.value ?? "");
+    }
+  } else if (rawHeaders && typeof rawHeaders === "object") {
+    for (const [k, v] of Object.entries(rawHeaders as Record<string, unknown>)) {
+      normalisedHeaders[k.toLowerCase()] = String(v ?? "");
+    }
+  }
+
+  const automated = isAutomatedSender(fromEmail, normalisedHeaders);
+
   const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   const { error } = await db.from("support_messages").insert({
@@ -155,12 +215,17 @@ serve(async (req) => {
     subject,
     reply_to:   replyTo,
     resend_id:  emailId,
-    status:     "autoreplied",
+    status:     automated ? "unread" : "autoreplied",
   });
 
   if (error) {
     console.error("[inbound-support] insert error:", error);
     return new Response("Internal error", { status: 500 });
+  }
+
+  if (automated) {
+    console.log("[inbound-support] skipping auto-reply to automated sender:", fromEmail);
+    return new Response("OK", { status: 200 });
   }
 
   // Send auto-reply in background — do not block the 200 OK to Resend
