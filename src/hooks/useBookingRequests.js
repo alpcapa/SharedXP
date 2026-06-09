@@ -396,14 +396,14 @@ export const useBookingRequests = (currentUser) => {
         .update({ released_at: now })
         .eq("booking_request_id", dispute.booking_request_id)
         .is("released_at", null);
-      await sendNotification("dispute_resolved_paid_host", dispute.booking_request_id);
+      await sendNotification("dispute_resolved_paid_host", dispute.booking_request_id, adminNote ? { adminNote } : {});
     } else {
       // Refund resolution — guest gets money back, so XP is reclaimed from both parties.
       await supabase
         .from("invoices")
         .update({ xp_earned: 0 })
         .eq("booking_request_id", dispute.booking_request_id);
-      await sendNotification("dispute_resolved_refund", dispute.booking_request_id);
+      await sendNotification("dispute_resolved_refund", dispute.booking_request_id, adminNote ? { adminNote } : {});
     }
 
     fetchRequests();
