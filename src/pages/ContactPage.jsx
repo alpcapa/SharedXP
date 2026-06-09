@@ -32,7 +32,6 @@ const ContactPage = ({ currentUser, onLogout }) => {
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey:           TURNSTILE_SITE_KEY,
         theme:             "light",
-        appearance:        "always",
         callback:          (token) => setTurnstileToken(token),
         "expired-callback": () => setTurnstileToken(null),
       });
