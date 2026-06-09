@@ -541,13 +541,9 @@ function buildDisputeResolvedRefund(
   booking: Record<string, unknown>,
   requester: Record<string, unknown>,
   host: Record<string, unknown>,
-  adminNote?: string,
 ): { to: string; subject: string; html: string }[] {
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
-  const noteBlock = adminNote
-    ? `<blockquote style="margin:16px 0 0;padding:12px 16px;background:#f0fdf4;border-left:3px solid #4ade80;border-radius:4px;font-style:italic;color:#166534;">${adminNote}</blockquote>`
-    : null;
   return [
     {
       to: String(requester.email),
@@ -556,7 +552,6 @@ function buildDisputeResolvedRefund(
         `Refund approved`,
         [
           `Dear ${reqName}, after reviewing both accounts for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team has decided to issue a full refund.`,
-          ...(noteBlock ? [`<strong>Note from our team:</strong>${noteBlock}`] : []),
           `Please allow 5–7 business days for the funds to appear on your original payment method.`,
           `We're sorry for the inconvenience and hope to see you on SharedXP again soon.`,
         ],
@@ -571,7 +566,6 @@ function buildDisputeResolvedRefund(
         `Dispute outcome, ${hostName}`,
         [
           `After reviewing the dispute for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team has decided to refund the guest.`,
-          ...(noteBlock ? [`<strong>Note from our team:</strong>${noteBlock}`] : []),
           `Payment will not be released for this session. If you have any questions, please <a href="${APP_URL}/contact" style="color:#1a1a1a;">contact our support team</a>.`,
         ],
         `${APP_URL}/history`,
@@ -586,13 +580,9 @@ function buildDisputeResolvedPaidHost(
   requester: Record<string, unknown>,
   host: Record<string, unknown>,
   invoice: Record<string, unknown> | null,
-  adminNote?: string,
 ): { to: string; subject: string; html: string }[] {
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "there");
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
-  const noteBlock = adminNote
-    ? `<blockquote style="margin:16px 0 0;padding:12px 16px;background:#f0fdf4;border-left:3px solid #4ade80;border-radius:4px;font-style:italic;color:#166534;">${adminNote}</blockquote>`
-    : null;
   return [
     {
       to: String(requester.email),
@@ -601,7 +591,6 @@ function buildDisputeResolvedPaidHost(
         `Dispute resolved`,
         [
           `Dear ${reqName}, after reviewing both accounts for your <strong>${booking.sport}</strong> session on ${booking.requested_date}, our team found that the experience was delivered as agreed.`,
-          ...(noteBlock ? [`<strong>Note from our team:</strong>${noteBlock}`] : []),
           `The payment has been released to the host. If you have further concerns, please <a href="${APP_URL}/contact" style="color:#1a1a1a;">contact our support team</a>.`,
         ],
         `${APP_URL}/history`,
@@ -615,7 +604,6 @@ function buildDisputeResolvedPaidHost(
         `Payment released, ${hostName}!`,
         [
           `Our customer service team has reviewed the dispute for your <strong>${booking.sport}</strong> session on ${booking.requested_date} and found in your favour.`,
-          ...(noteBlock ? [`<strong>Note from our team:</strong>${noteBlock}`] : []),
           `Payment has been released to your registered bank account.`,
         ],
         `${APP_URL}/history`,
@@ -899,14 +887,13 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, adminNote, inviteCode, commissionId, commissionIds, totalAmount, supportMessageId, postId, subject, message, replyTo, repliedBy } = body as {
+  const { emailType, bookingRequestId, disputeId, senderId, userId, adminNotes, inviteCode, commissionId, commissionIds, totalAmount, supportMessageId, postId, subject, message, replyTo, repliedBy } = body as {
     emailType: string;
     bookingRequestId?: string;
     disputeId?: string;
     senderId?: string;
     userId?: string;
     adminNotes?: string;
-    adminNote?: string;
     inviteCode?: string;
     commissionId?: string;
     commissionIds?: string[];
@@ -1315,7 +1302,7 @@ serve(async (req: Request): Promise<Response> => {
         break;
       }
       case "dispute_resolved_refund": {
-        const emails = buildDisputeResolvedRefund(booking, requester, host, adminNote);
+        const emails = buildDisputeResolvedRefund(booking, requester, host);
         await Promise.all([
           ...emails.map((e) => sendEmail(e.to, e.subject, e.html)),
           sendEmail(CS_EMAIL, `[Dispute resolved — refunded] ${emails[0].subject}`, emails[0].html),
@@ -1323,7 +1310,7 @@ serve(async (req: Request): Promise<Response> => {
         break;
       }
       case "dispute_resolved_paid_host": {
-        const emails = buildDisputeResolvedPaidHost(booking, requester, host, invoice, adminNote);
+        const emails = buildDisputeResolvedPaidHost(booking, requester, host, invoice);
         await Promise.all([
           ...emails.map((e) => sendEmail(e.to, e.subject, e.html)),
           sendEmail(CS_EMAIL, `[Dispute resolved — paid host] ${emails[0].subject}`, emails[0].html),

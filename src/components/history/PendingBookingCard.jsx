@@ -619,16 +619,13 @@ const PendingBookingCard = ({
         )}
 
         {/* Resolved dispute verdict */}
-        {(request.status === "resolved_paid_host" || request.status === "resolved_refunded") && request.dispute && (
+        {(request.status === "resolved_paid_host" || request.status === "resolved_refunded") && (
           <div className="pending-card-disputed pending-card-dispute-resolved">
             <p className="dispute-verdict-label">
               {request.status === "resolved_refunded"
                 ? "Our team reviewed this dispute and decided to refund the guest."
                 : "Our team reviewed this dispute and decided to release payment to the host."}
             </p>
-            {request.dispute.admin_note && (
-              <blockquote className="dispute-quote dispute-verdict-note">{request.dispute.admin_note}</blockquote>
-            )}
           </div>
         )}
 
