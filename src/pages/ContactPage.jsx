@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
+
+const TURNSTILE_SITE_KEY = "0x4AAAAAAbejGrw3iA0PU0T";
 
 const ContactPage = ({ currentUser, onLogout }) => {
   const [subject, setSubject] = useState("");
@@ -10,11 +12,24 @@ const ContactPage = ({ currentUser, onLogout }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState(null); // "sending" | "sent" | "error"
+  const [errorMsg, setErrorMsg] = useState("Something went wrong. Please try again.");
+  const [turnstileToken, setTurnstileToken] = useState(null);
 
   const userEmail = currentUser?.email ?? "";
   const userName = currentUser
     ? currentUser.fullName || `${currentUser.firstName ?? ""} ${currentUser.lastName ?? ""}`.trim()
     : "";
+
+  // Wire up global callbacks that the Turnstile div's data-callback attribute calls.
+  // The script itself is loaded in index.html and auto-renders any .cf-turnstile div.
+  useEffect(() => {
+    window.__onTurnstileSuccess = (token) => setTurnstileToken(token);
+    window.__onTurnstileExpired = () => setTurnstileToken(null);
+    return () => {
+      delete window.__onTurnstileSuccess;
+      delete window.__onTurnstileExpired;
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,23 +40,48 @@ const ContactPage = ({ currentUser, onLogout }) => {
     if (!message.trim()) { alert("Please enter a message."); return; }
 
     setStatus("sending");
-    const { error } = await supabase.from("support_messages").insert({
-      from_email: fromEmail,
-      from_name:  fromName,
-      subject:    subject.trim(),
-      body_text:  message.trim(),
-      reply_to:   fromEmail,
-    });
+    setErrorMsg("Something went wrong. Please try again.");
 
-    if (error) {
-      console.error("[contact] support submit error:", error);
-      setStatus("error");
-    } else {
+    // Authenticated users: direct insert (already gated by Supabase auth)
+    if (currentUser) {
+      const { error } = await supabase.from("support_messages").insert({
+        from_email: fromEmail,
+        from_name:  fromName,
+        subject:    subject.trim(),
+        body_text:  message.trim(),
+        reply_to:   fromEmail,
+      });
+      if (error) { console.error("[contact] insert error:", error); setStatus("error"); return; }
       setStatus("sent");
-      setSubject("");
-      setMessage("");
-      setName("");
-      setEmail("");
+      setSubject(""); setMessage("");
+      return;
+    }
+
+    // Unauthenticated users: send through edge function with Turnstile verification
+    if (!turnstileToken) {
+      setErrorMsg("Please complete the CAPTCHA challenge first.");
+      setStatus("error");
+      return;
+    }
+
+    try {
+      const res = await supabase.functions.invoke("contact-support", {
+        body: { fromEmail, fromName, subject: subject.trim(), message: message.trim(), turnstileToken },
+      });
+      if (res.error || res.data?.error) {
+        setErrorMsg(res.data?.error ?? "Something went wrong. Please try again.");
+        setStatus("error");
+        window.turnstile?.reset();
+        setTurnstileToken(null);
+      } else {
+        setStatus("sent");
+        setSubject(""); setMessage(""); setName(""); setEmail("");
+      }
+    } catch (err) {
+      console.error("[contact] edge function error:", err);
+      setStatus("error");
+      window.turnstile?.reset();
+      setTurnstileToken(null);
     }
   };
 
@@ -121,8 +161,20 @@ const ContactPage = ({ currentUser, onLogout }) => {
                       required
                     />
                   </div>
+                  {!currentUser && (
+                    <div className="support-form-row">
+                      <div
+                        className="cf-turnstile"
+                        data-sitekey={TURNSTILE_SITE_KEY}
+                        data-callback="__onTurnstileSuccess"
+                        data-expired-callback="__onTurnstileExpired"
+                        data-theme="light"
+                        data-appearance="always"
+                      />
+                    </div>
+                  )}
                   {status === "error" && (
-                    <p className="support-form-error">Something went wrong. Please try again.</p>
+                    <p className="support-form-error">{errorMsg}</p>
                   )}
                   <button
                     type="submit"
