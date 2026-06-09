@@ -2179,7 +2179,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
         id, status, sport, requested_date, price, currency, updated_at,
         requester:profiles!requester_id(full_name, first_name, last_name, email),
         host:profiles!host_id(full_name, first_name, last_name, email),
-        dispute:disputes(id, requester_explanation, host_response, opened_at, resolved_at, resolution, resolved_by, admin_note)
+        dispute:disputes(*)
       `)
       .in("status", ["disputed", "resolved_refunded", "resolved_paid_host"])
       .order("updated_at", { ascending: false });
