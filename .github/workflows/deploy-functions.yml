@@ -37,6 +37,11 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
+      - name: Deploy contact-support
+        run: supabase functions deploy contact-support --project-ref bwdkelprrvhztpviiujo --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
       - name: Deploy inbound-support
         run: supabase functions deploy inbound-support --project-ref bwdkelprrvhztpviiujo --no-verify-jwt
         env:
