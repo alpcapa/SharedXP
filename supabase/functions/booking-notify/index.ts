@@ -263,7 +263,7 @@ function buildDisputeOpenedToHost(
 ): { to: string; subject: string; html: string } {
   const hostName = String(host.full_name ?? `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim() ?? "Host");
   const reqName = String(requester.full_name ?? `${requester.first_name ?? ""} ${requester.last_name ?? ""}`.trim() ?? "The guest");
-  const ctaUrl = `${APP_URL}/dispute-response/${dispute.id}`;
+  const ctaUrl = `${APP_URL}/history?tab=pending&dispute=${dispute.id}`;
   return {
     to: String(host.email),
     subject: `A guest has raised a dispute for your session — SharedXP`,
@@ -271,9 +271,9 @@ function buildDisputeOpenedToHost(
       `Dispute raised, ${hostName}`,
       [
         `<strong>${reqName}</strong> has reported that the <strong>${booking.sport}</strong> experience on ${booking.requested_date} did not take place as expected.`,
-        `<strong>Their explanation:</strong>`,
+        `<strong>${reqName} wrote:</strong>`,
         `<blockquote style="margin:0;padding:12px 16px;background:#fff8f0;border-left:3px solid #f59e0b;border-radius:4px;font-style:italic;color:#4b3a2a;">"${String(dispute.requester_explanation)}"</blockquote>`,
-        `Please submit your side of the story within 48 hours so our team can resolve this fairly.`,
+        `Please submit your side of the story as soon as possible so our team can resolve this fairly.`,
       ],
       ctaUrl,
       "Submit My Response",
