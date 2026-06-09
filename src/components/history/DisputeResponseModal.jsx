@@ -87,7 +87,7 @@ const DisputeResponseModal = ({ dispute, request, requesterName, onClose }) => {
             </div>
 
             <div className="dispute-response-modal-guest">
-              <p className="dispute-account-label">{requesterName}&rsquo;s account</p>
+              <p className="dispute-account-label">{requesterName} wrote:</p>
               <blockquote className="dispute-quote">{dispute.requester_explanation}</blockquote>
             </div>
 
