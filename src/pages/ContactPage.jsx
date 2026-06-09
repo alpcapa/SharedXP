@@ -27,28 +27,31 @@ const ContactPage = ({ currentUser, onLogout }) => {
     if (currentUser) return;
 
     let mounted = true;
-    let timerId;
 
-    const tryRender = () => {
-      if (!mounted || widgetIdRef.current != null) return;
-      if (typeof window.turnstile?.render === "function" && containerRef.current) {
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
-          sitekey:            TURNSTILE_SITE_KEY,
-          theme:              "light",
-          appearance:         "always",
-          callback:           (token) => { if (mounted) setTurnstileToken(token); },
-          "expired-callback": () => { if (mounted) setTurnstileToken(null); },
-        });
-      } else {
-        timerId = setTimeout(tryRender, 200);
-      }
+    const doRender = () => {
+      if (!mounted || widgetIdRef.current != null || !containerRef.current) return;
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey:            TURNSTILE_SITE_KEY,
+        theme:              "light",
+        appearance:         "always",
+        callback:           (token) => { if (mounted) setTurnstileToken(token); },
+        "expired-callback": () => { if (mounted) setTurnstileToken(null); },
+      });
     };
 
-    tryRender();
+    if (window.__tsReady) {
+      doRender();
+    } else {
+      window.__tsQueue = window.__tsQueue || [];
+      window.__tsQueue.push(doRender);
+    }
 
     return () => {
       mounted = false;
-      clearTimeout(timerId);
+      if (Array.isArray(window.__tsQueue)) {
+        const idx = window.__tsQueue.indexOf(doRender);
+        if (idx !== -1) window.__tsQueue.splice(idx, 1);
+      }
       if (widgetIdRef.current != null && window.turnstile) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
