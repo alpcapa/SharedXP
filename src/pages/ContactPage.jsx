@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "";
 
 const ContactPage = ({ currentUser, onLogout }) => {
   const [subject, setSubject] = useState("");
@@ -10,11 +12,56 @@ const ContactPage = ({ currentUser, onLogout }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState(null); // "sending" | "sent" | "error"
+  const [errorMsg, setErrorMsg] = useState("Something went wrong. Please try again.");
+
+  const turnstileRef = useRef(null);
+  const widgetIdRef  = useRef(null);
 
   const userEmail = currentUser?.email ?? "";
   const userName = currentUser
     ? currentUser.fullName || `${currentUser.firstName ?? ""} ${currentUser.lastName ?? ""}`.trim()
     : "";
+
+  // Load and render the Turnstile widget only for unauthenticated users
+  useEffect(() => {
+    if (currentUser || !TURNSTILE_SITE_KEY) return;
+
+    const renderWidget = () => {
+      if (!turnstileRef.current || widgetIdRef.current != null) return;
+      widgetIdRef.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: "light",
+      });
+    };
+
+    if (window.turnstile) {
+      renderWidget();
+      return;
+    }
+
+    const scriptId = "cf-turnstile-script";
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+      script.onload = renderWidget;
+      document.head.appendChild(script);
+    } else {
+      // Script already loading — poll until turnstile is ready
+      const iv = setInterval(() => {
+        if (window.turnstile) { clearInterval(iv); renderWidget(); }
+      }, 100);
+    }
+
+    return () => {
+      if (widgetIdRef.current != null && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, [currentUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,23 +72,47 @@ const ContactPage = ({ currentUser, onLogout }) => {
     if (!message.trim()) { alert("Please enter a message."); return; }
 
     setStatus("sending");
-    const { error } = await supabase.from("support_messages").insert({
-      from_email: fromEmail,
-      from_name:  fromName,
-      subject:    subject.trim(),
-      body_text:  message.trim(),
-      reply_to:   fromEmail,
-    });
+    setErrorMsg("Something went wrong. Please try again.");
 
-    if (error) {
-      console.error("[contact] support submit error:", error);
-      setStatus("error");
-    } else {
+    // Authenticated users: direct insert (already gated by Supabase auth)
+    if (currentUser) {
+      const { error } = await supabase.from("support_messages").insert({
+        from_email: fromEmail,
+        from_name:  fromName,
+        subject:    subject.trim(),
+        body_text:  message.trim(),
+        reply_to:   fromEmail,
+      });
+      if (error) { console.error("[contact] insert error:", error); setStatus("error"); return; }
       setStatus("sent");
-      setSubject("");
-      setMessage("");
-      setName("");
-      setEmail("");
+      setSubject(""); setMessage("");
+      return;
+    }
+
+    // Unauthenticated users: send through edge function with Turnstile verification
+    const turnstileToken = window.turnstile?.getResponse(widgetIdRef.current) ?? "";
+    if (!turnstileToken) {
+      setErrorMsg("Please complete the CAPTCHA challenge first.");
+      setStatus("error");
+      return;
+    }
+
+    try {
+      const res = await supabase.functions.invoke("contact-support", {
+        body: { fromEmail, fromName, subject: subject.trim(), message: message.trim(), turnstileToken },
+      });
+      if (res.error || res.data?.error) {
+        setErrorMsg(res.data?.error ?? "Something went wrong. Please try again.");
+        setStatus("error");
+        window.turnstile?.reset(widgetIdRef.current);
+      } else {
+        setStatus("sent");
+        setSubject(""); setMessage(""); setName(""); setEmail("");
+      }
+    } catch (err) {
+      console.error("[contact] edge function error:", err);
+      setStatus("error");
+      window.turnstile?.reset(widgetIdRef.current);
     }
   };
 
@@ -121,8 +192,13 @@ const ContactPage = ({ currentUser, onLogout }) => {
                       required
                     />
                   </div>
+                  {!currentUser && TURNSTILE_SITE_KEY && (
+                    <div className="support-form-row">
+                      <div ref={turnstileRef} />
+                    </div>
+                  )}
                   {status === "error" && (
-                    <p className="support-form-error">Something went wrong. Please try again.</p>
+                    <p className="support-form-error">{errorMsg}</p>
                   )}
                   <button
                     type="submit"
