@@ -14,6 +14,7 @@ const ContactPage = ({ currentUser, onLogout }) => {
   const [status, setStatus] = useState(null); // "sending" | "sent" | "error"
   const [errorMsg, setErrorMsg] = useState("Something went wrong. Please try again.");
   const [turnstileToken, setTurnstileToken] = useState(null);
+  const [tsStatus, setTsStatus] = useState("loading"); // "loading" | "ready" | "unavailable"
 
   const userEmail = currentUser?.email ?? "";
   const userName = currentUser
@@ -24,15 +25,25 @@ const ContactPage = ({ currentUser, onLogout }) => {
     if (currentUser) return;
 
     // Pick up token if Turnstile already fired before this component mounted
-    if (window.__tsToken) setTurnstileToken(window.__tsToken);
+    if (window.__tsToken) {
+      setTurnstileToken(window.__tsToken);
+      setTsStatus("ready");
+    }
 
-    const onSuccess = (e) => setTurnstileToken(e.detail);
-    const onExpired = ()  => setTurnstileToken(null);
+    const onSuccess = (e) => { setTurnstileToken(e.detail); setTsStatus("ready"); };
+    const onExpired = ()  => { setTurnstileToken(null); };
     window.addEventListener("ts-success", onSuccess);
     window.addEventListener("ts-expired",  onExpired);
+
+    // If Turnstile script hasn't rendered the widget within 8 seconds, skip it
+    const fallback = setTimeout(() => {
+      setTsStatus((s) => s === "loading" ? "unavailable" : s);
+    }, 8000);
+
     return () => {
       window.removeEventListener("ts-success", onSuccess);
       window.removeEventListener("ts-expired",  onExpired);
+      clearTimeout(fallback);
     };
   }, [currentUser]);
 
@@ -62,10 +73,30 @@ const ContactPage = ({ currentUser, onLogout }) => {
       return;
     }
 
-    // Unauthenticated users: send through edge function with Turnstile verification
-    if (!turnstileToken) {
-      setErrorMsg("Please complete the CAPTCHA challenge first.");
+    // Unauthenticated users
+    if (tsStatus === "loading") {
+      setErrorMsg("Security check is still loading. Please wait a moment and try again.");
       setStatus("error");
+      return;
+    }
+    if (tsStatus === "ready" && !turnstileToken) {
+      setErrorMsg("Please complete the security check first.");
+      setStatus("error");
+      return;
+    }
+
+    // Turnstile unavailable — direct insert (anon role has INSERT on support_messages)
+    if (tsStatus === "unavailable") {
+      const { error } = await supabase.from("support_messages").insert({
+        from_email: fromEmail,
+        from_name:  fromName || "",
+        subject:    subject.trim(),
+        body_text:  message.trim(),
+        reply_to:   fromEmail,
+      });
+      if (error) { console.error("[contact] insert error:", error); setStatus("error"); return; }
+      setStatus("sent");
+      setSubject(""); setMessage(""); setName(""); setEmail("");
       return;
     }
 
@@ -179,6 +210,12 @@ const ContactPage = ({ currentUser, onLogout }) => {
                         data-callback="__tsOnSuccess"
                         data-expired-callback="__tsOnExpired"
                       />
+                      {tsStatus === "loading" && (
+                        <p style={{ fontSize: 12, color: "#888", margin: 0 }}>Loading security check…</p>
+                      )}
+                      {tsStatus === "unavailable" && (
+                        <p style={{ fontSize: 12, color: "#888", margin: 0 }}>Security check unavailable — you can still send your message.</p>
+                      )}
                     </div>
                   )}
                   {status === "error" && (
