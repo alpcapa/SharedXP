@@ -1,40 +1,22 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
-
-const TURNSTILE_SITE_KEY = "0x4AAAAAAbejGrw3iA0PU0T";
 
 const ContactPage = ({ currentUser, onLogout }) => {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const [status, setStatus] = useState(null); // "sending" | "sent" | "error"
   const [errorMsg, setErrorMsg] = useState("Something went wrong. Please try again.");
-  const [turnstileToken, setTurnstileToken] = useState(null);
 
   const userEmail = currentUser?.email ?? "";
   const userName = currentUser
     ? currentUser.fullName || `${currentUser.firstName ?? ""} ${currentUser.lastName ?? ""}`.trim()
     : "";
-
-  useEffect(() => {
-    if (currentUser) return;
-
-    // Pick up token if Turnstile already fired before this component mounted
-    if (window.__tsToken) setTurnstileToken(window.__tsToken);
-
-    const onSuccess = (e) => setTurnstileToken(e.detail);
-    const onExpired = ()  => setTurnstileToken(null);
-    window.addEventListener("ts-success", onSuccess);
-    window.addEventListener("ts-expired",  onExpired);
-    return () => {
-      window.removeEventListener("ts-success", onSuccess);
-      window.removeEventListener("ts-expired",  onExpired);
-    };
-  }, [currentUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,34 +44,21 @@ const ContactPage = ({ currentUser, onLogout }) => {
       return;
     }
 
-    // Unauthenticated users: send through edge function with Turnstile verification
-    if (!turnstileToken) {
-      setErrorMsg("Please complete the CAPTCHA challenge first.");
-      setStatus("error");
-      return;
-    }
-
+    // Unauthenticated users: edge function with honeypot + rate limiting
     try {
       const res = await supabase.functions.invoke("contact-support", {
-        body: { fromEmail, fromName, subject: subject.trim(), message: message.trim(), turnstileToken },
+        body: { fromEmail, fromName, subject: subject.trim(), message: message.trim(), honeypot },
       });
       if (res.error || res.data?.error) {
         setErrorMsg(res.data?.error ?? "Something went wrong. Please try again.");
         setStatus("error");
-        window.__tsToken = null;
-        setTurnstileToken(null);
-        window.turnstile?.reset();
       } else {
         setStatus("sent");
-        setSubject(""); setMessage(""); setName(""); setEmail("");
-        window.__tsToken = null;
+        setSubject(""); setMessage(""); setName(""); setEmail(""); setHoneypot("");
       }
     } catch (err) {
       console.error("[contact] edge function error:", err);
       setStatus("error");
-      window.__tsToken = null;
-      setTurnstileToken(null);
-      window.turnstile?.reset();
     }
   };
 
@@ -116,6 +85,17 @@ const ContactPage = ({ currentUser, onLogout }) => {
                 </div>
               ) : (
                 <form className="support-form" onSubmit={handleSubmit}>
+                  {/* Honeypot — hidden from users, filled by bots */}
+                  <input
+                    type="text"
+                    name="website"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    style={{ position: "absolute", opacity: 0, height: 0, overflow: "hidden", pointerEvents: "none" }}
+                  />
                   {!currentUser && (
                     <>
                       <div className="support-form-row">
@@ -169,18 +149,6 @@ const ContactPage = ({ currentUser, onLogout }) => {
                       required
                     />
                   </div>
-                  {!currentUser && (
-                    <div className="support-form-row">
-                      <div
-                        className="cf-turnstile"
-                        data-sitekey={TURNSTILE_SITE_KEY}
-                        data-theme="light"
-                        data-appearance="always"
-                        data-callback="__tsOnSuccess"
-                        data-expired-callback="__tsOnExpired"
-                      />
-                    </div>
-                  )}
                   {status === "error" && (
                     <p className="support-form-error">{errorMsg}</p>
                   )}

@@ -25,18 +25,7 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="SharedXP — Play Sports Like a Local" />
     <meta name="twitter:description" content="Find local sports hosts who share their expertise, equipment, and courts. Book a session with a local and experience your destination through sport." />
-    <script>
-      window.__tsToken = null;
-      window.__tsOnSuccess = function(token) {
-        window.__tsToken = token;
-        window.dispatchEvent(new CustomEvent('ts-success', { detail: token }));
-      };
-      window.__tsOnExpired = function() {
-        window.__tsToken = null;
-        window.dispatchEvent(new CustomEvent('ts-expired'));
-      };
-    </script>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
   </head>
   <body>
     <div id="root"></div>
