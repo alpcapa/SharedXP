@@ -16,7 +16,8 @@ const ScrollRow = ({ children, onLoadMore, isLoadingMore }) => {
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
 
     if (onLoadMore) {
-      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - LOAD_MORE_TRIGGER;
+      const scrollable = el.scrollWidth > el.clientWidth + 5;
+      const atEnd = scrollable && el.scrollLeft + el.clientWidth >= el.scrollWidth - LOAD_MORE_TRIGGER;
       if (atEnd && !nearEnd.current) {
         nearEnd.current = true;
         onLoadMore();
