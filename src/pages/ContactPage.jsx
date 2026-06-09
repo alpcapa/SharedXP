@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
 
-const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "0x4AAAAAAbejGrw3iA0PU0T";
+const TURNSTILE_SITE_KEY = "0x4AAAAAAbejGrw3iA0PU0T";
 
 const ContactPage = ({ currentUser, onLogout }) => {
   const [subject, setSubject] = useState("");
@@ -13,54 +13,23 @@ const ContactPage = ({ currentUser, onLogout }) => {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState(null); // "sending" | "sent" | "error"
   const [errorMsg, setErrorMsg] = useState("Something went wrong. Please try again.");
-
-  const turnstileRef = useRef(null);
-  const widgetIdRef  = useRef(null);
+  const [turnstileToken, setTurnstileToken] = useState(null);
 
   const userEmail = currentUser?.email ?? "";
   const userName = currentUser
     ? currentUser.fullName || `${currentUser.firstName ?? ""} ${currentUser.lastName ?? ""}`.trim()
     : "";
 
-  // Load and render the Turnstile widget only for unauthenticated users.
-  // Uses Turnstile's own ?onload= callback (not script.onload) because Turnstile
-  // does async internal setup after script execution — the URL param fires only
-  // once that setup is complete and window.turnstile.render() is safe to call.
+  // Wire up global callbacks that the Turnstile div's data-callback attribute calls.
+  // The script itself is loaded in index.html and auto-renders any .cf-turnstile div.
   useEffect(() => {
-    if (currentUser || !TURNSTILE_SITE_KEY) return;
-
-    const renderWidget = () => {
-      if (!turnstileRef.current || widgetIdRef.current != null) return;
-      widgetIdRef.current = window.turnstile.render(turnstileRef.current, {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme: "light",
-      });
-    };
-
-    if (window.turnstile) {
-      renderWidget();
-      return;
-    }
-
-    window.__onTurnstileLoad = renderWidget;
-
-    if (!document.getElementById("cf-turnstile-script")) {
-      const script = document.createElement("script");
-      script.id = "cf-turnstile-script";
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__onTurnstileLoad&render=explicit";
-      script.async = true;
-      document.head.appendChild(script);
-    }
-    // If script is already in DOM and still loading, the callback will fire when ready.
-
+    window.__onTurnstileSuccess = (token) => setTurnstileToken(token);
+    window.__onTurnstileExpired = () => setTurnstileToken(null);
     return () => {
-      delete window.__onTurnstileLoad;
-      if (widgetIdRef.current != null && window.turnstile) {
-        window.turnstile.remove(widgetIdRef.current);
-        widgetIdRef.current = null;
-      }
+      delete window.__onTurnstileSuccess;
+      delete window.__onTurnstileExpired;
     };
-  }, [currentUser]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -89,7 +58,6 @@ const ContactPage = ({ currentUser, onLogout }) => {
     }
 
     // Unauthenticated users: send through edge function with Turnstile verification
-    const turnstileToken = window.turnstile?.getResponse(widgetIdRef.current) ?? "";
     if (!turnstileToken) {
       setErrorMsg("Please complete the CAPTCHA challenge first.");
       setStatus("error");
@@ -103,7 +71,8 @@ const ContactPage = ({ currentUser, onLogout }) => {
       if (res.error || res.data?.error) {
         setErrorMsg(res.data?.error ?? "Something went wrong. Please try again.");
         setStatus("error");
-        window.turnstile?.reset(widgetIdRef.current);
+        window.turnstile?.reset();
+        setTurnstileToken(null);
       } else {
         setStatus("sent");
         setSubject(""); setMessage(""); setName(""); setEmail("");
@@ -111,7 +80,8 @@ const ContactPage = ({ currentUser, onLogout }) => {
     } catch (err) {
       console.error("[contact] edge function error:", err);
       setStatus("error");
-      window.turnstile?.reset(widgetIdRef.current);
+      window.turnstile?.reset();
+      setTurnstileToken(null);
     }
   };
 
@@ -191,9 +161,15 @@ const ContactPage = ({ currentUser, onLogout }) => {
                       required
                     />
                   </div>
-                  {!currentUser && TURNSTILE_SITE_KEY && (
+                  {!currentUser && (
                     <div className="support-form-row">
-                      <div ref={turnstileRef} />
+                      <div
+                        className="cf-turnstile"
+                        data-sitekey={TURNSTILE_SITE_KEY}
+                        data-callback="__onTurnstileSuccess"
+                        data-expired-callback="__onTurnstileExpired"
+                        data-theme="light"
+                      />
                     </div>
                   )}
                   {status === "error" && (
