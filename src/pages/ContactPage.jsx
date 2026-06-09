@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { supabase } from "../lib/supabase";
 
 const TURNSTILE_SITE_KEY = "0x4AAAAAAbejGrw3iA0PU0T";
+const TURNSTILE_CB       = "__cfTurnstileReady";
 
 const ContactPage = ({ currentUser, onLogout }) => {
   const [subject, setSubject] = useState("");
@@ -15,21 +16,55 @@ const ContactPage = ({ currentUser, onLogout }) => {
   const [errorMsg, setErrorMsg] = useState("Something went wrong. Please try again.");
   const [turnstileToken, setTurnstileToken] = useState(null);
 
+  const containerRef = useRef(null);
+  const widgetIdRef  = useRef(null);
+
   const userEmail = currentUser?.email ?? "";
   const userName = currentUser
     ? currentUser.fullName || `${currentUser.firstName ?? ""} ${currentUser.lastName ?? ""}`.trim()
     : "";
 
-  // Wire up global callbacks that the Turnstile div's data-callback attribute calls.
-  // The script itself is loaded in index.html and auto-renders any .cf-turnstile div.
   useEffect(() => {
-    window.__onTurnstileSuccess = (token) => setTurnstileToken(token);
-    window.__onTurnstileExpired = () => setTurnstileToken(null);
-    return () => {
-      delete window.__onTurnstileSuccess;
-      delete window.__onTurnstileExpired;
+    if (currentUser) return;
+
+    const renderWidget = () => {
+      if (!containerRef.current || widgetIdRef.current != null) return;
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey:           TURNSTILE_SITE_KEY,
+        theme:             "light",
+        appearance:        "always",
+        callback:          (token) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(null),
+      });
     };
-  }, []);
+
+    // Register the callback Turnstile will invoke once fully initialised.
+    // This must be set BEFORE the script tag is added to the DOM.
+    window[TURNSTILE_CB] = renderWidget;
+
+    if (window.turnstile) {
+      // Script already loaded from an earlier page visit in this session
+      renderWidget();
+    } else if (!document.getElementById("cf-turnstile-script")) {
+      const s = document.createElement("script");
+      s.id    = "cf-turnstile-script";
+      // ?onload fires only after Turnstile finishes its internal async setup —
+      // unlike script.onload which fires as soon as the JS file executes.
+      // ?render=explicit prevents the script from auto-scanning the DOM.
+      s.src   = `https://challenges.cloudflare.com/turnstile/v0/api.js?onload=${TURNSTILE_CB}&render=explicit`;
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    // If the script tag is already loading, the ?onload callback will fire when ready.
+
+    return () => {
+      delete window[TURNSTILE_CB];
+      if (widgetIdRef.current != null && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, [currentUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,7 +106,7 @@ const ContactPage = ({ currentUser, onLogout }) => {
       if (res.error || res.data?.error) {
         setErrorMsg(res.data?.error ?? "Something went wrong. Please try again.");
         setStatus("error");
-        window.turnstile?.reset();
+        window.turnstile?.reset(widgetIdRef.current);
         setTurnstileToken(null);
       } else {
         setStatus("sent");
@@ -80,7 +115,7 @@ const ContactPage = ({ currentUser, onLogout }) => {
     } catch (err) {
       console.error("[contact] edge function error:", err);
       setStatus("error");
-      window.turnstile?.reset();
+      window.turnstile?.reset(widgetIdRef.current);
       setTurnstileToken(null);
     }
   };
@@ -163,14 +198,7 @@ const ContactPage = ({ currentUser, onLogout }) => {
                   </div>
                   {!currentUser && (
                     <div className="support-form-row">
-                      <div
-                        className="cf-turnstile"
-                        data-sitekey={TURNSTILE_SITE_KEY}
-                        data-callback="__onTurnstileSuccess"
-                        data-expired-callback="__onTurnstileExpired"
-                        data-theme="light"
-                        data-appearance="always"
-                      />
+                      <div ref={containerRef} />
                     </div>
                   )}
                   {status === "error" && (
