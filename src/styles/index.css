@@ -5857,35 +5857,71 @@ body {
   background: #fff;
   border: 1px solid #e8e9e4;
   border-radius: 14px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  overflow: hidden;
 }
 
 .admin-dispute-card.resolved {
   opacity: 0.75;
 }
 
-.admin-dispute-header {
+/* Collapsed summary row */
+.admin-dispute-summary-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 16px 20px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.admin-dispute-summary-row:hover {
+  background: #f9faf8;
+}
+
+.admin-dispute-summary-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
+  font-size: 14px;
+  color: #1a1a1a;
 }
 
 .admin-dispute-sport {
-  margin: 0;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: #1a1a1a;
 }
 
-.admin-dispute-date {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: #596164;
+.admin-dispute-summary-sep {
+  color: #9ca3af;
+}
+
+.admin-dispute-summary-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.admin-dispute-chevron {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* Expanded body */
+.admin-dispute-body {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-top: 1px solid #f0f0ee;
+  padding-top: 16px;
 }
 
 .admin-dispute-parties {
@@ -5960,6 +5996,13 @@ body {
   border: 1px solid #bbf7d0;
   border-radius: 10px;
   padding: 12px 16px;
+}
+
+.admin-dispute-note-text {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #166534;
+  line-height: 1.6;
 }
 
 .admin-dispute-resolve-panel {

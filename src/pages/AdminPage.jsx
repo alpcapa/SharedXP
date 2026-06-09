@@ -2162,8 +2162,9 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   const [disputeTab, setDisputeTab] = useState("open");
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(null);
-  const [resolvePanel, setResolvePanel] = useState(null); // { disputeId, resolution }
+  const [resolvePanel, setResolvePanel] = useState(null);
   const [adminNote, setAdminNote] = useState("");
+  const [expandedDisputeId, setExpandedDisputeId] = useState(null);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "disputes");
   const [memberSearch, setMemberSearch] = useState("");
   const [cmCounts, setCmCounts] = useState({ pendingApps: 0, pendingComms: 0 });
@@ -2389,99 +2390,116 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
               const hostName = br ? getName(br.host) : "—";
               const isResolved = !!br?.status?.startsWith("resolved_");
 
+              const isExpanded = expandedDisputeId === d.id;
               return (
                 <article key={d.id} className={`admin-dispute-card${isResolved ? " resolved" : ""}`}>
-                  <div className="admin-dispute-header">
-                    <div>
-                      <h2 className="admin-dispute-sport">{br?.sport ?? "Unknown sport"}</h2>
-                      <p className="admin-dispute-date">{fmtDate(br?.requested_date)}</p>
-                    </div>
-                    <span className={`pending-status-badge status-${isResolved ? "resolved" : "disputed"}`}>
-                      {isResolved ? `Resolved: ${d.resolution ?? br?.status?.replace("resolved_", "")}` : "Open"}
+                  {/* Collapsed summary row */}
+                  <button
+                    type="button"
+                    className="admin-dispute-summary-row"
+                    onClick={() => setExpandedDisputeId(isExpanded ? null : d.id)}
+                  >
+                    <span className="admin-dispute-summary-main">
+                      <span className="admin-dispute-sport">{br?.sport ?? "Unknown sport"}</span>
+                      <span className="admin-dispute-summary-sep">·</span>
+                      <span>{hostName}</span>
+                      <span className="admin-dispute-summary-sep">·</span>
+                      <span>{fmtDate(br?.requested_date)}</span>
                     </span>
-                  </div>
+                    <span className="admin-dispute-summary-right">
+                      <span className={`pending-status-badge status-${isResolved ? "resolved" : "disputed"}`}>
+                        {isResolved ? (d.resolution === "refunded" ? "Refunded" : "Paid host") : "Open"}
+                      </span>
+                      <span className="admin-dispute-chevron">{isExpanded ? "▲" : "▼"}</span>
+                    </span>
+                  </button>
 
-                  <div className="admin-dispute-parties">
-                    <div>
-                      <p className="admin-dispute-label">Guest</p>
-                      <p>{requesterName}</p>
-                      <p className="admin-dispute-email">{br?.requester?.email ?? ""}</p>
-                    </div>
-                    <div>
-                      <p className="admin-dispute-label">Host</p>
-                      <p>{hostName}</p>
-                      <p className="admin-dispute-email">{br?.host?.email ?? ""}</p>
-                    </div>
-                    <div>
-                      <p className="admin-dispute-label">Amount held</p>
-                      <p>{br?.currency} {Number(br?.price ?? 0).toFixed(2)}</p>
-                    </div>
-                  </div>
-
-                  <div className="admin-dispute-accounts">
-                    <div>
-                      <p className="admin-dispute-label">Guest's response</p>
-                      <blockquote className="dispute-quote">{d.requester_explanation}</blockquote>
-                    </div>
-                    <div>
-                      <p className="admin-dispute-label">Host's response</p>
-                      {d.host_response ? (
-                        <blockquote className="dispute-quote dispute-quote-host">{d.host_response}</blockquote>
-                      ) : (
-                        <p className="admin-dispute-pending">Pending host response</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {!isResolved && resolvePanel?.disputeId === d.id ? (
-                    <div className="admin-dispute-resolve-panel">
-                      <p className="admin-dispute-label">
-                        Resolving as: <strong>{resolvePanel.resolution === "refunded" ? "Refund Guest" : "Release to Host"}</strong>
-                      </p>
-                      <textarea
-                        className="admin-dispute-note-input"
-                        placeholder="Admin note (optional — internal only)"
-                        value={adminNote}
-                        onChange={(e) => setAdminNote(e.target.value)}
-                        rows={3}
-                      />
-                      <div className="admin-dispute-actions">
-                        <button type="button" className="btn btn-light" onClick={() => setResolvePanel(null)}>Cancel</button>
-                        <button type="button" className={resolvePanel.resolution === "refunded" ? "btn btn-danger" : "btn btn-primary"} onClick={handleResolveConfirm}>
-                          Confirm
-                        </button>
+                  {/* Expanded detail */}
+                  {isExpanded && (
+                    <div className="admin-dispute-body">
+                      <div className="admin-dispute-parties">
+                        <div>
+                          <p className="admin-dispute-label">Guest</p>
+                          <p>{requesterName}</p>
+                          <p className="admin-dispute-email">{br?.requester?.email ?? ""}</p>
+                        </div>
+                        <div>
+                          <p className="admin-dispute-label">Host</p>
+                          <p>{hostName}</p>
+                          <p className="admin-dispute-email">{br?.host?.email ?? ""}</p>
+                        </div>
+                        <div>
+                          <p className="admin-dispute-label">Amount held</p>
+                          <p>{br?.currency} {Number(br?.price ?? 0).toFixed(2)}</p>
+                        </div>
                       </div>
-                    </div>
-                  ) : !isResolved && (
-                    <div className="admin-dispute-actions">
-                      <button
-                        type="button"
-                        className="btn btn-danger"
-                        onClick={() => handleResolve(d.id, "refunded")}
-                        disabled={resolving === d.id}
-                      >
-                        {resolving === d.id ? "…" : "Refund Guest"}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={() => handleResolve(d.id, "paid_host")}
-                        disabled={resolving === d.id}
-                      >
-                        {resolving === d.id ? "…" : "Release to Host"}
-                      </button>
-                    </div>
-                  )}
 
-                  {isResolved && (
-                    <div className="admin-dispute-resolved-thread">
-                      <p className="admin-dispute-resolved-info">
-                        Resolved {fmtDate(d.resolved_at)} by {d.resolved_by ?? "admin"} — {d.resolution === "refunded" ? "Guest refunded" : "Payment released to host"}
-                      </p>
-                      {d.admin_note && (
-                        <div className="admin-dispute-note-block">
-                          <p className="admin-dispute-label">Admin note</p>
-                          <blockquote className="dispute-quote">{d.admin_note}</blockquote>
+                      <div className="admin-dispute-accounts">
+                        <div>
+                          <p className="admin-dispute-label">Guest's response</p>
+                          <blockquote className="dispute-quote">{d.requester_explanation}</blockquote>
+                        </div>
+                        <div>
+                          <p className="admin-dispute-label">Host's response</p>
+                          {d.host_response ? (
+                            <blockquote className="dispute-quote dispute-quote-host">{d.host_response}</blockquote>
+                          ) : (
+                            <p className="admin-dispute-pending">Pending host response</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {!isResolved && resolvePanel?.disputeId === d.id ? (
+                        <div className="admin-dispute-resolve-panel">
+                          <p className="admin-dispute-label">
+                            Resolving as: <strong>{resolvePanel.resolution === "refunded" ? "Refund Guest" : "Release to Host"}</strong>
+                          </p>
+                          <textarea
+                            className="admin-dispute-note-input"
+                            placeholder="Admin note (optional — internal only)"
+                            value={adminNote}
+                            onChange={(e) => setAdminNote(e.target.value)}
+                            rows={3}
+                          />
+                          <div className="admin-dispute-actions">
+                            <button type="button" className="btn btn-light" onClick={() => setResolvePanel(null)}>Cancel</button>
+                            <button type="button" className={resolvePanel.resolution === "refunded" ? "btn btn-danger" : "btn btn-primary"} onClick={handleResolveConfirm}>
+                              Confirm
+                            </button>
+                          </div>
+                        </div>
+                      ) : !isResolved && (
+                        <div className="admin-dispute-actions">
+                          <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={() => handleResolve(d.id, "refunded")}
+                            disabled={resolving === d.id}
+                          >
+                            {resolving === d.id ? "…" : "Refund Guest"}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={() => handleResolve(d.id, "paid_host")}
+                            disabled={resolving === d.id}
+                          >
+                            {resolving === d.id ? "…" : "Release to Host"}
+                          </button>
+                        </div>
+                      )}
+
+                      {isResolved && (
+                        <div className="admin-dispute-resolved-thread">
+                          <p className="admin-dispute-resolved-info">
+                            Resolved {fmtDate(d.resolved_at)} by {d.resolved_by ?? "admin"} — {d.resolution === "refunded" ? "Guest refunded" : "Payment released to host"}
+                          </p>
+                          {d.admin_note && (
+                            <div className="admin-dispute-note-block">
+                              <p className="admin-dispute-label">Admin note</p>
+                              <p className="admin-dispute-note-text">{d.admin_note}</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
