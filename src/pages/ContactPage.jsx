@@ -22,7 +22,10 @@ const ContactPage = ({ currentUser, onLogout }) => {
     ? currentUser.fullName || `${currentUser.firstName ?? ""} ${currentUser.lastName ?? ""}`.trim()
     : "";
 
-  // Load and render the Turnstile widget only for unauthenticated users
+  // Load and render the Turnstile widget only for unauthenticated users.
+  // Uses Turnstile's own ?onload= callback (not script.onload) because Turnstile
+  // does async internal setup after script execution — the URL param fires only
+  // once that setup is complete and window.turnstile.render() is safe to call.
   useEffect(() => {
     if (currentUser || !TURNSTILE_SITE_KEY) return;
 
@@ -39,23 +42,19 @@ const ContactPage = ({ currentUser, onLogout }) => {
       return;
     }
 
-    const scriptId = "cf-turnstile-script";
-    if (!document.getElementById(scriptId)) {
+    window.__onTurnstileLoad = renderWidget;
+
+    if (!document.getElementById("cf-turnstile-script")) {
       const script = document.createElement("script");
-      script.id = scriptId;
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.id = "cf-turnstile-script";
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__onTurnstileLoad&render=explicit";
       script.async = true;
-      script.defer = true;
-      script.onload = renderWidget;
       document.head.appendChild(script);
-    } else {
-      // Script already loading — poll until turnstile is ready
-      const iv = setInterval(() => {
-        if (window.turnstile) { clearInterval(iv); renderWidget(); }
-      }, 100);
     }
+    // If script is already in DOM and still loading, the callback will fire when ready.
 
     return () => {
+      delete window.__onTurnstileLoad;
       if (widgetIdRef.current != null && window.turnstile) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
