@@ -169,6 +169,7 @@ const ContactPage = ({ currentUser, onLogout }) => {
                         data-callback="__onTurnstileSuccess"
                         data-expired-callback="__onTurnstileExpired"
                         data-theme="light"
+                        data-appearance="always"
                       />
                     </div>
                   )}
