@@ -625,6 +625,7 @@ const PendingBookingCard = ({
               {request.status === "resolved_refunded"
                 ? "Our team reviewed this dispute and decided to refund the guest."
                 : "Our team reviewed this dispute and decided to release payment to the host."}
+              {" "}If you have questions, please <Link to="/contact">contact support</Link>.
             </p>
           </div>
         )}
