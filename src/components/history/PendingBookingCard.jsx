@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import DeclineModal from "./DeclineModal";
 import DeclineConfirmationModal from "./DeclineConfirmationModal";
+import DisputeResponseModal from "./DisputeResponseModal";
 import ShareToFieldModal from "./ShareToFieldModal";
 import { HOST_RATING_FIELDS, clampRating, FALLBACK_EVENT_PHOTO } from "../../utils/historyItem";
 import { deleteFieldPost, lookupFieldPost, saveFieldPost } from "../../utils/fieldPosts";
@@ -114,11 +115,13 @@ const PendingBookingCard = ({
   currentUser,
   editRatingRequestId,
   scrollToId,
+  openDisputeResponseId,
 }) => {
   const cardRef = useRef(null);
   const navigate = useNavigate();
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [showDisputeResponseModal, setShowDisputeResponseModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Rating panel state (for completed bookings)
@@ -223,6 +226,16 @@ const PendingBookingCard = ({
       setTimeout(() => cardRef.current?.classList.remove("pending-card-highlight"), 2000);
     });
   }, [scrollToId, request.id]);
+
+  // Auto-open the dispute response modal when arriving from the email link.
+  useEffect(() => {
+    if (!openDisputeResponseId || openDisputeResponseId !== request.dispute?.id) return;
+    if (request.dispute?.host_response) return; // already responded
+    requestAnimationFrame(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    setShowDisputeResponseModal(true);
+  }, [openDisputeResponseId, request.dispute?.id, request.dispute?.host_response]);
 
   const initialHostRatings = initialRatingSnapshot?.hostRatings ?? {
     overall: 0,
@@ -592,13 +605,14 @@ const PendingBookingCard = ({
             {request.dispute && isHost && !request.dispute.host_response && (
               <div className="dispute-account-block" style={{ marginTop: 12 }}>
                 <p className="dispute-pending-note">You haven't submitted your response yet.</p>
-                <a
-                  href={`/dispute-response/${request.dispute.id}`}
+                <button
+                  type="button"
                   className="find-button pending-pay-btn"
                   style={{ display: "inline-block", marginTop: 8 }}
+                  onClick={() => setShowDisputeResponseModal(true)}
                 >
                   Submit My Response
-                </a>
+                </button>
               </div>
             )}
           </div>
@@ -756,6 +770,14 @@ const PendingBookingCard = ({
           onConfirm={handleOpenDispute}
           onCancel={() => setShowDisputeModal(false)}
           loading={actionLoading}
+        />
+      )}
+      {showDisputeResponseModal && request.dispute && (
+        <DisputeResponseModal
+          dispute={request.dispute}
+          request={request}
+          requesterName={requesterName}
+          onClose={() => setShowDisputeResponseModal(false)}
         />
       )}
       {shareItem && (
