@@ -85,6 +85,7 @@ const NOTE_LABELS = {
   reopen: "Account Reopened",
   commission_approved: "Commission Approved",
   commission_paid: "Commission Marked Paid",
+  payout_notified: "Payout Notification Sent",
 };
 
 const fmtDateTime = (iso) =>

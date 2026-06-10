@@ -13,6 +13,10 @@
 //      approved and payment is on the way.
 //   5. Stamps payout_notified_at so the same batch is never re-notified.
 //
+// Every auto-approval and notification is also appended to the CM's
+// admin-notes thread (cm_profiles.admin_notes) so the admin panel shows the
+// complete action history alongside manual approve/mark-paid actions.
+//
 // Scheduling (pick one):
 //   a) GitHub Actions — add a workflow with `schedule: [{cron: "0 6 * * *"}]`
 //      that POSTs to this function with the service role key.
@@ -100,6 +104,38 @@ function commissionBreakdownHtml(
   </table>`;
 }
 
+// Appends an entry to cm_profiles.admin_notes — the same JSON note thread the
+// admin panel writes to (see appendNote in AdminPage.jsx) — so auto-approvals
+// show up alongside manual admin actions.
+async function appendCmNote(
+  db: ReturnType<typeof createClient>,
+  cmId: string,
+  action: string,
+  note: string,
+): Promise<void> {
+  const { data: prof } = await db
+    .from("cm_profiles")
+    .select("admin_notes")
+    .eq("id", cmId)
+    .maybeSingle();
+  const existing = prof?.admin_notes as string | null;
+  let notes: Array<Record<string, unknown>> = [];
+  if (existing) {
+    try {
+      const parsed = JSON.parse(existing);
+      notes = Array.isArray(parsed) ? parsed : [{ action: "note", note: existing, at: null }];
+    } catch {
+      notes = [{ action: "note", note: existing, at: null }];
+    }
+  }
+  notes.push({ action, note, at: new Date().toISOString(), by: "Payout sweep (auto)" });
+  const { error } = await db
+    .from("cm_profiles")
+    .update({ admin_notes: JSON.stringify(notes) })
+    .eq("id", cmId);
+  if (error) console.error("[cm-payout-sweep] note error:", cmId, error);
+}
+
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -142,13 +178,36 @@ serve(async (req: Request): Promise<Response> => {
   ];
 
   for (const { cm_id, currency } of pairs) {
+    const { data: toApprove } = await db
+      .from("cm_commissions")
+      .select("id, commission_amount, booking_request:booking_requests(sport)")
+      .eq("cm_id", cm_id)
+      .eq("currency", currency)
+      .eq("status", "pending");
     const { error } = await db
       .from("cm_commissions")
       .update({ status: "approved", approved_at: new Date().toISOString() })
       .eq("cm_id", cm_id)
       .eq("currency", currency)
       .eq("status", "pending");
-    if (error) console.error("[cm-payout-sweep] approve error:", cm_id, currency, error);
+    if (error) {
+      console.error("[cm-payout-sweep] approve error:", cm_id, currency, error);
+      continue;
+    }
+    if (toApprove?.length) {
+      const total = toApprove.reduce((s, c) => s + Number(c.commission_amount), 0);
+      const sports = toApprove
+        .map((c) => String((c.booking_request as Record<string, unknown> | null)?.sport ?? "experience"))
+        .join(", ");
+      const count = toApprove.length;
+      await appendCmNote(
+        db,
+        cm_id,
+        "commission_approved",
+        `${currency} ${total.toFixed(2)} auto-approved after ${PAYOUT_DAYS} days pending` +
+          ` (${count} commission${count > 1 ? "s" : ""}: ${sports})`,
+      );
+    }
   }
 
   // ── Step 3: Find approved commissions not yet notified ────────────────────
@@ -185,7 +244,7 @@ serve(async (req: Request): Promise<Response> => {
 
   const notifiedIds: string[] = [];
 
-  for (const [, comms] of byCm) {
+  for (const [cmId, comms] of byCm) {
     const first = comms[0];
     const profile = (first.cm_profile as Record<string, unknown> | null);
     const owner = (profile?.owner as Record<string, unknown> | null);
@@ -263,6 +322,14 @@ serve(async (req: Request): Promise<Response> => {
         hasPaymentInfo ? "View CM Dashboard" : "Add Payout Details",
         `${breakdownHtml}<p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#444;">You can track all your commissions on your CM Dashboard.</p>`,
       ),
+    );
+
+    await appendCmNote(
+      db,
+      cmId,
+      "payout_notified",
+      `${amountLines} payout ready — admin and CM notified` +
+        ` (${comms.length} commission${comms.length > 1 ? "s" : ""})`,
     );
 
     for (const c of comms) notifiedIds.push(c.id as string);
