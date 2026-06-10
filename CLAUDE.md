@@ -120,3 +120,4 @@ Only utility functions are tested. Test files sit alongside their source file (`
 - **Images are uploaded as blobs before saving.** Data URLs (from file pickers) must be converted to storage URLs via `uploadAvatarFromDataUrl` or the sport-image upload path in `onSaveHostProfile` before persisting to DB.
 - **All booking mutations go through `useBookingRequests`**, not direct Supabase calls in pages.
 - **Admin access** is gated on `profiles.is_admin = true`. Set this directly in the Supabase dashboard; there is no UI to grant admin.
+- **No real payment processing.** All payments (guest charges, host payouts, CM commissions) are handled manually by accounting outside the platform — the app only records payment state (invoices, commission statuses, "Mark Paid", etc.) and provides the admin/user UIs. Stripe integration is planned for launch; all payment flows will be redesigned and wired up then. Do not add real payment logic in the meantime.
