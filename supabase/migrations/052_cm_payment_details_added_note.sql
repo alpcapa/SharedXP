@@ -6,6 +6,13 @@
 -- Runs SECURITY DEFINER so the lookups on profiles and cm_commissions work
 -- regardless of the RLS context of whoever performs the update.
 
+-- The remote schema can be missing payment_info even though migration 049 is
+-- recorded as applied (the migrate workflow repairs "already exists" failures
+-- into the history without running them). Recreate it idempotently so the
+-- trigger below always has a column to attach to.
+ALTER TABLE public.cm_profiles
+  ADD COLUMN IF NOT EXISTS payment_info TEXT NOT NULL DEFAULT '';
+
 CREATE OR REPLACE FUNCTION public.log_cm_payment_details_added()
 RETURNS TRIGGER
 LANGUAGE plpgsql
