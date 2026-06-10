@@ -727,6 +727,7 @@ function buildCmCommissionApproved(
   commissionAmount: number,
   currency: string,
   bookingDetails: string,
+  hasPaymentInfo: boolean,
 ): { to: string; subject: string; html: string } {
   const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
   const fmt = (n: number) => Number(n).toFixed(2);
@@ -739,10 +740,12 @@ function buildCmCommissionApproved(
         `Great news! A commission has been approved for your CM account.`,
         `<strong>Booking:</strong> ${bookingDetails}`,
         `<strong>Commission amount:</strong> ${currency} ${fmt(commissionAmount)}`,
-        `Payment will be sent to your registered payout method. You'll receive a separate confirmation once the payment is processed.`,
+        hasPaymentInfo
+          ? `Payment will be sent to your registered payout method. You'll receive a separate confirmation once the payment is processed.`
+          : `<strong>Action required:</strong> your commission has been approved, but we don't have your payment details on file. Please head to your CM Dashboard and add your preferred payout details (bank account, PayPal, etc.) — otherwise the payment cannot be made.`,
       ],
       `${APP_URL}/user/${cm.id}?tab=cm`,
-      "View CM Dashboard",
+      hasPaymentInfo ? "View CM Dashboard" : "Add Payout Details",
     ),
   };
 }
@@ -979,7 +982,13 @@ serve(async (req: Request): Promise<Response> => {
               bookingDetails = `${comm.booking_request?.sport ?? ""} on ${comm.booking_request?.requested_date ?? ""}`;
             }
           }
-          const e = buildCmCommissionApproved(userProfile, commAmount, currency, bookingDetails);
+          const { data: cmProfile } = await db
+            .from("cm_profiles")
+            .select("payment_info")
+            .eq("user_id", userId)
+            .maybeSingle();
+          const hasPaymentInfo = Boolean(String(cmProfile?.payment_info ?? "").trim());
+          const e = buildCmCommissionApproved(userProfile, commAmount, currency, bookingDetails, hasPaymentInfo);
           await sendEmail(e.to, e.subject, e.html);
           break;
         }
