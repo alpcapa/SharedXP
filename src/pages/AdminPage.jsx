@@ -83,6 +83,8 @@ const NOTE_LABELS = {
   unsuspend: "Account Unsuspended",
   close: "Account Closed",
   reopen: "Account Reopened",
+  commission_approved: "Commission Approved",
+  commission_paid: "Commission Marked Paid",
 };
 
 const fmtDateTime = (iso) =>
@@ -145,6 +147,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
   const [cmSearch, setCmSearch] = useState(initialSearch);
   const [emailFeedback, setEmailFeedback] = useState({});
   const [viewApplication, setViewApplication] = useState(null);
+  const [confirmPay, setConfirmPay] = useState(null); // { cm, comm }
 
   const toggleExpand = (id) =>
     setExpandedIds((prev) => {
@@ -342,44 +345,55 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
     setActionBusy(null);
   };
 
-  const approveCommission = async (cm, commissionId) => {
-    const key = `${cm.id}-${commissionId}`;
+  // Describes a commission for the admin note thread, e.g. "EUR 12.50 — Skiing experience"
+  const commissionNote = (comm) =>
+    `${comm.currency} ${Number(comm.commission_amount).toFixed(2)}${
+      comm.booking_request?.sport ? ` — ${comm.booking_request.sport} experience` : ""
+    }`;
+
+  const appendCmNote = async (cm, action, noteText) => {
+    const newNotes = appendNote(
+      mergeAdminNotes(cm.admin_notes, cm._application?.admin_notes),
+      action,
+      noteText,
+      adminName
+    );
+    await supabase.from("cm_profiles").update({ admin_notes: newNotes }).eq("id", cm.id);
+  };
+
+  const approveCommission = async (cm, comm) => {
+    const key = `${cm.id}-${comm.id}`;
     if (busy(key)) return;
     setActionBusy(key);
-    await supabase
+    const { error } = await supabase
       .from("cm_commissions")
       .update({ status: "approved", approved_at: new Date().toISOString() })
-      .eq("id", commissionId);
-    await sendCmEmail("cm_commission_approved", cm.user_id, { commissionId });
+      .eq("id", comm.id);
+    if (!error) {
+      await appendCmNote(cm, "commission_approved", commissionNote(comm));
+      await sendCmEmail("cm_commission_approved", cm.user_id, { commissionId: comm.id });
+    }
     await fetchAll();
     setActionBusy(null);
   };
 
-  const markCommissionPaid = async (cm, commissionIds) => {
-    const ids = Array.isArray(commissionIds) ? commissionIds : [commissionIds];
+  const markCommissionPaid = async (cm, comm) => {
     const key = `pay-${cm.id}`;
     if (busy(key)) return;
     setActionBusy(key);
     const { error } = await supabase
       .from("cm_commissions")
       .update({ status: "paid", paid_at: new Date().toISOString() })
-      .in("id", ids);
+      .eq("id", comm.id);
     if (!error) {
-      const total = (cm.cm_commissions ?? [])
-        .filter((c) => ids.includes(c.id))
-        .reduce((s, c) => s + Number(c.commission_amount), 0);
-      await sendCmEmail("cm_commission_paid", cm.user_id, { commissionIds: ids, totalAmount: total });
+      await appendCmNote(cm, "commission_paid", commissionNote(comm));
+      await sendCmEmail("cm_commission_paid", cm.user_id, {
+        commissionIds: [comm.id],
+        totalAmount: Number(comm.commission_amount),
+      });
     }
     await fetchAll();
     setActionBusy(null);
-  };
-
-  const markAllApprovedPaid = async (cm) => {
-    const approvedIds = (cm.cm_commissions ?? [])
-      .filter((c) => c.status === "approved" && !c.paid_at)
-      .map((c) => c.id);
-    if (!approvedIds.length) return;
-    await markCommissionPaid(cm, approvedIds);
   };
 
   const matchesCmSearch = (name, email) => {
@@ -780,22 +794,12 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                                     type="button"
                                     className="btn btn-secondary btn-sm"
                                     disabled={busy(`pay-${cm.id}`)}
-                                    onClick={() => markCommissionPaid(cm, c.id)}
+                                    onClick={() => setConfirmPay({ cm, comm: c })}
                                   >
                                     {busy(`pay-${cm.id}`) ? "…" : "Mark Paid"}
                                   </button>
                                 </div>
                               ))}
-                              <div className="admin-dispute-actions" style={{ marginTop: 8 }}>
-                                <button
-                                  type="button"
-                                  className="btn btn-primary"
-                                  disabled={busy(`pay-${cm.id}`)}
-                                  onClick={() => markAllApprovedPaid(cm)}
-                                >
-                                  {busy(`pay-${cm.id}`) ? "Processing…" : `Pay All Approved (${approvedComms.length})`}
-                                </button>
-                              </div>
                             </>
                           )}
                           {pendingComms.length > 0 && (
@@ -825,7 +829,7 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
                                     type="button"
                                     className="btn btn-primary btn-sm"
                                     disabled={busy(`${cm.id}-${c.id}`)}
-                                    onClick={() => approveCommission(cm, c.id)}
+                                    onClick={() => approveCommission(cm, c)}
                                   >
                                     {busy(`${cm.id}-${c.id}`) ? "…" : "Approve"}
                                   </button>
@@ -1014,6 +1018,40 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
           </div>
           <div className="cm-app-popup-footer">
             <button type="button" className="btn btn-light" onClick={() => setViewApplication(null)}>Close</button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {confirmPay && (
+      <div className="modal-backdrop" role="presentation" onClick={() => setConfirmPay(null)}>
+        <div
+          className="modal-box"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirm commission payment"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="modal-title">
+            Mark {confirmPay.comm.currency} {Number(confirmPay.comm.commission_amount).toFixed(2)} as
+            paid to {getName(confirmPay.cm.owner)}?
+          </h3>
+          <p className="modal-body-text">Have you confirmed with accounting about this?</p>
+          <div className="modal-actions">
+            <button type="button" className="btn btn-light" onClick={() => setConfirmPay(null)}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={busy(`pay-${confirmPay.cm.id}`)}
+              onClick={async () => {
+                await markCommissionPaid(confirmPay.cm, confirmPay.comm);
+                setConfirmPay(null);
+              }}
+            >
+              {busy(`pay-${confirmPay.cm.id}`) ? "Processing…" : "Yes, continue"}
+            </button>
           </div>
         </div>
       </div>
