@@ -678,8 +678,8 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
         : 0,
       totalExperiences: commList.length,
       expThisMonth: commList.filter((c) => c.created_at >= thisMonthStart).length,
-      totalGmv: commList.reduce((s, c) => s + Number(c.gmv ?? 0), 0),
-      gmvThisMonth: commList.filter((c) => c.created_at >= thisMonthStart).reduce((s, c) => s + Number(c.gmv ?? 0), 0),
+      totalGbv: commList.reduce((s, c) => s + Number(c.gmv ?? 0), 0),
+      gbvThisMonth: commList.filter((c) => c.created_at >= thisMonthStart).reduce((s, c) => s + Number(c.gmv ?? 0), 0),
     });
     setCmCommissions(commList);
     setCmReferrals(referralList);
@@ -724,9 +724,9 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
     for (const c of cmCommissions) {
       const city = c.booking_request?.host?.city || "Unknown";
       const country = c.booking_request?.host?.country || "—";
-      if (!map[city]) map[city] = { city, country, expCount: 0, gmv: 0 };
+      if (!map[city]) map[city] = { city, country, expCount: 0, gbv: 0 };
       map[city].expCount += 1;
-      map[city].gmv += Number(c.gmv ?? 0);
+      map[city].gbv += Number(c.gmv ?? 0);
     }
     const list = Object.values(map).sort((a, b) => b.expCount - a.expCount);
     const totalExp = list.reduce((s, c) => s + c.expCount, 0);
@@ -1380,8 +1380,8 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
                     </div>
                     <div className="cm-stat-card">
                       <p className="cm-stat-label">GBV Generated</p>
-                      <p className="cm-stat-value">{fmtCurrency(cmStats.totalGmv, cmStats.currency)}</p>
-                      <p className="cm-stat-sub">{fmtCurrency(cmStats.gmvThisMonth, cmStats.currency)} this month</p>
+                      <p className="cm-stat-value">{fmtCurrency(cmStats.totalGbv, cmStats.currency)}</p>
+                      <p className="cm-stat-sub">{fmtCurrency(cmStats.gbvThisMonth, cmStats.currency)} this month</p>
                     </div>
                     <div className="cm-stat-card">
                       <p className="cm-stat-label">Awaiting Payment</p>
@@ -1475,7 +1475,7 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
                                   <td><strong>{c.city}</strong></td>
                                   <td>{c.country}</td>
                                   <td>{c.expCount}</td>
-                                  <td>{fmtCurrency(c.gmv, cmStats.currency)}</td>
+                                  <td>{fmtCurrency(c.gbv, cmStats.currency)}</td>
                                 </tr>
                               ))}
                             </tbody>

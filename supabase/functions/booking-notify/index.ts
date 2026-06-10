@@ -751,7 +751,7 @@ function buildCmCommissionApproved(
 }
 
 function commissionBreakdownHtml(
-  items: Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }>,
+  items: Array<{ sport: string; date: string; gbv: number; commissionAmount: number; currency: string }>,
   totalAmount: number,
   currency: string,
 ): string {
@@ -766,7 +766,7 @@ function commissionBreakdownHtml(
     <tr>
       <td style="${tdStyle}">${item.sport || "—"}</td>
       <td style="${tdStyle}">${fmtDate(item.date)}</td>
-      <td style="${tdRStyle}color:#666;">${item.currency} ${fmt(item.gmv)}</td>
+      <td style="${tdRStyle}color:#666;">${item.currency} ${fmt(item.gbv)}</td>
       <td style="${tdRStyle}font-weight:600;color:#1a1a1a;">${item.currency} ${fmt(item.commissionAmount)}</td>
     </tr>`).join("");
   return `<table style="width:100%;border-collapse:collapse;margin:16px 0;">
@@ -788,7 +788,7 @@ function buildCmCommissionPaid(
   cm: Record<string, unknown>,
   totalAmount: number,
   currency: string,
-  lineItems: Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }> = [],
+  lineItems: Array<{ sport: string; date: string; gbv: number; commissionAmount: number; currency: string }> = [],
 ): { to: string; subject: string; html: string } {
   const name = String(cm.full_name ?? `${cm.first_name ?? ""} ${cm.last_name ?? ""}`.trim() ?? "there");
   const fmt = (n: number) => Number(n).toFixed(2);
@@ -995,7 +995,7 @@ serve(async (req: Request): Promise<Response> => {
         case "cm_commission_paid": {
           let paidAmount = Number(totalAmount ?? 0);
           let paidCurrency = "EUR";
-          let lineItems: Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }> = [];
+          let lineItems: Array<{ sport: string; date: string; gbv: number; commissionAmount: number; currency: string }> = [];
           if (commissionIds?.length) {
             const { data: comms } = await db
               .from("cm_commissions")
@@ -1007,7 +1007,7 @@ serve(async (req: Request): Promise<Response> => {
               lineItems = comms.map((c: Record<string, unknown>) => ({
                 sport: String((c.booking_request as Record<string, unknown>)?.sport ?? ""),
                 date: String((c.booking_request as Record<string, unknown>)?.requested_date ?? ""),
-                gmv: Number(c.gmv),
+                gbv: Number(c.gmv),
                 commissionAmount: Number(c.commission_amount),
                 currency: String(c.currency),
               }));

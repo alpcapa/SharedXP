@@ -67,7 +67,7 @@ function emailHtml(heading: string, bodyLines: string[], ctaUrl: string, ctaLabe
 }
 
 function commissionBreakdownHtml(
-  items: Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }>,
+  items: Array<{ sport: string; date: string; gbv: number; commissionAmount: number; currency: string }>,
   totalAmount: number,
   currency: string,
 ): string {
@@ -82,7 +82,7 @@ function commissionBreakdownHtml(
     <tr>
       <td style="${tdStyle}">${item.sport || "—"}</td>
       <td style="${tdStyle}">${fmtDate(item.date)}</td>
-      <td style="${tdRStyle}color:#666;">${item.currency} ${fmt(item.gmv)}</td>
+      <td style="${tdRStyle}color:#666;">${item.currency} ${fmt(item.gbv)}</td>
       <td style="${tdRStyle}font-weight:600;color:#1a1a1a;">${item.currency} ${fmt(item.commissionAmount)}</td>
     </tr>`).join("");
   return `<table style="width:100%;border-collapse:collapse;margin:16px 0;">
@@ -227,7 +227,7 @@ serve(async (req: Request): Promise<Response> => {
     );
 
     // Build per-currency breakdown for CM email
-    const byCurrencyItems = new Map<string, Array<{ sport: string; date: string; gmv: number; commissionAmount: number; currency: string }>>();
+    const byCurrencyItems = new Map<string, Array<{ sport: string; date: string; gbv: number; commissionAmount: number; currency: string }>>();
     for (const c of comms) {
       const cur = String(c.currency);
       if (!byCurrencyItems.has(cur)) byCurrencyItems.set(cur, []);
@@ -235,7 +235,7 @@ serve(async (req: Request): Promise<Response> => {
       byCurrencyItems.get(cur)!.push({
         sport: String(br?.sport ?? ""),
         date: String(br?.requested_date ?? ""),
-        gmv: Number(c.gmv),
+        gbv: Number(c.gmv),
         commissionAmount: Number(c.commission_amount),
         currency: cur,
       });

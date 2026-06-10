@@ -96,7 +96,7 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
           <div className="invoice-detail-row">
             <span className="invoice-detail-label">Booking value (GBV)</span>
             <span className="invoice-detail-value invoice-detail-total">
-              {fmt(sym, invoice.currency, invoice.gmv)}{" "}
+              {fmt(sym, invoice.currency, invoice.gbv)}{" "}
               <span className="invoice-currency">{invoice.currency}</span>
             </span>
           </div>
@@ -367,7 +367,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
           currency: cm.currency,
           gross_amount: cm.commission_amount,
           commission_amount: cm.commission_amount,
-          gmv: cm.gmv,
+          gbv: cm.gmv,
           paid_at: cm.paid_at,
           released_at: cm.paid_at,
           requestedDate: cm.booking_request?.requested_date ?? "",
