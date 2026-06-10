@@ -193,6 +193,7 @@ serve(async (req: Request): Promise<Response> => {
 
     const cmName = String(owner.full_name ?? (`${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim() || "CM"));
     const cmEmail = String(owner.email);
+    const hasPaymentInfo = Boolean(String(profile?.payment_info ?? "").trim());
     const paymentInfo = String(profile?.payment_info ?? "").trim() || "No payment details provided — ask CM to add them in their dashboard.";
 
     // Group by currency for display
@@ -254,10 +255,12 @@ serve(async (req: Request): Promise<Response> => {
         `Commission approved, ${cmName}!`,
         [
           `Your SharedXP commissions totalling <strong>${amountLines}</strong> have been approved for payment.`,
-          `Our team will process the payment to your registered payout method. You'll receive a confirmation email once the payment is sent.`,
+          hasPaymentInfo
+            ? `Our team will process the payment to your registered payout method. You'll receive a confirmation email once the payment is sent.`
+            : `<strong>Action required:</strong> we don't have your payment details on file. Please head to your CM Dashboard and add your preferred payout details (bank account, PayPal, etc.) — otherwise the payment cannot be made.`,
         ],
         `${APP_URL}/user/${owner.id}?tab=cm`,
-        "View CM Dashboard",
+        hasPaymentInfo ? "View CM Dashboard" : "Add Payout Details",
         `${breakdownHtml}<p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#444;">You can track all your commissions on your CM Dashboard.</p>`,
       ),
     );
