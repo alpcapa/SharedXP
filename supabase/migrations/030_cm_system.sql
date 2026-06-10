@@ -37,7 +37,8 @@ CREATE TABLE cm_referrals (
   signed_up_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Commission accrues only on completed bookings by referred users (5 % of GMV).
+-- Commission accrues only on completed bookings by referred users (5 % of GBV).
+-- Note: the column is named gmv for historical reasons; it stores the gross booking value (GBV).
 CREATE TABLE cm_commissions (
   id                 UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
   cm_id              UUID          NOT NULL REFERENCES cm_profiles(id) ON DELETE CASCADE,
