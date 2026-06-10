@@ -8452,6 +8452,9 @@ body {
   flex-direction: column;
   gap: 10px;
   margin-bottom: 4px;
+  /* Show roughly 5 entries; scroll within the frame for older ones */
+  max-height: 300px;
+  overflow-y: auto;
 }
 .admin-note-entry { font-size: 13px; }
 .admin-note-meta {
