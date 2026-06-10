@@ -94,7 +94,7 @@ const InvoiceDetailModal = ({ invoice, onClose }) => {
           <p className="invoice-detail-section-title">Commission breakdown</p>
 
           <div className="invoice-detail-row">
-            <span className="invoice-detail-label">Booking value (GMV)</span>
+            <span className="invoice-detail-label">Booking value (GBV)</span>
             <span className="invoice-detail-value invoice-detail-total">
               {fmt(sym, invoice.currency, invoice.gmv)}{" "}
               <span className="invoice-currency">{invoice.currency}</span>

@@ -1379,7 +1379,7 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
                       <p className="cm-stat-sub">+{cmStats.expThisMonth} this month</p>
                     </div>
                     <div className="cm-stat-card">
-                      <p className="cm-stat-label">GMV Generated</p>
+                      <p className="cm-stat-label">GBV Generated</p>
                       <p className="cm-stat-value">{fmtCurrency(cmStats.totalGmv, cmStats.currency)}</p>
                       <p className="cm-stat-sub">{fmtCurrency(cmStats.gmvThisMonth, cmStats.currency)} this month</p>
                     </div>
@@ -1466,7 +1466,7 @@ const ProfilePage = ({ currentUser, onLogout, onSaveCmPaymentInfo }) => {
                                 <th>City</th>
                                 <th>Country</th>
                                 <th>Exp</th>
-                                <th>GMV</th>
+                                <th>GBV</th>
                               </tr>
                             </thead>
                             <tbody>
