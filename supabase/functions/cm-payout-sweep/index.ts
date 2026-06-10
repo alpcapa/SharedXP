@@ -200,12 +200,19 @@ serve(async (req: Request): Promise<Response> => {
         .map((c) => String((c.booking_request as Record<string, unknown> | null)?.sport ?? "experience"))
         .join(", ");
       const count = toApprove.length;
+      const { data: cmProf } = await db
+        .from("cm_profiles")
+        .select("payment_info")
+        .eq("id", cm_id)
+        .maybeSingle();
+      const detailsMissing = !String(cmProf?.payment_info ?? "").trim();
       await appendCmNote(
         db,
         cm_id,
         "commission_approved",
         `${currency} ${total.toFixed(2)} auto-approved after ${PAYOUT_DAYS} days pending` +
-          ` (${count} commission${count > 1 ? "s" : ""}: ${sports})`,
+          ` (${count} commission${count > 1 ? "s" : ""}: ${sports})` +
+          (detailsMissing ? " — payout details missing at approval" : ""),
       );
     }
   }

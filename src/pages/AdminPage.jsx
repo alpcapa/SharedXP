@@ -86,6 +86,7 @@ const NOTE_LABELS = {
   commission_approved: "Commission Approved",
   commission_paid: "Commission Marked Paid",
   payout_notified: "Payout Notification Sent",
+  payment_details_added: "Payment Details Added",
 };
 
 const fmtDateTime = (iso) =>
@@ -371,7 +372,12 @@ const CMManagementPanel = ({ currentUser, initialSearch = "", initialSubTab = "a
       .update({ status: "approved", approved_at: new Date().toISOString() })
       .eq("id", comm.id);
     if (!error) {
-      await appendCmNote(cm, "commission_approved", commissionNote(comm));
+      const detailsMissing = !String(cm.payment_info ?? "").trim();
+      await appendCmNote(
+        cm,
+        "commission_approved",
+        commissionNote(comm) + (detailsMissing ? " — payout details missing at approval" : "")
+      );
       await sendCmEmail("cm_commission_approved", cm.user_id, { commissionId: comm.id });
     }
     await fetchAll();
