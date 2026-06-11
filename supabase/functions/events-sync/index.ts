@@ -250,6 +250,14 @@ serve(async (request) => {
     return new Response("Method not allowed", { status: 405 });
   }
 
+  const token = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!token || token !== SERVICE_ROLE_KEY) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
     return new Response(
       JSON.stringify({
