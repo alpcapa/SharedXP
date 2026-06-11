@@ -796,7 +796,7 @@ All Edge Functions run on the Deno runtime (TypeScript). They use the **service-
 | `send-email` | Supabase Auth Hook | Handles signup confirmation, magic link, and recovery emails |
 | `forgot-password` | Client invoke | Generates recovery link via admin API; sends via Resend |
 | `auto-confirm` | Hourly cron (GitHub Actions, `:15` past each hour) | Sends feedback emails and auto-confirms expired bookings; server-side safety net for the client-side check in `useBookingRequests.js` |
-| `events-sync` | Daily cron (GitHub Action) | Fetches major sports events from external APIs; upserts to `external_events` |
+| `events-sync` | Daily cron (GitHub Actions, 04:00 UTC) | Fetches major sports events from external APIs; upserts to `external_events` |
 | `inbound-support` | Resend Svix webhook | Receives forwarded support emails; inserts to `support_messages`; sends auto-reply |
 | `contact-support` | Client invoke | Receives contact form submissions; inserts to `support_messages` |
 | `cm-payout-sweep` | Daily cron (GitHub Action, 06:00 UTC) | Auto-approves CM commissions ≥45 days old; notifies admin |
