@@ -40,7 +40,7 @@ jobs:
           # genuinely new migrations are still applied rather than skipped.
           attempts=$(ls supabase/migrations/*.sql | wc -l)
           for i in $(seq 0 "$attempts"); do
-            OUTPUT=$(supabase db push --linked 2>&1)
+            OUTPUT=$(supabase db push --linked --include-all 2>&1)
             EXIT_CODE=$?
             echo "$OUTPUT"
             if [ $EXIT_CODE -eq 0 ]; then
