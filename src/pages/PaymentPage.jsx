@@ -120,7 +120,7 @@ const PaymentPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgo
     setError("");
 
     const now = new Date();
-    const midnight = new Date(`${booking.requested_date}T00:00:00`);
+    const midnight = new Date(`${booking.requested_date}T00:00:00Z`);
     midnight.setDate(midnight.getDate() + 1);
     const experienceEndsAt = midnight.toISOString();
     const autoConfirmAt = new Date(midnight.getTime() + AUTO_CONFIRM_MS).toISOString();
