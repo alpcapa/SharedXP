@@ -2494,7 +2494,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
       {/* Sub-tabs */}
       <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
         <button type="button" className={`admin-tab${subTab === "pending" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("pending")}>
-          Invoices
+          Pending Payment
           {!loading && awaitingRelease.length > 0 && (
             <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{awaitingRelease.length}</span>
           )}
