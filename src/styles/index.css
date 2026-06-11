@@ -6058,6 +6058,44 @@ body {
 }
 
 /* ── Accounting Panel ───────────────────────────────── */
+.accounting-inv-ref {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6366f1;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
+.accounting-inv-ref-large {
+  font-size: 14px;
+  font-weight: 700;
+  color: #6366f1;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.04em;
+}
+.accounting-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.accounting-results-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.accounting-results-totals {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+}
 .accounting-amount-badge {
   font-size: 13px;
   font-weight: 600;

@@ -1838,6 +1838,8 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
   const [releasing, setReleasing] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [markingRefund, setMarkingRefund] = useState(null);
+  const [releasedSearch, setReleasedSearch] = useState("");
+  const [releasedSort, setReleasedSort] = useState("date-desc");
   const [approvingComm, setApprovingComm] = useState(null);
   const [payingComm, setPayingComm] = useState(null);
   const [confirmPayComm, setConfirmPayComm] = useState(null);
@@ -1900,6 +1902,36 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
 
   const fmtAmt = (amount, currency) =>
     `${currency ?? "EUR"} ${Number(amount ?? 0).toFixed(2)}`;
+
+  const invRef = (inv) => `#${inv.id.slice(0, 8).toUpperCase()}`;
+
+  const matchesInvoiceSearch = (inv, query) => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    const br = inv.booking_request;
+    return [
+      getName(br?.requester),
+      br?.requester?.email ?? "",
+      getName(br?.host),
+      br?.host?.email ?? "",
+      br?.sport ?? "",
+      inv.id.slice(0, 8),
+      fmtDate(br?.requested_date),
+      fmtDate(inv.released_at),
+      fmtDate(inv.approved_at),
+      Number(inv.gross_amount ?? 0).toFixed(2),
+      inv.currency ?? "",
+    ].some((f) => f.toLowerCase().includes(q));
+  };
+
+  const sortInvoices = (list, sort) => {
+    const copy = [...list];
+    if (sort === "date-asc") return copy.sort((a, b) => new Date(a.released_at ?? a.created_at) - new Date(b.released_at ?? b.created_at));
+    if (sort === "date-desc") return copy.sort((a, b) => new Date(b.released_at ?? b.created_at) - new Date(a.released_at ?? a.created_at));
+    if (sort === "amount-desc") return copy.sort((a, b) => Number(b.gross_amount) - Number(a.gross_amount));
+    if (sort === "amount-asc") return copy.sort((a, b) => Number(a.gross_amount) - Number(b.gross_amount));
+    return copy;
+  };
 
   const awaitingApproval = invoices.filter((inv) => !inv.approved_at && !inv.released_at);
   const awaitingRelease = invoices.filter((inv) => !!inv.approved_at && !inv.released_at);
@@ -1992,6 +2024,8 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
           onClick={() => setExpandedId(isExpanded ? null : inv.id)}
         >
           <span className="admin-dispute-summary-main">
+            <span className="accounting-inv-ref">{invRef(inv)}</span>
+            <span className="admin-dispute-summary-sep">·</span>
             <span className="admin-dispute-sport">{br?.sport ?? "—"}</span>
             <span className="admin-dispute-summary-sep">·</span>
             <span>{hostName}</span>
@@ -2008,6 +2042,11 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
         {isExpanded && (
           <div className="admin-dispute-body">
             <div className="admin-dispute-parties">
+              <div>
+                <p className="admin-dispute-label">Invoice</p>
+                <p className="accounting-inv-ref-large">{invRef(inv)}</p>
+                <p className="admin-dispute-email">Created {fmtDate(inv.created_at)}</p>
+              </div>
               <div>
                 <p className="admin-dispute-label">Guest</p>
                 <p>{guestName}</p>
@@ -2214,18 +2253,66 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
             </>
           )}
 
-          {/* ── Released ─────────────────────────────────────────────────── */}
-          {subTab === "released" && (
-            <>
-              {releasedInvoices.length === 0 ? (
-                <p>No released invoices yet.</p>
-              ) : (
-                <div className="admin-dispute-list">
-                  {releasedInvoices.map((inv) => renderInvoiceCard(inv))}
+          {/* ── Released (searchable history) ────────────────────────────── */}
+          {subTab === "released" && (() => {
+            const filtered = sortInvoices(
+              releasedInvoices.filter((inv) => matchesInvoiceSearch(inv, releasedSearch)),
+              releasedSort,
+            );
+            const totalGross = filtered.reduce((s, inv) => s + Number(inv.gross_amount ?? 0), 0);
+            const totalNet = filtered.reduce((s, inv) => s + Number(inv.net_amount ?? 0), 0);
+            const currency = filtered[0]?.currency ?? "EUR";
+            return (
+              <>
+                <div className="accounting-search-bar">
+                  <input
+                    type="text"
+                    className="support-search-input"
+                    placeholder="Search by name, sport, invoice ID, date, amount…"
+                    value={releasedSearch}
+                    onChange={(e) => setReleasedSearch(e.target.value)}
+                    style={{ flex: 1, minWidth: 220 }}
+                  />
+                  <select
+                    className="support-search-input"
+                    value={releasedSort}
+                    onChange={(e) => setReleasedSort(e.target.value)}
+                    style={{ width: "auto" }}
+                  >
+                    <option value="date-desc">Newest first</option>
+                    <option value="date-asc">Oldest first</option>
+                    <option value="amount-desc">Highest amount</option>
+                    <option value="amount-asc">Lowest amount</option>
+                  </select>
+                  {releasedSearch && (
+                    <button type="button" className="btn btn-light btn-sm" onClick={() => setReleasedSearch("")}>
+                      Clear
+                    </button>
+                  )}
                 </div>
-              )}
-            </>
-          )}
+
+                {releasedInvoices.length === 0 ? (
+                  <p>No released invoices yet.</p>
+                ) : filtered.length === 0 ? (
+                  <p>No invoices match "{releasedSearch}".</p>
+                ) : (
+                  <>
+                    <div className="accounting-results-summary">
+                      <span>{filtered.length} invoice{filtered.length !== 1 ? "s" : ""}{releasedSearch ? " matching" : ""}</span>
+                      <span className="accounting-results-totals">
+                        Gross: <strong>{fmtAmt(totalGross, currency)}</strong>
+                        <span className="admin-dispute-summary-sep">·</span>
+                        Net to hosts: <strong>{fmtAmt(totalNet, currency)}</strong>
+                      </span>
+                    </div>
+                    <div className="admin-dispute-list">
+                      {filtered.map((inv) => renderInvoiceCard(inv))}
+                    </div>
+                  </>
+                )}
+              </>
+            );
+          })()}
 
           {/* ── Refunds Due ──────────────────────────────────────────────── */}
           {subTab === "refunds" && (() => {
