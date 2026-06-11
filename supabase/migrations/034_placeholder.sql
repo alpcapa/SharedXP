@@ -1,0 +1,10 @@
+-- Migration 034 was intentionally skipped.
+--
+-- A migration with this number was drafted during development but was
+-- abandoned before being applied to any environment. The number was
+-- retired to keep the sequence stable — re-using it would risk applying
+-- a different schema change to databases that have already recorded 034
+-- as applied (Supabase tracks applied migrations by filename).
+--
+-- DO NOT create a new migration named 034_*.sql.
+-- The next migration after 033 is 035.
