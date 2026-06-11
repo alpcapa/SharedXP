@@ -313,10 +313,9 @@ The same function also handles the earlier feedback email: for bookings where `e
 
 ### 6.5 History sync
 
-The `bookings` table is a denormalised history mirror. When a booking is completed:
-1. Two rows are upserted into `bookings`: one for the guest (`role = 'attended'`), one for the host (`role = 'hosted'`).
-2. `syncBookings()` in `AuthContext` handles this upsert.
-3. The `bookings` table is used for the history page and CM eligibility check.
+The `bookings` table is a denormalised history mirror. When a booking is completed or a user saves a rating/review, `syncBookings()` in `AuthContext` is called. It uses the `sync_user_bookings` DB function (migration 054) which performs the DELETE + INSERT in a single transaction — either both succeed or both roll back. This prevents the previous failure mode where DELETE could succeed but a network error before INSERT would leave the table empty until the next sync.
+
+The `bookings` table is used for the history page and public profile ratings display. CM eligibility is checked directly against `booking_requests`, not `bookings`.
 
 ---
 
