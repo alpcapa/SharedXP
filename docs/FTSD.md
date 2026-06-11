@@ -911,6 +911,18 @@ All tables enforce RLS policies at the database level. The frontend enforces the
 - Suspended accounts (`suspended_at IS NOT NULL`): cannot log in; soft block checked after session load
 - Closed accounts (`closed_at IS NOT NULL`): `gdpr-erasure` function anonymises PII; financial records preserved for audit
 
+### 21.6 Edge Function rate limiting
+
+Public Edge Functions (no auth token required) are rate-limited at the DB level using the `edge_rate_limits` table (`key TEXT, created_at TIMESTAMPTZ`). Each function inserts one row per attempt and counts rows within a rolling window before proceeding.
+
+| Function | Key pattern | Window | Max requests |
+|---|---|---|---|
+| `forgot-password` | `forgot_password:<email>` | 15 min | 3 |
+
+`inbound-support` is protected by Svix HMAC signature verification (not rate limited). All other Edge Functions require a service-role token or are triggered by trusted cron jobs.
+
+Old `edge_rate_limits` rows (> 2 h) are pruned opportunistically on each successful request.
+
 ---
 
 ## 22. Routing Reference
