@@ -629,7 +629,7 @@ After a booking is completed and rated, the user sees an option to share the ses
 
 ### 14.4 Interactions
 
-- **Likes**: `field_post_likes` table; unique per user per post; counter on `field_posts.likes`.
+- **Likes**: `field_post_likes` table tracks authenticated likes (unique per user per post); a DB trigger (`field_post_likes_count_trigger`) maintains `field_posts.likes` atomically. Anonymous likes adjust the counter directly via `toggle_field_post_like` (no row stored). Counter = anonymous adjustments + `COUNT(field_post_likes)`.
 - **Reports**: `field_post_reports`; any user can report; statuses `pending` / `dismissed`.
 - **Suspension**: Admin can suspend a post via Admin Panel; suspended posts are hidden from the feed.
 

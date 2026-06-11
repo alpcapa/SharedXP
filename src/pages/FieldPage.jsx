@@ -72,7 +72,7 @@ const FieldPage = ({ currentUser, onLogout }) => {
           : p
       )
     );
-    const result = await toggleFieldPostLike(post.id);
+    const result = await toggleFieldPostLike(post.id, currentUser?.id);
     if (!result) {
       setLikedPostIds((prev) => {
         const next = new Set(prev);
