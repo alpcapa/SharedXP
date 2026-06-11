@@ -12,12 +12,11 @@
 //   3. Deletes avatar and host-sport images from storage
 //   4. Updates the Supabase Auth email to the same placeholder (closes the auth.users gap)
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
 const GRACE_DAYS = 30;
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }

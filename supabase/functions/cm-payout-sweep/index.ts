@@ -25,7 +25,6 @@
 //
 // Deploy: supabase functions deploy cm-payout-sweep
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY       = Deno.env.get("RESEND_API_KEY") ?? "";
@@ -148,7 +147,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   }
 }
 
-serve(async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
 
   const authHeader = req.headers.get("authorization") ?? "";

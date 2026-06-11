@@ -281,12 +281,12 @@ Auto-confirm runs in two places — a server-side cron as the primary trigger an
 **Server-side (primary):** The `auto-confirm` Edge Function runs every hour via GitHub Actions (`.github/workflows/auto-confirm.yml`, `:15` past each hour). It:
 1. Finds all `in_progress` bookings where `auto_confirm_at <= now()`.
 2. Transitions each to `completed` and sets `updated_at`.
-3. Releases the invoice (`released_at = now()`) using an atomic `IS NULL` guard.
-4. Sends the `experience_confirmed_to_host` notification — only if this run claimed the `released_at` field, preventing duplicates when a client is also online.
+3. Marks the invoice as admin-approved (`approved_at = now()`) using an atomic `IS NULL` guard, routing it to the Accounting tab for payment release.
+4. Sends the `experience_confirmed_to_host` notification — only if this run claimed the `approved_at` field, preventing duplicates when a client is also online.
 
 The same function also handles the earlier feedback email: for bookings where `experience_ends_at` has passed but `auto_confirm_at` hasn't yet and `feedback_email_sent_at IS NULL`, it atomically claims the field and sends `experience_completed_to_requester`.
 
-**Client-side (fast path):** `useBookingRequests.js` runs the same checks on every fetch using the same atomic guards. If the user opens the app before the hourly function fires, they get an immediate transition with no wait.
+**Client-side (fast path):** `useBookingRequests.js` runs the same checks on every fetch using the same atomic guards. If the user opens the app before the hourly function fires, they get an immediate transition (`completed`) with no wait. The client does **not** set `approved_at` or `released_at` — those are set by the Admin Panel and Accounting tab respectively.
 
 ### 6.4 Booking request data
 
@@ -302,6 +302,7 @@ The same function also handles the earlier feedback email: for bookings where `e
 | `status` | See §6.1 |
 | `decline_reason` | Free text; set when host declines |
 | `refund_pct` | `0` \| `50` \| `100`; calculated at cancellation time |
+| `refund_sent_at` | Set by accounting via Admin Panel when manual refund is sent to guest |
 | `guest_rating` | 1–5 integer |
 | `guest_host_ratings` | JSONB; detailed attribute ratings (punctuality, etc.) |
 | `guest_review` | Free text |
@@ -345,9 +346,10 @@ The `computeInvoice(gross, currency)` function in `src/utils/pricing.js` perform
 | `currency` | ISO 4217 |
 | `xp_earned` | Computed at payment time; stored immutably |
 | `paid_at` | When guest payment was confirmed |
-| `released_at` | When host payout was released (set at completion/resolution) |
+| `approved_at` | When admin (or auto-confirm) approved the invoice for payout; prerequisite for release |
+| `released_at` | When accounting released the host payout; always set after `approved_at` |
 
-An invoice is created when the booking transitions to `in_progress` (payment step). `released_at` is set at completion or dispute resolution.
+An invoice is created when the booking transitions to `in_progress` (payment step). The two-step release flow is: admin sets `approved_at` (via Experiences tab or auto-confirm), then accounting sets `released_at` (via Accounting → Pending Payment tab).
 
 ---
 
@@ -431,10 +433,12 @@ There is no live payment processing. The flow is:
 1. Guest visits `/payment/:bookingRequestId` and clicks "Pay Now".
 2. The booking transitions to `in_progress`; an `invoices` row is created with calculated fees.
 3. `paid_at` is set immediately (simulated payment confirmation).
-4. The CS/accounting team handles actual money collection and host payout outside the platform.
-5. Host bank details are collected in `host_profiles` for this manual process.
+4. The CS/accounting team handles actual money collection outside the platform.
+5. Once the experience is completed, **admin** reviews and approves it via the **Experiences tab** → Pending sub-tab, setting `invoices.approved_at`.
+6. **Accounting** then releases the payout via the **Accounting tab** → Pending Payment sub-tab, setting `invoices.released_at`.
+7. Host bank details are collected in `host_profiles` for this manual payout process.
 
-The `invoices` table tracks all financial obligations and serves as the source of truth for accounting.
+The two-step admin-approval → accounting-release design serves as a checks-and-balances mechanism to prevent errors before money moves. The `invoices` table tracks all financial obligations and is the source of truth for accounting.
 
 ### 10.2 Stripe integration (TBD)
 
@@ -470,12 +474,12 @@ A guest can open a dispute instead of confirming a completed session:
 
 ### 11.3 Admin resolution
 
-Admin reviews both sides in the Admin Panel disputes queue:
+Admin reviews both sides in the Admin Panel disputes queue (Experiences → All tab):
 
 | Resolution | Outcome |
 |---|---|
-| `resolved_paid_host` | Invoice released to host; `released_at` set; host notified |
-| `resolved_refunded` | Refund issued to guest; `xp_earned` zeroed; guest notified |
+| `resolved_paid_host` | `invoices.approved_at` set; booking routes to Accounting → Pending Payment for release; host notified |
+| `resolved_refunded` | `xp_earned` zeroed; refund obligation recorded; accounting marks sent via Accounting → Refunds tab; guest notified |
 
 Admin adds notes (markdown, with timestamp) stored in `disputes.admin_notes`.
 
@@ -714,9 +718,10 @@ Support messages are visible only to admin users (RLS-enforced).
 
 | Area | Capabilities |
 |---|---|
+| **Experiences** | View all booking requests by status (Pending / Approved / Active / Cancelled / All); approve completed and dispute-resolved bookings for accounting release; serves as the admin half of the two-step payment checks-and-balances flow |
+| **Accounting** | Release approved invoices to hosts (Pending Payment); full searchable invoice history (Released); track and mark manual refunds sent (Refunds); approve and mark CM commissions paid (CM Commissions) |
 | **CM Applications** | View queue; move to interview, accept (creates CM profile + invite code), decline; add timestamped markdown notes |
 | **CM Profiles** | View active CMs; pause, revoke, reactivate; edit city/country/payment info; view referral and commission history |
-| **Commissions** | Approve pending commissions; mark as paid; send payout notification email |
 | **Disputes** | View open disputes; read both sides; resolve as refunded or paid-host; add admin notes |
 | **Profiles** | Search users; suspend (with reason + date); close account; add admin notes |
 | **Field Posts** | View reported posts; dismiss report; suspend post |
@@ -768,7 +773,12 @@ Notes are append-only; no editing or deletion.
 
 ### 18.2 Migration history
 
-Migrations live in `supabase/migrations/` numbered 001–038 (034 intentionally absent). Run in numeric order. Never edit a shipped migration; add new migrations instead.
+Migrations live in `supabase/migrations/` numbered 001–059 (034 intentionally absent). Run in numeric order. Never edit a shipped migration; add new migrations instead.
+
+Notable recent migrations:
+- **057** — `invoices_admin_read` RLS policy (admins can read all invoices)
+- **058** — `booking_requests.refund_sent_at` column
+- **059** — `invoices.approved_at` column (two-step payment flow)
 
 ### 18.3 Row-Level Security
 
@@ -786,14 +796,14 @@ RLS is enabled on all tables. Key policy patterns:
 
 ## 19. Edge Functions
 
-All Edge Functions run on the Deno runtime (TypeScript). They use the **service-role key** to bypass RLS where needed. Deployed via `supabase functions deploy <name>`.
+All Edge Functions run on the Deno runtime (TypeScript). They use the **service-role key** to bypass RLS where needed. Deployed via `supabase functions deploy <name>`. All functions use the built-in `Deno.serve()` API (not the deprecated `serve` import from `deno.land/std`).
 
 | Function | Trigger | Purpose |
 |---|---|---|
 | `booking-notify` | Client invoke (via `sendNotification.js`) | Dispatches transactional emails for all booking lifecycle events via Resend |
 | `send-email` | Supabase Auth Hook | Handles signup confirmation, magic link, and recovery emails |
 | `forgot-password` | Client invoke | Generates recovery link via admin API; sends via Resend |
-| `auto-confirm` | Hourly cron (GitHub Actions, `:15` past each hour) | Sends feedback emails and auto-confirms expired bookings; server-side safety net for the client-side check in `useBookingRequests.js` |
+| `auto-confirm` | Hourly cron (GitHub Actions, `:15` past each hour) | Sends feedback emails and auto-confirms expired bookings; sets `approved_at` on the invoice (not `released_at`) so auto-confirmed sessions still flow through the Accounting tab for payout release |
 | `events-sync` | Daily cron (GitHub Actions, 04:00 UTC) | Fetches major sports events from external APIs; upserts to `external_events` |
 | `inbound-support` | Resend Svix webhook | Receives forwarded support emails; inserts to `support_messages`; sends auto-reply |
 | `contact-support` | Client invoke | Receives contact form submissions; inserts to `support_messages` |

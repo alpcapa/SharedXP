@@ -3,7 +3,6 @@
 // Then register the hook in the Supabase dashboard under
 // Authentication → Hooks → Send Email.
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM_EMAIL =
@@ -181,7 +180,7 @@ function buildEmail(
   }
 }
 
-serve(async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
   }
