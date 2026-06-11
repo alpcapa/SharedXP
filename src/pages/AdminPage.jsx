@@ -1834,6 +1834,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
   const [refunds, setRefunds] = useState([]);
   const [commissions, setCommissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [approving, setApproving] = useState(null);
   const [releasing, setReleasing] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [markingRefund, setMarkingRefund] = useState(null);
@@ -1852,7 +1853,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
         .from("invoices")
         .select(`
           id, gross_amount, platform_commission, tax, net_amount, currency,
-          paid_at, released_at, xp_earned, created_at,
+          paid_at, approved_at, released_at, xp_earned, created_at,
           booking_request:booking_requests(
             id, sport, requested_date, status,
             requester:profiles!requester_id(full_name, first_name, last_name, email),
@@ -1900,11 +1901,24 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
   const fmtAmt = (amount, currency) =>
     `${currency ?? "EUR"} ${Number(amount ?? 0).toFixed(2)}`;
 
-  const pendingInvoices = invoices.filter((inv) => !inv.released_at);
+  const awaitingApproval = invoices.filter((inv) => !inv.approved_at && !inv.released_at);
+  const awaitingRelease = invoices.filter((inv) => !!inv.approved_at && !inv.released_at);
   const releasedInvoices = invoices.filter((inv) => !!inv.released_at);
   const pendingComms = commissions.filter((c) => c.status === "pending");
   const approvedComms = commissions.filter((c) => c.status === "approved");
   const paidComms = commissions.filter((c) => c.status === "paid");
+
+  const approveInvoice = async (inv) => {
+    if (approving === inv.id) return;
+    setApproving(inv.id);
+    await supabase
+      .from("invoices")
+      .update({ approved_at: new Date().toISOString() })
+      .eq("id", inv.id)
+      .is("approved_at", null);
+    await fetchAll();
+    setApproving(null);
+  };
 
   const releaseInvoice = async (inv) => {
     if (releasing === inv.id) return;
@@ -1956,11 +1970,20 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
     setConfirmPayComm(null);
   };
 
-  const renderInvoiceCard = (inv, isReleased) => {
+  const renderInvoiceCard = (inv) => {
     const br = inv.booking_request;
     const isExpanded = expandedId === inv.id;
+    const isApproved = !!inv.approved_at;
+    const isReleased = !!inv.released_at;
     const guestName = getName(br?.requester);
     const hostName = getName(br?.host);
+
+    const statusBadge = isReleased
+      ? <span className="pending-status-badge status-completed">Released</span>
+      : isApproved
+      ? <span className="pending-status-badge status-accepted">Approved</span>
+      : <span className="pending-status-badge status-payment-pending">Awaiting Approval</span>;
+
     return (
       <article key={inv.id} className={`admin-dispute-card${isReleased ? " resolved" : ""}`}>
         <button
@@ -1977,12 +2000,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
           </span>
           <span className="admin-dispute-summary-right">
             <span className="accounting-amount-badge">{fmtAmt(inv.gross_amount, inv.currency)}</span>
-            {isReleased && (
-              <span className="pending-status-badge status-completed">Released</span>
-            )}
-            {!isReleased && (
-              <span className="pending-status-badge status-payment-pending">Pending</span>
-            )}
+            {statusBadge}
             <span className="admin-dispute-chevron">{isExpanded ? "▲" : "▼"}</span>
           </span>
         </button>
@@ -2031,12 +2049,27 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
               )}
             </div>
 
-            {isReleased ? (
-              <p className="accounting-released-info">
-                Released on {fmtDateTime(inv.released_at)}
-              </p>
-            ) : (
+            {isReleased && (
+              <div className="accounting-status-trail">
+                <p className="accounting-released-info">Approved {fmtDateTime(inv.approved_at)}</p>
+                <p className="accounting-released-info">Released {fmtDateTime(inv.released_at)}</p>
+              </div>
+            )}
+            {!isReleased && !isApproved && (
               <div className="admin-dispute-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={approving === inv.id}
+                  onClick={() => approveInvoice(inv)}
+                >
+                  {approving === inv.id ? "Approving…" : "Approve"}
+                </button>
+              </div>
+            )}
+            {!isReleased && isApproved && (
+              <div className="accounting-approved-bar">
+                <p className="accounting-released-info">Approved by admin on {fmtDateTime(inv.approved_at)}</p>
                 <button
                   type="button"
                   className="btn btn-primary"
@@ -2122,9 +2155,9 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
       {/* Sub-tabs */}
       <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
         <button type="button" className={`admin-tab${subTab === "pending" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("pending")}>
-          Pending Release
-          {!loading && pendingInvoices.length > 0 && (
-            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{pendingInvoices.length}</span>
+          Invoices
+          {!loading && (awaitingApproval.length + awaitingRelease.length) > 0 && (
+            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{awaitingApproval.length + awaitingRelease.length}</span>
           )}
         </button>
         <button type="button" className={`admin-tab${subTab === "released" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("released")}>
@@ -2149,15 +2182,34 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
         <p>Loading…</p>
       ) : (
         <>
-          {/* ── Pending Release ───────────────────────────────────────────── */}
+          {/* ── Invoices (Approve → Release) ─────────────────────────────── */}
           {subTab === "pending" && (
             <>
-              {pendingInvoices.length === 0 ? (
-                <p>No invoices pending release.</p>
+              {awaitingApproval.length === 0 && awaitingRelease.length === 0 ? (
+                <p>No invoices pending.</p>
               ) : (
-                <div className="admin-dispute-list">
-                  {pendingInvoices.map((inv) => renderInvoiceCard(inv, false))}
-                </div>
+                <>
+                  {awaitingApproval.length > 0 && (
+                    <>
+                      <p className="admin-dispute-label" style={{ marginBottom: 8 }}>
+                        Awaiting admin approval — {awaitingApproval.length} invoice{awaitingApproval.length !== 1 ? "s" : ""}
+                      </p>
+                      <div className="admin-dispute-list">
+                        {awaitingApproval.map((inv) => renderInvoiceCard(inv))}
+                      </div>
+                    </>
+                  )}
+                  {awaitingRelease.length > 0 && (
+                    <>
+                      <p className="admin-dispute-label" style={{ marginTop: awaitingApproval.length > 0 ? 24 : 0, marginBottom: 8 }}>
+                        Approved — ready to release — {awaitingRelease.length} invoice{awaitingRelease.length !== 1 ? "s" : ""}
+                      </p>
+                      <div className="admin-dispute-list">
+                        {awaitingRelease.map((inv) => renderInvoiceCard(inv))}
+                      </div>
+                    </>
+                  )}
+                </>
               )}
             </>
           )}
@@ -2169,7 +2221,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
                 <p>No released invoices yet.</p>
               ) : (
                 <div className="admin-dispute-list">
-                  {releasedInvoices.map((inv) => renderInvoiceCard(inv, true))}
+                  {releasedInvoices.map((inv) => renderInvoiceCard(inv))}
                 </div>
               )}
             </>
@@ -2796,7 +2848,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
       supabase
         .from("invoices")
         .select("id", { count: "exact", head: true })
-        .is("released_at", null),
+        .is("released_at", null),  // any unreleased invoice (awaiting approval or awaiting release)
       supabase
         .from("cm_commissions")
         .select("id", { count: "exact", head: true })

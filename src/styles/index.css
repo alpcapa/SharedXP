@@ -6096,7 +6096,20 @@ body {
 .accounting-released-info {
   font-size: 13px;
   color: #047857;
+  margin: 2px 0;
+}
+.accounting-status-trail {
   margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.accounting-approved-bar {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 /* ── Report card media layout ───────────────────────── */

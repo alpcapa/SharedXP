@@ -141,19 +141,7 @@ export const useBookingRequests = (currentUser) => {
           .from("booking_requests")
           .update({ status: "completed", updated_at: now })
           .eq("id", r.id);
-
-        const { data: released } = await supabase
-          .from("invoices")
-          .update({ released_at: now })
-          .eq("booking_request_id", r.id)
-          .is("released_at", null)
-          .select("id");
-
-        // Only the client that actually flipped released_at sends notifications,
-        // preventing duplicate emails when both participants are online.
-        if (released?.length > 0) {
-          await sendNotification("experience_confirmed_to_host", r.id);
-        }
+        // Invoice release is handled by accounting via the Admin Panel.
       }
       fetchRequests();
     })();
@@ -232,14 +220,7 @@ export const useBookingRequests = (currentUser) => {
       .update({ status: "completed", updated_at: now })
       .eq("id", requestId);
     if (error) return false;
-
-    await supabase
-      .from("invoices")
-      .update({ released_at: now })
-      .eq("booking_request_id", requestId)
-      .is("released_at", null);
-
-    await sendNotification("experience_confirmed_to_host", requestId);
+    // Invoice release is handled by accounting via the Admin Panel.
     fetchRequests();
     return true;
   }, [fetchRequests]);
