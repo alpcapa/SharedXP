@@ -47,8 +47,8 @@ Migrations live in `supabase/migrations/` (run in numeric order). Migration 034 
 - `bookings` — completed history with roles (`attended` / `hosted`); synced client-side via `syncBookings`
 - `booking_requests` — active booking lifecycle: `pending → accepted → payment_pending → in_progress → completed` (or `declined / cancelled / disputed / resolved_*`)
 - `messages` — per booking_request chat thread
-- `invoices` — payment record per booking_request; `released_at` signals payout; `xp_earned` stores XP awarded to each participant
-- `disputes` — opened by requester when disputing a completed booking; resolved by admin
+- `invoices` — payment record per booking_request; `approved_at` signals admin approval (prerequisite for release); `released_at` signals payout (set by accounting after approval); `xp_earned` stores XP awarded to each participant
+- `disputes` — opened by requester when disputing a completed booking; resolved by admin (sets `approved_at` for paid-host resolutions, which then routes to accounting for release)
 - `external_events` — major international sports events (marathons, tennis, cycling, F1, etc.) sourced via the `events-sync` edge function
 - `field_posts` — community experience feed posts sourced from completed bookings
 - `field_post_likes` — like tracking per user per field post
@@ -66,7 +66,9 @@ Storage buckets: `Avatars` (user photos) and `host-sport-images` (host sport gal
 ### Booking flow
 
 `src/hooks/useBookingRequests.js` manages the active booking lifecycle. `src/hooks/useHosts.js` fetches and filters the host list for Explore. Key points for booking requests:
-- Auto-confirm logic runs **client-side**: when a booking's `auto_confirm_at` has passed and status is `in_progress`, the first participant to load the page triggers completion and invoice release.
+- Auto-confirm logic runs **client-side**: when a booking's `auto_confirm_at` has passed and status is `in_progress`, the first participant to load the page transitions it to `completed`. It does **not** set `approved_at` or `released_at` — those are owned by the Admin Panel.
+- Invoice payment release is a **two-step flow**: admin approves (sets `approved_at`) via the Experiences tab → Pending sub-tab; accounting releases (sets `released_at`) via the Accounting tab → Pending Payment sub-tab. This applies to completed sessions, auto-confirms, and dispute-resolved (paid-host) bookings alike.
+- `refund_sent_at` on `booking_requests` is set by accounting (Accounting → Refunds tab) when a manual refund is sent; this changes the guest-facing status badge from "Cancelled · Refund pending" to "Cancelled · Refund sent".
 - Platform fee is 15% + 5% tax, computed in `computeInvoice()`.
 - Notifications are sent by calling `supabase.functions.invoke('booking-notify', …)` via `src/utils/sendNotification.js`.
 
@@ -84,9 +86,13 @@ New pages: `/payment-history` (`PaymentHistoryPage`) shows invoices with per-tra
 
 `supabase/functions/forgot-password/index.ts` — sends password-reset emails via Resend. Called by the `onForgotPassword` AuthContext callback.
 
+`supabase/functions/auto-confirm/index.ts` — hourly server-side sweep (GitHub Actions, `:15` past each hour). Sends feedback emails for sessions where `experience_ends_at` has passed; auto-confirms bookings where `auto_confirm_at` has passed. Sets `approved_at` (not `released_at`) so auto-confirmed invoices still route through the Accounting tab.
+
 `supabase/functions/events-sync/index.ts` — pulls major sports events from public sources and upserts them into the `external_events` table. Intended to run on a daily cron (pg_cron, GitHub Action, or Supabase scheduled trigger). Can also be invoked manually via HTTP POST with the service role key.
 
 `supabase/functions/inbound-support/index.ts` — receives inbound emails forwarded by Resend (via Svix webhook) to support@sharedxp.com, persists them to `support_messages`, and sends an auto-reply directing the sender to the Help Center. Requires `RESEND_WEBHOOK_SECRET` (Svix signing secret) and `RESEND_API_KEY`.
+
+**Edge Function runtime note:** All functions use `Deno.serve()`. Do not use the old `import { serve } from "https://deno.land/std@0.x.x/http/server.ts"` pattern — it causes bundling errors in Supabase deploy previews.
 
 ### Styling
 
