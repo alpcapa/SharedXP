@@ -1828,7 +1828,7 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
 
 // ── Experiences Panel ─────────────────────────────────────────────────────────
 const ExperiencesPanel = ({ currentUser, onCountChange }) => {
-  const [subTab, setSubTab] = useState("to-approve");
+  const [subTab, setSubTab] = useState("pending");
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState(null);
@@ -2056,8 +2056,8 @@ const ExperiencesPanel = ({ currentUser, onCountChange }) => {
       <p className="admin-subtitle">Review all experiences and approve completed ones for accounting to release payment.</p>
 
       <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
-        <button type="button" className={`admin-tab${subTab === "to-approve" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("to-approve")}>
-          To Approve
+        <button type="button" className={`admin-tab${subTab === "pending" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("pending")}>
+          Pending
           {!loading && toApprove.length > 0 && (
             <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{toApprove.length}</span>
           )}
@@ -2091,7 +2091,7 @@ const ExperiencesPanel = ({ currentUser, onCountChange }) => {
       ) : (
         <>
           {/* ── To Approve ───────────────────────────────────────────────── */}
-          {subTab === "to-approve" && (
+          {subTab === "pending" && (
             toApprove.length === 0
               ? <p>No completed experiences awaiting approval.</p>
               : <div className="admin-dispute-list">{toApprove.map((br) => renderBookingCard(br, true))}</div>
