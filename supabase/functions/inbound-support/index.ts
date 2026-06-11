@@ -5,7 +5,6 @@
 // Deploy:  supabase functions deploy inbound-support
 // Secret:  supabase secrets set RESEND_WEBHOOK_SECRET=whsec_...
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL") ?? "";
@@ -159,7 +158,7 @@ async function sendAutoReply(toEmail: string, toName: string, originalSubject: s
   });
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204 });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 

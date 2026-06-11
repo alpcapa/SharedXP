@@ -16,7 +16,6 @@
 // Scheduling: .github/workflows/auto-confirm.yml (runs every hour at :15).
 // Deploy: supabase functions deploy auto-confirm
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL") ?? "";
@@ -42,7 +41,7 @@ async function invokeBookingNotify(emailType: string, bookingRequestId: string):
   }
 }
 
-serve(async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
 
   const authHeader = req.headers.get("authorization") ?? "";
@@ -103,16 +102,17 @@ serve(async (req: Request): Promise<Response> => {
       .update({ status: "completed", updated_at: now })
       .eq("id", r.id);
 
-    // Atomic claim on invoice release — only the first writer (this function or
-    // a live client) sends the completion notification.
-    const { data: released } = await db
+    // Mark invoice as admin-approved so accounting can release payment.
+    // Use atomic claim (IS NULL) so only the first writer (this function or a
+    // live client) sets the flag — no double-approvals.
+    const { data: approved } = await db
       .from("invoices")
-      .update({ released_at: now })
+      .update({ approved_at: now })
       .eq("booking_request_id", r.id)
-      .is("released_at", null)
+      .is("approved_at", null)
       .select("id");
 
-    if (released?.length) {
+    if (approved?.length) {
       await invokeBookingNotify("experience_confirmed_to_host", r.id);
       confirmed++;
     }
