@@ -95,6 +95,16 @@ export const toNSU = (amount, currency) => {
   return Math.ceil((Number(amount) || 0) / divisor);
 };
 
+// Returns the XP to retain after a cancellation/refund.
+// refundPct is 0, 50, or 100 (from CANCELLATION_POLICIES).
+// 0%  refund → XP unchanged (guest never got money back, keeps XP)
+// 50% refund → XP halved
+// 100% refund → XP zeroed
+export const computeXpAfterRefund = (xpEarned, refundPct) => {
+  if (!refundPct) return xpEarned ?? 0;
+  return Math.round((xpEarned ?? 0) * (1 - refundPct / 100));
+};
+
 export const formatCurrency = (amount, currency) => {
   const sym = CURRENCY_SYMBOLS[String(currency).toUpperCase()] ?? currency;
   return `${sym}${Number(amount).toFixed(2)}`;

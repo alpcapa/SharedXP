@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { sendNotification } from "../utils/sendNotification";
-import { COMMISSION_RATE, TAX_RATE } from "../utils/pricing";
+import { COMMISSION_RATE, TAX_RATE, computeXpAfterRefund } from "../utils/pricing";
 import { computeRefundPct } from "../utils/cancellationPolicy";
 
 export const useBookingRequests = (currentUser) => {
@@ -200,8 +200,6 @@ export const useBookingRequests = (currentUser) => {
       .eq("id", requestId);
     if (error) return { ok: false, refundPct };
 
-    // Reduce XP proportionally to the amount NOT refunded.
-    // Full refund (100%) → xp_earned = 0. No refund (0%) → xp_earned unchanged.
     if (!isPrePayment && refundPct > 0) {
       const { data: inv } = await supabase
         .from("invoices")
@@ -209,10 +207,9 @@ export const useBookingRequests = (currentUser) => {
         .eq("booking_request_id", requestId)
         .maybeSingle();
       if (inv) {
-        const newXp = Math.round((inv.xp_earned ?? 0) * (1 - refundPct / 100));
         await supabase
           .from("invoices")
-          .update({ xp_earned: newXp })
+          .update({ xp_earned: computeXpAfterRefund(inv.xp_earned, refundPct) })
           .eq("booking_request_id", requestId);
       }
     }
