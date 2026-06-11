@@ -104,8 +104,7 @@ There is no global state library. State lives in:
 3. `supabase.auth.signUp()` is called with `email`, `password`, and user metadata (`name`, `photo`, `languages`, `sports`, `invite_code`).
 4. Supabase sends a confirmation email via the `send-email` Edge Function (registered as an Auth Hook in the Supabase Dashboard).
 5. User clicks the confirmation link; the Auth Hook fires again (event `EMAIL_OTP`).
-6. On confirmed session, `AuthContext.fetchUserProfile()` loads or creates the `profiles` row.
-7. If a `pending_profiles` row exists (from OAuth partial flow), it is merged and then deleted.
+6. On confirmed session, `AuthContext.fetchUserProfile()` loads or creates the `profiles` row using the `sharedxp_pending_profile` key from `user_metadata` (the metadata travels with the session, no separate table needed).
 
 ### 3.3 OAuth flow
 
@@ -747,7 +746,6 @@ Notes are append-only; no editing or deletion.
 | Table | Purpose |
 |---|---|
 | `profiles` | One row per auth user; core identity + flags |
-| `pending_profiles` | Temporary storage during OAuth/email confirmation partial flows |
 | `user_languages` | Up to 4 languages per user with position |
 | `user_sports` | Up to 4 sports per user with position |
 | `host_profiles` | One-to-one with `profiles` when `is_host=true`; location, bank info |

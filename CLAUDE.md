@@ -40,7 +40,6 @@ supabase secrets set RESEND_API_KEY=... RESEND_FROM_EMAIL=... APP_URL=... SEND_E
 
 Migrations live in `supabase/migrations/` (run in numeric order). Migration 034 is a comments-only placeholder — the number was retired after the original draft was abandoned; see `034_placeholder.sql` for details. Do not create a new `034_*.sql`.
 - `profiles` — one row per auth user; `is_host` and `is_admin` flags here
-- `pending_profiles` — intermediate profile state during OAuth/email confirmation
 - `user_languages` / `user_sports` — up to 4 ordered entries per user
 - `host_profiles` — one-to-one with `profiles` when `is_host=true`; holds payout/bank info, postcode, and geocoded coordinates
 - `host_sports` — one `host_profiles` → many sports, each with availability, pricing, equipment; each sport has a `cancellation_policy` field
