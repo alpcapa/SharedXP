@@ -1870,6 +1870,10 @@ const ExperiencesPanel = ({ currentUser, onCountChange }) => {
 
   const active = bookings.filter((br) => ACTIVE_STATUSES.includes(br.status));
   const cancelled = bookings.filter((br) => ["cancelled", "declined"].includes(br.status));
+  const approvedPending = bookings.filter((br) => {
+    const inv = br.invoice?.[0];
+    return inv && !!inv.approved_at && !inv.released_at;
+  });
 
   const matchesSearch = (br, q) => {
     if (!q.trim()) return true;
@@ -2057,6 +2061,12 @@ const ExperiencesPanel = ({ currentUser, onCountChange }) => {
             <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{toApprove.length}</span>
           )}
         </button>
+        <button type="button" className={`admin-tab${subTab === "approved" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("approved")}>
+          Approved
+          {!loading && approvedPending.length > 0 && (
+            <span className="cm-admin-count" style={{ marginLeft: 4 }}>{approvedPending.length}</span>
+          )}
+        </button>
         <button type="button" className={`admin-tab${subTab === "active" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("active")}>
           Active
           {!loading && active.length > 0 && (
@@ -2084,6 +2094,13 @@ const ExperiencesPanel = ({ currentUser, onCountChange }) => {
             toApprove.length === 0
               ? <p>No completed experiences awaiting approval.</p>
               : <div className="admin-dispute-list">{toApprove.map((br) => renderBookingCard(br, true))}</div>
+          )}
+
+          {/* ── Approved — waiting on accounting ─────────────────────────── */}
+          {subTab === "approved" && (
+            approvedPending.length === 0
+              ? <p>No approved experiences waiting on accounting.</p>
+              : <div className="admin-dispute-list">{approvedPending.map((br) => renderBookingCard(br, false))}</div>
           )}
 
           {/* ── Active ───────────────────────────────────────────────────── */}
