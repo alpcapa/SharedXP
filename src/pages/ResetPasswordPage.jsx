@@ -19,14 +19,8 @@ const ResetPasswordPage = ({ currentUser, onLogout }) => {
     if (tokenHash && type === "recovery") {
       return { tokenHash, type };
     }
-
-    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
-    if (hashParams.get("type") === "recovery") {
-      return { tokenHash: null, type: "recovery" };
-    }
-
     return null;
-  }, [location.hash, location.search]);
+  }, [location.search]);
 
   useEffect(() => {
     let isMounted = true;
@@ -37,13 +31,6 @@ const ResetPasswordPage = ({ currentUser, onLogout }) => {
           setStatus("error");
           setErrorMessage("Invalid or expired password reset link.");
         }
-        return;
-      }
-
-      if (!tokenParams.tokenHash) {
-        // Implicit-flow: Supabase already created a recovery session from the
-        // hash fragment; no explicit verifyOtp call needed.
-        if (isMounted) setStatus("ready");
         return;
       }
 

@@ -887,7 +887,7 @@ The Supabase client (`src/lib/supabase.js`) reads `VITE_SUPABASE_URL` and `VITE_
 ### 21.1 Authentication
 
 - JWT-based; managed by Supabase Auth
-- `flowType: "implicit"` (token in URL hash) for Safari and in-app browser compatibility
+- `flowType: "pkce"` — tokens are exchanged server-side; never exposed in the URL hash, browser history, or referrer headers
 - OAuth via Supabase's built-in Google and Apple providers
 
 ### 21.2 Row-Level Security
