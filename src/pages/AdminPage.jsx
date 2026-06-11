@@ -2504,7 +2504,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
           {!loading && <span className="cm-admin-count" style={{ marginLeft: 4 }}>{releasedInvoices.length}</span>}
         </button>
         <button type="button" className={`admin-tab${subTab === "refunds" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("refunds")}>
-          Refunds Due
+          Refunds
           {!loading && refunds.filter((r) => !r.refund_sent_at).length > 0 && (
             <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{refunds.filter((r) => !r.refund_sent_at).length}</span>
           )}
