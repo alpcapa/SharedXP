@@ -277,12 +277,17 @@ pending
 
 ### 6.3 Auto-confirmation
 
-Auto-confirm is handled **client-side** to avoid requiring a scheduled Edge Function:
+Auto-confirm runs in two places — a server-side cron as the primary trigger and a client-side check as an instant fallback when the user is already in the app:
 
-1. On every load of `useBookingRequests`, all `in_progress` bookings are checked.
-2. If `now > auto_confirm_at`, the booking is immediately transitioned to `completed`.
-3. The invoice is released (`released_at` set), XP awarded, and a completion notification sent.
-4. The first client to load the page performs this transition; subsequent loads are idempotent.
+**Server-side (primary):** The `auto-confirm` Edge Function runs every hour via GitHub Actions (`.github/workflows/auto-confirm.yml`, `:15` past each hour). It:
+1. Finds all `in_progress` bookings where `auto_confirm_at <= now()`.
+2. Transitions each to `completed` and sets `updated_at`.
+3. Releases the invoice (`released_at = now()`) using an atomic `IS NULL` guard.
+4. Sends the `experience_confirmed_to_host` notification — only if this run claimed the `released_at` field, preventing duplicates when a client is also online.
+
+The same function also handles the earlier feedback email: for bookings where `experience_ends_at` has passed but `auto_confirm_at` hasn't yet and `feedback_email_sent_at IS NULL`, it atomically claims the field and sends `experience_completed_to_requester`.
+
+**Client-side (fast path):** `useBookingRequests.js` runs the same checks on every fetch using the same atomic guards. If the user opens the app before the hourly function fires, they get an immediate transition with no wait.
 
 ### 6.4 Booking request data
 
@@ -791,10 +796,11 @@ All Edge Functions run on the Deno runtime (TypeScript). They use the **service-
 | `booking-notify` | Client invoke (via `sendNotification.js`) | Dispatches transactional emails for all booking lifecycle events via Resend |
 | `send-email` | Supabase Auth Hook | Handles signup confirmation, magic link, and recovery emails |
 | `forgot-password` | Client invoke | Generates recovery link via admin API; sends via Resend |
-| `events-sync` | Daily cron (pg_cron / GitHub Action) | Fetches major sports events from external APIs; upserts to `external_events` |
+| `auto-confirm` | Hourly cron (GitHub Actions, `:15` past each hour) | Sends feedback emails and auto-confirms expired bookings; server-side safety net for the client-side check in `useBookingRequests.js` |
+| `events-sync` | Daily cron (GitHub Action) | Fetches major sports events from external APIs; upserts to `external_events` |
 | `inbound-support` | Resend Svix webhook | Receives forwarded support emails; inserts to `support_messages`; sends auto-reply |
 | `contact-support` | Client invoke | Receives contact form submissions; inserts to `support_messages` |
-| `cm-payout-sweep` | Daily cron | Auto-approves CM commissions ≥45 days old; notifies admin |
+| `cm-payout-sweep` | Daily cron (GitHub Action, 06:00 UTC) | Auto-approves CM commissions ≥45 days old; notifies admin |
 | `gdpr-erasure` | Client invoke (account closure) | Anonymises PII on closed accounts; preserves financial history |
 
 ### Required secrets

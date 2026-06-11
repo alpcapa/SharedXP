@@ -56,3 +56,8 @@ jobs:
         run: supabase functions deploy cm-payout-sweep --project-ref bwdkelprrvhztpviiujo --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy auto-confirm
+        run: supabase functions deploy auto-confirm --project-ref bwdkelprrvhztpviiujo --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
