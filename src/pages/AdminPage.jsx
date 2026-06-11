@@ -1871,6 +1871,7 @@ const ExperiencesPanel = ({ currentUser, onCountChange }) => {
   const active = bookings.filter((br) => ACTIVE_STATUSES.includes(br.status));
   const cancelled = bookings.filter((br) => ["cancelled", "declined"].includes(br.status));
   const approvedPending = bookings.filter((br) => {
+    if (br.status !== "completed") return false;
     const inv = br.invoice?.[0];
     return inv && !!inv.approved_at && !inv.released_at;
   });
