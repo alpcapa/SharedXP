@@ -2383,7 +2383,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
                     {pendingRefunds.length > 0 && (
                       <>
                         <p className="admin-dispute-label" style={{ marginBottom: 8 }}>
-                          Awaiting refund — {pendingRefunds.length} booking{pendingRefunds.length !== 1 ? "s" : ""}
+                          Refund pending — {pendingRefunds.length} booking{pendingRefunds.length !== 1 ? "s" : ""}
                         </p>
                         {renderRefundTable(pendingRefunds, true)}
                       </>
