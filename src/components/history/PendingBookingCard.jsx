@@ -379,7 +379,14 @@ const PendingBookingCard = ({
 
   const hostName = getName(request.host_profile) ?? "Host";
   const requesterName = getName(request.requester_profile) ?? "Guest";
-  const statusInfo = STATUS_LABELS[request.status] ?? { label: request.status, cls: "pending" };
+  const statusInfo = (() => {
+    if (request.status === "cancelled" && Number(request.refund_pct ?? 0) > 0) {
+      return request.refund_sent_at
+        ? { label: "Cancelled · Refund released", cls: "cancelled" }
+        : { label: "Cancelled · Refund pending", cls: "cancelled-refund-pending" };
+    }
+    return STATUS_LABELS[request.status] ?? { label: request.status, cls: "pending" };
+  })();
 
   const autoConfirmCountdown = useCountdown(
     request.status === "in_progress" ? request.auto_confirm_at : null,
