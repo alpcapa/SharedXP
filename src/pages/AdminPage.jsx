@@ -1836,6 +1836,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
   const [loading, setLoading] = useState(true);
   const [releasing, setReleasing] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [markingRefund, setMarkingRefund] = useState(null);
   const [approvingComm, setApprovingComm] = useState(null);
   const [payingComm, setPayingComm] = useState(null);
   const [confirmPayComm, setConfirmPayComm] = useState(null);
@@ -1862,7 +1863,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
       supabase
         .from("booking_requests")
         .select(`
-          id, sport, requested_date, price, currency, refund_pct, updated_at,
+          id, sport, requested_date, price, currency, refund_pct, updated_at, refund_sent_at,
           requester:profiles!requester_id(full_name, first_name, last_name, email),
           host:profiles!host_id(full_name, first_name, last_name, email)
         `)
@@ -1919,6 +1920,17 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
     }
     await fetchAll();
     setReleasing(null);
+  };
+
+  const markRefundSent = async (br) => {
+    if (markingRefund === br.id) return;
+    setMarkingRefund(br.id);
+    await supabase
+      .from("booking_requests")
+      .update({ refund_sent_at: new Date().toISOString() })
+      .eq("id", br.id);
+    await fetchAll();
+    setMarkingRefund(null);
   };
 
   const approveCommission = async (comm) => {
@@ -1989,7 +2001,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
                 <p className="admin-dispute-email">{br?.host?.email ?? ""}</p>
               </div>
               <div>
-                <p className="admin-dispute-label">Booking date</p>
+                <p className="admin-dispute-label">Session date</p>
                 <p>{fmtDate(br?.requested_date)}</p>
               </div>
             </div>
@@ -2121,8 +2133,8 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
         </button>
         <button type="button" className={`admin-tab${subTab === "refunds" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("refunds")}>
           Refunds Due
-          {!loading && refunds.length > 0 && (
-            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{refunds.length}</span>
+          {!loading && refunds.filter((r) => !r.refund_sent_at).length > 0 && (
+            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{refunds.filter((r) => !r.refund_sent_at).length}</span>
           )}
         </button>
         <button type="button" className={`admin-tab${subTab === "commissions" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("commissions")}>
@@ -2164,48 +2176,92 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
           )}
 
           {/* ── Refunds Due ──────────────────────────────────────────────── */}
-          {subTab === "refunds" && (
-            <>
-              {refunds.length === 0 ? (
-                <p>No cancelled bookings with refunds due.</p>
-              ) : (
+          {subTab === "refunds" && (() => {
+            const pendingRefunds = refunds.filter((br) => !br.refund_sent_at);
+            const sentRefunds = refunds.filter((br) => !!br.refund_sent_at);
+            const renderRefundTable = (rows, showAction) => (
+              rows.length === 0 ? null : (
                 <div className="members-table-wrapper">
                   <table className="members-table">
                     <thead>
                       <tr>
                         <th>Guest</th>
                         <th>Sport</th>
-                        <th>Booking date</th>
+                        <th>Session date</th>
+                        <th>Cancelled on</th>
                         <th>Gross paid</th>
                         <th>Refund %</th>
                         <th>Refund amount</th>
-                        <th>Cancelled on</th>
+                        {showAction && <th>Action</th>}
+                        {!showAction && <th>Sent on</th>}
                       </tr>
                     </thead>
                     <tbody>
-                      {refunds.map((br) => {
+                      {rows.map((br) => {
                         const refundAmt = (Number(br.price ?? 0) * Number(br.refund_pct ?? 0)) / 100;
                         return (
                           <tr key={br.id} className="members-row">
                             <td>
-                              <p style={{ fontWeight: 500 }}>{getName(br.requester)}</p>
-                              <p className="admin-dispute-email">{br.requester?.email ?? ""}</p>
+                              <p style={{ fontWeight: 500, margin: 0 }}>{getName(br.requester)}</p>
+                              <p style={{ margin: 0 }} className="admin-dispute-email">{br.requester?.email ?? ""}</p>
                             </td>
                             <td>{br.sport ?? "—"}</td>
                             <td>{fmtDate(br.requested_date)}</td>
+                            <td>{fmtDate(br.updated_at)}</td>
                             <td>{fmtAmt(br.price, br.currency)}</td>
                             <td>{Number(br.refund_pct ?? 0).toFixed(0)}%</td>
                             <td><strong>{fmtAmt(refundAmt, br.currency)}</strong></td>
-                            <td>{fmtDate(br.updated_at)}</td>
+                            {showAction ? (
+                              <td>
+                                <button
+                                  type="button"
+                                  className="btn btn-primary btn-sm"
+                                  disabled={markingRefund === br.id}
+                                  onClick={() => markRefundSent(br)}
+                                >
+                                  {markingRefund === br.id ? "…" : "Mark Sent"}
+                                </button>
+                              </td>
+                            ) : (
+                              <td>
+                                <span className="pending-status-badge status-completed">{fmtDate(br.refund_sent_at)}</span>
+                              </td>
+                            )}
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
                 </div>
-              )}
-            </>
-          )}
+              )
+            );
+            return (
+              <>
+                {refunds.length === 0 ? (
+                  <p>No cancelled bookings with refunds due.</p>
+                ) : (
+                  <>
+                    {pendingRefunds.length > 0 && (
+                      <>
+                        <p className="admin-dispute-label" style={{ marginBottom: 8 }}>
+                          Awaiting refund — {pendingRefunds.length} booking{pendingRefunds.length !== 1 ? "s" : ""}
+                        </p>
+                        {renderRefundTable(pendingRefunds, true)}
+                      </>
+                    )}
+                    {sentRefunds.length > 0 && (
+                      <>
+                        <p className="admin-dispute-label" style={{ marginTop: pendingRefunds.length > 0 ? 24 : 0, marginBottom: 8 }}>
+                          Refunds sent — {sentRefunds.length} booking{sentRefunds.length !== 1 ? "s" : ""}
+                        </p>
+                        {renderRefundTable(sentRefunds, false)}
+                      </>
+                    )}
+                  </>
+                )}
+              </>
+            );
+          })()}
 
           {/* ── CM Commissions ───────────────────────────────────────────── */}
           {subTab === "commissions" && (
@@ -2736,7 +2792,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   }, []);
 
   const fetchAccountingCounts = useCallback(async () => {
-    const [invRes, commRes] = await Promise.all([
+    const [invRes, commRes, refundRes] = await Promise.all([
       supabase
         .from("invoices")
         .select("id", { count: "exact", head: true })
@@ -2745,8 +2801,14 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
         .from("cm_commissions")
         .select("id", { count: "exact", head: true })
         .in("status", ["pending", "approved"]),
+      supabase
+        .from("booking_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "cancelled")
+        .gt("refund_pct", 0)
+        .is("refund_sent_at", null),
     ]);
-    setPendingAccountingCount((invRes.count ?? 0) + (commRes.count ?? 0));
+    setPendingAccountingCount((invRes.count ?? 0) + (commRes.count ?? 0) + (refundRes.count ?? 0));
   }, []);
 
   useEffect(() => {
