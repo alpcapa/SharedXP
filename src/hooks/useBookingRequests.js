@@ -369,11 +369,12 @@ export const useBookingRequests = (currentUser) => {
     ]);
 
     if (resolution === "paid_host") {
+      // Mark invoice as admin-approved; accounting will release the actual payment.
       await supabase
         .from("invoices")
-        .update({ released_at: now })
+        .update({ approved_at: now })
         .eq("booking_request_id", dispute.booking_request_id)
-        .is("released_at", null);
+        .is("approved_at", null);
       await sendNotification("dispute_resolved_paid_host", dispute.booking_request_id);
     } else {
       // Refund resolution — guest gets money back, so XP is reclaimed from both parties.

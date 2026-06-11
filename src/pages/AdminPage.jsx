@@ -1871,7 +1871,7 @@ const ExperiencesPanel = ({ currentUser, onCountChange }) => {
   const active = bookings.filter((br) => ACTIVE_STATUSES.includes(br.status));
   const cancelled = bookings.filter((br) => ["cancelled", "declined"].includes(br.status));
   const approvedPending = bookings.filter((br) => {
-    if (br.status !== "completed") return false;
+    if (!["completed", "resolved_paid_host"].includes(br.status)) return false;
     const inv = br.invoice?.[0];
     return inv && !!inv.approved_at && !inv.released_at;
   });
@@ -2191,12 +2191,12 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
       supabase
         .from("booking_requests")
         .select(`
-          id, sport, requested_date, price, currency, refund_pct, updated_at, refund_sent_at,
+          id, status, sport, requested_date, price, currency, refund_pct, updated_at, refund_sent_at,
           requester:profiles!requester_id(full_name, first_name, last_name, email),
-          host:profiles!host_id(full_name, first_name, last_name, email)
+          host:profiles!host_id(full_name, first_name, last_name, email),
+          invoice:invoices(gross_amount)
         `)
-        .eq("status", "cancelled")
-        .gt("refund_pct", 0)
+        .in("status", ["cancelled", "resolved_refunded"])
         .order("updated_at", { ascending: false }),
       supabase
         .from("cm_commissions")
@@ -2214,7 +2214,9 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
         .order("created_at", { ascending: false }),
     ]);
     setInvoices(invRes.data ?? []);
-    setRefunds(refundRes.data ?? []);
+    setRefunds((refundRes.data ?? []).filter((br) =>
+      br.status === "resolved_refunded" || Number(br.refund_pct ?? 0) > 0
+    ));
     setCommissions(commRes.data ?? []);
     setLoading(false);
     onCountChange?.();
@@ -2607,9 +2609,8 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
                         <th>Guest</th>
                         <th>Sport</th>
                         <th>Session date</th>
-                        <th>Cancelled on</th>
+                        <th>Reason</th>
                         <th>Gross paid</th>
-                        <th>Refund %</th>
                         <th>Refund amount</th>
                         {showAction && <th>Action</th>}
                         {!showAction && <th>Sent on</th>}
@@ -2617,7 +2618,10 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
                     </thead>
                     <tbody>
                       {rows.map((br) => {
-                        const refundAmt = (Number(br.price ?? 0) * Number(br.refund_pct ?? 0)) / 100;
+                        const isDispute = br.status === "resolved_refunded";
+                        const refundAmt = isDispute
+                          ? Number(br.invoice?.[0]?.gross_amount ?? br.price ?? 0)
+                          : (Number(br.price ?? 0) * Number(br.refund_pct ?? 0)) / 100;
                         return (
                           <tr key={br.id} className="members-row">
                             <td>
@@ -2626,9 +2630,13 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
                             </td>
                             <td>{br.sport ?? "—"}</td>
                             <td>{fmtDate(br.requested_date)}</td>
-                            <td>{fmtDate(br.updated_at)}</td>
+                            <td>
+                              {isDispute
+                                ? <span className="pending-status-badge status-disputed">Dispute — refunded</span>
+                                : <span className="pending-status-badge status-cancelled">{Number(br.refund_pct ?? 0).toFixed(0)}% cancellation</span>
+                              }
+                            </td>
                             <td>{fmtAmt(br.price, br.currency)}</td>
-                            <td>{Number(br.refund_pct ?? 0).toFixed(0)}%</td>
                             <td><strong>{fmtAmt(refundAmt, br.currency)}</strong></td>
                             {showAction ? (
                               <td>
@@ -3234,8 +3242,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
       supabase
         .from("booking_requests")
         .select("id", { count: "exact", head: true })
-        .eq("status", "cancelled")
-        .gt("refund_pct", 0)
+        .in("status", ["cancelled", "resolved_refunded"])
         .is("refund_sent_at", null),
     ]);
     setPendingAccountingCount((invRes.count ?? 0) + (commRes.count ?? 0) + (refundRes.count ?? 0));
