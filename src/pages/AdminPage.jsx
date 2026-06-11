@@ -1826,6 +1826,314 @@ const FieldPostReportsPanel = ({ currentUser, onCountChange, onViewMember }) => 
   );
 };
 
+// ── Experiences Panel ─────────────────────────────────────────────────────────
+const ExperiencesPanel = ({ currentUser, onCountChange }) => {
+  const [subTab, setSubTab] = useState("to-approve");
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [approving, setApproving] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+  const [search, setSearch] = useState("");
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("booking_requests")
+      .select(`
+        id, status, sport, requested_date, requested_time, price, currency,
+        refund_pct, cancellation_policy, created_at, updated_at,
+        requester:profiles!requester_id(full_name, first_name, last_name, email),
+        host:profiles!host_id(full_name, first_name, last_name, email),
+        invoice:invoices(id, gross_amount, platform_commission, tax, net_amount, currency, approved_at, released_at, xp_earned)
+      `)
+      .order("updated_at", { ascending: false });
+    setBookings(data ?? []);
+    setLoading(false);
+    onCountChange?.();
+  }, [onCountChange]);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const getName = (p) =>
+    p ? p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "—" : "—";
+
+  const fmtAmt = (amount, currency) =>
+    `${currency ?? "EUR"} ${Number(amount ?? 0).toFixed(2)}`;
+
+  const ACTIVE_STATUSES = ["pending", "accepted", "payment_pending", "in_progress"];
+
+  const toApprove = bookings.filter((br) => {
+    if (br.status !== "completed") return false;
+    const inv = br.invoice?.[0];
+    return inv && !inv.approved_at;
+  });
+
+  const active = bookings.filter((br) => ACTIVE_STATUSES.includes(br.status));
+  const cancelled = bookings.filter((br) => ["cancelled", "declined"].includes(br.status));
+
+  const matchesSearch = (br, q) => {
+    if (!q.trim()) return true;
+    const lq = q.toLowerCase();
+    return [
+      getName(br.requester), br.requester?.email ?? "",
+      getName(br.host), br.host?.email ?? "",
+      br.sport ?? "", br.status ?? "",
+      fmtDate(br.requested_date),
+    ].some((f) => f.toLowerCase().includes(lq));
+  };
+
+  const STATUS_DISPLAY = {
+    pending: { label: "Pending", cls: "pending" },
+    accepted: { label: "Accepted", cls: "accepted" },
+    payment_pending: { label: "Payment pending", cls: "payment-pending" },
+    in_progress: { label: "In progress", cls: "in-progress" },
+    completed: { label: "Completed", cls: "completed" },
+    cancelled: { label: "Cancelled", cls: "cancelled" },
+    declined: { label: "Declined", cls: "declined" },
+  };
+
+  const approveExperience = async (br) => {
+    const inv = br.invoice?.[0];
+    if (!inv || approving === br.id) return;
+    setApproving(br.id);
+    await supabase
+      .from("invoices")
+      .update({ approved_at: new Date().toISOString() })
+      .eq("id", inv.id)
+      .is("approved_at", null);
+    await fetchAll();
+    setApproving(null);
+  };
+
+  const renderBookingCard = (br, showApprove = false) => {
+    const inv = br.invoice?.[0];
+    const isExpanded = expandedId === br.id;
+    const guestName = getName(br.requester);
+    const hostName = getName(br.host);
+    const sd = STATUS_DISPLAY[br.status] ?? { label: br.status, cls: "pending" };
+    const isApproved = !!inv?.approved_at;
+    const isReleased = !!inv?.released_at;
+
+    return (
+      <article key={br.id} className="admin-dispute-card">
+        <button
+          type="button"
+          className="admin-dispute-summary-row"
+          onClick={() => setExpandedId(isExpanded ? null : br.id)}
+        >
+          <span className="admin-dispute-summary-main">
+            <span className="admin-dispute-sport">{br.sport ?? "—"}</span>
+            <span className="admin-dispute-summary-sep">·</span>
+            <span>{hostName}</span>
+            <span className="admin-dispute-summary-sep">·</span>
+            <span>{fmtDate(br.requested_date)}</span>
+          </span>
+          <span className="admin-dispute-summary-right">
+            {inv && <span className="accounting-amount-badge">{fmtAmt(inv.gross_amount, inv.currency)}</span>}
+            <span className={`pending-status-badge status-${sd.cls}`}>{sd.label}</span>
+            {showApprove && isApproved && <span className="pending-status-badge status-completed">Approved</span>}
+            <span className="admin-dispute-chevron">{isExpanded ? "▲" : "▼"}</span>
+          </span>
+        </button>
+
+        {isExpanded && (
+          <div className="admin-dispute-body">
+            <div className="admin-dispute-parties">
+              <div>
+                <p className="admin-dispute-label">Guest</p>
+                <p style={{ margin: 0 }}>{guestName}</p>
+                <p style={{ margin: 0 }} className="admin-dispute-email">{br.requester?.email ?? ""}</p>
+              </div>
+              <div>
+                <p className="admin-dispute-label">Host</p>
+                <p style={{ margin: 0 }}>{hostName}</p>
+                <p style={{ margin: 0 }} className="admin-dispute-email">{br.host?.email ?? ""}</p>
+              </div>
+              <div>
+                <p className="admin-dispute-label">Session date</p>
+                <p>{fmtDate(br.requested_date)}{br.requested_time ? ` · ${br.requested_time}` : ""}</p>
+              </div>
+              {br.status === "cancelled" && Number(br.refund_pct ?? 0) > 0 && (
+                <div>
+                  <p className="admin-dispute-label">Refund</p>
+                  <p>{Number(br.refund_pct).toFixed(0)}% of {fmtAmt(br.price, br.currency)}</p>
+                </div>
+              )}
+            </div>
+
+            {inv && (
+              <div className="accounting-breakdown">
+                <div className="accounting-breakdown-row">
+                  <span>Gross (guest paid)</span>
+                  <strong>{fmtAmt(inv.gross_amount, inv.currency)}</strong>
+                </div>
+                <div className="accounting-breakdown-row accounting-breakdown-deduction">
+                  <span>Platform commission (15%)</span>
+                  <span>− {fmtAmt(inv.platform_commission, inv.currency)}</span>
+                </div>
+                <div className="accounting-breakdown-row accounting-breakdown-deduction">
+                  <span>Tax (5%)</span>
+                  <span>− {fmtAmt(inv.tax, inv.currency)}</span>
+                </div>
+                <div className="accounting-breakdown-row accounting-breakdown-net">
+                  <span>Net to host</span>
+                  <strong>{fmtAmt(inv.net_amount, inv.currency)}</strong>
+                </div>
+              </div>
+            )}
+
+            {showApprove && inv && !isApproved && (
+              <div className="admin-dispute-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={approving === br.id}
+                  onClick={() => approveExperience(br)}
+                >
+                  {approving === br.id ? "Approving…" : "Approve — send to accounting"}
+                </button>
+              </div>
+            )}
+            {showApprove && isApproved && (
+              <div className="accounting-status-trail">
+                <p className="accounting-released-info">
+                  Approved {fmtDateTime(inv.approved_at)} — sent to accounting
+                  {isReleased && ` · Released ${fmtDateTime(inv.released_at)}`}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </article>
+    );
+  };
+
+  const renderTable = (rows) => (
+    <div className="members-table-wrapper">
+      <table className="members-table">
+        <thead>
+          <tr>
+            <th>Guest</th>
+            <th>Host</th>
+            <th>Sport</th>
+            <th>Session date</th>
+            <th>Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((br) => {
+            const sd = STATUS_DISPLAY[br.status] ?? { label: br.status, cls: "pending" };
+            return (
+              <tr key={br.id} className="members-row">
+                <td>
+                  <p style={{ fontWeight: 500, margin: 0 }}>{getName(br.requester)}</p>
+                  <p style={{ margin: 0 }} className="admin-dispute-email">{br.requester?.email ?? ""}</p>
+                </td>
+                <td>
+                  <p style={{ margin: 0 }}>{getName(br.host)}</p>
+                  <p style={{ margin: 0 }} className="admin-dispute-email">{br.host?.email ?? ""}</p>
+                </td>
+                <td>{br.sport ?? "—"}</td>
+                <td>{fmtDate(br.requested_date)}</td>
+                <td>{fmtAmt(br.price, br.currency)}</td>
+                <td><span className={`pending-status-badge status-${sd.cls}`}>{sd.label}</span></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <div>
+      <p className="admin-subtitle">Review all experiences and approve completed ones for accounting to release payment.</p>
+
+      <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
+        <button type="button" className={`admin-tab${subTab === "to-approve" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("to-approve")}>
+          To Approve
+          {!loading && toApprove.length > 0 && (
+            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{toApprove.length}</span>
+          )}
+        </button>
+        <button type="button" className={`admin-tab${subTab === "active" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("active")}>
+          Active
+          {!loading && active.length > 0 && (
+            <span className="cm-admin-count" style={{ marginLeft: 4 }}>{active.length}</span>
+          )}
+        </button>
+        <button type="button" className={`admin-tab${subTab === "cancelled" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("cancelled")}>
+          Cancelled
+          {!loading && cancelled.length > 0 && (
+            <span className="cm-admin-count" style={{ marginLeft: 4 }}>{cancelled.length}</span>
+          )}
+        </button>
+        <button type="button" className={`admin-tab${subTab === "all" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("all")}>
+          All
+          {!loading && <span className="cm-admin-count" style={{ marginLeft: 4 }}>{bookings.length}</span>}
+        </button>
+      </div>
+
+      {loading ? (
+        <p>Loading…</p>
+      ) : (
+        <>
+          {/* ── To Approve ───────────────────────────────────────────────── */}
+          {subTab === "to-approve" && (
+            toApprove.length === 0
+              ? <p>No completed experiences awaiting approval.</p>
+              : <div className="admin-dispute-list">{toApprove.map((br) => renderBookingCard(br, true))}</div>
+          )}
+
+          {/* ── Active ───────────────────────────────────────────────────── */}
+          {subTab === "active" && (
+            active.length === 0
+              ? <p>No active bookings.</p>
+              : renderTable(active)
+          )}
+
+          {/* ── Cancelled ────────────────────────────────────────────────── */}
+          {subTab === "cancelled" && (
+            cancelled.length === 0
+              ? <p>No cancelled or declined bookings.</p>
+              : renderTable(cancelled)
+          )}
+
+          {/* ── All ──────────────────────────────────────────────────────── */}
+          {subTab === "all" && (() => {
+            const filtered = bookings.filter((br) => matchesSearch(br, search));
+            return (
+              <>
+                <div className="accounting-search-bar" style={{ marginBottom: 12 }}>
+                  <input
+                    type="text"
+                    className="support-search-input"
+                    placeholder="Search by name, sport, status, date…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    style={{ flex: 1, minWidth: 220 }}
+                  />
+                  {search && (
+                    <button type="button" className="btn btn-light btn-sm" onClick={() => setSearch("")}>Clear</button>
+                  )}
+                </div>
+                {filtered.length === 0
+                  ? <p>No bookings match "{search}".</p>
+                  : <>
+                      <p className="admin-dispute-label" style={{ marginBottom: 8 }}>{filtered.length} booking{filtered.length !== 1 ? "s" : ""}</p>
+                      {renderTable(filtered)}
+                    </>
+                }
+              </>
+            );
+          })()}
+        </>
+      )}
+    </div>
+  );
+};
+
 // ── Accounting Panel ──────────────────────────────────────────────────────────
 const AccountingPanel = ({ currentUser, onCountChange }) => {
   const [subTab, setSubTab] = useState("pending");
@@ -1834,7 +2142,6 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
   const [refunds, setRefunds] = useState([]);
   const [commissions, setCommissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [approving, setApproving] = useState(null);
   const [releasing, setReleasing] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [markingRefund, setMarkingRefund] = useState(null);
@@ -1933,24 +2240,11 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
     return copy;
   };
 
-  const awaitingApproval = invoices.filter((inv) => !inv.approved_at && !inv.released_at);
   const awaitingRelease = invoices.filter((inv) => !!inv.approved_at && !inv.released_at);
   const releasedInvoices = invoices.filter((inv) => !!inv.released_at);
   const pendingComms = commissions.filter((c) => c.status === "pending");
   const approvedComms = commissions.filter((c) => c.status === "approved");
   const paidComms = commissions.filter((c) => c.status === "paid");
-
-  const approveInvoice = async (inv) => {
-    if (approving === inv.id) return;
-    setApproving(inv.id);
-    await supabase
-      .from("invoices")
-      .update({ approved_at: new Date().toISOString() })
-      .eq("id", inv.id)
-      .is("approved_at", null);
-    await fetchAll();
-    setApproving(null);
-  };
 
   const releaseInvoice = async (inv) => {
     if (releasing === inv.id) return;
@@ -2012,9 +2306,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
 
     const statusBadge = isReleased
       ? <span className="pending-status-badge status-completed">Released</span>
-      : isApproved
-      ? <span className="pending-status-badge status-accepted">Approved</span>
-      : <span className="pending-status-badge status-payment-pending">Awaiting Approval</span>;
+      : <span className="pending-status-badge status-accepted">Approved</span>;
 
     return (
       <article key={inv.id} className={`admin-dispute-card${isReleased ? " resolved" : ""}`}>
@@ -2094,19 +2386,7 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
                 <p className="accounting-released-info">Released {fmtDateTime(inv.released_at)}</p>
               </div>
             )}
-            {!isReleased && !isApproved && (
-              <div className="admin-dispute-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={approving === inv.id}
-                  onClick={() => approveInvoice(inv)}
-                >
-                  {approving === inv.id ? "Approving…" : "Approve"}
-                </button>
-              </div>
-            )}
-            {!isReleased && isApproved && (
+            {!isReleased && (
               <div className="accounting-approved-bar">
                 <p className="accounting-released-info">Approved by admin on {fmtDateTime(inv.approved_at)}</p>
                 <button
@@ -2195,8 +2475,8 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
       <div className="cm-admin-subtabs" style={{ marginBottom: 16 }}>
         <button type="button" className={`admin-tab${subTab === "pending" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("pending")}>
           Invoices
-          {!loading && (awaitingApproval.length + awaitingRelease.length) > 0 && (
-            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{awaitingApproval.length + awaitingRelease.length}</span>
+          {!loading && awaitingRelease.length > 0 && (
+            <span className="cm-admin-count cm-admin-count-alert" style={{ marginLeft: 4 }}>{awaitingRelease.length}</span>
           )}
         </button>
         <button type="button" className={`admin-tab${subTab === "released" ? " admin-tab-active" : ""}`} onClick={() => setSubTab("released")}>
@@ -2221,36 +2501,18 @@ const AccountingPanel = ({ currentUser, onCountChange }) => {
         <p>Loading…</p>
       ) : (
         <>
-          {/* ── Invoices (Approve → Release) ─────────────────────────────── */}
+          {/* ── Invoices — approved by admin, ready to release ───────────── */}
           {subTab === "pending" && (
-            <>
-              {awaitingApproval.length === 0 && awaitingRelease.length === 0 ? (
-                <p>No invoices pending.</p>
-              ) : (
-                <>
-                  {awaitingApproval.length > 0 && (
-                    <>
-                      <p className="admin-dispute-label" style={{ marginBottom: 8 }}>
-                        Awaiting admin approval — {awaitingApproval.length} invoice{awaitingApproval.length !== 1 ? "s" : ""}
-                      </p>
-                      <div className="admin-dispute-list">
-                        {awaitingApproval.map((inv) => renderInvoiceCard(inv))}
-                      </div>
-                    </>
-                  )}
-                  {awaitingRelease.length > 0 && (
-                    <>
-                      <p className="admin-dispute-label" style={{ marginTop: awaitingApproval.length > 0 ? 24 : 0, marginBottom: 8 }}>
-                        Approved — ready to release — {awaitingRelease.length} invoice{awaitingRelease.length !== 1 ? "s" : ""}
-                      </p>
-                      <div className="admin-dispute-list">
-                        {awaitingRelease.map((inv) => renderInvoiceCard(inv))}
-                      </div>
-                    </>
-                  )}
+            awaitingRelease.length === 0
+              ? <p>No approved invoices awaiting release. Experiences are approved in the Experiences tab.</p>
+              : <>
+                  <p className="admin-dispute-label" style={{ marginBottom: 8 }}>
+                    Approved by admin — ready to release — {awaitingRelease.length} invoice{awaitingRelease.length !== 1 ? "s" : ""}
+                  </p>
+                  <div className="admin-dispute-list">
+                    {awaitingRelease.map((inv) => renderInvoiceCard(inv))}
+                  </div>
                 </>
-              )}
-            </>
           )}
 
           {/* ── Released (searchable history) ────────────────────────────── */}
@@ -2867,6 +3129,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
   const [unreadSupport, setUnreadSupport] = useState(0);
   const [pendingReports, setPendingReports] = useState(0);
   const [pendingAccountingCount, setPendingAccountingCount] = useState(0);
+  const [pendingExperiencesCount, setPendingExperiencesCount] = useState(0);
   const { resolveDispute } = useBookingRequests(currentUser);
 
   const fetchDisputes = useCallback(async () => {
@@ -2930,12 +3193,22 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
     setPendingReports(count ?? 0);
   }, []);
 
+  const fetchExperiencesCounts = useCallback(async () => {
+    const { count } = await supabase
+      .from("invoices")
+      .select("id", { count: "exact", head: true })
+      .is("approved_at", null)
+      .is("released_at", null);
+    setPendingExperiencesCount(count ?? 0);
+  }, []);
+
   const fetchAccountingCounts = useCallback(async () => {
     const [invRes, commRes, refundRes] = await Promise.all([
       supabase
         .from("invoices")
         .select("id", { count: "exact", head: true })
-        .is("released_at", null),  // any unreleased invoice (awaiting approval or awaiting release)
+        .not("approved_at", "is", null)
+        .is("released_at", null),  // only approved-not-released invoices
       supabase
         .from("cm_commissions")
         .select("id", { count: "exact", head: true })
@@ -2957,10 +3230,11 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
       fetchUnreadSupport();
       fetchPendingReports();
       fetchAccountingCounts();
+      fetchExperiencesCounts();
     } else {
       setLoading(false);
     }
-  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts, fetchUnreadSupport, fetchPendingReports, fetchAccountingCounts]);
+  }, [currentUser?.isAdmin, currentUser?.id, fetchDisputes, fetchCmCounts, fetchUnreadSupport, fetchPendingReports, fetchAccountingCounts, fetchExperiencesCounts]);
 
   const handleResolve = (disputeId, resolution) => {
     setResolvePanel({ disputeId, resolution });
@@ -3076,11 +3350,21 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
           </button>
           <button
             type="button"
+            className={`admin-tab${activeTab === "experiences" ? " admin-tab-active" : ""}`}
+            onClick={() => setActiveTab("experiences")}
+          >
+            Experiences
+            {pendingExperiencesCount > 0 && (
+              <span className="cm-admin-count cm-admin-count-alert">{pendingExperiencesCount}</span>
+            )}
+          </button>
+          <button
+            type="button"
             className={`admin-tab${activeTab === "accounting" ? " admin-tab-active" : ""}`}
             onClick={() => setActiveTab("accounting")}
           >
             Accounting
-            {(pendingAccountingCount) > 0 && (
+            {pendingAccountingCount > 0 && (
               <span className="cm-admin-count cm-admin-count-alert">{pendingAccountingCount}</span>
             )}
           </button>
@@ -3243,6 +3527,7 @@ const AdminPage = ({ currentUser, authLoading, onLogout, onEmailLogin, onForgotP
         {activeTab === "cm" && <CMManagementPanel currentUser={currentUser} initialSearch={searchParams.get("search") ?? ""} initialSubTab={searchParams.get("subtab") ?? "applications"} onCountChange={fetchCmCounts} />}
         {activeTab === "support" && <SupportPanel currentUser={currentUser} onRead={fetchUnreadSupport} />}
         {activeTab === "reports" && <FieldPostReportsPanel currentUser={currentUser} onCountChange={setPendingReports} onViewMember={(name) => { setMemberSearch(name); setActiveTab("members"); }} />}
+        {activeTab === "experiences" && <ExperiencesPanel currentUser={currentUser} onCountChange={fetchExperiencesCounts} />}
         {activeTab === "accounting" && <AccountingPanel currentUser={currentUser} onCountChange={fetchAccountingCounts} />}
         {activeTab === "members" && <MembersPanel currentUser={currentUser} initialSearch={memberSearch} />}
         </main>
