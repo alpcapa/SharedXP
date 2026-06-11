@@ -104,8 +104,7 @@ There is no global state library. State lives in:
 3. `supabase.auth.signUp()` is called with `email`, `password`, and user metadata (`name`, `photo`, `languages`, `sports`, `invite_code`).
 4. Supabase sends a confirmation email via the `send-email` Edge Function (registered as an Auth Hook in the Supabase Dashboard).
 5. User clicks the confirmation link; the Auth Hook fires again (event `EMAIL_OTP`).
-6. On confirmed session, `AuthContext.fetchUserProfile()` loads or creates the `profiles` row.
-7. If a `pending_profiles` row exists (from OAuth partial flow), it is merged and then deleted.
+6. On confirmed session, `AuthContext.fetchUserProfile()` loads or creates the `profiles` row using the `sharedxp_pending_profile` key from `user_metadata` (the metadata travels with the session, no separate table needed).
 
 ### 3.3 OAuth flow
 
@@ -277,12 +276,17 @@ pending
 
 ### 6.3 Auto-confirmation
 
-Auto-confirm is handled **client-side** to avoid requiring a scheduled Edge Function:
+Auto-confirm runs in two places — a server-side cron as the primary trigger and a client-side check as an instant fallback when the user is already in the app:
 
-1. On every load of `useBookingRequests`, all `in_progress` bookings are checked.
-2. If `now > auto_confirm_at`, the booking is immediately transitioned to `completed`.
-3. The invoice is released (`released_at` set), XP awarded, and a completion notification sent.
-4. The first client to load the page performs this transition; subsequent loads are idempotent.
+**Server-side (primary):** The `auto-confirm` Edge Function runs every hour via GitHub Actions (`.github/workflows/auto-confirm.yml`, `:15` past each hour). It:
+1. Finds all `in_progress` bookings where `auto_confirm_at <= now()`.
+2. Transitions each to `completed` and sets `updated_at`.
+3. Releases the invoice (`released_at = now()`) using an atomic `IS NULL` guard.
+4. Sends the `experience_confirmed_to_host` notification — only if this run claimed the `released_at` field, preventing duplicates when a client is also online.
+
+The same function also handles the earlier feedback email: for bookings where `experience_ends_at` has passed but `auto_confirm_at` hasn't yet and `feedback_email_sent_at IS NULL`, it atomically claims the field and sends `experience_completed_to_requester`.
+
+**Client-side (fast path):** `useBookingRequests.js` runs the same checks on every fetch using the same atomic guards. If the user opens the app before the hourly function fires, they get an immediate transition with no wait.
 
 ### 6.4 Booking request data
 
@@ -308,10 +312,9 @@ Auto-confirm is handled **client-side** to avoid requiring a scheduled Edge Func
 
 ### 6.5 History sync
 
-The `bookings` table is a denormalised history mirror. When a booking is completed:
-1. Two rows are upserted into `bookings`: one for the guest (`role = 'attended'`), one for the host (`role = 'hosted'`).
-2. `syncBookings()` in `AuthContext` handles this upsert.
-3. The `bookings` table is used for the history page and CM eligibility check.
+The `bookings` table is a denormalised history mirror. When a booking is completed or a user saves a rating/review, `syncBookings()` in `AuthContext` is called. It uses the `sync_user_bookings` DB function (migration 054) which performs the DELETE + INSERT in a single transaction — either both succeed or both roll back. This prevents the previous failure mode where DELETE could succeed but a network error before INSERT would leave the table empty until the next sync.
+
+The `bookings` table is used for the history page and public profile ratings display. CM eligibility is checked directly against `booking_requests`, not `bookings`.
 
 ---
 
@@ -624,7 +627,7 @@ After a booking is completed and rated, the user sees an option to share the ses
 
 ### 14.4 Interactions
 
-- **Likes**: `field_post_likes` table; unique per user per post; counter on `field_posts.likes`.
+- **Likes**: `field_post_likes` table tracks authenticated likes (unique per user per post); a DB trigger (`field_post_likes_count_trigger`) maintains `field_posts.likes` atomically. Anonymous likes adjust the counter directly via `toggle_field_post_like` (no row stored). Counter = anonymous adjustments + `COUNT(field_post_likes)`.
 - **Reports**: `field_post_reports`; any user can report; statuses `pending` / `dismissed`.
 - **Suspension**: Admin can suspend a post via Admin Panel; suspended posts are hidden from the feed.
 
@@ -743,7 +746,6 @@ Notes are append-only; no editing or deletion.
 | Table | Purpose |
 |---|---|
 | `profiles` | One row per auth user; core identity + flags |
-| `pending_profiles` | Temporary storage during OAuth/email confirmation partial flows |
 | `user_languages` | Up to 4 languages per user with position |
 | `user_sports` | Up to 4 sports per user with position |
 | `host_profiles` | One-to-one with `profiles` when `is_host=true`; location, bank info |
@@ -791,10 +793,11 @@ All Edge Functions run on the Deno runtime (TypeScript). They use the **service-
 | `booking-notify` | Client invoke (via `sendNotification.js`) | Dispatches transactional emails for all booking lifecycle events via Resend |
 | `send-email` | Supabase Auth Hook | Handles signup confirmation, magic link, and recovery emails |
 | `forgot-password` | Client invoke | Generates recovery link via admin API; sends via Resend |
-| `events-sync` | Daily cron (pg_cron / GitHub Action) | Fetches major sports events from external APIs; upserts to `external_events` |
+| `auto-confirm` | Hourly cron (GitHub Actions, `:15` past each hour) | Sends feedback emails and auto-confirms expired bookings; server-side safety net for the client-side check in `useBookingRequests.js` |
+| `events-sync` | Daily cron (GitHub Actions, 04:00 UTC) | Fetches major sports events from external APIs; upserts to `external_events` |
 | `inbound-support` | Resend Svix webhook | Receives forwarded support emails; inserts to `support_messages`; sends auto-reply |
 | `contact-support` | Client invoke | Receives contact form submissions; inserts to `support_messages` |
-| `cm-payout-sweep` | Daily cron | Auto-approves CM commissions ≥45 days old; notifies admin |
+| `cm-payout-sweep` | Daily cron (GitHub Action, 06:00 UTC) | Auto-approves CM commissions ≥45 days old; notifies admin |
 | `gdpr-erasure` | Client invoke (account closure) | Anonymises PII on closed accounts; preserves financial history |
 
 ### Required secrets
@@ -881,7 +884,7 @@ The Supabase client (`src/lib/supabase.js`) reads `VITE_SUPABASE_URL` and `VITE_
 ### 21.1 Authentication
 
 - JWT-based; managed by Supabase Auth
-- `flowType: "implicit"` (token in URL hash) for Safari and in-app browser compatibility
+- `flowType: "pkce"` — tokens are exchanged server-side; never exposed in the URL hash, browser history, or referrer headers
 - OAuth via Supabase's built-in Google and Apple providers
 
 ### 21.2 Row-Level Security
@@ -905,6 +908,18 @@ All tables enforce RLS policies at the database level. The frontend enforces the
 
 - Suspended accounts (`suspended_at IS NOT NULL`): cannot log in; soft block checked after session load
 - Closed accounts (`closed_at IS NOT NULL`): `gdpr-erasure` function anonymises PII; financial records preserved for audit
+
+### 21.6 Edge Function rate limiting
+
+Public Edge Functions (no auth token required) are rate-limited at the DB level using the `edge_rate_limits` table (`key TEXT, created_at TIMESTAMPTZ`). Each function inserts one row per attempt and counts rows within a rolling window before proceeding.
+
+| Function | Key pattern | Window | Max requests |
+|---|---|---|---|
+| `forgot-password` | `forgot_password:<email>` | 15 min | 3 |
+
+`inbound-support` is protected by Svix HMAC signature verification (not rate limited). All other Edge Functions require a service-role token or are triggered by trusted cron jobs.
+
+Old `edge_rate_limits` rows (> 2 h) are pruned opportunistically on each successful request.
 
 ---
 

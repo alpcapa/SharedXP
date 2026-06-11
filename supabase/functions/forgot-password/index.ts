@@ -14,6 +14,9 @@ const CORS_HEADERS = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15-minute rolling window
+const RATE_LIMIT_MAX = 3;                      // max requests per email per window
+
 function resetEmailHtml(resetUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -103,6 +106,34 @@ serve(async (req: Request): Promise<Response> => {
       status: 400,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
+  }
+
+  // Per-email rate limit: guards against inbox-flooding and Resend quota exhaustion.
+  // Max RATE_LIMIT_MAX requests per email address in any RATE_LIMIT_WINDOW_MS window.
+  {
+    const rlClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const rlKey = `forgot_password:${normalizedEmail}`;
+    const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+
+    const { count, error: rlErr } = await rlClient
+      .from("edge_rate_limits")
+      .select("id", { count: "exact", head: true })
+      .eq("key", rlKey)
+      .gte("created_at", windowStart);
+
+    if (!rlErr && (count ?? 0) >= RATE_LIMIT_MAX) {
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please wait before requesting another password reset." }),
+        { status: 429, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
+      );
+    }
+    // Record this attempt; opportunistically prune rows older than 2 h.
+    await rlClient.from("edge_rate_limits").insert({ key: rlKey });
+    rlClient.from("edge_rate_limits").delete()
+      .lt("created_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
+      .then(() => {}).catch(() => {});
   }
 
   // Determine the reset-password page URL. The frontend passes its own origin

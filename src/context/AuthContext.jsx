@@ -173,21 +173,15 @@ payment_released: !!item.paymentReleased,
 });
 
 const syncBookings = async (userId, role, items) => {
-const { error: delError } = await supabase
-.from("bookings")
-.delete()
-.eq("user_id", userId)
-.eq("role", role);
-if (delError) {
-console.error("[auth] syncBookings delete:", delError);
-return;
-}
 const rows = (Array.isArray(items) ? items : []).map((item) =>
 toBookingRow(userId, role, item)
 );
-if (!rows.length) return;
-const { error: insError } = await supabase.from("bookings").insert(rows);
-if (insError) console.error("[auth] syncBookings insert:", insError);
+const { error } = await supabase.rpc("sync_user_bookings", {
+p_user_id: userId,
+p_role: role,
+p_rows: rows,
+});
+if (error) console.error("[auth] syncBookings:", error);
 };
 
 const buildCmProfileObject = (cmProfile) => {

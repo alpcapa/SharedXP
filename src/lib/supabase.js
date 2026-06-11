@@ -28,11 +28,11 @@ if (!normalizedUrl || !rawKey) {
 const safeUrl = normalizedUrl || "https://missing-supabase-url.invalid";
 const safeKey = rawKey || "missing-supabase-anon-key";
 
-// Implicit flow: email-confirmation links embed tokens in the URL hash
-// (#access_token=…) — no PKCE code_verifier needed, works in every browser
-// context (Safari, iOS Mail/SFSafariViewController, in-app browsers).
+// PKCE flow: email-confirmation and OAuth callbacks use a token_hash / code
+// in the query string rather than the URL hash. Tokens are never exposed in
+// browser history or referrer headers.
 export const supabase = createClient(safeUrl, safeKey, {
-  auth: { flowType: "implicit" },
+  auth: { flowType: "pkce" },
 });
 
 export const supabaseUrl = normalizedUrl;

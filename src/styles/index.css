@@ -4581,6 +4581,29 @@ body {
   line-height: 1.55;
 }
 
+/* ── Host Settings — manual payout notice ─ */
+.host-payment-manual-notice {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #1e40af;
+}
+
+.host-payment-manual-notice strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #1d4ed8;
+}
+
+.host-payment-manual-notice p {
+  margin: 0;
+  line-height: 1.55;
+  color: #1e40af;
+}
+
 /* ── Host Settings — payment complete banner ─ */
 .host-payment-complete {
   display: flex;

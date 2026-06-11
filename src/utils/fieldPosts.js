@@ -302,18 +302,20 @@ export const fetchLikedPostIds = () => loadLikedSet();
 
 /**
  * Toggle a like for a field post. No auth required — anyone can like.
- * Liked state is stored in localStorage; the counter is updated via a
- * SECURITY DEFINER RPC so anon users can bypass RLS on field_posts.
+ * Liked state is tracked in localStorage. Authenticated users write to
+ * field_post_likes (the DB trigger maintains the counter); anonymous users
+ * adjust the counter directly via SECURITY DEFINER RPC.
  * Returns { liked: boolean, likes: number } on success, or null on error.
  */
-export const toggleFieldPostLike = async (postId) => {
+export const toggleFieldPostLike = async (postId, userId = null) => {
   if (!postId) return null;
   const likedSet = loadLikedSet();
   const isLiked = likedSet.has(postId);
   const delta = isLiked ? -1 : 1;
   try {
-    const { data, error } = await supabase.rpc("adjust_field_post_likes", {
+    const { data, error } = await supabase.rpc("toggle_field_post_like", {
       p_post_id: postId,
+      p_user_id: userId ?? null,
       p_delta: delta,
     });
     if (error) {

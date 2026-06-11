@@ -21,6 +21,16 @@ const HostPaymentTab = ({
 
   return (
     <form onSubmit={onSubmit} noValidate>
+      <div className="host-payment-manual-notice" role="note">
+        <strong>Manual payouts — Stripe coming soon</strong>
+        <p>
+          Payouts are currently processed manually by the SharedXP team after
+          each confirmed session. Fill in your bank details below so we know
+          where to send your earnings. Automated payouts via Stripe will replace
+          this process at launch.
+        </p>
+      </div>
+
       {!isPaymentTabComplete && (
         <div className="host-payment-warning" role="alert">
           <span className="host-payment-warning-icon" aria-hidden="true">
@@ -29,9 +39,8 @@ const HostPaymentTab = ({
           <div>
             <strong>Payment details incomplete</strong>
             <p>
-              You can host sessions and receive bookings, but payouts are on
-              hold until you complete this section. SharedXP holds all collected
-              payments until your bank details are saved and verified.
+              Your bank details are missing. The SharedXP team needs these to
+              send your payouts manually — please complete this section.
             </p>
           </div>
         </div>
@@ -40,13 +49,13 @@ const HostPaymentTab = ({
       {isPaymentTabComplete && (
         <div className="host-payment-complete" role="status">
           <span aria-hidden="true">✅</span>
-          <strong>Payment details complete.</strong> Payouts will be released
-          after each confirmed session.
+          <strong>Payment details on file.</strong> The SharedXP team will
+          process your payout manually after each confirmed session.
         </div>
       )}
 
       <section className="host-onboarding-card">
-        <h2>Bank Details (Required for us to pay you)</h2>
+        <h2>Bank Details</h2>
         <div className="host-form-grid">
           <label htmlFor="stripeEmail">Stripe email</label>
           <input

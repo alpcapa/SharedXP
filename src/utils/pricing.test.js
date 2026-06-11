@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COMMISSION_RATE, TAX_RATE, CURRENCY_SYMBOLS, formatCurrency, toNSU } from "./pricing";
+import { COMMISSION_RATE, TAX_RATE, CURRENCY_SYMBOLS, formatCurrency, toNSU, computeXpAfterRefund } from "./pricing";
 
 describe("constants", () => {
   it("COMMISSION_RATE is 15%", () => {
@@ -81,6 +81,35 @@ describe("toNSU (rounds up)", () => {
   it("is case-insensitive for currency code", () => {
     expect(toNSU(100, "jpy")).toBe(1);
     expect(toNSU(100, "JPY")).toBe(1);
+  });
+});
+
+describe("computeXpAfterRefund", () => {
+  it("0% refund — XP unchanged", () => {
+    expect(computeXpAfterRefund(100, 0)).toBe(100);
+    expect(computeXpAfterRefund(45, 0)).toBe(45);
+  });
+
+  it("50% refund — XP halved (rounded)", () => {
+    expect(computeXpAfterRefund(100, 50)).toBe(50);
+    expect(computeXpAfterRefund(7, 50)).toBe(4);   // Math.round(3.5) = 4
+    expect(computeXpAfterRefund(1, 50)).toBe(1);   // Math.round(0.5) = 1
+  });
+
+  it("100% refund — XP zeroed", () => {
+    expect(computeXpAfterRefund(100, 100)).toBe(0);
+    expect(computeXpAfterRefund(1, 100)).toBe(0);
+  });
+
+  it("null / undefined xpEarned treated as 0", () => {
+    expect(computeXpAfterRefund(null, 100)).toBe(0);
+    expect(computeXpAfterRefund(undefined, 50)).toBe(0);
+    expect(computeXpAfterRefund(null, 0)).toBe(0);
+  });
+
+  it("0 XP stays 0 regardless of refund percentage", () => {
+    expect(computeXpAfterRefund(0, 50)).toBe(0);
+    expect(computeXpAfterRefund(0, 100)).toBe(0);
   });
 });
 

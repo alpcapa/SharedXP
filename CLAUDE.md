@@ -38,9 +38,8 @@ supabase secrets set RESEND_API_KEY=... RESEND_FROM_EMAIL=... APP_URL=... SEND_E
 
 ### Data model (Supabase Postgres + RLS)
 
-Migrations live in `supabase/migrations/` (001–038, run in numeric order; 034 is intentionally absent):
+Migrations live in `supabase/migrations/` (run in numeric order). Migration 034 is a comments-only placeholder — the number was retired after the original draft was abandoned; see `034_placeholder.sql` for details. Do not create a new `034_*.sql`.
 - `profiles` — one row per auth user; `is_host` and `is_admin` flags here
-- `pending_profiles` — intermediate profile state during OAuth/email confirmation
 - `user_languages` / `user_sports` — up to 4 ordered entries per user
 - `host_profiles` — one-to-one with `profiles` when `is_host=true`; holds payout/bank info, postcode, and geocoded coordinates
 - `host_sports` — one `host_profiles` → many sports, each with availability, pricing, equipment; each sport has a `cancellation_policy` field
@@ -121,3 +120,4 @@ Only utility functions are tested. Test files sit alongside their source file (`
 - **All booking mutations go through `useBookingRequests`**, not direct Supabase calls in pages.
 - **Admin access** is gated on `profiles.is_admin = true`. Set this directly in the Supabase dashboard; there is no UI to grant admin.
 - **No real payment processing.** All payments (guest charges, host payouts, CM commissions) are handled manually by accounting outside the platform — the app only records payment state (invoices, commission statuses, "Mark Paid", etc.) and provides the admin/user UIs. Stripe integration is planned for launch; all payment flows will be redesigned and wired up then. Do not add real payment logic in the meantime.
+- **`experience_ends_at` and `auto_confirm_at` are always UTC.** When computing these from a `requested_date` string (`YYYY-MM-DD`), always parse with an explicit `Z` suffix: `new Date(\`${date}T00:00:00Z\`)`. Omitting `Z` makes JS interpret the string as local time, shifting the deadline by the browser's UTC offset.
