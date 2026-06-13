@@ -54,7 +54,7 @@
   --shadow-card: 0 10px 30px rgba(58, 42, 24, 0.08);
   --shadow-card-hover: 0 18px 44px rgba(58, 42, 24, 0.16);
   --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
-  --display-font: "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif;
+  --display-font: "Poppins", "Plus Jakarta Sans", "Segoe UI", sans-serif;
 }
 
 html {
