@@ -37,6 +37,24 @@
   --brand-font-size: 39px;
   --hero-min-height: min(690px, 82vh);
   --footer-trust-panel-ratio: 1.08fr;
+
+  /* ── Redesign palette — warm, earthy, community-driven ─────────────
+   * Energetic grass-green primary, terracotta accent, cream surfaces.
+   * Legacy hardcoded greens were unified onto var(--brand). */
+  --brand: #5f9e3c;          /* earthy grass green (was var(--brand)) */
+  --brand-dark: #4c8330;     /* hover / pressed */
+  --brand-soft: #e7f0d6;     /* tints, pill backgrounds */
+  --accent: #e2622e;         /* warm terracotta — vibrant pops */
+  --accent-dark: #c64f20;
+  --bg: #f7f1e8;             /* warm cream page background */
+  --surface: #ffffff;
+  --ink: #2b2520;            /* warm near-black text */
+  --ink-soft: #6b635c;       /* warm muted text */
+  --line: #ece4d6;           /* warm hairlines */
+  --shadow-card: 0 10px 30px rgba(58, 42, 24, 0.08);
+  --shadow-card-hover: 0 18px 44px rgba(58, 42, 24, 0.16);
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --display-font: "Bricolage Grotesque", "Plus Jakarta Sans", "Segoe UI", sans-serif;
 }
 
 html {
@@ -45,9 +63,11 @@ html {
 
 body {
   margin: 0;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  color: #141a1f;
-  background: #f5f5f2;
+  font-family: "Plus Jakarta Sans", Inter, "Segoe UI", Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
 
@@ -152,7 +172,7 @@ body {
 }
 
 .view-all-link {
-  color: #96c93d;
+  color: var(--brand);
   text-decoration: none;
   font-weight: 700;
   font-size: 14px;
@@ -217,7 +237,7 @@ body {
   height: 24px;
   border-radius: 50%;
   border: 2px solid #e3e5df;
-  border-top-color: #96c93d;
+  border-top-color: var(--brand);
   animation: scroll-spinner 0.7s linear infinite;
 }
 
@@ -295,7 +315,7 @@ body {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #96c93d;
+  background: var(--brand);
   flex-shrink: 0;
 }
 
@@ -516,7 +536,7 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #96c93d;
+  background: var(--brand);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -596,7 +616,7 @@ body {
 }
 
 .brand span {
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .site-nav {
@@ -654,16 +674,16 @@ body {
 }
 
 .host-add-sport-button {
-  background: #96c93d;
+  background: var(--brand);
   color: #fff;
 }
 
 .host-add-sport-button:hover {
-  background: #96c93d;
+  background: var(--brand);
 }
 
 .btn-primary {
-  background: #96c93d;
+  background: var(--brand);
   color: #fff;
 }
 
@@ -800,11 +820,11 @@ body {
 }
 
 .hero-content .dot {
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .hero-content .accent {
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .hero-content p {
@@ -961,7 +981,7 @@ body {
   border: none;
   border-radius: 14px;
   margin-left: 12px;
-  background: #97ca3f;
+  background: var(--brand);
   color: #fff;
   font-size: clamp(18px, 2.1vw, 24px);
   font-weight: 800;
@@ -2109,7 +2129,7 @@ body {
 .history-switch-link {
   font-size: 14px;
   font-weight: 700;
-  color: #96c93d;
+  color: var(--brand);
   text-decoration: none;
 }
 
@@ -2254,7 +2274,7 @@ body {
 .role-attended {
   background: rgba(220, 234, 184, 0.92);
   color: #476526;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .role-hosted {
@@ -2818,7 +2838,7 @@ body {
 }
 
 .booking-hint-selected {
-  color: #97ca3f;
+  color: var(--brand);
 }
 
 .booking-hint-unselected {
@@ -2878,7 +2898,7 @@ body {
 }
 
 .booking-signup-button {
-  background: #97ca3f;
+  background: var(--brand);
   color: #fff;
   border: none;
 }
@@ -3033,7 +3053,7 @@ body {
   justify-content: center;
   border: none;
   border-radius: 14px;
-  background: #a7cf35;
+  background: var(--brand);
   color: #132300;
   font-weight: 700;
   font-size: 22px;
@@ -3048,7 +3068,7 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   gap: 8px;
-  background: #dfdfdb;
+  background: #efe7d9;
 }
 
 .footer-trust-item {
@@ -3306,7 +3326,7 @@ body {
   font-weight: 700;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: #96c93d;
+  color: var(--brand);
 }
 
 /* Story */
@@ -3419,7 +3439,7 @@ body {
 .about-split-link {
   display: inline-block;
   margin-top: 4px;
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
@@ -3569,7 +3589,7 @@ body {
 }
 
 .field-city-pill.active {
-  background: #96c93d;
+  background: var(--brand);
   color: #fff;
   font-weight: 700;
 }
@@ -3742,7 +3762,7 @@ body {
   align-self: flex-end;
   border: 0;
   background: transparent;
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -3850,7 +3870,7 @@ body {
 .event-card-link {
   margin-top: 6px;
   align-self: flex-start;
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
@@ -4092,7 +4112,7 @@ body {
   margin-top: 8px;
   padding: 5px 12px;
   border-radius: 999px;
-  border: 1px dashed #96c93d;
+  border: 1px dashed var(--brand);
   background: #f4fae9;
   color: #3d6b1a;
   font-size: 12px;
@@ -4223,7 +4243,7 @@ body {
 
 .field-share-caption-input:focus {
   outline: none;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .field-share-caption-error {
@@ -4313,7 +4333,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #96c93d;
+  background: var(--brand);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
@@ -4401,7 +4421,7 @@ body {
 
 /* ── The Field — share invite link ─── */
 .field-share-invite-link {
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 600;
   text-decoration: underline;
 }
@@ -4421,7 +4441,7 @@ body {
 /* ── The Field — view host link ─────────── */
 .field-view-host-link {
   display: inline-block;
-  color: #96c93d;
+  color: var(--brand);
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
@@ -4524,7 +4544,7 @@ body {
 
 .host-tab-btn.active {
   color: #141a1f;
-  border-bottom-color: #96c93d;
+  border-bottom-color: var(--brand);
 }
 
 .host-tab-status {
@@ -4702,7 +4722,7 @@ body {
 }
 .modal-textarea:focus {
   outline: none;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .modal-error {
@@ -4768,8 +4788,8 @@ body {
 }
 
 .pending-card-highlight {
-  box-shadow: 0 0 0 3px #96c93d66;
-  border-color: #96c93d;
+  box-shadow: 0 0 0 3px var(--brand)66;
+  border-color: var(--brand);
 }
 
 .pending-card-header {
@@ -5625,7 +5645,7 @@ body {
 
 .chat-input:focus {
   outline: none;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .chat-send-btn {
@@ -5868,7 +5888,7 @@ body {
 .admin-tab-active {
   font-weight: 700;
   color: #1a1a1a;
-  border-bottom-color: #96c93d;
+  border-bottom-color: var(--brand);
 }
 
 .admin-dispute-list {
@@ -6622,7 +6642,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #96c93d 0%, #96c93d 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand) 100%);
   border-radius: 32px;
   padding: 8px 16px;
   flex-shrink: 0;
@@ -6669,8 +6689,8 @@ body {
   width: 16px;
   height: 16px;
   font-size: 10px;
-  border-color: #96c93d;
-  color: #96c93d;
+  border-color: var(--brand);
+  color: var(--brand);
   border-width: 1.5px;
 }
 
@@ -6682,7 +6702,7 @@ body {
   background: none;
   border: none;
   padding: 0;
-  color: #96c93d;
+  color: var(--brand);
   font-size: inherit;
   font-family: inherit;
   font-weight: 600;
@@ -6743,7 +6763,7 @@ body {
 .payment-filter-group select:focus,
 .payment-filter-group input[type="date"]:focus {
   outline: none;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .payment-filter-reset {
@@ -6761,7 +6781,7 @@ body {
 }
 
 .payment-filter-reset:hover {
-  border-color: #96c93d;
+  border-color: var(--brand);
   color: #3a5a1a;
 }
 
@@ -6812,7 +6832,7 @@ body {
 }
 
 .payment-invoice-card:hover .invoice-card-chevron {
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .invoice-card-left {
@@ -6873,7 +6893,7 @@ body {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .invoice-status {
@@ -6985,7 +7005,7 @@ body {
 }
 
 .payment-history-empty-sub a {
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 600;
 }
 
@@ -7039,7 +7059,7 @@ body {
 .xp-loyalty-link {
   font-size: 14px;
   font-weight: 600;
-  color: #96c93d;
+  color: var(--brand);
   text-decoration: none;
 }
 
@@ -7157,7 +7177,7 @@ body {
 .invoice-detail-xp-value {
   font-size: 16px;
   font-weight: 700;
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .invoice-detail-ref {
@@ -7236,7 +7256,7 @@ body {
 }
 
 .cancel-policy-option.selected {
-  border-color: #96c93d;
+  border-color: var(--brand);
   background: #f7fee7;
 }
 
@@ -7392,7 +7412,7 @@ body {
   }
 
   .bottom-nav-tab-active {
-    color: #96c93d;
+    color: var(--brand);
   }
 
   .bottom-nav-tab-paused {
@@ -7417,7 +7437,7 @@ body {
   }
 
   .bottom-nav-tab-active .bottom-nav-avatar {
-    border-color: #96c93d;
+    border-color: var(--brand);
   }
 
   .bottom-nav-badge {
@@ -7494,7 +7514,7 @@ body {
   }
 
   .install-banner-install {
-    background: #96c93d;
+    background: var(--brand);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -7621,7 +7641,7 @@ body {
 
   .install-modal-arrow {
     font-size: 22px;
-    color: #96c93d;
+    color: var(--brand);
     animation: bounce-down 1s infinite;
   }
 
@@ -7632,7 +7652,7 @@ body {
 
   .install-modal-done {
     width: 100%;
-    background: #96c93d;
+    background: var(--brand);
     color: #fff;
     border: none;
     border-radius: 14px;
@@ -9216,5 +9236,277 @@ body {
   }
   .locals-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ==================================================================
+ * REDESIGN ENHANCEMENTS  (2026)
+ * Warm, community-driven refresh layered on top of the base styles.
+ * Placed last so equal-specificity rules win by source order.
+ * Covers: display typography, micro-interactions, inviting cards,
+ * energetic CTAs, trust-signal emphasis, and a11y focus states.
+ * ================================================================== */
+
+/* ── Display typography ─────────────────────────────────────────── */
+.brand,
+.hero-content h1,
+.section-title,
+.explore-hero-content h1,
+.events-hero h1,
+.footer-host-copy h2 {
+  font-family: var(--display-font);
+}
+
+.hero-content h1 {
+  letter-spacing: -2px;
+  font-weight: 800;
+}
+
+.section-title {
+  letter-spacing: -0.6px;
+}
+
+.section-sub {
+  color: var(--ink-soft);
+}
+
+/* Warm terracotta pop on the hero's second mark */
+.hero-content .accent {
+  color: var(--accent);
+}
+
+.hero-content p {
+  color: #4a423b;
+}
+
+/* ── Brand wordmark ─────────────────────────────────────────────── */
+.brand {
+  transition: opacity 0.18s var(--ease);
+}
+.brand:hover {
+  opacity: 0.82;
+}
+
+/* ── Header polish ──────────────────────────────────────────────── */
+.site-header {
+  border: 1px solid rgba(95, 158, 60, 0.1);
+  box-shadow: 0 6px 22px rgba(58, 42, 24, 0.06);
+  backdrop-filter: saturate(1.1) blur(4px);
+}
+
+/* ── Nav links — animated underline on hover ────────────────────── */
+.site-nav-link,
+.nav-link-button {
+  position: relative;
+  transition: color 0.18s var(--ease);
+}
+.site-nav-link::after,
+.nav-link-button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s var(--ease);
+}
+.site-nav-link:hover,
+.nav-link-button:hover {
+  color: var(--brand-dark);
+}
+.site-nav-link:hover::after,
+.nav-link-button:hover::after {
+  transform: scaleX(1);
+}
+.site-nav-link-paused:hover {
+  color: #b91c1c;
+}
+
+/* ── Buttons — smooth, tactile ──────────────────────────────────── */
+.btn {
+  transition: transform 0.16s var(--ease), box-shadow 0.18s var(--ease),
+    background-color 0.18s var(--ease), filter 0.18s var(--ease);
+}
+.btn-primary {
+  box-shadow: 0 6px 16px rgba(95, 158, 60, 0.28);
+}
+.btn-primary:hover {
+  background: var(--brand-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(95, 158, 60, 0.34);
+}
+.btn-light:hover {
+  background: #e7ded1;
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0);
+}
+
+/* ── Hero search CTA — energetic gradient + glow ────────────────── */
+.search-bar {
+  border: 1px solid rgba(95, 158, 60, 0.12);
+}
+.search-field select:focus,
+.search-field input:focus {
+  color: var(--brand-dark);
+}
+.find-button {
+  background: linear-gradient(135deg, var(--brand) 0%, #6fb046 100%);
+  box-shadow: 0 8px 20px rgba(95, 158, 60, 0.32);
+  transition: transform 0.16s var(--ease), box-shadow 0.2s var(--ease),
+    filter 0.2s var(--ease);
+}
+.find-button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+  box-shadow: 0 14px 30px rgba(95, 158, 60, 0.42);
+}
+.find-button:active {
+  transform: translateY(0);
+}
+
+/* ── Inviting cards — hover lift + image zoom ───────────────────── */
+.local-card-link,
+.field-card {
+  transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease),
+    border-color 0.22s var(--ease);
+}
+.field-card {
+  box-shadow: var(--shadow-card);
+}
+.local-card-link:hover,
+.field-home-section .field-card:hover {
+  transform: translateY(-4px);
+}
+.local-card-link:hover .field-card,
+.local-card-link:hover .local-card {
+  border-color: rgba(95, 158, 60, 0.45);
+  box-shadow: var(--shadow-card-hover);
+}
+.field-home-section .field-card:hover {
+  border-color: rgba(95, 158, 60, 0.45);
+  box-shadow: var(--shadow-card-hover);
+}
+.local-card,
+.field-card {
+  border-color: var(--line);
+}
+
+/* Gentle image zoom inside cards */
+.field-post-photo,
+.local-image-wrap img {
+  transition: transform 0.4s var(--ease);
+}
+.local-card-link:hover .field-post-photo,
+.local-card-link:hover .local-image-wrap img,
+.field-home-section .field-card:hover .field-post-photo {
+  transform: scale(1.04);
+}
+
+/* ── Trust signals — make sport tags & ratings pop ──────────────── */
+.sport-pill {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  border: 1px solid rgba(95, 158, 60, 0.22);
+  letter-spacing: 0.01em;
+}
+.field-host-rating {
+  color: #b8791a;
+}
+.field-host-avatar {
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+/* ── How it works cards ─────────────────────────────────────────── */
+.how-card {
+  transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease),
+    border-color 0.22s var(--ease);
+}
+.how-card:not(.how-highlight):hover {
+  transform: translateY(-4px);
+  border-color: rgba(95, 158, 60, 0.4);
+  box-shadow: var(--shadow-card-hover);
+}
+.how-highlight {
+  background: linear-gradient(135deg, #eef3e6 0%, #e7f0d6 100%);
+  border: 1px solid rgba(95, 158, 60, 0.2);
+}
+.step-badge {
+  box-shadow: 0 3px 8px rgba(95, 158, 60, 0.4);
+}
+
+/* ── "View all" link — arrow nudge ──────────────────────────────── */
+.view-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.18s var(--ease), gap 0.18s var(--ease);
+}
+.view-all-link::after {
+  content: "→";
+  transition: transform 0.18s var(--ease);
+}
+.view-all-link:hover {
+  color: var(--brand-dark);
+}
+.view-all-link:hover::after {
+  transform: translateX(3px);
+}
+
+/* ── Footer CTA buttons ─────────────────────────────────────────── */
+.footer-host-button,
+.learn-more-link {
+  transition: transform 0.16s var(--ease), box-shadow 0.18s var(--ease),
+    filter 0.18s var(--ease);
+}
+.footer-host-button {
+  color: #0e2206;
+  box-shadow: 0 8px 18px rgba(95, 158, 60, 0.3);
+}
+.footer-host-button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 12px 26px rgba(95, 158, 60, 0.4);
+}
+.footer-trust-icon {
+  background: #fff;
+}
+
+/* ── Like button heartbeat ──────────────────────────────────────── */
+.field-like-btn {
+  transition: transform 0.15s var(--ease);
+}
+.field-like-btn:not(:disabled):hover {
+  transform: scale(1.2);
+}
+.field-like-btn:not(:disabled):active {
+  transform: scale(0.9);
+}
+
+/* ── Accessible focus rings ─────────────────────────────────────── */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(95, 158, 60, 0.45);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ── Respect reduced-motion preferences ─────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

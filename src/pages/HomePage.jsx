@@ -50,20 +50,20 @@ const MONTH_NAMES = [
 const steps = [
   {
     stepNum: 1,
-    title: "1. Find a buddy",
-    text: "Browse locals by sport, location, and vibe.",
+    title: "1. Find your host",
+    text: "Browse locals by sport, city, and vibe.",
     img: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=500&h=220&q=80"
   },
   {
     stepNum: 2,
-    title: "2. Request & book",
-    text: "Chat, agree on details, and book securely.",
+    title: "2. Message & book",
+    text: "Chat, sort the details, and book securely.",
     img: "https://images.unsplash.com/photo-1529422643029-d4585747aaf2?auto=format&fit=crop&w=500&h=220&q=80"
   },
   {
     stepNum: 3,
     title: "3. Meet & play",
-    text: "Have an amazing time. We handle the payment.",
+    text: "Show up, have a blast — we handle the payment.",
     img: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=500&h=220&q=80"
   }
 ];
@@ -82,15 +82,15 @@ const LockIcon = () => (
     fill="none"
     aria-hidden="true"
   >
-    <rect x="12" y="34" width="48" height="30" rx="7" stroke="#96c93d" strokeWidth="3" />
+    <rect x="12" y="34" width="48" height="30" rx="7" stroke="#5f9e3c" strokeWidth="3" />
     <path
       d="M24 34V24a12 12 0 0124 0v10"
-      stroke="#96c93d"
+      stroke="#5f9e3c"
       strokeWidth="3"
       strokeLinecap="round"
     />
-    <circle cx="36" cy="49" r="4" fill="#96c93d" />
-    <line x1="36" y1="53" x2="36" y2="58" stroke="#96c93d" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="36" cy="49" r="4" fill="#5f9e3c" />
+    <line x1="36" y1="53" x2="36" y2="58" stroke="#5f9e3c" strokeWidth="3" strokeLinecap="round" />
   </svg>
 );
 
@@ -353,11 +353,11 @@ const HomePage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           <div className="hero-content">
             <h1>
-              Find your sports buddy<span className="dot">.</span>
+              Play like a local<span className="dot">.</span>
               <br />
-              Anywhere<span className="accent">.</span>
+              Wherever you roam<span className="accent">.</span>
             </h1>
-            <p>Join locals and travelers for unforgettable sports experiences.</p>
+            <p>Find a local host to train, play, and explore with — anywhere your travels take you.</p>
             <div className="search-bar" role="search" aria-label="Find sports buddies" ref={searchBarRef}>
               <div className="search-field">
                 <label htmlFor="filter-home-country">Select Country</label>
@@ -436,10 +436,10 @@ const HomePage = ({ currentUser, onLogout }) => {
               <button
                 type="button"
                 className="find-button"
-                aria-label="Find buddies"
+                aria-label="Find a host"
                 onClick={handleFindBuddies}
               >
-                Find Buddies
+                Find a Host
               </button>
             </div>
           </div>
@@ -454,7 +454,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   Locals ready to play in {localsHeadingLocation}
                 </h2>
                 <p className="section-sub">
-                  Sports buddies near you. Real people. Real connections.
+                  Real locals who love their sport — and can't wait to share it.
                 </p>
               </div>
               <Link to="/locals" className="view-all-link">
@@ -524,7 +524,7 @@ const HomePage = ({ currentUser, onLogout }) => {
             <div className="section-head">
               <div>
                 <h2 className="section-title">What's happening on the Field?</h2>
-                <p className="section-sub">Real sessions. Real people.</p>
+                <p className="section-sub">Real sessions, straight from the community.</p>
               </div>
               <Link to="/the-field" className="view-all-link">View all</Link>
             </div>
@@ -711,8 +711,8 @@ const HomePage = ({ currentUser, onLogout }) => {
 
           {/* ── How it works ─────────────────────────────────── */}
           <section className="how-section">
-            <h2 className="section-title">How SharedXP works?</h2>
-            <p className="section-sub">Simple steps to connect and play.</p>
+            <h2 className="section-title">How it works</h2>
+            <p className="section-sub">Three easy steps to get out and play.</p>
             <div className="how-grid">
               {steps.map((step) => (
                 <article key={step.title} className="how-card">

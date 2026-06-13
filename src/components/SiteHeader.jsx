@@ -33,12 +33,12 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
     typeof hostingPausedOverride === "boolean"
       ? hostingPausedOverride
       : Boolean(currentUser?.isHost && currentUser?.hostProfile?.pauseHosting);
-  let hostLabel = "Become Host";
+  let hostLabel = "Become a Host";
   if (currentUser?.isHost) {
     hostLabel = isHostingPaused ? "Hosting Paused" : "Host Settings";
   }
   const navHostRoute = isLoggedIn ? hostRoute : "/become-a-host";
-  const navHostLabel = isLoggedIn ? hostLabel : "Become Host";
+  const navHostLabel = isLoggedIn ? hostLabel : "Become a Host";
   const isHostLabelPaused = Boolean(isLoggedIn && currentUser?.isHost && isHostingPaused);
 
   const fallbackPhoto = useMemo(() => {
@@ -49,7 +49,7 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
     const initials = sanitizeInitials(createInitials(currentUser.fullName));
     return `data:image/svg+xml;utf8,${encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="${initials}">
-        <rect width="100" height="100" rx="50" fill="#96c93d" />
+        <rect width="100" height="100" rx="50" fill="#5f9e3c" />
         <text x="50" y="58" text-anchor="middle" font-size="34" fill="#ffffff" font-family="Arial, sans-serif">${initials}</text>
       </svg>`
     )}`;
@@ -128,7 +128,7 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
                 My Profile
               </Link>
               <Link to="/history" className="user-dropdown-link user-dropdown-xp-history" role="menuitem">
-                <span>My <span style={{color: "#96c93d", fontWeight: 800}}>XP</span> History</span>
+                <span>My <span style={{color: "#5f9e3c", fontWeight: 800}}>XP</span> History</span>
                 {activeTags.length > 0 && (
                   <span className="xp-history-tags">
                     {activeTags.map((status) => (
@@ -174,7 +174,7 @@ const SiteHeader = ({ currentUser, onLogout, hostingPausedOverride }) => {
             Log in
           </Link>
           <Link to="/signup" className="btn btn-primary auth-link">
-            Sign up
+            Join free
           </Link>
         </div>
       )}
