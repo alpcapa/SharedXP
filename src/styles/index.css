@@ -54,7 +54,7 @@
   --shadow-card: 0 10px 30px rgba(58, 42, 24, 0.08);
   --shadow-card-hover: 0 18px 44px rgba(58, 42, 24, 0.16);
   --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
-  --display-font: "Poppins", "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  --display-font: "Sora", "Plus Jakarta Sans", "Segoe UI", sans-serif;
 }
 
 html {
@@ -9259,11 +9259,16 @@ body {
 
 .hero-content h1 {
   letter-spacing: -2px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .section-title {
   letter-spacing: -0.6px;
+  font-weight: 700;
+}
+
+.brand {
+  font-weight: 700;
 }
 
 .section-sub {
