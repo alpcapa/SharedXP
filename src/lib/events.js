@@ -32,6 +32,7 @@ const fromSupabaseRow = (row) => ({
   endsAt: row.ends_at ?? "",
   url: String(row.url ?? ""),
   imageUrl: String(row.image_url ?? ""),
+  imageStyle: String(row.image_style ?? ""),
   description: String(row.description ?? "")
 });
 
@@ -42,7 +43,7 @@ export const loadMajorEvents = async () => {
     const { data, error } = await supabase
       .from("external_events")
       .select(
-        "id, source, title, sport, category, country, city, venue, starts_at, ends_at, url, image_url, description"
+        "id, source, title, sport, category, country, city, venue, starts_at, ends_at, url, image_url, image_style, description"
       )
       .order("starts_at", { ascending: true })
       .limit(FETCH_LIMIT);
@@ -63,7 +64,7 @@ export const loadMajorEventsPage = async ({ limit = 20, offset = 0 } = {}) => {
     const { data, error } = await supabase
       .from("external_events")
       .select(
-        "id, source, title, sport, category, country, city, venue, starts_at, ends_at, url, image_url, description"
+        "id, source, title, sport, category, country, city, venue, starts_at, ends_at, url, image_url, image_style, description"
       )
       .gte("starts_at", cutoff)
       .order("starts_at", { ascending: true })
