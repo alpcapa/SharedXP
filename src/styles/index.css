@@ -9311,7 +9311,12 @@ body,
 .auth-hero + .middle-section,
 .auth-hero + .field-main,
 .auth-hero + .events-main,
-.auth-hero + .middle-section.explore-page-content {
+.auth-hero + .middle-section.explore-page-content,
+.auth-hero + .middle-section.host-settings-page,
+.auth-hero + .middle-section.edit-profile-page,
+.auth-hero + .middle-section.history-page,
+.auth-hero + .middle-section.payment-history-page,
+.auth-hero + .middle-section.unified-profile-page {
   background: var(--bg);
 }
 
