@@ -353,7 +353,7 @@ const HomePage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           <div className="hero-content">
             <h1>
-              Find a local host<span className="dot">.</span>
+              Find a local sport host<span className="dot">.</span>
               <br />
               <span className="accent">Anywhere.</span>
             </h1>
