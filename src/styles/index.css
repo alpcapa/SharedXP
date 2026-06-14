@@ -9331,11 +9331,41 @@ body,
 /* ── Inner cards stay white ───────────────────────────────────────────── */
 .auth-hero + .middle-section.simple-page,
 .auth-hero + .middle-section.admin-main,
-.auth-hero + .middle-section.about-main,
-.auth-hero + .middle-section.follow-main,
 .auth-hero + .middle-section.auth-page,
 .auth-hero + .middle-section.legal-content {
   background: var(--surface);
+}
+
+/* ── Footer content pages — override simple-page white with cream ────── */
+.auth-hero + .middle-section.about-main,
+.auth-hero + .middle-section.follow-main,
+.auth-hero + .middle-section.help-center-page,
+.auth-hero + .middle-section.contact-center-page,
+.auth-hero + .middle-section.legal-center-page {
+  background: var(--bg);
+}
+
+/* ── Footer pages — white card sections on cream bg ──────────────────── */
+.help-faq-list {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0 20px;
+  border: 1px solid var(--border);
+}
+.help-topic-card {
+  background: #ffffff;
+}
+.contact-form-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px;
+  border: 1px solid var(--border);
+}
+.legal-center-page > article {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 32px 36px;
+  border: 1px solid var(--border);
 }
 
 /* ── Host setting cards — true white for contrast against cream bg ────── */

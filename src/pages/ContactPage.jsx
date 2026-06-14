@@ -69,7 +69,7 @@ const ContactPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section simple-page">
+        <main className="middle-section simple-page contact-center-page">
           <h1 className="admin-title">Contact Center</h1>
           <p className="contact-page-subtitle">
             Send us a message and we'll get back to you as soon as possible.
