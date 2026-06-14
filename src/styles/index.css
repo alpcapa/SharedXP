@@ -2538,6 +2538,18 @@ h1, h2, .site-brand {
   margin-top: 14px;
 }
 
+.profile-form .auth-submit {
+  justify-self: start;
+  padding: 11px 28px;
+}
+
+@media (max-width: 600px) {
+  .profile-form .auth-submit {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
 .profile-photo-editor {
   position: relative;
   width: 170px;
