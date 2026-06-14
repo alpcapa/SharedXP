@@ -2587,10 +2587,16 @@ h1, h2, .site-brand {
 .reviews,
 .gallery,
 .booking-engine-section,
-.recommendations,
+.recommendations {
+  background: white;
+  margin: 20px 10px;
+  padding: 20px;
+  border-radius: 10px;
+}
+
 .host-settings-page,
 .edit-profile-page {
-  background: white;
+  background: var(--bg);
   margin: 20px 10px;
   padding: 20px;
   border-radius: 10px;
@@ -9446,11 +9452,6 @@ h1 .accent {
 }
 
 /* ── Warm cream on profile / settings / history pages ────────────────── */
-.auth-hero + .middle-section.host-settings-page,
-.auth-hero + .middle-section.edit-profile-page,
-.auth-hero + .middle-section.payment-history-page,
-.host-settings-page,
-.edit-profile-page,
 .history-page,
 .payment-history-page,
 .unified-profile-page,
