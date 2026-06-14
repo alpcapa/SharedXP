@@ -9320,6 +9320,19 @@ body,
   background: var(--bg);
 }
 
+/* ── Floating card frame (shadow + corners) on content pages ─────────── */
+.auth-hero + .middle-section.host-settings-page,
+.auth-hero + .middle-section.edit-profile-page,
+.auth-hero + .middle-section.history-page,
+.auth-hero + .middle-section.payment-history-page,
+.auth-hero + .middle-section.unified-profile-page {
+  width: auto;
+  margin: 10px 10px 0;
+  padding: 28px 28px 48px;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
 /* ── Inner cards stay white ───────────────────────────────────────────── */
 .auth-hero + .middle-section.simple-page,
 .auth-hero + .middle-section.admin-main,
@@ -9328,6 +9341,11 @@ body,
 .auth-hero + .middle-section.auth-page,
 .auth-hero + .middle-section.legal-content {
   background: var(--surface);
+}
+
+/* ── Host setting cards — true white for contrast against cream bg ────── */
+.host-onboarding-card {
+  background: #ffffff;
 }
 
 /* ── Sport pills — prominent warm tint ───────────────────────────────── */
