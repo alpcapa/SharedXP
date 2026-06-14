@@ -357,7 +357,7 @@ const HomePage = ({ currentUser, onLogout }) => {
               <br />
               <span className="accent">Anywhere.</span>
             </h1>
-            <p>Train, play, and explore with locals — wherever your travels take you.</p>
+            <p>Train, play, and explore with locals — wherever you travel.</p>
             <div className="search-bar" role="search" aria-label="Find sports buddies" ref={searchBarRef}>
               <div className="search-field">
                 <label htmlFor="filter-home-country">Select Country</label>
