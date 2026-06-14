@@ -472,7 +472,7 @@ const PaymentHistoryPage = ({ currentUser, authLoading, onLogout }) => {
         <main className="middle-section payment-history-page">
           <div className="payment-history-header">
             <div className="payment-history-title-row">
-              <h1 className="payment-history-title">Payment History</h1>
+              <h1 className="payment-history-title">Payment &amp; <span style={{color: "var(--brand)", fontWeight: 800}}>XP</span> History</h1>
               <div className="payment-history-xp-badge">
                 <span className="xp-badge-label">Total XP</span>
                 <span className="xp-badge-value">{totalXp.toLocaleString()}</span>
