@@ -866,6 +866,7 @@ h1, h2, .site-brand {
   margin-bottom: 0;
   color: #2d3033;
   font-size: 33px;
+  font-weight: 700;
   line-height: 1.42;
 }
 
@@ -2564,10 +2565,6 @@ h1, h2, .site-brand {
     text-shadow:
       0 1px 2px rgba(244, 243, 235, 0.95),
       0 0 16px rgba(244, 243, 235, 0.85);
-  }
-
-  .hero-content p {
-    font-weight: 700;
   }
 
   .hero-content h1 .hero-break-desktop {
