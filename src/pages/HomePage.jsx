@@ -354,8 +354,10 @@ const HomePage = ({ currentUser, onLogout }) => {
           <div className="hero-content">
             <h1>
               Find a local sport
-              <br />
-              host<span className="dot">.</span> <span className="accent">Anywhere.</span>
+              <br className="hero-break-desktop" />{" "}
+              host<span className="dot">.</span>{" "}
+              <br className="hero-break-mobile" />
+              <span className="accent">Anywhere.</span>
             </h1>
             <p>Train, play, and explore with locals — wherever you travel.</p>
             <div className="search-bar" role="search" aria-label="Find sports buddies" ref={searchBarRef}>
