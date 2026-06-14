@@ -2754,16 +2754,20 @@ h1, h2, .site-brand {
   align-items: center;
   gap: 12px;
   margin: 12px 0 6px;
+  min-width: 0;
 }
 
 .booking-time-row .booking-label {
   margin: 0;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .booking-time-row .booking-time-select {
-  width: min(160px, 100%);
-  flex: none;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  max-width: 220px;
 }
 
 .booking-paused-notice {
