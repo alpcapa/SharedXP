@@ -21,8 +21,13 @@ const sortByStartAscending = (a, b) => {
 
 const staticById = Object.fromEntries(staticEvents.map((e) => [e.id, e]));
 
+const SPORT_IMAGE_DEFAULTS = {
+  "Formula 1": { imageUrl: "/events/f1-logo.svg", imageStyle: "contain" },
+};
+
 const fromSupabaseRow = (row) => {
   const fallback = staticById[String(row.id)] ?? {};
+  const sportDefault = SPORT_IMAGE_DEFAULTS[String(row.sport ?? "")] ?? {};
   return {
     id: String(row.id),
     source: String(row.source ?? ""),
@@ -35,8 +40,8 @@ const fromSupabaseRow = (row) => {
     startsAt: row.starts_at ?? "",
     endsAt: row.ends_at ?? "",
     url: String(row.url ?? ""),
-    imageUrl: String(row.image_url ?? "") || fallback.imageUrl || "",
-    imageStyle: String(row.image_style ?? "") || fallback.imageStyle || "",
+    imageUrl: String(row.image_url ?? "") || fallback.imageUrl || sportDefault.imageUrl || "",
+    imageStyle: String(row.image_style ?? "") || fallback.imageStyle || sportDefault.imageStyle || "",
     description: String(row.description ?? "")
   };
 };
