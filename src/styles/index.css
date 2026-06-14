@@ -853,7 +853,7 @@ h1, h2, .site-brand {
 }
 
 .hero .hero-content .accent {
-  color: var(--brand);
+  color: var(--accent);
 }
 
 .hero-content p {
