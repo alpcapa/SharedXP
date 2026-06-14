@@ -9445,6 +9445,19 @@ h1 .accent {
   color: var(--text-muted);
 }
 
+/* ── Warm cream on profile / settings / history pages ────────────────── */
+.auth-hero + .middle-section.host-settings-page,
+.auth-hero + .middle-section.edit-profile-page,
+.auth-hero + .middle-section.payment-history-page,
+.host-settings-page,
+.edit-profile-page,
+.history-page,
+.payment-history-page,
+.unified-profile-page,
+.guest-profile-page {
+  background: var(--bg);
+}
+
 /* ── prefers-reduced-motion guard ────────────────────────────────────────*/
 @media (prefers-reduced-motion: reduce) {
   *,
