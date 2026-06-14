@@ -173,7 +173,7 @@ body {
 }
 
 .view-all-link {
-  color: #96c93d;
+  color: var(--brand);
   text-decoration: none;
   font-weight: 700;
   font-size: 14px;
@@ -238,7 +238,7 @@ body {
   height: 24px;
   border-radius: 50%;
   border: 2px solid #e3e5df;
-  border-top-color: #96c93d;
+  border-top-color: var(--brand);
   animation: scroll-spinner 0.7s linear infinite;
 }
 
@@ -538,7 +538,7 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #96c93d;
+  background: var(--brand);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -1010,7 +1010,7 @@ h1, h2, .site-brand {
   border: none;
   border-radius: 14px;
   margin-left: 12px;
-  background: #97ca3f;
+  background: var(--brand);
   color: #fff;
   font-size: clamp(18px, 2.1vw, 24px);
   font-weight: 800;
@@ -2158,7 +2158,7 @@ h1, h2, .site-brand {
 .history-switch-link {
   font-size: 14px;
   font-weight: 700;
-  color: #96c93d;
+  color: var(--brand);
   text-decoration: none;
 }
 
@@ -2303,7 +2303,7 @@ h1, h2, .site-brand {
 .role-attended {
   background: rgba(220, 234, 184, 0.92);
   color: #476526;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .role-hosted {
@@ -2877,7 +2877,7 @@ h1, h2, .site-brand {
 }
 
 .booking-hint-selected {
-  color: #97ca3f;
+  color: var(--brand);
 }
 
 .booking-hint-unselected {
@@ -2937,7 +2937,7 @@ h1, h2, .site-brand {
 }
 
 .booking-signup-button {
-  background: #97ca3f;
+  background: var(--brand);
   color: #fff;
   border: none;
 }
@@ -3092,7 +3092,7 @@ h1, h2, .site-brand {
   justify-content: center;
   border: none;
   border-radius: 14px;
-  background: #a7cf35;
+  background: var(--brand);
   color: #132300;
   font-weight: 700;
   font-size: 22px;
@@ -3365,7 +3365,7 @@ h1, h2, .site-brand {
   font-weight: 700;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: #96c93d;
+  color: var(--brand);
 }
 
 /* Story */
@@ -3478,7 +3478,7 @@ h1, h2, .site-brand {
 .about-split-link {
   display: inline-block;
   margin-top: 4px;
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
@@ -3628,7 +3628,7 @@ h1, h2, .site-brand {
 }
 
 .field-city-pill.active {
-  background: #96c93d;
+  background: var(--brand);
   color: #fff;
   font-weight: 700;
 }
@@ -3809,7 +3809,7 @@ h1, h2, .site-brand {
   align-self: flex-end;
   border: 0;
   background: transparent;
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -3924,7 +3924,7 @@ h1, h2, .site-brand {
 .event-card-link {
   margin-top: 6px;
   align-self: flex-start;
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
@@ -4166,7 +4166,7 @@ h1, h2, .site-brand {
   margin-top: 8px;
   padding: 5px 12px;
   border-radius: 999px;
-  border: 1px dashed #96c93d;
+  border: 1px dashed var(--brand);
   background: #f4fae9;
   color: #3d6b1a;
   font-size: 12px;
@@ -4297,7 +4297,7 @@ h1, h2, .site-brand {
 
 .field-share-caption-input:focus {
   outline: none;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .field-share-caption-error {
@@ -4387,7 +4387,7 @@ h1, h2, .site-brand {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #96c93d;
+  background: var(--brand);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
@@ -4475,7 +4475,7 @@ h1, h2, .site-brand {
 
 /* ── The Field — share invite link ─── */
 .field-share-invite-link {
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 600;
   text-decoration: underline;
 }
@@ -4495,7 +4495,7 @@ h1, h2, .site-brand {
 /* ── The Field — view host link ─────────── */
 .field-view-host-link {
   display: inline-block;
-  color: #96c93d;
+  color: var(--brand);
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
@@ -4598,7 +4598,7 @@ h1, h2, .site-brand {
 
 .host-tab-btn.active {
   color: #141a1f;
-  border-bottom-color: #96c93d;
+  border-bottom-color: var(--brand);
 }
 
 .host-tab-status {
@@ -4776,7 +4776,7 @@ h1, h2, .site-brand {
 }
 .modal-textarea:focus {
   outline: none;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .modal-error {
@@ -4842,8 +4842,8 @@ h1, h2, .site-brand {
 }
 
 .pending-card-highlight {
-  box-shadow: 0 0 0 3px #96c93d66;
-  border-color: #96c93d;
+  box-shadow: 0 0 0 3px rgba(122, 170, 46, 0.4);
+  border-color: var(--brand);
 }
 
 .pending-card-header {
@@ -5699,7 +5699,7 @@ h1, h2, .site-brand {
 
 .chat-input:focus {
   outline: none;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .chat-send-btn {
@@ -5942,7 +5942,7 @@ h1, h2, .site-brand {
 .admin-tab-active {
   font-weight: 700;
   color: #1a1a1a;
-  border-bottom-color: #96c93d;
+  border-bottom-color: var(--brand);
 }
 
 .admin-dispute-list {
@@ -6881,7 +6881,7 @@ h1, h2, .site-brand {
 }
 
 .payment-invoice-card:hover .invoice-card-chevron {
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .invoice-card-left {
@@ -6942,7 +6942,7 @@ h1, h2, .site-brand {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .invoice-status {
@@ -7054,7 +7054,7 @@ h1, h2, .site-brand {
 }
 
 .payment-history-empty-sub a {
-  color: #96c93d;
+  color: var(--brand);
   font-weight: 600;
 }
 
@@ -7108,7 +7108,7 @@ h1, h2, .site-brand {
 .xp-loyalty-link {
   font-size: 14px;
   font-weight: 600;
-  color: #96c93d;
+  color: var(--brand);
   text-decoration: none;
 }
 
@@ -7226,7 +7226,7 @@ h1, h2, .site-brand {
 .invoice-detail-xp-value {
   font-size: 16px;
   font-weight: 700;
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .invoice-detail-ref {
@@ -7305,7 +7305,7 @@ h1, h2, .site-brand {
 }
 
 .cancel-policy-option.selected {
-  border-color: #96c93d;
+  border-color: var(--brand);
   background: #f7fee7;
 }
 
@@ -7461,7 +7461,7 @@ body {
   }
 
   .bottom-nav-tab-active {
-    color: #96c93d;
+    color: var(--brand);
   }
 
   .bottom-nav-tab-paused {
@@ -7486,7 +7486,7 @@ body {
   }
 
   .bottom-nav-tab-active .bottom-nav-avatar {
-    border-color: #96c93d;
+    border-color: var(--brand);
   }
 
   .bottom-nav-badge {
@@ -7563,7 +7563,7 @@ body {
   }
 
   .install-banner-install {
-    background: #96c93d;
+    background: var(--brand);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -7690,7 +7690,7 @@ body {
 
   .install-modal-arrow {
     font-size: 22px;
-    color: #96c93d;
+    color: var(--brand);
     animation: bounce-down 1s infinite;
   }
 
@@ -7701,7 +7701,7 @@ body {
 
   .install-modal-done {
     width: 100%;
-    background: #96c93d;
+    background: var(--brand);
     color: #fff;
     border: none;
     border-radius: 14px;
