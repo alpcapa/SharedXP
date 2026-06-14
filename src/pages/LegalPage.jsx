@@ -10,9 +10,9 @@ const LegalPage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
         </section>
 
-        <main className="middle-section simple-page legal-center-page">
+        <main className="middle-section simple-page">
+          <h1 className="admin-title">Legal Center</h1>
           <article className="legal-page">
-            <h1 className="admin-title">Legal Center</h1>
             <p className="legal-last-updated">Last updated: May 18, 2026</p>
             <section className="legal-section">
               <h2>1. Scope of this Legal Center</h2>

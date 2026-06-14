@@ -9357,8 +9357,7 @@ body,
 .auth-hero + .middle-section.about-main,
 .auth-hero + .middle-section.follow-main,
 .auth-hero + .middle-section.help-center-page,
-.auth-hero + .middle-section.contact-center-page,
-.auth-hero + .middle-section.legal-center-page {
+.auth-hero + .middle-section.contact-center-page {
   background: var(--bg);
 }
 
@@ -9376,12 +9375,6 @@ body,
   background: #ffffff;
   border-radius: 14px;
   padding: 28px;
-  border: 1px solid var(--border);
-}
-.legal-center-page > article {
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 32px 36px;
   border: 1px solid var(--border);
 }
 
