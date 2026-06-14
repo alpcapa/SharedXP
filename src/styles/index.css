@@ -9291,14 +9291,14 @@ body,
 .home-page,
 .auth-hero + .middle-section,
 .auth-hero + .field-main,
-.auth-hero + .events-main {
+.auth-hero + .events-main,
+.auth-hero + .middle-section.explore-page-content {
   background: var(--bg);
 }
 
 /* ── Inner cards stay white ───────────────────────────────────────────── */
 .auth-hero + .middle-section.simple-page,
 .auth-hero + .middle-section.admin-main,
-.auth-hero + .middle-section.explore-page-content,
 .auth-hero + .middle-section.about-main,
 .auth-hero + .middle-section.follow-main,
 .auth-hero + .middle-section.auth-page,
