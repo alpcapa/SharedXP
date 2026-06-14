@@ -2566,6 +2566,10 @@ h1, h2, .site-brand {
       0 0 16px rgba(244, 243, 235, 0.85);
   }
 
+  .hero-content p {
+    font-weight: 700;
+  }
+
   .hero-content h1 .hero-break-desktop {
     display: none;
   }
