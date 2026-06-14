@@ -362,17 +362,16 @@ const HostSportTab = ({
 
       {/* ── Session details ───────────────────────────────────────────── */}
       <section className="host-onboarding-card">
+        <h2>How much do you charge per session?</h2>
         <div className="host-form-grid">
-          <label htmlFor="sportPricing">
-            How much do you charge per session?
-          </label>
           <div className="host-price-row">
             <input
               id="sportPricing"
+              aria-label="Price per session"
               className={fi("sportPricing")}
               type="text"
               inputMode="numeric"
-              placeholder="How much do you charge per session?"
+              placeholder="Price per session"
               value={activeSport.pricing}
               onChange={(e) => updateSportField("pricing", e.target.value)}
             />
