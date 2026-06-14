@@ -821,8 +821,9 @@ h1, h2, .site-brand {
   border-radius: 16px;
   min-height: var(--hero-min-height);
   padding: 0 0 10px;
+  --hero-scrim: linear-gradient(90deg, rgba(244, 243, 235, 0.97) 0%, rgba(244, 243, 235, 0.85) 45%, rgba(244, 243, 235, 0.4) 70%, rgba(244, 243, 235, 0.1) 100%);
   background-image:
-    linear-gradient(90deg, rgba(244, 243, 235, 0.97) 0%, rgba(244, 243, 235, 0.85) 45%, rgba(244, 243, 235, 0.4) 70%, rgba(244, 243, 235, 0.1) 100%),
+    var(--hero-scrim),
     url("../assets/BEEE9932-9032-4B9C-8E1B-577FFB6173E8.png");
   background-size: cover;
   background-position: center;
@@ -2548,6 +2549,16 @@ h1, h2, .site-brand {
 }
 
 @media (max-width: 600px) {
+  .home-page .hero {
+    --hero-scrim: linear-gradient(
+      180deg,
+      rgba(244, 243, 235, 0.97) 0%,
+      rgba(244, 243, 235, 0.94) 50%,
+      rgba(244, 243, 235, 0.7) 75%,
+      rgba(244, 243, 235, 0.35) 100%
+    );
+  }
+
   .hero-content h1 .hero-break-desktop {
     display: none;
   }
