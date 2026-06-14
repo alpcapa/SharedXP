@@ -19,22 +19,27 @@ const sortByStartAscending = (a, b) => {
   return aStart - bStart;
 };
 
-const fromSupabaseRow = (row) => ({
-  id: String(row.id),
-  source: String(row.source ?? ""),
-  title: String(row.title ?? ""),
-  sport: String(row.sport ?? ""),
-  category: String(row.category ?? ""),
-  country: String(row.country ?? ""),
-  city: String(row.city ?? ""),
-  venue: String(row.venue ?? ""),
-  startsAt: row.starts_at ?? "",
-  endsAt: row.ends_at ?? "",
-  url: String(row.url ?? ""),
-  imageUrl: String(row.image_url ?? ""),
-  imageStyle: String(row.image_style ?? ""),
-  description: String(row.description ?? "")
-});
+const staticById = Object.fromEntries(staticEvents.map((e) => [e.id, e]));
+
+const fromSupabaseRow = (row) => {
+  const fallback = staticById[String(row.id)] ?? {};
+  return {
+    id: String(row.id),
+    source: String(row.source ?? ""),
+    title: String(row.title ?? ""),
+    sport: String(row.sport ?? ""),
+    category: String(row.category ?? ""),
+    country: String(row.country ?? ""),
+    city: String(row.city ?? ""),
+    venue: String(row.venue ?? ""),
+    startsAt: row.starts_at ?? "",
+    endsAt: row.ends_at ?? "",
+    url: String(row.url ?? ""),
+    imageUrl: String(row.image_url ?? "") || fallback.imageUrl || "",
+    imageStyle: String(row.image_style ?? "") || fallback.imageStyle || "",
+    description: String(row.description ?? "")
+  };
+};
 
 // Loads events from Supabase. If the table is empty, missing, or the query
 // errors, fall back to the curated static module so the UI always has data.
