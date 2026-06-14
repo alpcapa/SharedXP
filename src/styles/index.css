@@ -34,6 +34,27 @@
 }
 
 :root {
+  /* ── Typography ─────────────────────────────────────────── */
+  --font-body: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif;
+
+  /* ── Brand palette (unified — replaces legacy #96c93d / #97ca3f / #a7cf35) */
+  --brand: #7aaa2e;
+  --brand-dark: #4e7a14;
+  --brand-light: #d8edac;
+
+  /* ── Accent (terracotta) ─────────────────────────────────── */
+  --accent: #c4622d;
+  --accent-light: #f5ddd2;
+
+  /* ── Surfaces & text ─────────────────────────────────────── */
+  --bg: #f7f1e8;
+  --surface: #ffffff;
+  --text: #273033;
+  --text-muted: #596164;
+  --border: #e8e9e4;
+
+  /* ── Legacy sizing vars (keep) ───────────────────────────── */
   --brand-font-size: 39px;
   --hero-min-height: min(690px, 82vh);
   --footer-trust-panel-ratio: 1.08fr;
@@ -45,9 +66,9 @@ html {
 
 body {
   margin: 0;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  color: #141a1f;
-  background: #f5f5f2;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--bg);
   overflow-x: hidden;
 }
 
@@ -296,7 +317,7 @@ body {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #96c93d;
+  background: var(--brand);
   flex-shrink: 0;
 }
 
@@ -588,16 +609,21 @@ body {
   background: rgba(255, 255, 255, 0.95);
 }
 
+h1, h2, .site-brand {
+  font-family: var(--font-display);
+}
+
 .brand {
   text-decoration: none;
   color: #111;
   font-weight: 800;
   font-size: var(--brand-font-size);
   letter-spacing: -0.7px;
+  font-family: var(--font-display);
 }
 
 .brand span {
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .site-nav {
@@ -664,7 +690,7 @@ body {
 }
 
 .btn-primary {
-  background: #96c93d;
+  background: var(--brand-dark);
   color: #fff;
 }
 
@@ -3286,7 +3312,7 @@ body {
 
 .about-page {
   background: #f5f5f2;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-body);
 }
 
 .about-main {
@@ -9232,5 +9258,178 @@ body {
   }
   .locals-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * DESIGN REFRESH — warm palette, Bricolage Grotesque headings, micro-UX
+ * Added June 2026. Remove this block to fully revert all enhancements.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Display font on hero & section titles ───────────────────────────── */
+h1,
+h2,
+.section-title,
+.site-brand,
+.hero-title,
+.about-hero-title,
+.explore-hero-title {
+  font-family: var(--font-display);
+}
+
+/* ── Warm cream on page-level surfaces ───────────────────────────────── */
+body,
+.home-page,
+.auth-hero + .middle-section,
+.auth-hero + .field-main,
+.auth-hero + .events-main {
+  background: var(--bg);
+}
+
+/* ── Inner cards stay white ───────────────────────────────────────────── */
+.auth-hero + .middle-section.simple-page,
+.auth-hero + .middle-section.admin-main,
+.auth-hero + .middle-section.explore-page-content,
+.auth-hero + .middle-section.about-main,
+.auth-hero + .middle-section.follow-main,
+.auth-hero + .middle-section.auth-page,
+.auth-hero + .middle-section.legal-content {
+  background: var(--surface);
+}
+
+/* ── Sport pills — prominent warm tint ───────────────────────────────── */
+.sport-pill {
+  background: var(--brand-light);
+  color: var(--brand-dark);
+  font-weight: 600;
+  border: none;
+}
+
+/* ── Host avatar ring ─────────────────────────────────────────────────── */
+.field-host-avatar {
+  box-shadow: 0 0 0 2px var(--brand-light);
+}
+
+/* ── Ratings warm amber ───────────────────────────────────────────────── */
+.field-host-rating {
+  color: #b45309;
+}
+
+/* ── Primary CTA — gradient + glow ───────────────────────────────────── */
+.btn-primary,
+.find-button {
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
+  box-shadow: 0 2px 10px rgba(78, 122, 20, 0.28);
+  transition: box-shadow 0.2s ease, transform 0.15s ease, background 0.2s ease;
+}
+.btn-primary:hover,
+.find-button:hover {
+  box-shadow: 0 4px 18px rgba(78, 122, 20, 0.42);
+  transform: translateY(-1px);
+}
+.btn-primary:active,
+.find-button:active {
+  transform: scale(0.97) translateY(0);
+  box-shadow: 0 1px 6px rgba(78, 122, 20, 0.22);
+}
+
+/* ── Animated nav underline ───────────────────────────────────────────── */
+.site-nav-link,
+.nav-link-button {
+  position: relative;
+}
+.site-nav-link::after,
+.nav-link-button::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--brand);
+  transition: width 0.2s ease;
+  border-radius: 1px;
+}
+.site-nav-link:hover::after,
+.nav-link-button:hover::after {
+  width: 100%;
+}
+
+/* ── "View all →" arrow nudge ─────────────────────────────────────────── */
+.view-all-link {
+  transition: letter-spacing 0.15s ease, gap 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+}
+.view-all-link:hover {
+  letter-spacing: 0.01em;
+}
+
+/* ── Image zoom on card hover ─────────────────────────────────────────── */
+.field-card .field-post-photo,
+.field-card .field-post-photo-placeholder {
+  transition: transform 0.35s ease;
+}
+.field-card:hover .field-post-photo,
+.local-card-link:hover .field-post-photo {
+  transform: scale(1.04);
+}
+
+/* ── Like button heartbeat ────────────────────────────────────────────── */
+@keyframes heartbeat {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.35); }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.field-like-btn:active {
+  animation: heartbeat 0.4s ease;
+}
+
+/* ── Hero accent becomes terracotta ───────────────────────────────────── */
+.hero h1 .accent,
+h1 .accent {
+  color: var(--accent);
+}
+
+/* ── Terracotta "Become a Host" secondary CTA ─────────────────────────── */
+.btn-host-cta {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+.btn-host-cta:hover {
+  background: #a8501f;
+  transform: translateY(-1px);
+}
+
+/* ── Focus-visible rings ──────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Explore / About / Profile warm headers ───────────────────────────── */
+.explore-hero,
+.about-hero,
+.auth-hero {
+  background: linear-gradient(160deg, #2e3d18 0%, #1a2410 100%);
+}
+
+/* ── Section subtitle colour ──────────────────────────────────────────── */
+.section-sub {
+  color: var(--text-muted);
+}
+
+/* ── prefers-reduced-motion guard ────────────────────────────────────────*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
