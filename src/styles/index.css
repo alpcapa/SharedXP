@@ -34,6 +34,27 @@
 }
 
 :root {
+  /* ── Typography ─────────────────────────────────────────── */
+  --font-body: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif;
+
+  /* ── Brand palette (unified — replaces legacy #96c93d / #97ca3f / #a7cf35) */
+  --brand: #7aaa2e;
+  --brand-dark: #4e7a14;
+  --brand-light: #d8edac;
+
+  /* ── Accent (terracotta) ─────────────────────────────────── */
+  --accent: #c4622d;
+  --accent-light: #f5ddd2;
+
+  /* ── Surfaces & text ─────────────────────────────────────── */
+  --bg: #f7f1e8;
+  --surface: #ffffff;
+  --text: #273033;
+  --text-muted: #596164;
+  --border: #e8e9e4;
+
+  /* ── Legacy sizing vars (keep) ───────────────────────────── */
   --brand-font-size: 39px;
   --hero-min-height: min(690px, 82vh);
   --footer-trust-panel-ratio: 1.08fr;
@@ -45,9 +66,9 @@ html {
 
 body {
   margin: 0;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  color: #141a1f;
-  background: #f5f5f2;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--bg);
   overflow-x: hidden;
 }
 
@@ -228,8 +249,9 @@ body {
 .home-scroll-row {
   display: flex;
   overflow-x: auto;
+  overflow-y: visible;
   gap: 14px;
-  padding-bottom: 12px;
+  padding: 4px 0 12px;
   scroll-snap-type: x proximity;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
@@ -295,7 +317,7 @@ body {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #96c93d;
+  background: var(--brand);
   flex-shrink: 0;
 }
 
@@ -587,16 +609,21 @@ body {
   background: rgba(255, 255, 255, 0.95);
 }
 
+h1, h2, .site-brand {
+  font-family: var(--font-display);
+}
+
 .brand {
   text-decoration: none;
   color: #111;
   font-weight: 800;
   font-size: var(--brand-font-size);
   letter-spacing: -0.7px;
+  font-family: var(--font-display);
 }
 
 .brand span {
-  color: #96c93d;
+  color: var(--brand);
 }
 
 .site-nav {
@@ -651,19 +678,41 @@ body {
 .btn-light {
   background: #f0f1f4;
   color: #222;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.18s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.btn-light:hover {
+  background: #e6e8ec;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.13);
+  transform: translateY(-1px);
+}
+
+.btn-light:active {
+  transform: scale(0.97) translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .host-add-sport-button {
-  background: #96c93d;
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
   color: #fff;
+  box-shadow: 0 2px 10px rgba(78, 122, 20, 0.28);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
 }
 
 .host-add-sport-button:hover {
-  background: #96c93d;
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
+  box-shadow: 0 4px 18px rgba(78, 122, 20, 0.42);
+  transform: translateY(-1px);
+}
+
+.host-add-sport-button:active {
+  transform: scale(0.97) translateY(0);
+  box-shadow: 0 1px 6px rgba(78, 122, 20, 0.22);
 }
 
 .btn-primary {
-  background: #96c93d;
+  background: var(--brand-dark);
   color: #fff;
 }
 
@@ -2538,10 +2587,16 @@ body {
 .reviews,
 .gallery,
 .booking-engine-section,
-.recommendations,
+.recommendations {
+  background: white;
+  margin: 20px 10px;
+  padding: 20px;
+  border-radius: 10px;
+}
+
 .host-settings-page,
 .edit-profile-page {
-  background: white;
+  background: var(--bg);
   margin: 20px 10px;
   padding: 20px;
   border-radius: 10px;
@@ -2699,16 +2754,20 @@ body {
   align-items: center;
   gap: 12px;
   margin: 12px 0 6px;
+  min-width: 0;
 }
 
 .booking-time-row .booking-label {
   margin: 0;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .booking-time-row .booking-time-select {
-  width: min(160px, 100%);
-  flex: none;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  max-width: 220px;
 }
 
 .booking-paused-notice {
@@ -3285,7 +3344,7 @@ body {
 
 .about-page {
   background: #f5f5f2;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-body);
 }
 
 .about-main {
@@ -3593,6 +3652,14 @@ body {
   border-radius: 14px;
   overflow: hidden;
   padding: 16px;
+  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+.field-card:hover,
+.local-card-link:hover .field-card {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+  transform: translateY(-2px);
+  border-color: #cdd1c6;
 }
 
 .field-host-row {
@@ -3775,6 +3842,13 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+.event-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+  transform: translateY(-2px);
+  border-color: #cdd1c6;
 }
 
 .event-card-image-link {
@@ -6583,15 +6657,12 @@ body {
 .payment-history-page {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
   padding-bottom: 40px;
 }
 
 .payment-history-header {
-  background: #fff;
-  border: 1px solid #e6e7e2;
-  border-radius: 16px;
-  padding: 24px 28px;
+  padding: 0;
 }
 
 .payment-history-title-row {
@@ -6612,7 +6683,7 @@ body {
 
 .payment-history-subtitle {
   margin: 8px 0 0;
-  color: #4b5563;
+  color: #6b7280;
   font-size: 15px;
   line-height: 1.6;
 }
@@ -6622,7 +6693,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #96c93d 0%, #96c93d 100%);
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
   border-radius: 32px;
   padding: 8px 16px;
   flex-shrink: 0;
@@ -6669,20 +6740,20 @@ body {
   width: 16px;
   height: 16px;
   font-size: 10px;
-  border-color: #96c93d;
-  color: #96c93d;
+  border-color: var(--brand);
+  color: var(--brand);
   border-width: 1.5px;
 }
 
 .xp-info-trigger--sm:hover {
-  background: rgba(108, 164, 59, 0.1);
+  background: var(--brand-light);
 }
 
 .xp-inline-link {
   background: none;
   border: none;
   padding: 0;
-  color: #96c93d;
+  color: var(--brand-dark);
   font-size: inherit;
   font-family: inherit;
   font-weight: 600;
@@ -6692,7 +6763,7 @@ body {
 }
 
 .xp-inline-link:hover {
-  color: #4e8a2b;
+  color: var(--brand);
 }
 
 /* ── XP info popup ────────────────────────────────── */
@@ -6706,10 +6777,8 @@ body {
   flex-wrap: wrap;
   gap: 12px;
   align-items: flex-end;
-  background: #fff;
-  border: 1px solid #e6e7e2;
-  border-radius: 14px;
-  padding: 10px 20px;
+  padding: 0;
+  margin-top: 4px;
 }
 
 .payment-filter-group {
@@ -6743,7 +6812,7 @@ body {
 .payment-filter-group select:focus,
 .payment-filter-group input[type="date"]:focus {
   outline: none;
-  border-color: #96c93d;
+  border-color: var(--brand);
 }
 
 .payment-filter-reset {
@@ -6761,8 +6830,8 @@ body {
 }
 
 .payment-filter-reset:hover {
-  border-color: #96c93d;
-  color: #3a5a1a;
+  border-color: var(--brand);
+  color: var(--brand-dark);
 }
 
 /* ── Invoice list ─────────────────────────────────── */
@@ -9216,5 +9285,239 @@ body {
   }
   .locals-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * DESIGN REFRESH — warm palette, Bricolage Grotesque headings, micro-UX
+ * Added June 2026. Remove this block to fully revert all enhancements.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Display font on hero & section titles ───────────────────────────── */
+h1,
+h2,
+.section-title,
+.site-brand,
+.hero-title,
+.about-hero-title,
+.explore-hero-title {
+  font-family: var(--font-display);
+}
+
+/* ── Warm cream on page-level surfaces ───────────────────────────────── */
+body,
+.home-page,
+.auth-hero + .middle-section,
+.auth-hero + .field-main,
+.auth-hero + .events-main,
+.auth-hero + .middle-section.explore-page-content,
+.auth-hero + .middle-section.host-settings-page,
+.auth-hero + .middle-section.edit-profile-page,
+.auth-hero + .middle-section.history-page,
+.auth-hero + .middle-section.payment-history-page,
+.auth-hero + .middle-section.unified-profile-page {
+  background: var(--bg);
+}
+
+/* ── Floating card frame (shadow + corners) on content pages ─────────── */
+.auth-hero + .middle-section.host-settings-page,
+.auth-hero + .middle-section.edit-profile-page,
+.auth-hero + .middle-section.history-page,
+.auth-hero + .middle-section.payment-history-page,
+.auth-hero + .middle-section.unified-profile-page {
+  width: auto;
+  margin: 10px 10px 0;
+  padding: 28px 28px 48px;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+/* ── Inner cards stay white ───────────────────────────────────────────── */
+.auth-hero + .middle-section.simple-page,
+.auth-hero + .middle-section.admin-main,
+.auth-hero + .middle-section.auth-page,
+.auth-hero + .middle-section.legal-content {
+  background: var(--surface);
+}
+
+/* ── Footer content pages — override simple-page white with cream ────── */
+.auth-hero + .middle-section.about-main,
+.auth-hero + .middle-section.follow-main,
+.auth-hero + .middle-section.help-center-page,
+.auth-hero + .middle-section.contact-center-page,
+.auth-hero + .middle-section.legal-center-page {
+  background: var(--bg);
+}
+
+/* ── Footer pages — white card sections on cream bg ──────────────────── */
+.help-faq-list {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0 20px;
+  border: 1px solid var(--border);
+}
+.help-topic-card {
+  background: #ffffff;
+}
+.contact-form-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px;
+  border: 1px solid var(--border);
+}
+.legal-center-page > article {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 32px 36px;
+  border: 1px solid var(--border);
+}
+
+/* ── Host setting cards — true white for contrast against cream bg ────── */
+.host-onboarding-card {
+  background: #ffffff;
+}
+
+/* ── Sport pills — prominent warm tint ───────────────────────────────── */
+.sport-pill {
+  background: var(--brand-light);
+  color: var(--brand-dark);
+  font-weight: 600;
+  border: none;
+}
+
+/* ── Host avatar ring ─────────────────────────────────────────────────── */
+.field-host-avatar {
+  box-shadow: 0 0 0 2px var(--brand-light);
+}
+
+/* ── Ratings warm amber ───────────────────────────────────────────────── */
+.field-host-rating {
+  color: #b45309;
+}
+
+/* ── Primary CTA — gradient + glow ───────────────────────────────────── */
+.btn-primary,
+.find-button {
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
+  box-shadow: 0 2px 10px rgba(78, 122, 20, 0.28);
+  transition: box-shadow 0.2s ease, transform 0.15s ease, background 0.2s ease;
+}
+.btn-primary:hover,
+.find-button:hover {
+  box-shadow: 0 4px 18px rgba(78, 122, 20, 0.42);
+  transform: translateY(-1px);
+}
+.btn-primary:active,
+.find-button:active {
+  transform: scale(0.97) translateY(0);
+  box-shadow: 0 1px 6px rgba(78, 122, 20, 0.22);
+}
+
+/* ── Animated nav underline ───────────────────────────────────────────── */
+.site-nav-link,
+.nav-link-button {
+  position: relative;
+}
+.site-nav-link::after,
+.nav-link-button::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--brand);
+  transition: width 0.2s ease;
+  border-radius: 1px;
+}
+.site-nav-link:hover::after,
+.nav-link-button:hover::after {
+  width: 100%;
+}
+
+/* ── "View all →" arrow nudge ─────────────────────────────────────────── */
+.view-all-link {
+  transition: letter-spacing 0.15s ease, gap 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+}
+.view-all-link:hover {
+  letter-spacing: 0.01em;
+}
+
+/* ── Image zoom on card hover ─────────────────────────────────────────── */
+.field-card .field-post-photo,
+.field-card .field-post-photo-placeholder {
+  transition: transform 0.35s ease;
+}
+.field-card:hover .field-post-photo,
+.local-card-link:hover .field-post-photo {
+  transform: scale(1.04);
+}
+
+/* ── Like button heartbeat ────────────────────────────────────────────── */
+@keyframes heartbeat {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.35); }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.field-like-btn:active {
+  animation: heartbeat 0.4s ease;
+}
+
+/* ── Hero accent becomes terracotta ───────────────────────────────────── */
+.hero h1 .accent,
+h1 .accent {
+  color: var(--accent);
+}
+
+/* ── Terracotta "Become a Host" secondary CTA ─────────────────────────── */
+.btn-host-cta {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+.btn-host-cta:hover {
+  background: #a8501f;
+  transform: translateY(-1px);
+}
+
+/* ── Focus-visible rings ──────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Explore / About / Profile warm headers ───────────────────────────── */
+.explore-hero,
+.about-hero,
+.auth-hero {
+  background: linear-gradient(160deg, #2e3d18 0%, #1a2410 100%);
+}
+
+/* ── Section subtitle colour ──────────────────────────────────────────── */
+.section-sub {
+  color: var(--text-muted);
+}
+
+/* ── Warm cream on profile / settings / history pages ────────────────── */
+.history-page,
+.payment-history-page,
+.unified-profile-page,
+.guest-profile-page {
+  background: var(--bg);
+}
+
+/* ── prefers-reduced-motion guard ────────────────────────────────────────*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

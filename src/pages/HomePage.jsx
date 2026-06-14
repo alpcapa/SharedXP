@@ -50,20 +50,20 @@ const MONTH_NAMES = [
 const steps = [
   {
     stepNum: 1,
-    title: "1. Find a buddy",
-    text: "Browse locals by sport, location, and vibe.",
+    title: "1. Find your host",
+    text: "Browse local sports hosts by sport, city, and level — filter by equipment too.",
     img: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=500&h=220&q=80"
   },
   {
     stepNum: 2,
-    title: "2. Request & book",
-    text: "Chat, agree on details, and book securely.",
+    title: "2. Book in seconds",
+    text: "Message your host, agree on details, and confirm your session securely.",
     img: "https://images.unsplash.com/photo-1529422643029-d4585747aaf2?auto=format&fit=crop&w=500&h=220&q=80"
   },
   {
     stepNum: 3,
-    title: "3. Meet & play",
-    text: "Have an amazing time. We handle the payment.",
+    title: "3. Play like a local",
+    text: "Show up, have fun, and experience your destination through sport.",
     img: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=500&h=220&q=80"
   }
 ];
@@ -353,11 +353,11 @@ const HomePage = ({ currentUser, onLogout }) => {
           <SiteHeader currentUser={currentUser} onLogout={onLogout} />
           <div className="hero-content">
             <h1>
-              Find your sports buddy<span className="dot">.</span>
+              Find a local host<span className="dot">.</span>
               <br />
-              Anywhere<span className="accent">.</span>
+              <span className="accent">Anywhere.</span>
             </h1>
-            <p>Join locals and travelers for unforgettable sports experiences.</p>
+            <p>Train, play, and explore with locals — wherever your travels take you.</p>
             <div className="search-bar" role="search" aria-label="Find sports buddies" ref={searchBarRef}>
               <div className="search-field">
                 <label htmlFor="filter-home-country">Select Country</label>
@@ -436,10 +436,10 @@ const HomePage = ({ currentUser, onLogout }) => {
               <button
                 type="button"
                 className="find-button"
-                aria-label="Find buddies"
+                aria-label="Find a host"
                 onClick={handleFindBuddies}
               >
-                Find Buddies
+                Find a Host
               </button>
             </div>
           </div>
@@ -454,7 +454,7 @@ const HomePage = ({ currentUser, onLogout }) => {
                   Locals ready to play in {localsHeadingLocation}
                 </h2>
                 <p className="section-sub">
-                  Sports buddies near you. Real people. Real connections.
+                  Local hosts ready to play — real people, real connections.
                 </p>
               </div>
               <Link to="/locals" className="view-all-link">
@@ -711,8 +711,8 @@ const HomePage = ({ currentUser, onLogout }) => {
 
           {/* ── How it works ─────────────────────────────────── */}
           <section className="how-section">
-            <h2 className="section-title">How SharedXP works?</h2>
-            <p className="section-sub">Simple steps to connect and play.</p>
+            <h2 className="section-title">How it works</h2>
+            <p className="section-sub">From discovery to kick-off in minutes.</p>
             <div className="how-grid">
               {steps.map((step) => (
                 <article key={step.title} className="how-card">

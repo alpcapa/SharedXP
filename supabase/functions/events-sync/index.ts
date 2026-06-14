@@ -38,6 +38,7 @@ interface NormalizedEvent {
   ends_at: string | null;
   url: string;
   image_url: string;
+  image_style: string;
   description: string;
 }
 
@@ -137,6 +138,7 @@ async function fetchWikidataEditions(): Promise<NormalizedEvent[]> {
       ends_at: null,
       url: `https://www.wikidata.org/wiki/${editionQid}`,
       image_url: String(binding?.image?.value ?? ""),
+      image_style: "",
       description: ""
     });
   }
@@ -169,8 +171,8 @@ async function fetchOpenF1Sessions(year: number): Promise<NormalizedEvent[]> {
       starts_at: String(session?.date_start ?? ""),
       ends_at: String(session?.date_end ?? "") || null,
       url: "https://www.formula1.com/",
-      image_url:
-        "https://images.unsplash.com/photo-1504707748692-419802cf939d?auto=format&fit=crop&w=1400&q=80",
+      image_url: "/events/f1-logo.svg",
+      image_style: "contain",
       description: ""
     } as NormalizedEvent;
   }).filter((e: NormalizedEvent) => e.starts_at);
@@ -212,25 +214,32 @@ async function syncAll(): Promise<{
     return { inserted: 0, bySource, errors };
   }
 
-  // Fetch existing image_url values so manually-set logos are not overwritten.
+  // Fetch existing image_url/image_style so manually-set logos are not overwritten.
   const { data: existingRows } = await supabase
     .from("external_events")
-    .select("source, source_id, image_url");
-  const existingImageMap = new Map<string, string>();
+    .select("source, source_id, image_url, image_style");
+  const existingImageMap = new Map<string, { image_url: string; image_style: string }>();
   for (const row of existingRows ?? []) {
     if (row.image_url) {
-      existingImageMap.set(`${row.source}:${row.source_id}`, row.image_url);
+      existingImageMap.set(`${row.source}:${row.source_id}`, {
+        image_url: row.image_url,
+        image_style: row.image_style ?? ""
+      });
     }
   }
 
   // Upsert in chunks of 100 to keep payloads small.
   let inserted = 0;
   for (let i = 0; i < collected.length; i += 100) {
-    const chunk = collected.slice(i, i + 100).map((e) => ({
-      ...e,
-      image_url: existingImageMap.get(`${e.source}:${e.source_id}`) ?? e.image_url,
-      last_synced_at: new Date().toISOString()
-    }));
+    const chunk = collected.slice(i, i + 100).map((e) => {
+      const existing = existingImageMap.get(`${e.source}:${e.source_id}`);
+      return {
+        ...e,
+        image_url: existing?.image_url ?? e.image_url,
+        image_style: existing?.image_style ?? e.image_style,
+        last_synced_at: new Date().toISOString()
+      };
+    });
     const { error } = await supabase
       .from("external_events")
       .upsert(chunk, { onConflict: "source,source_id" });
