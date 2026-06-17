@@ -116,6 +116,22 @@ Utility helpers beyond date/pricing:
 - `src/utils/recoveryLink.js` — `hasRecoveryType({ search, hash })` detects password-recovery URLs from both query params and hash fragments.
 - `src/utils/fieldPosts.js` — all Supabase read/write operations for `field_posts`: `fetchFieldPosts`, `saveFieldPost`, `deleteFieldPost`, `reportFieldPost`, `toggleFieldPostLike`, `lookupFieldPost`, `lookupFieldPostId`, `syncLocalFallbackPosts`. Like state is tracked in `localStorage` for anonymous users; authenticated users also write to `field_post_likes` (DB trigger maintains the counter).
 
+### Admin panel (`/admin`)
+
+Access is gated on `profiles.is_admin = true`. The panel is a single-page component (`src/pages/AdminPage.jsx`) with 7 top-level tabs:
+
+- **Experiences** — Sub-tabs: Pending (completed bookings awaiting admin approval) · Approved · Active · Cancelled · All (searchable). Admin approves a completed booking here, which sets `invoices.approved_at` and routes it to the Accounting tab for payment release.
+- **Accounting** — Sub-tabs:
+  - *Pending Payment* — invoices with `approved_at` set but no `released_at`; admin releases payment to host (sets `released_at`).
+  - *Released* — searchable/sortable history of released invoices with gross/net totals.
+  - *Refunds* — pending refunds (`refund_sent_at` is null) and sent refunds; accounting marks a refund sent here.
+  - *CM Commissions* — nested: Pending (approve) → Approved (mark paid) → Paid history.
+- **Disputes** — Open disputes and resolved history. Admin resolves each dispute as either "Refund Guest" (`resolved_refunded`) or "Release to Host" (`resolved_paid_host`). Paid-host resolutions also set `approved_at` so they route through Accounting for release.
+- **CM** — Applications (move to Interview → Accept/Decline), plus Active / Paused / Revoked CM lists. Admin can search, email, pause, reactivate, revoke CMs and manage their commissions inline.
+- **Support** — Inbound support emails from `support_messages` (Open / Archived). Admin can read threads, reply, and mark resolved. Matched accounts and CM status shown inline.
+- **Reports** — Field post reports. Admin can suspend, remove, or un-suspend posts and email the poster.
+- **Members** — All user accounts (All / Restricted / Deleted / Guest / Host / CM / Admin sub-tabs). Admin can suspend, close (30-day grace period), and reopen accounts.
+
 ### Tests
 
 Only utility functions are tested. Test files sit alongside their source file (`*.test.js`). Vitest runs in `node` environment (configured in `vite.config.js`). There are no component or integration tests.
@@ -129,6 +145,6 @@ Only utility functions are tested. Test files sit alongside their source file (`
 - **`getDateKey(year, month, day)`** takes a 0-indexed month (JS `Date` convention) and returns a zero-padded `YYYY-MM-DD` string.
 - **Images are uploaded as blobs before saving.** Data URLs (from file pickers) must be converted to storage URLs via `uploadAvatarFromDataUrl` or the sport-image upload path in `onSaveHostProfile` before persisting to DB.
 - **All booking mutations go through `useBookingRequests`**, not direct Supabase calls in pages.
-- **Admin access** is gated on `profiles.is_admin = true`. Set this directly in the Supabase dashboard; there is no UI to grant admin.
+- **Admin access** is gated on `profiles.is_admin = true`. Set this directly in the Supabase dashboard; there is no UI to grant admin. See the Admin panel section above for the full tab/feature breakdown.
 - **No real payment processing.** All payments (guest charges, host payouts, CM commissions) are handled manually by accounting outside the platform — the app only records payment state (invoices, commission statuses, "Mark Paid", etc.) and provides the admin/user UIs. Stripe integration is planned for launch; all payment flows will be redesigned and wired up then. Do not add real payment logic in the meantime.
 - **`experience_ends_at` and `auto_confirm_at` are always UTC.** When computing these from a `requested_date` string (`YYYY-MM-DD`), always parse with an explicit `Z` suffix: `new Date(\`${date}T00:00:00Z\`)`. Omitting `Z` makes JS interpret the string as local time, shifting the deadline by the browser's UTC offset.

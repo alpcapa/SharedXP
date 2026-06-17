@@ -55,10 +55,18 @@ SharedXP connects sports-loving travelers with local people who are eager to sha
 - Sign up with email or social (Google / Apple — prototype)
 - Email confirmation and password reset via Resend
 - Hosting paused indicator in nav
-- Admin dispute dashboard for customer service
-- Inbound support inbox — emails to support@sharedxp.com are stored and auto-replied
-- Community Manager program — applications, referral codes, and per-booking commissions
 - Full legal pages suite (Terms, Privacy, Payments, Safety, IP, Disclaimers, Cancellation Policy, CM Policy)
+- Community Manager program — applications, referral codes, and per-booking commissions
+
+### Admin panel (`/admin`, requires `is_admin = true`)
+
+- **Experiences** — approve completed bookings and route them to accounting
+- **Accounting** — release payments to hosts, track refunds, manage CM commission payouts
+- **Disputes** — resolve disputes as refund-guest or release-to-host
+- **CM** — manage Community Manager applications, status changes, and commissions
+- **Support** — inbound support inbox (emails to support@sharedxp.com), reply and resolve threads
+- **Reports** — review and act on field post reports (suspend / remove)
+- **Members** — search, suspend, close, and reopen user accounts
 
 -----
 
