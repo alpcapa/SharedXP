@@ -64,7 +64,7 @@ const faqGroups = [
         q: "What is the XP Loyalty Program?",
         a: (
           <>
-            You earn XP on every booking — as a traveler and as a host. XP is calculated from the booking amount in your local currency. Learn more on the{" "}
+            You earn XP on every booking — as a traveler and as a host. XP is calculated from the booking amount in your local currency. If a booking is cancelled and a refund is issued, any XP earned on that booking will be reclaimed. Learn more on the{" "}
             <Link to="/loyalty-program">Loyalty Program</Link> page.
           </>
         ),

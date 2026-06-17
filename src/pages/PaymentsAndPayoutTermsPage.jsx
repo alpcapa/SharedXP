@@ -133,7 +133,54 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>9. Taxes and Regulatory Reporting</h2>
+              <h2>9. Session Completion and Auto-Confirmation</h2>
+              <p>
+                A booking is marked completed when both parties confirm the session took place, or
+                automatically by the platform if neither party raises a dispute within <strong>72 hours</strong> of
+                the scheduled session end time. Auto-confirmed bookings are treated identically to
+                manually confirmed ones for payment release, XP award, and review eligibility purposes.
+                Participants receive a feedback-request email when their session is auto-confirmed.
+              </p>
+              <p>
+                Once a booking is completed (by either path), the invoice enters the admin approval
+                queue before funds are released to the host. Auto-confirmed invoices follow the same
+                two-step approval and release process as all other completed sessions.
+              </p>
+            </section>
+
+            <section className="legal-section">
+              <h2>10. Community Manager Commissions</h2>
+              <p>
+                Users who participate in the SharedXP Community Manager (CM) programme earn a
+                commission on bookings made by guests they referred via their personal invite code.
+                The following rules apply:
+              </p>
+              <ul>
+                <li>
+                  <strong>Rate:</strong> 5% of the gross booking amount (before platform fees) for
+                  each qualifying completed booking attributable to the CM's referral code.
+                </li>
+                <li>
+                  <strong>Approval:</strong> Commissions are created automatically when an invoice is
+                  released and are subject to admin approval before payment is scheduled.
+                </li>
+                <li>
+                  <strong>Payment threshold:</strong> Approved commissions are paid once the total
+                  reaches €25, or after 45 days if the threshold has not been met.
+                </li>
+                <li>
+                  <strong>Reversals:</strong> Commissions associated with a refunded or disputed
+                  booking may be reclaimed or cancelled.
+                </li>
+              </ul>
+              <p>
+                Full terms for the Community Manager programme are available at{" "}
+                <a href="/community-manager-policy">/community-manager-policy</a>.
+              </p>
+            </section>
+
+            <section className="legal-section">
+              <h2>11. Taxes and Regulatory Reporting</h2>
               <p>
                 Hosts are generally responsible for taxes associated with their activity, including VAT and income taxes,
                 unless withholding/reporting is legally required from the platform or payment providers.
@@ -141,7 +188,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>10. Compliance and Restricted Use</h2>
+              <h2>12. Compliance and Restricted Use</h2>
               <p>
                 Payments may be restricted, suspended, or refused for sanctions screening, anti-money-laundering
                 obligations, unlawful activity concerns, or other compliance requirements.
@@ -149,7 +196,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>11. XP Loyalty Points and Payment History</h2>
+              <h2>13. XP Loyalty Points and Payment History</h2>
               <p>
                 SharedXP awards <strong>XP (Experience Points)</strong> to both guests and hosts on every
                 completed, paid experience. Guests and hosts earn equal XP — hosting a session is valued
@@ -197,7 +244,7 @@ const PaymentsAndPayoutTermsPage = ({ currentUser, onLogout }) => {
             </section>
 
             <section className="legal-section">
-              <h2>12. Changes and Contact</h2>
+              <h2>14. Changes and Contact</h2>
               <p>
                 SharedXP may update these terms to reflect legal or operational changes. Questions can be submitted through our <Link to="/contact">Contact Center</Link>.
               </p>

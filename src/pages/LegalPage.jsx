@@ -13,7 +13,7 @@ const LegalPage = ({ currentUser, onLogout }) => {
         <main className="middle-section simple-page">
           <h1 className="admin-title">Legal Center</h1>
           <article className="legal-page">
-            <p className="legal-last-updated">Last updated: May 18, 2026</p>
+            <p className="legal-last-updated">Last updated: June 17, 2026</p>
             <section className="legal-section">
               <h2>1. Scope of this Legal Center</h2>
               <p>
