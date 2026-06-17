@@ -62,6 +62,21 @@ Rendered in code as:
 - Default display size token: `--brand-font-size: 39px`.
 - Do not recolor `Shared` to anything other than near-black on light surfaces.
 
+### XP in secondary UI contexts
+
+When `XP` appears inline within body text (e.g. "My **XP** History" in the user dropdown), apply the same brand treatment as the logo — brand green, Bricolage Grotesque, weight 800 — and size it to match the cap-height of the surrounding text:
+
+```jsx
+<span style={{ color: "var(--brand)", fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.15em", lineHeight: 1 }}>XP</span>
+```
+
+### PWA app icon
+
+The home screen icon (`public/icon-192.png`, `public/icon-512.png`) uses:
+- Background: `#7aaa2e` (brand green) with 10% corner radius
+- Text: "XP" in white, Bricolage Grotesque weight 800, centered, with a soft drop shadow
+- Regenerate with `scripts/generate-icons.js` if the brand color or font changes (requires `@resvg/resvg-js` and `wawoff2`)
+
 ---
 
 ## 3. Color Palette
