@@ -55,10 +55,18 @@ SharedXP connects sports-loving travelers with local people who are eager to sha
 - Sign up with email or social (Google / Apple — prototype)
 - Email confirmation and password reset via Resend
 - Hosting paused indicator in nav
-- Admin dispute dashboard for customer service
-- Inbound support inbox — emails to support@sharedxp.com are stored and auto-replied
-- Community Manager program — applications, referral codes, and per-booking commissions
 - Full legal pages suite (Terms, Privacy, Payments, Safety, IP, Disclaimers, Cancellation Policy, CM Policy)
+- Community Manager program — applications, referral codes, and per-booking commissions
+
+### Admin panel (`/admin`, requires `is_admin = true`)
+
+- **Experiences** — approve completed bookings and route them to accounting
+- **Accounting** — release payments to hosts, track refunds, manage CM commission payouts
+- **Disputes** — resolve disputes as refund-guest or release-to-host
+- **CM** — manage Community Manager applications, status changes, and commissions
+- **Support** — inbound support inbox (emails to support@sharedxp.com), reply and resolve threads
+- **Reports** — review and act on field post reports (suspend / remove)
+- **Members** — search, suspend, close, and reopen user accounts
 
 -----
 
@@ -73,10 +81,12 @@ SharedXP connects sports-loving travelers with local people who are eager to sha
 |Backend   |Supabase (Postgres + Auth + Storage)|
 |Auth      |Supabase Auth (email + OAuth, implicit flow)|
 |Email     |Resend via Supabase Edge Functions (Deno)|
-|Geocoding |Nominatim / OpenStreetMap      |
-|Deployment|Vercel                         |
+|Maps      |Leaflet + Nominatim / OpenStreetMap|
+|Fonts     |Bricolage Grotesque + Plus Jakarta Sans (variable, via `@fontsource-variable`)|
+|Native    |Capacitor 8 (iOS + Android)    |
+|Deployment|Vercel (web) / Capacitor (native)|
 
-No external UI libraries. No TypeScript (frontend). The only runtime dependency beyond React and React Router is `@supabase/supabase-js`.
+No external UI libraries. No TypeScript (frontend).
 
 -----
 
@@ -142,9 +152,11 @@ src/
 ├── lib/                 # supabase.js — singleton Supabase client
 ├── pages/               # One file per route
 ├── styles/              # index.css — global styles (~6,500 lines, no modules)
-├── utils/               # Date, age, pricing, and notification helpers
+├── utils/               # Date, age, pricing, notification, and field post helpers
 ├── App.jsx              # Route declarations
 └── main.jsx             # Entry point
+scripts/
+└── generate-icons.js    # Regenerate public/icon-*.png (requires @resvg/resvg-js wawoff2)
 supabase/
 ├── functions/
 │   ├── booking-notify/  # Transactional email dispatcher (Deno)
@@ -152,7 +164,7 @@ supabase/
 │   ├── forgot-password/ # Password reset email sender (Deno)
 │   ├── events-sync/     # Daily sports events sync (Deno)
 │   └── inbound-support/ # Inbound support email receiver (Deno)
-└── migrations/          # Numbered SQL migrations (001–038; 034 absent)
+└── migrations/          # Numbered SQL migrations (001–060; 034 is a placeholder)
 ```
 
 -----
@@ -181,6 +193,7 @@ supabase/
 |`/chat/:bookingRequestId`         |In-app messaging for a booking                         |
 |`/dispute-response/:disputeId`    |Host dispute response form                             |
 |`/admin`                          |Admin panel — disputes, CM, support (requires `is_admin = true`)|
+|`/contact`                        |Contact / support form                                 |
 |`/follow`                         |Follow / connections                                   |
 |`/help`                           |Help centre                                            |
 |`/legal`                          |Legal hub — links to all legal pages                   |

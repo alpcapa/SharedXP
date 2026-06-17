@@ -13,7 +13,7 @@ const CommunityManagerPolicyPage = ({ currentUser, onLogout }) => {
         <main className="middle-section simple-page">
           <h1 className="admin-title">Community Manager Policy</h1>
           <article className="legal-page">
-            <p className="legal-last-updated">Last updated: May 21, 2026</p>
+            <p className="legal-last-updated">Last updated: June 17, 2026</p>
             <p>
               This Community Manager Policy ("CM Policy") governs participation in the SharedXP Community Manager
               Program ("the Program"). By submitting an application or accepting a Community Manager role, you agree
