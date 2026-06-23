@@ -84,6 +84,7 @@ const NOTE_LABELS = {
   unsuspend: "Account Unsuspended",
   close: "Account Closed",
   reopen: "Account Reopened",
+  make_cm: "Granted Community Manager",
   commission_approved: "Commission Approved",
   commission_paid: "Commission Marked Paid",
   payout_notified: "Payout Notification Sent",
@@ -2880,6 +2881,44 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
     const action = actionMode.action;
 
     setActing(member.id);
+
+    if (action === "makeCm") {
+      // Direct CM promotion — bypasses the application/interview pipeline.
+      // Mirrors acceptApplication: generate a unique invite code, create the
+      // cm_profiles row, then send the standard CM welcome email.
+      const city = member.city || "XP";
+      let inviteCode = generateInviteCode(city);
+      const { data: clash } = await supabase
+        .from("cm_profiles")
+        .select("id")
+        .eq("invite_code", inviteCode)
+        .maybeSingle();
+      if (clash) inviteCode = generateInviteCode(city);
+      const cmNotes = appendNote(null, "accepted", note, adminName);
+      const { error: cmErr } = await supabase.from("cm_profiles").insert({
+        user_id: member.id,
+        invite_code: inviteCode,
+        status: "active",
+        city: member.city || "",
+        country: member.country || "",
+        admin_notes: cmNotes,
+      });
+      if (cmErr) {
+        console.error("[members] make CM error:", cmErr);
+        alert("Could not grant CM. The member may already be a Community Manager.");
+        setActing(null);
+        return;
+      }
+      // Also record the promotion on the member's account thread.
+      const promoNotes = appendNote(member.admin_notes, "make_cm", note, adminName);
+      await supabase.from("profiles").update({ admin_notes: promoNotes }).eq("id", member.id);
+      await sendCmEmail("cm_accepted", member.id, { inviteCode });
+      closeAction();
+      await loadMembers();
+      setActing(null);
+      return;
+    }
+
     if (action === "suspend" || action === "close") {
       // Auto-cancel any bookings still in the booking phase
       await supabase
@@ -3008,8 +3047,9 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
               const graceDaysLeft = isClosed
                 ? Math.max(0, 30 - Math.floor((Date.now() - new Date(m.closed_at).getTime()) / (1000 * 60 * 60 * 24)))
                 : null;
-              const ACTION_LABELS = { suspend: "Reason for suspension", unsuspend: "Reason for unsuspending", close: "Reason for closing account", reopen: "Reason for reopening account" };
-              const ACTION_BTN = { suspend: "Save & Suspend", unsuspend: "Save & Unsuspend", close: "Save & Close", reopen: "Save & Reopen" };
+              const ACTION_LABELS = { suspend: "Reason for suspension", unsuspend: "Reason for unsuspending", close: "Reason for closing account", reopen: "Reason for reopening account", makeCm: "Remarks for granting Community Manager" };
+              const ACTION_BTN = { suspend: "Save & Suspend", unsuspend: "Save & Unsuspend", close: "Save & Close", reopen: "Save & Reopen", makeCm: "Save & Make CM" };
+              const canMakeCm = m.is_host && !m.isCm && !isSuspended && !isClosed;
               const rows = [
                 <tr key={m.id} className={`members-row${isOpen || isHistoryOpen || isBlocked ? " members-row-open" : ""}${isClosed ? " members-row-closed" : ""}`}>
                   <td data-label="Name">
@@ -3046,6 +3086,9 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
                         )}
                         {!isClosed && (
                           <button type="button" className="btn btn-danger btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "close")}>{isBusy ? "…" : "Close"}</button>
+                        )}
+                        {canMakeCm && (
+                          <button type="button" className="btn btn-primary btn-sm" disabled={isBusy || isOpen || isBlocked} onClick={() => openAction(m.id, "makeCm")}>{isBusy ? "…" : "Make CM"}</button>
                         )}
                         {noteCount > 0 && (
                           <button type="button" className={`members-notes-btn${isHistoryOpen ? " members-notes-btn-active" : ""}`} onClick={() => toggleHistory(m.id)}>
@@ -3104,10 +3147,15 @@ const MembersPanel = ({ currentUser, initialSearch = "" }) => {
                           There is a 30-day grace period before the account is permanently closed and all personal data is deleted. The member will be notified and can contact you to reopen their account within this window.
                         </p>
                       )}
+                      {actionMode.action === "makeCm" && (
+                        <p style={{ fontSize: 13, color: "#1e3a8a", background: "#dbeafe", padding: "8px 12px", borderRadius: 6, margin: "6px 0 10px" }}>
+                          This promotes the host to an active Community Manager immediately, bypassing the usual application and interview requirements. A unique invite code is generated and the standard CM welcome email is sent. Manage them afterwards from the CM Management tab.
+                        </p>
+                      )}
                       <textarea
                         className="cm-admin-notes"
                         rows={3}
-                        placeholder={actionMode.action === "close" ? "e.g. Customer requested, Terms violation…" : actionMode.action === "reopen" ? "e.g. Customer contacted us to reopen…" : actionMode.action === "unsuspend" ? "e.g. Review completed, no violation found…" : "e.g. Terms violation, Abusive behaviour…"}
+                        placeholder={actionMode.action === "close" ? "e.g. Customer requested, Terms violation…" : actionMode.action === "reopen" ? "e.g. Customer contacted us to reopen…" : actionMode.action === "unsuspend" ? "e.g. Review completed, no violation found…" : actionMode.action === "makeCm" ? "e.g. Active host, strong local presence — fast-tracked onboarding…" : "e.g. Terms violation, Abusive behaviour…"}
                         value={noteText}
                         onChange={(e) => setNoteText(e.target.value)}
                         autoFocus
