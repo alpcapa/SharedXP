@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board Alt 3 – Stacked Card Podium</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(160deg, #f0f2ff 0%, #e8ebff 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 24px;
+  }
+
+  .board {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* ===== HEADER ===== */
+  .board-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .board-header h1 {
+    font-size: 26px;
+    font-weight: 900;
+    color: #1a1f3a;
+    letter-spacing: -0.8px;
+  }
+
+  .board-header p {
+    font-size: 13px;
+    color: #8890b0;
+    margin-top: 3px;
+  }
+
+  /* ===== MY XP BANNER ===== */
+  .my-xp-banner {
+    background: #fff;
+    border-radius: 20px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow:
+      0 2px 0 #ccd0f0,
+      0 4px 0 #bbc0e8,
+      0 6px 0 #a8b0e0,
+      0 10px 30px rgba(80,90,200,0.12);
+    border: 1px solid rgba(100,120,220,0.12);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .my-xp-banner::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, #667eea, #764ba2);
+    border-radius: 20px 0 0 20px;
+  }
+
+  .my-xp-icon {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    box-shadow:
+      0 4px 0 #3a4ab0,
+      0 6px 14px rgba(102,126,234,0.3),
+      inset 0 1px 2px rgba(255,255,255,0.3);
+  }
+
+  .my-xp-info .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8890b0;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .my-xp-info .value {
+    font-size: 34px;
+    font-weight: 900;
+    color: #1a1f3a;
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+
+  .my-xp-info .value em {
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    color: #667eea;
+    letter-spacing: 0;
+    margin-left: 4px;
+  }
+
+  .rank-chip {
+    margin-left: auto;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 14px;
+    padding: 8px 14px;
+    text-align: center;
+    box-shadow:
+      0 4px 0 #3a3880,
+      0 6px 14px rgba(102,126,234,0.25);
+  }
+
+  .rank-chip .rank-label {
+    font-size: 10px;
+    font-weight: 700;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .rank-chip .rank-num {
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+
+  /* ===== PODIUM ===== */
+  .podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .podium-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .podium-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    box-shadow:
+      0 3px 0 rgba(0,0,0,0.2),
+      0 6px 14px rgba(0,0,0,0.12);
+    border: 2.5px solid #fff;
+  }
+
+  .podium-avatar.big {
+    width: 58px;
+    height: 58px;
+    font-size: 24px;
+  }
+
+  .podium-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2d3142;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .podium-xp {
+    font-size: 12px;
+    font-weight: 800;
+    color: #667eea;
+    text-align: center;
+  }
+
+  .podium-block {
+    width: 100%;
+    border-radius: 14px 14px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    padding: 12px 0 8px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    position: relative;
+  }
+
+  /* 3D stacked shadow effect on podium blocks */
+  .podium-block::after {
+    content: '';
+    position: absolute;
+    bottom: -5px; left: 2px; right: 2px;
+    height: 5px;
+    border-radius: 0 0 6px 6px;
+    filter: brightness(0.6);
+  }
+
+  .block-gold {
+    background: linear-gradient(160deg, #ffe566, #f5a623);
+    height: 100px;
+    box-shadow:
+      0 6px 0 #b07000,
+      0 8px 0 #906000,
+      0 14px 28px rgba(245,166,35,0.25),
+      inset 0 1px 2px rgba(255,255,255,0.5);
+  }
+
+  .block-silver {
+    background: linear-gradient(160deg, #e8eaf4, #a0a8c0);
+    height: 75px;
+    box-shadow:
+      0 5px 0 #606880,
+      0 7px 0 #505870,
+      0 12px 20px rgba(100,108,150,0.2),
+      inset 0 1px 2px rgba(255,255,255,0.6);
+  }
+
+  .block-bronze {
+    background: linear-gradient(160deg, #e8b088, #c07848);
+    height: 60px;
+    box-shadow:
+      0 5px 0 #805030,
+      0 7px 0 #704020,
+      0 12px 20px rgba(192,120,72,0.2),
+      inset 0 1px 2px rgba(255,255,255,0.4);
+  }
+
+  /* ===== LIST ===== */
+  .list-section {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow:
+      0 4px 0 #c8cce8,
+      0 6px 0 #b8bce0,
+      0 12px 30px rgba(80,90,180,0.1);
+  }
+
+  .list-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #f0f2f8;
+    transition: background 0.12s;
+    cursor: default;
+  }
+
+  .list-row:last-child { border-bottom: none; }
+
+  .list-row:hover { background: #f8f9ff; }
+
+  .list-row.me-row {
+    background: linear-gradient(90deg, #f0f3ff, #f8f0ff);
+    border-bottom: none;
+  }
+
+  .list-num {
+    width: 28px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: #c0c4d8;
+    flex-shrink: 0;
+  }
+
+  .list-num.me-num { color: #667eea; }
+
+  .list-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.15), 0 3px 8px rgba(0,0,0,0.08);
+  }
+
+  .list-info { flex: 1; }
+
+  .list-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1f3a;
+  }
+
+  .list-sport {
+    font-size: 12px;
+    color: #9098b8;
+    margin-top: 1px;
+  }
+
+  .list-row.me-row .list-name { color: #5060c8; }
+
+  .list-xp {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1a1f3a;
+  }
+
+  .list-xp .unit {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9098b8;
+    margin-left: 1px;
+  }
+
+  .list-row.me-row .list-xp { color: #667eea; }
+
+  .list-dots {
+    text-align: center;
+    color: #c8cce0;
+    font-size: 16px;
+    letter-spacing: 4px;
+    padding: 10px 0 4px;
+    border-bottom: 1px solid #f0f2f8;
+  }
+</style>
+</head>
+<body>
+<div class="board">
+  <div class="board-header">
+    <h1>XP Leaderboard</h1>
+    <p>June 2026 · All Sports</p>
+  </div>
+
+  <!-- My XP Banner -->
+  <div class="my-xp-banner">
+    <div class="my-xp-icon">⚡</div>
+    <div class="my-xp-info">
+      <div class="label">Your XP Balance</div>
+      <div class="value">1,240 <em>XP</em></div>
+    </div>
+    <div class="rank-chip">
+      <div class="rank-label">Rank</div>
+      <div class="rank-num">#12</div>
+    </div>
+  </div>
+
+  <!-- Podium -->
+  <div class="podium">
+    <!-- 2nd -->
+    <div class="podium-col">
+      <div class="podium-avatar" style="background:linear-gradient(135deg,#11998e,#38ef7d)">M</div>
+      <div class="podium-name">MustafaY</div>
+      <div class="podium-xp">2,150 XP</div>
+      <div class="podium-block block-silver">2</div>
+    </div>
+    <!-- 1st -->
+    <div class="podium-col">
+      <div class="podium-avatar big" style="background:linear-gradient(135deg,#667eea,#764ba2)">S</div>
+      <div class="podium-name">SwimBikeRun</div>
+      <div class="podium-xp">3,820 XP</div>
+      <div class="podium-block block-gold">1</div>
+    </div>
+    <!-- 3rd -->
+    <div class="podium-col">
+      <div class="podium-avatar" style="background:linear-gradient(135deg,#f7971e,#ffd200)">A</div>
+      <div class="podium-name">Alp_Capa</div>
+      <div class="podium-xp">1,890 XP</div>
+      <div class="podium-block block-bronze">3</div>
+    </div>
+  </div>
+
+  <!-- List below podium -->
+  <div class="list-section">
+    <div class="list-row">
+      <div class="list-num">4</div>
+      <div class="list-avatar" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)">D</div>
+      <div class="list-info">
+        <div class="list-name">DenizKaya</div>
+        <div class="list-sport">Swimming · İstanbul</div>
+      </div>
+      <div class="list-xp">1,440 <span class="unit">XP</span></div>
+    </div>
+    <div class="list-row">
+      <div class="list-num">5</div>
+      <div class="list-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c)">B</div>
+      <div class="list-info">
+        <div class="list-name">BernaKlimber</div>
+        <div class="list-sport">Climbing · İstanbul</div>
+      </div>
+      <div class="list-xp">1,310 <span class="unit">XP</span></div>
+    </div>
+    <div class="list-dots">· · ·</div>
+    <div class="list-row me-row">
+      <div class="list-num me-num">12</div>
+      <div class="list-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2)">Y</div>
+      <div class="list-info">
+        <div class="list-name">You</div>
+        <div class="list-sport">Running · Bursa</div>
+      </div>
+      <div class="list-xp">1,240 <span class="unit">XP</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
